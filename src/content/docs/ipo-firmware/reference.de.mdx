@@ -1,0 +1,57 @@
+---
+title: "Contract 3, EBDA & POST Codes"
+description: "Specification of Contract 3 MBR OS handover, EBDA data layout, and diagnostic POST codes for IPO_Firmware."
+---
+
+import SharedStruct from '../../../components/SharedStruct.astro';
+import Callout from '../../../components/Callout.astro';
+
+# Contract 3, EBDA & POST Codes
+
+This reference documents the diagnostic POST progress codes of **IPO_Firmware** and the formal OS bootloader handover contract (**Contract 3**).
+
+---
+
+## 📋 Port 0x80 POST Diagnostic Codes
+
+IPO_Firmware writes status progress codes to I/O port `0x80` throughout its execution:
+
+<SharedStruct id="firmware_post_codes" />
+
+---
+
+## 🤝 Contract 3 Specification (Firmware $\to$ OS Bootloader Handover)
+
+Contract 3 represents the classic, universally recognized PC BIOS MBR boot handover interface.
+
+### 1. Boot Sector Loading
+- **Memory Destination:** Exactly physical address `0x0000:7C00` (512 bytes).
+- **Validation Rule:** Byte 510 must be `0x55` and byte 511 must be `0xAA`. If this word is not `0xAA55`, the sector is rejected.
+
+### 2. CPU Register State at Entry Point (`0x0000:7C00`)
+
+| Register | Handover Value | Meaning |
+| :--- | :--- | :--- |
+| **`CS:IP`** | `0x0000:0x7C00` | Real-mode execution address |
+| **`DL`** | `0x80` (or `0x81`..`0x83`) | BIOS drive ID of the boot disk |
+| **`SS:SP`** | `0x0000:0x7C00` | Stack pointer located safely just below the MBR |
+| **`DS`, `ES`**| `0x0000` | Base data segments aligned to 0 |
+| **`EFLAGS`** | `0x00000202` | **`IF = 1`** (Hardware interrupts enabled) |
+| **A20 Gate** | **Enabled** | Address line 20 active; no memory wrap at 1 MB |
+| **IVT** | **Operational** | INT 10h through INT 1Ah fully ready for bootloader calls |
+
+---
+
+## 🗄️ EBDA Memory Layout (`0x0009FC00`)
+
+The Extended BIOS Data Area occupies 1 KB below the 640 KB conventional RAM boundary:
+
+```
+Offset      Size    Field               Content
+0x0000      8 B     acpi_rsdp_sig       "RSD PTR "
+0x0008      1 B     checksum            Additive 8-bit checksum for RSDP
+0x0009      6 B     oem_id              "IPO   "
+0x000F      1 B     revision            0 (ACPI 1.0)
+0x0010      4 B     rsdt_address        Physical pointer to RSDT table (0x0009FC40)
+0x0014      44 B    reserved            Internal storage driver queues
+```

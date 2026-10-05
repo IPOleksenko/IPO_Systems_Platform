@@ -1,0 +1,63 @@
+---
+title: "Storage Preparation & Partitioning"
+description: "Creating raw OS disk images, managing IPO_FS via disk_editor.py, and writing to physical media."
+---
+
+# Storage Preparation & Partitioning
+
+To prepare bootable media for IPO_OS, a raw disk image is created with an MBR partition table and an **IPO_FS** Dateisystem partition starting at **LBA 2048** (the standard 1 MB alignment boundary).
+
+---
+
+## 💾 Disk Layout & Geometry
+
+```
+┌─────────────────────┬───────────────────────────┬──────────────────────────────┐
+│ Sector 0 (LBA 0)    │ Sectors 1–2047            │ Sector 2048 (LBA 2048) ...   │
+│ Master Boot Record  │ Reserved Sectors          │ IPO_FS Partition             │
+│ (Stage 1 / 0x7C00)  │ Stage 2 Bootloader Data   │ Superblock, Bitmaps, Inodes  │
+└─────────────────────┴───────────────────────────┴──────────────────────────────┘
+```
+
+1. **Sector 0 (MBR):** Contains the 512-byte Stage 1 bootloader and standard partition table ending with the `0x55AA` signature at offset 510.
+2. **Sectors 1–2047:** Reserved sectors holding Stage 2 bootloader code and kernel bootstrap metadata.
+3. **Sector 2048+:** Start of the `IPO_FS` partition. The Superblock resides at exact LBA offset 2048.
+
+---
+
+## 🛠️ Managing the Filesystem via `disk_editor.py`
+
+The project provides an independent Python utility, `disk_editor.py`, to manipulate files inside the raw disk image without needing root loopback mounts:
+
+<SharedCode id="disk-editor-cmds" lang="en" />
+
+### Available Subcommands:
+- `format`: Initializes a fresh `IPO_FS` superblock, zeroing bitmap and inode tables.
+- `ls [path]`: Lists directories and file attributes (inode, size, type).
+- `cat <path>`: Prints text file contents to stdout.
+- `mkdir <path>`: Creates a directory node.
+- `put <src> <dest>`: Copies a host binary or file into the target directory inside the image.
+- `rm <path>`: Removes a file or empty directory.
+
+---
+
+## ⚡ Writing the Image to Physical Media (`dd`)
+
+<Callout type="caution" lang="en" title="Triple-Check Your Target Device!">
+Writing to the wrong block device with `dd` will cause **irreversible data loss** on your host computer. Always verify drive identifiers using `lsblk` before proceeding.
+</Callout>
+
+```bash
+# 1. Identify your USB drive or CF card adapter on the Linux host
+lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,MODEL
+
+# 2. Unmount any automatically mounted partitions
+sudo umount /dev/sdX* 2>/dev/null || true
+
+# 3. Write raw image to the physical device (replace sdX with your drive)
+sudo dd if=build/disk.img of=/dev/sdX bs=4M status=progress conv=fsync
+
+# 4. Flush kernel write buffers
+sync
+```
+Once `sync` returns, safely remove the USB stick or CompactFlash card and connect it to your physical IPO_OS target computer.

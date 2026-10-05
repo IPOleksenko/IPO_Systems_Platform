@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgFs" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="900" height="620" fill="url(#bgFs)" rx="12"/>
+  <text x="450" y="38" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="#f8fafc" text-anchor="middle">IPO_FS 64-bit Extent-Based On-Disk Architecture</text>
+  <text x="450" y="60" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">512-byte blocks • 128-byte Inodes • 64-bit Extents • Infinite Chained Extent Nodes</text>
+
+  <!-- Disk Block Layout Strip -->
+  <g transform="translate(50, 90)">
+    <text x="0" y="-10" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#94a3b8">DISK PARTITION LAYOUT (512-BYTE BLOCKS):</text>
+    
+    <rect x="0" y="0" width="100" height="46" fill="#334155" stroke="#64748b" rx="4"/>
+    <text x="50" y="20" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">RESERVED</text>
+    <text x="50" y="35" font-family="monospace" font-size="9" fill="#94a3b8" text-anchor="middle">LBA 0..2047</text>
+
+    <rect x="106" y="0" width="130" height="46" fill="#047857" stroke="#10b981" rx="4"/>
+    <text x="171" y="20" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">SUPERBLOCK</text>
+    <text x="171" y="35" font-family="monospace" font-size="9" fill="#a7f3d0" text-anchor="middle">LBA 2048 ("IPO_FS")</text>
+
+    <rect x="242" y="0" width="130" height="46" fill="#1e3a8a" stroke="#3b82f6" rx="4"/>
+    <text x="307" y="20" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">INODE BITMAP</text>
+    <text x="307" y="35" font-family="monospace" font-size="9" fill="#bfdbfe" text-anchor="middle">Allocation Map</text>
+
+    <rect x="378" y="0" width="130" height="46" fill="#1e3a8a" stroke="#3b82f6" rx="4"/>
+    <text x="443" y="20" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">BLOCK BITMAP</text>
+    <text x="443" y="35" font-family="monospace" font-size="9" fill="#bfdbfe" text-anchor="middle">Data Allocation</text>
+
+    <rect x="514" y="0" width="140" height="46" fill="#6d28d9" stroke="#8b5cf6" rx="4"/>
+    <text x="584" y="20" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">INODE TABLE</text>
+    <text x="584" y="35" font-family="monospace" font-size="9" fill="#ddd6fe" text-anchor="middle">128B Inodes (4/blk)</text>
+
+    <rect x="660" y="0" width="140" height="46" fill="#b45309" stroke="#f59e0b" rx="4"/>
+    <text x="730" y="20" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">DATA BLOCKS</text>
+    <text x="730" y="35" font-family="monospace" font-size="9" fill="#fde68a" text-anchor="middle">File Content &amp; Dirs</text>
+  </g>
+
+  <!-- Inode Box -->
+  <g transform="translate(50, 180)">
+    <rect width="360" height="390" rx="8" fill="#1e1e38" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="20" y="30" font-family="system-ui, sans-serif" font-size="15" font-weight="700" fill="#f8fafc">struct ipo_inode (128 Bytes)</text>
+    
+    <g transform="translate(16, 50)">
+      <rect width="328" height="26" fill="#2d2d50" rx="3"/>
+      <text x="10" y="17" font-family="monospace" font-size="11" fill="#cbd5e1">uint32_t mode (DIR=0x1, FILE=0x2)</text>
+
+      <rect y="32" width="328" height="26" fill="#2d2d50" rx="3"/>
+      <text x="10" y="49" font-family="monospace" font-size="11" fill="#cbd5e1">uint32_t links_count</text>
+
+      <rect y="64" width="328" height="26" fill="#2d2d50" rx="3"/>
+      <text x="10" y="81" font-family="monospace" font-size="11" fill="#cbd5e1">uint64_t size (64-bit file size)</text>
+
+      <rect y="96" width="328" height="150" fill="#1e293b" stroke="#3b82f6" rx="4"/>
+      <text x="10" y="118" font-family="sans-serif" font-size="12" font-weight="700" fill="#60a5fa">Embedded Extents (extents[4])</text>
+      <text x="10" y="138" font-family="monospace" font-size="10.5" fill="#93c5fd">• Extent 0: L_Blk: 0, P_Blk: 4096, Count: 8</text>
+      <text x="10" y="158" font-family="monospace" font-size="10.5" fill="#93c5fd">• Extent 1: L_Blk: 8, P_Blk: 8192, Count: 16</text>
+      <text x="10" y="178" font-family="monospace" font-size="10.5" fill="#93c5fd">• Extent 2: L_Blk: 24, P_Blk: 9000, Count: 4</text>
+      <text x="10" y="198" font-family="monospace" font-size="10.5" fill="#93c5fd">• Extent 3: L_Blk: 28, P_Blk: 9500, Count: 2</text>
+      <text x="10" y="230" font-family="sans-serif" font-size="10.5" fill="#bfdbfe">Total embedded capacity: up to 96 KB inline</text>
+
+      <rect y="254" width="328" height="34" fill="#3b0764" stroke="#c084fc" rx="4"/>
+      <text x="10" y="275" font-family="monospace" font-size="11" font-weight="700" fill="#f5d0fe">uint64_t next_extent_node</text>
+
+      <rect y="296" width="328" height="24" fill="#2d2d50" rx="3"/>
+      <text x="10" y="312" font-family="monospace" font-size="11" fill="#94a3b8">uint8_t _pad[8] (Padding to 128B)</text>
+    </g>
+  </g>
+
+  <!-- Chaining Arrow -->
+  <path d="M 410 450 L 480 450" stroke="#c084fc" stroke-width="2.5" stroke-dasharray="4,4"/>
+  <polygon points="480,446 488,450 480,454" fill="#c084fc"/>
+
+  <!-- Extent Node Box -->
+  <g transform="translate(490, 180)">
+    <rect width="360" height="390" rx="8" fill="#1b2838" stroke="#38bdf8" stroke-width="1.5"/>
+    <text x="20" y="30" font-family="system-ui, sans-serif" font-size="15" font-weight="700" fill="#f8fafc">struct ipo_extent_node (512 Bytes)</text>
+    
+    <g transform="translate(16, 50)">
+      <rect width="328" height="26" fill="#1e3a5f" rx="3"/>
+      <text x="10" y="17" font-family="monospace" font-size="11" fill="#cbd5e1">uint32_t count (Active extents count)</text>
+
+      <rect y="32" width="328" height="26" fill="#1e3a5f" rx="3"/>
+      <text x="10" y="49" font-family="monospace" font-size="11" fill="#cbd5e1">uint32_t flags</text>
+
+      <rect y="64" width="328" height="30" fill="#3b0764" stroke="#c084fc" rx="3"/>
+      <text x="10" y="83" font-family="monospace" font-size="11" font-weight="700" fill="#f5d0fe">uint64_t next_node (Infinite chain)</text>
+
+      <rect y="102" width="328" height="190" fill="#0f172a" stroke="#0ea5e9" rx="4"/>
+      <text x="10" y="124" font-family="sans-serif" font-size="12" font-weight="700" fill="#38bdf8">Extended Extents Array (extents[20])</text>
+      <text x="10" y="146" font-family="monospace" font-size="10.5" fill="#7dd3fc">• Extent 0: 24 bytes (Logical, Phys, Count)</text>
+      <text x="10" y="166" font-family="monospace" font-size="10.5" fill="#7dd3fc">• Extent 1: 24 bytes</text>
+      <text x="10" y="186" font-family="monospace" font-size="10.5" fill="#7dd3fc">• ...</text>
+      <text x="10" y="206" font-family="monospace" font-size="10.5" fill="#7dd3fc">• Extent 19: 24 bytes</text>
+      <text x="10" y="240" font-family="sans-serif" font-size="11" fill="#bae6fd">20 extents * 24B = 480 Bytes in one block</text>
+      <text x="10" y="260" font-family="sans-serif" font-size="11" fill="#38bdf8">Supports petabytes without tree depth penalties</text>
+
+      <rect y="300" width="328" height="24" fill="#1e3a5f" rx="3"/>
+      <text x="10" y="316" font-family="monospace" font-size="11" fill="#94a3b8">uint8_t _pad[16] (Padding to 512B)</text>
+    </g>
+  </g>
+</svg>

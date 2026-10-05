@@ -1,0 +1,107 @@
+---
+import { sharedCodeSnippets } from '../data/shared-code';
+import { getTranslation } from '../utils/i18n';
+
+interface Props {
+  id: string;
+  lang: string;
+  titleOverride?: string;
+}
+
+const { id, lang, titleOverride } = Astro.props;
+const snippet = sharedCodeSnippets[id];
+
+if (!snippet) {
+  throw new Error(`SharedCode snippet not found for ID: ${id}`);
+}
+
+const displayTitle = titleOverride || snippet.title;
+const copyText = getTranslation(lang, 'ui.copy');
+const copiedText = getTranslation(lang, 'ui.copied');
+---
+
+<div class="code-wrapper" data-snippet-id={id}>
+  <div class="code-header">
+    <span class="code-title">📄 {displayTitle}</span>
+    <button class="copy-button" type="button" aria-label={copyText} data-copy-msg={copyText} data-copied-msg={copiedText}>
+      <span class="copy-text">{copyText}</span>
+    </button>
+  </div>
+  <pre class={`language-${snippet.lang}`}><code class={`language-${snippet.lang}`}>{snippet.code}</code></pre>
+</div>
+
+<style>
+  .code-wrapper {
+    margin: 1.5rem 0;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background-color: var(--code-bg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  .code-title {
+    font-family: var(--font-mono);
+    font-weight: 500;
+  }
+
+  .copy-button {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0.2rem 0.6rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .copy-button:hover {
+    background-color: var(--accent-light);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+  }
+
+  .code-wrapper pre {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background-color: transparent !important;
+  }
+</style>
+
+<script>
+  document.querySelectorAll('.copy-button').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const wrapper = btn.closest('.code-wrapper');
+      const code = wrapper?.querySelector('code')?.innerText;
+      if (code) {
+        try {
+          await navigator.clipboard.writeText(code);
+          const copyMsg = btn.getAttribute('data-copy-msg') || 'Copy';
+          const copiedMsg = btn.getAttribute('data-copied-msg') || 'Copied!';
+          const textEl = btn.querySelector('.copy-text');
+          if (textEl) textEl.textContent = copiedMsg;
+          btn.classList.add('copied');
+          setTimeout(() => {
+            if (textEl) textEl.textContent = copyMsg;
+            btn.classList.remove('copied');
+          }, 2000);
+        } catch (err) {
+          console.error('Failed to copy', err);
+        }
+      }
+    });
+  });
+</script>

@@ -1,0 +1,50 @@
+---
+title: "Pruebas y Pull Requests"
+description: "Pruebas de regresión automatizadas en QEMU, convenciones de mensajes de confirmación y apertura de Pull Requests."
+---
+
+# Pruebas y Pull Requests
+
+Before submitting patches or opening Pull Requests to the IPO_OS repository, verify that your changes build cleanly and pass headless execution tests in QEMU.
+
+---
+
+## 🧪 Headless QEMU Testing
+
+IPO_OS can be executed in headless mode with COM1 serial output directed to stdout:
+
+```bash
+# Headless test run with both boot and storage images
+qemu-system-i386 -m 2048 \
+    -drive format=raw,file=build/IPO_OS.img,if=ide,index=0 \
+    -drive format=raw,file=build/disk.img,if=ide,index=1 \
+    -display none -serial stdio
+```
+
+---
+
+## 📝 Commit Message Guidelines
+
+We follow the **Conventional Commits** specification:
+```
+<type>(<scope>): <short imperative summary>
+
+[optional detailed explanation of why the change was necessary]
+```
+
+### Common Types:
+- `feat`: A new kernel feature or driver module
+- `fix`: A bug fix in existing code
+- `docs`: Documentation updates or additions
+- `refactor`: Code reorganization without functional changes
+- `test`: Adding or updating test cases
+
+---
+
+## ✅ Pull Request Checklist
+
+Before marking your PR as ready for review:
+1. [ ] Code compiles without warnings (`make all`).
+2. [ ] Kernel boots cleanly to the interactive prompt (`> `).
+3. [ ] No memory leaks in `kmalloc` heap pools.
+4. [ ] All modified system calls conform to the array-pointer ABI in `<syscall.h>`.

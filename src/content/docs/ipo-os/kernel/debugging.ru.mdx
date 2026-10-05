@@ -1,0 +1,91 @@
+---
+title: "Отладка ядра и обработка исключений CPU"
+description: "Обработчик исключений cpu_exception_handler, восстановление при падении процессов, логирование через serial_printf и отладка в QEMU с GDB."
+---
+
+# Отладка ядра и обработка исключений CPU
+
+В **IPO_OS** подсистема отладки и обработки сбоев реализована непосредственно в `src/kernel/syscall/syscall.c` и низкоуровневом диспетчере `src/kernel/arch/x86/syscall.asm`.
+
+---
+
+## 💥 Обработчик аппаратных исключений (`cpu_exception_handler`)
+
+При возникновении аппаратного исключения процессора (деление на ноль `#DE`, сбой общей защиты `#GP`, ошибка страницы `#PF` и т.д.), вектор прерывания направляется на макросы `ISR_NOERR` / `ISR_ERR` в `syscall.asm`. 
+
+Ассемблерный диспетчер сохраняет регистры в стек (`isr_common`) и передаёт указатель на стековый кадр `frame` в функцию `cpu_exception_handler()`:
+
+```c
+void cpu_exception_handler(uint32_t *frame) {
+    uint32_t vector = frame[7];
+    uint32_t err_code = frame[8];
+    uint32_t eip = frame[9];
+    const char *name = (vector < 32) ? exception_names[vector] : "Unknown Exception";
+
+    process_t *proc = process_get_current();
+    if (proc != NULL) {
+        printf("\n[Process %u] Terminated: CPU Exception %u (%s) at 0x%08x (err=0x%x)\n",
+               proc->pid, vector, name, eip, err_code);
+        serial_printf("[cpu_exception] Process %u crashed: vec=%u (%s) eip=0x%08x err=0x%x\n",
+                      proc->pid, vector, name, eip, err_code);
+        frame[9] = (uint32_t)process_crash_exit;
+        return;
+    }
+
+    printf("\nKERNEL PANIC: CPU Exception %u (%s) at 0x%08x (err=0x%x)\n",
+           vector, name, eip, err_code);
+    serial_printf("KERNEL PANIC: CPU Exception %u (%s) at 0x%08x (err=0x%x)\n",
+                  vector, name, eip, err_code);
+    while (1) {
+        __asm__ volatile("cli; hlt");
+    }
+}
+```
+
+### Двухуровневая стратегия изоляции сбоев:
+1. **Исключение в пространстве процесса (`proc != NULL`):**
+   - Выводится подробное сообщение об упавшем процессе: номер PID, вектор, название исключения, адрес `EIP` и код ошибки.
+   - Адрес возврата `frame[9]` подменяется на адрес `process_crash_exit`.
+   - Процесс корректно завершается, память освобождается, а ядро возвращается в интерактивный терминал без паники всей системы!
+2. **Исключение в пространстве ядра (Kernel Context):**
+   - Выводится баннер **`KERNEL PANIC`** с кодом ошибки и адресом инструкции.
+   - Телеметрия дублируется в последовательный порт COM1 через `serial_printf`.
+   - Ядро останавливает процессор в безопасном цикле `cli; hlt`.
+
+---
+
+## 📡 Логирование в последовательный порт COM1 (`0x3F8`)
+
+Функция `serial_printf(const char *format, ...)` (`src/include/stdio.h`) доступна на всех этапах работы ядра и обеспечивает неблокирующий вывод отладочных логов на скорости 115200 бод (8N1).
+
+### Запуск QEMU с выводом логов:
+```bash
+# Вывод телеметрии ядра прямо в окно терминала хоста
+qemu-system-i386 -hda ipo-os.img -serial stdio
+
+# Запись логов в отдельный файл
+qemu-system-i386 -hda ipo-os.img -serial file:kernel.log
+```
+
+---
+
+## 🪲 Интерактивная отладка с QEMU и GDB
+
+Для пошаговой отладки ядра с загрузкой таблицы символов:
+
+```bash
+# 1. Запуск QEMU в режиме ожидания отладчика (порт :1234)
+qemu-system-i386 -hda ipo-os.img -serial stdio -s -S
+
+# 2. В соседней консоли подключаем GDB с ELF-символами ядра
+gdb build/kernel.elf
+```
+
+В консоли GDB:
+```bash
+(gdb) target remote localhost:1234
+(gdb) break kmain
+(gdb) continue
+(gdb) x/16xw 0x10000
+(gdb) next
+```

@@ -1,0 +1,66 @@
+---
+title: "Structures de données et en-têtes système"
+description: "Dispositions binaires sur disque d'IPO_FS, descripteur de processus process_t, statistiques du tas kmalloc et structures matérielles."
+---
+
+import SharedStruct from '../../../../components/SharedStruct.astro';
+
+# Structures de données et en-têtes système
+
+This reference defines the core binary structures utilized across the **IPO_OS** kernel and **IPO_FS** filesystem driver, verified line-by-line against kernel headers in `src/include/`.
+
+---
+
+## 🗄️ IPO_FS Superblock (`struct ipo_superblock`)
+
+Located at LBA 2048 (offset 1 MB) of the filesystem partition (`src/include/file_system/ipo_fs.h`):
+
+<SharedStruct id="ipo_superblock" />
+
+---
+
+## 📄 IPO_FS Inode Descriptor (`struct ipo_inode`)
+
+Each inode occupies exactly 128 bytes, allowing 4 inodes per 512-byte disk block:
+
+<SharedStruct id="ipo_inode" />
+
+---
+
+## 🧩 IPO_FS Extent Descriptor (`struct ipo_extent`)
+
+Describes a contiguous physical block extent in `src/include/file_system/ipo_fs.h`:
+
+<SharedStruct id="ipo_extent" />
+
+---
+
+## ⚙️ Process Control Structure (`process_t`)
+
+Defined in `src/include/kernel/process.h`, tracking process execution state, memory base, stack, and workspaces:
+
+<SharedStruct id="process_pcb" />
+
+---
+
+## 🧠 Kernel Heap Statistics (`kmalloc_stats_t`)
+
+Used for telemetry, monitoring, and debugging in `src/include/memory/kmalloc.h`:
+
+<SharedStruct id="kmalloc_stats" />
+
+---
+
+## 💾 ATA Storage Device Info (`ata_device_t`)
+
+Populated by the ATA driver during IDENTIFY command polling in `src/include/driver/ata/ata.h`:
+
+<SharedStruct id="ata_device" />
+
+---
+
+## ⚡ Interrupt Descriptor Gate (`ipo_idt_entry_t`)
+
+The 8-byte x86 interrupt and syscall gate descriptor defined in `src/kernel/syscall/syscall.c`:
+
+<SharedStruct id="ipo_idt_entry" />

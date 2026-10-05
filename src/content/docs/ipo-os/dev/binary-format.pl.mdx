@@ -1,0 +1,111 @@
+---
+title: "Binary Layout & Memory Map"
+description: "Understanding the flat raw binary format, section layout, and the memory map of user processes in IPO_OS."
+---
+
+# Binary Layout & Memory Map
+
+IPO_OS employs a clean, deterministic execution model. Rather than requiring complex dynamic linkers or runtime symbol resolution, applications are distributed as **raw flat binaries** linked to start execution directly at address `0x00800000` (`PROCESS_HEAP_START`, 8 MB).
+
+---
+
+## 🗺️ Process Memory Map
+
+Every user application in IPO_OS executes in a 32-bit flat address space:
+
+```
++----------------------------------------------------+ Top of RAM
+| Per-Process Dynamic Heaps (0x08000000 + (pid-1)*64M) |
++----------------------------------------------------+ 0x08000000 (128 MB)
+| Kernel Dynamic Heap (kmalloc, 16 MB capacity)      |
+|   • Process Stacks (256 KB dynamic via setup_stack)|
+|   • Process Arguments Array (argv) & Environment   |
++----------------------------------------------------+ 0x01000000 (16 MB)
+| .bss (Zero-initialized variables)                  |
++----------------------------------------------------+
+| .data (Initialized global and static variables)    |
++----------------------------------------------------+
+| .rodata (String literals and constant pools)       |
++----------------------------------------------------+
+| .text (Executable instructions, _start at entry)   |
++----------------------------------------------------+ 0x00800000 (8 MB)
+| Kernel Space (Code at 0x10000, Stack at 0x500000)   |
+| RAM size detection byte count at 0x8FF0            |
++----------------------------------------------------+ 0x00000000
+```
+
+---
+
+## 📦 Anatomy of a Flat Binary
+
+A raw flat binary (`.bin`) contains no ELF headers, segment headers, or relocation tables. It consists exclusively of contiguous machine instructions and data bytes ready to be executed:
+
+```
+Offset in .bin      Section          Description
+0x00000000          .entry / .text   Startup instructions (jmp main)
++0x00000020          .text            Compiled functions
+...                  .rodata          Constants, format strings
+...                  .data            Pre-initialized global variables
+...                  .bss             Included as zero-filled padding
+```
+
+### Why Flat Binary?
+1. **Instant Loading:** The kernel's `exec` implementation reads the binary file directly from disk into physical memory starting at `0x00800000`.
+2. **Deterministic Startup:** Execution begins immediately by jumping to `0x00800000` without symbol parsing overhead.
+3. **Simplicity:** Eliminates the need for dynamic ELF parsers in early microkernel stages.
+
+---
+
+## ⚙️ Linker Script (`applications/app.ld`)
+
+Applications are linked using the project linker script `applications/app.ld`:
+
+```c
+ENTRY(_start)
+
+SECTIONS
+{
+    . = 0x800000;
+
+    .text : ALIGN(4) {
+        *(.entry)
+        *(.text.startup)
+        *(.text.main)
+        *(.text*)
+    }
+
+    .rodata : ALIGN(4) { *(.rodata*) }
+    .data   : ALIGN(4) { *(.data*) }
+    .bss    : ALIGN(4) {
+        __bss_start = .;
+        *(COMMON)
+        *(.bss*)
+        __bss_end = .;
+    }
+    _end = .;
+}
+```
+
+The entry point `applications/entry.s`:
+```asm
+.global _start
+.extern main
+
+.section .entry, "ax"
+_start:
+    jmp main
+```
+
+---
+
+## ⚠️ The `.bss` Section Requirement
+
+In a typical Linux ELF file, uninitialized global variables (`.bss`) take up zero bytes on disk because the ELF loader zeroes them at load time.
+
+However, in a raw flat binary, if `.bss` is omitted, data and pointers mapped after `.bss` would be corrupted. For IPO_OS flat binaries, `objcopy` must be instructed to include the `.bss` section as explicit zero-filled bytes:
+
+```bash
+objcopy --set-section-flags .bss=alloc,load,contents \
+        -j .text -j .rodata -j .data -j .bss \
+        -O binary app.elf app.bin
+```

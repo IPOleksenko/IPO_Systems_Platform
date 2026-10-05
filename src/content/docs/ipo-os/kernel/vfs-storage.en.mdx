@@ -1,0 +1,60 @@
+---
+title: "Virtual File System & IPO_FS"
+description: "VFS abstraction, 64-bit extent allocation engine, and on-disk structures of IPO_FS."
+---
+
+# Virtual File System & IPO_FS
+
+Storage in IPO_OS is managed through a Virtual File System (VFS) layer backed by **IPO_FS** — an extent-based 64-bit filesystem designed for direct block-level performance.
+
+---
+
+## 🗄️ IPO_FS Partition Layout
+
+<LocalizedDiagram id="fs_layout" lang="en" figureNum={7} />
+
+---
+
+## 📑 Superblock Specification (LBA 2048)
+
+The filesystem begins with a 64-byte superblock header located at LBA 2048:
+
+<SharedStruct id="ipo_superblock" lang="en" />
+
+---
+
+## 📄 Inode Structure & 64-bit Extents
+
+Each file or directory is represented by a compact **128-byte inode** (packed 4 inodes per 512-byte block):
+
+<SharedStruct id="ipo_inode" lang="en" />
+
+### Extent-Based Allocation Mechanism
+Unlike traditional filesystems that use multi-level pointer blocks (indirect blocks) which require multiple seeks per read, `IPO_FS` uses contiguous **extents**:
+```c
+struct ipo_extent {
+    uint64_t logical_block;   /* Logical offset inside the file */
+    uint64_t physical_block;  /* Starting physical block in partition */
+    uint32_t block_count;     /* Number of contiguous 512-byte blocks */
+    uint32_t flags;
+};
+```
+- The first **4 extents** are embedded directly inside the 128-byte inode.
+- For files requiring more than 4 non-contiguous extents, `next_extent_node` references an `ipo_extent_node` block containing **20 chained extents** (480 bytes + 32-byte header/pad).
+
+---
+
+## 📂 Directory Entries (`ipo_dir_entry`)
+
+Directories in `IPO_FS` are regular files whose payload consists of linear arrays of variable-length directory records:
+
+```c
+struct ipo_dir_entry {
+    uint32_t inode;       /* Target inode index */
+    uint32_t rec_len;     /* Total record byte length (including padding) */
+    uint32_t name_len;    /* Filename length in bytes (up to 64 bytes) */
+    uint8_t  type;        /* 0x1 = Directory, 0x2 = Regular File */
+    uint8_t  reserved[3];
+    /* char name[] follows immediately */
+};
+```

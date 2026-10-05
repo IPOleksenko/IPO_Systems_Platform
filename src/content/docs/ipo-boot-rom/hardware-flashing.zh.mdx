@@ -1,0 +1,64 @@
+---
+title: "Physical SPI Flashing (CH341A)"
+description: "Hardware guide for flashing IPO_Boot_ROM and firmware images onto physical motherboard SPI NOR chips using the CH341A programmer."
+---
+
+import SharedCode from '../../../components/SharedCode.astro';
+import Callout from '../../../components/Callout.astro';
+
+# Physical SPI Flashing (CH341A)
+
+Deploying IPO_Boot_ROM to physical motherboards requires programming the board's SPI NOR Flash ROM chip. This guide details using the popular and inexpensive **CH341A USB programmer** with `flashrom`.
+
+---
+
+## 🧰 Required Equipment
+
+| Equipment | Purpose | 提示s |
+| :--- | :--- | :--- |
+| **CH341A Programmer** | USB-to-SPI hardware programmer | Ensure jumper is set to SPI mode (pins 1-2) |
+| **SOIC-8 Test Clip (Pomona 5250)** | Connects to soldered SPI chips | Pin 1 marked with red wire |
+| **1.8V Voltage Adapter** | Level shifter for 1.8V SPI chips | Mandatory if chip is Winbond W25QxxFW or similar |
+| **Multimeter** | Verifies 3.3V / 1.8V VCC pin voltage | Never apply 5V to SPI flash chips! |
+
+---
+
+## ⚡ Critical Electrical Safety 警告s
+
+<Callout type="caution" title="Never Flash a Powered Motherboard">
+Always disconnect the target PC's ATX power supply and remove the CR2032 CMOS battery before attaching the SOIC-8 clip! Supplying power from both the ATX rail and the programmer simultaneously will destroy the programmer, motherboard chipset, and flash chip.
+</Callout>
+
+<Callout type="warning" title="Verify Programmer VCC Voltage">
+Many cheap black CH341A programmers supply 5V logic levels on data lines despite having a 3.3V jumper! Verify with a multimeter between pin 8 (VCC) and pin 4 (GND) before connecting to expensive motherboards.
+</Callout>
+
+---
+
+## 📍 Locating Pin 1 on the SPI Chip
+
+On standard 8-pin SOIC-8 chips:
+- **Pin 1:** Identified by a small circular dot/depression in the plastic epoxy package.
+- **Pin 8 (VCC):** Located directly opposite Pin 1.
+- Align the red stripe on the ribbon cable with Pin 1.
+
+```
+SOIC-8 Pinout:
+        +---v---+
+  /CS  1| o     |8  VCC (3.3V or 1.8V)
+   DO  2|       |7  /HOLD
+  /WP  3|       |6  CLK
+  GND  4|       |5  DI
+        +-------+
+```
+
+---
+
+## 💻 Flashing Commands with `flashrom`
+
+<SharedCode id="flashrom-spi-cmds" />
+
+### Steps Explained:
+1. **Double Dump Verification:** Taking two separate read dumps (`backup1.bin` and `backup2.bin`) and running `cmp` guarantees that all 8 clip pins have solid, low-resistance electrical contact.
+2. **Safe Backup:** Keep your verified factory backup safe! If your custom ROM fails to boot, you can reflash the factory BIOS at any time.
+3. **Flashing & Verify:** `flashrom` automatically erases, programs, and reads back the chip to verify data integrity.

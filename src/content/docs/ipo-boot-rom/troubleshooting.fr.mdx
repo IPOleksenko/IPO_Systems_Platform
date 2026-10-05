@@ -1,0 +1,40 @@
+---
+title: "Diagnostics & Hardware Failures"
+description: "Debugging hardware failures, deciphering Port 0x80 error codes, and troubleshooting SPI flashing issues in IPO_Boot_ROM."
+---
+
+import Callout from '../../../components/Callout.astro';
+
+# Diagnostics & Hardware Failures
+
+When porting or booting **IPO_Boot_ROM** on physical motherboard hardware, issues typically manifest as a completely black screen or a specific freeze code on your diagnostic POST display.
+
+---
+
+## 🛑 Decoding Port 0x80 Codes d'erreur
+
+| Hex Code | Meaning | Root Cause & Resolution |
+| :--- | :--- | :--- |
+| **`0x2E`** | `ERR_NO_MTRR` | The processor does not support Memory Type Range Registers (e.g. CPU older than Pentium Pro / i686) or MTRR MSR writes faulted. In virtual machines, ensure CPU model is `-cpu host` or `-cpu qemu32,+mtrr`. |
+| **`0x3E`** | `ERR_UNKNOWN_CHIPSET` | The PCI Host Bridge Vendor/Device ID read from `0xCF8`/`0xCFC` did not match i440FX (`0x1237`) or Q35 (`0x29C0`). Check motherboard chipset compatibility. |
+| **`0x4E`** | `ERR_DRAM_FAIL` | The alternating bit pattern (`0x55AA55AA` / `0xAA55AA55`) test failed. Remove and reseat DDR RAM modules, clean DIMM gold contacts with isopropyl alcohol, or test with a single stick in Slot 1. |
+| **`0x7E`** | `ERR_MAGIC_MISMATCH` | The firmware payload at `0xF000:0000` does not begin with the `'IPOF'` magic signature (`0x464F5049`). The SPI flash image was assembled with incorrect offsets or firmware padding. |
+
+---
+
+## ⚡ Hardware Dépannage Scenarios
+
+### 1. No Port 0x80 Codes at All (Completely Dead)
+If a motherboard shows no codes on a PCI/LPC diagnostic card:
+1. **Vecteur de réinitialisation Missing:** The top 16 bytes of the SPI flash chip (`0xFFFFFFF0`..`0xFFFFFFFF`) do not contain a valid JMP instruction. Verify your binary image size matches the physical chip capacity (e.g. exactly 4,194,304 bytes for a 4 MB chip).
+2. **Chip Soldering / Contact:** If you desoldered the SPI chip or used a clip, inspect for solder bridges across adjacent pins.
+3. **Power Rail Failure:** Verify that the 3.3V standby rail (`+3VSB`) reaches Pin 8 (VCC) of the flash chip when power is plugged in.
+
+---
+
+### 2. Oscilloscope / Logic Analyzer Checks
+When troubleshooting custom boards:
+- **Pin 1 (/CS - Chip Select):** Must pulse low upon releasing the motherboard reset switch. If it stays high continuously, the chipset's SPI controller has not started reading the ROM.
+- **Pin 6 (CLK - Clock):** Should exhibit active square wave clock bursts (typically 20 MHz to 50 MHz).
+- **Pin 5 (DI / MOSI):** Carries the standard SPI Read command (`0x03` or Fast Read `0x0B`).
+- **Pin 2 (DO / MISO):** Carries the byte data returned by the SPI Flash chip to the chipset.

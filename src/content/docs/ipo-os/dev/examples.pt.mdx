@@ -1,0 +1,68 @@
+---
+title: "Practical Application Examples"
+description: "Complete working application examples for IPO_OS: Gerenciador de janelas GUI windows, TinyGL 3D rendering, TCP HTTP server, audio playback, MicroPython, Lua, TCC, and NASM."
+---
+
+import SharedCode from '../../../../components/SharedCode.astro';
+import Callout from '../../../../components/Callout.astro';
+
+# Practical Application Examples
+
+This section contains verified, production-ready source code examples for the core subsystems of IPO_OS.
+
+---
+
+## 💻 1. First Console Application in C
+
+<SharedCode id="hello-c" />
+
+---
+
+## 🪟 2. Gerenciador de janelas GUI Application
+
+<SharedCode id="wm-gui-window" />
+
+---
+
+## 🧊 3. TinyGL 3D Graphics Rendering (OpenGL 1.1)
+
+<SharedCode id="opengl-cube" />
+
+---
+
+## 🌐 4. POSIX Sockets TCP HTTP Server
+
+<SharedCode id="socket-tcp-server" />
+
+---
+
+## 🐍 5. Executing Python via MicroPython
+
+<SharedCode id="micropython-script" />
+
+Run inside the IPO_OS shell:
+```bash
+micropython /scripts/test.py
+```
+
+---
+
+## 🔨 6. In-OS C Compilation via Tiny C Compiler (TCC)
+
+<SharedCode id="in-os-tcc" />
+
+---
+
+## ⚙️ 7. Native In-OS Assembly via NASM
+
+```bash
+nasm -f elf32 -o test.o test.asm
+ld -T /lib/linker.ld -o test test.o
+./test
+```
+
+---
+
+## 🚀 8. Multitasking Workspace Management
+
+<SharedCode id="multitasking-shell-operators" />

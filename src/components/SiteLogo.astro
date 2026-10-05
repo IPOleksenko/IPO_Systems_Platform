@@ -1,0 +1,66 @@
+---
+interface Props {
+  size?: number;
+  class?: string;
+}
+
+const { size = 24, class: className = 'brand-icon' } = Astro.props;
+---
+
+<svg class={className} viewBox="0 0 64 64" width={size} height={size} fill="none" aria-hidden="true">
+  <defs>
+    <!-- Substrate Background Gradient -->
+    <linearGradient id="logoBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+
+    <!-- Layer 1: Hardware Boot ROM (Gold / Amber) -->
+    <linearGradient id="logoRomTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+
+    <!-- Layer 2: Firmware Service Layer (Cyan / Teal) -->
+    <linearGradient id="logoFwTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#0891B2" />
+    </linearGradient>
+
+    <!-- Layer 3: Operating System (Blue / Cobalt) -->
+    <linearGradient id="logoOsTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#2563EB" />
+    </linearGradient>
+  </defs>
+
+  <!-- Base Rounded Substrate Plate -->
+  <rect width="64" height="64" rx="14" fill="url(#logoBgGrad)" />
+  <rect x="1.5" y="1.5" width="61" height="61" rx="12.5" stroke="#334155" stroke-width="1.2" stroke-opacity="0.8" />
+
+  <!-- Hardware Via Alignment Dots -->
+  <circle cx="8" cy="8" r="1.5" fill="#38BDF8" opacity="0.6"/>
+  <circle cx="56" cy="8" r="1.5" fill="#38BDF8" opacity="0.6"/>
+  <circle cx="8" cy="56" r="1.5" fill="#F59E0B" opacity="0.6"/>
+  <circle cx="56" cy="56" r="1.5" fill="#F59E0B" opacity="0.6"/>
+
+  <!-- LAYER 1: Boot ROM (Bottom Base Tier) -->
+  <path d="M14 43 L32 52 L32 55.5 L14 46.5 Z" fill="#92400E" />
+  <path d="M50 43 L32 52 L32 55.5 L50 46.5 Z" fill="#78350F" />
+  <path d="M32 34 L50 43 L32 52 L14 43 Z" fill="url(#logoRomTop)" />
+
+  <!-- LAYER 2: Firmware BIOS (Middle Service Tier) -->
+  <path d="M14 29 L32 38 L32 41.5 L14 32.5 Z" fill="#0E7490" />
+  <path d="M50 29 L32 38 L32 41.5 L50 32.5 Z" fill="#155E75" />
+  <path d="M32 20 L50 29 L32 38 L14 29 Z" fill="url(#logoFwTop)" />
+
+  <!-- LAYER 3: Operating System (Top Execution Tier) -->
+  <path d="M14 15 L32 24 L32 27.5 L14 18.5 Z" fill="#1E40AF" />
+  <path d="M50 15 L32 24 L32 27.5 L50 18.5 Z" fill="#172554" />
+  <path d="M32 6 L50 15 L32 24 L14 15 Z" fill="url(#logoOsTop)" />
+
+  <!-- Central Processing Core (CPU Nucleus) - Pure Vector, Zero Raster Lag -->
+  <circle cx="32" cy="15" r="5" fill="#60A5FA" opacity="0.3" />
+  <circle cx="32" cy="15" r="3" fill="#FFFFFF" />
+  <circle cx="32" cy="15" r="1.5" fill="#1D4ED8" />
+</svg>

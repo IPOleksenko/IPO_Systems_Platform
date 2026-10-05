@@ -1,0 +1,86 @@
+---
+title: "Primer Programa: Hello, IPO_OS"
+description: "Escritura, ensamblado, compilación y ejecución de sus primeras aplicaciones en C y ensamblador en IPO_OS."
+---
+
+import SharedCode from '../../../../components/SharedCode.astro';
+import Callout from '../../../../components/Callout.astro';
+
+# Primer Programa: Hello, IPO_OS
+
+This guide walks you through creating your first native application on IPO_OS from scratch, in both C and pure x86 Assembly.
+
+---
+
+## 💻 1. Writing the Application in C
+
+In C, we use `printf()` and standard `main()` conventions. When compiled against our freestanding runtime, string printing is routed to the kernel console via the `IPO_SYSCALL_PRINT` (`0x1001`) system call:
+
+<SharedCode id="hello-c" />
+
+---
+
+## ⚡ 2. Writing the Application in Pure Assembly (NASM)
+
+For developers writing low-level utilities directly in assembly, NASM generates flat binary files directly:
+
+<SharedCode id="hello-asm" />
+
+### How Assembly Dispatches System Calls:
+1. `push msg`: Pushes the address of the string buffer onto the stack.
+2. `mov ecx, esp`: Sets `ECX` to point to the arguments array on the stack.
+3. `mov eax, 0x1001`: Sets `EAX` to the system call number (`IPO_SYSCALL_PRINT`).
+4. `mov ebx, 1`: Sets `EBX` to the argument count (`1`).
+5. `int 0x80`: Triggers the software interrupt trap gate, executing the kernel dispatcher.
+
+---
+
+## 🔨 3. Compiling the C Application
+
+To compile `main.c`, we need the startup stub `entry.s` and linker script `app.ld`:
+
+```bash
+# 1. Compile C source code with freestanding flags
+gcc -m32 -O2 -ffreestanding -fno-pie -fno-pic -nostdlib -c main.c -o main.o
+
+# 2. Assemble entry stub
+gcc -m32 -c entry.s -o entry.o
+
+# 3. Link into temporary ELF binary mapped at 0x800000
+gcc -m32 -Wl,-T,app.ld -nostdlib entry.o main.o -o hello.elf
+
+# 4. Extract raw flat binary with initialized .bss
+objcopy -O binary --set-section-flags .bss=alloc,load,contents hello.elf hello.bin
+```
+
+---
+
+## 🚀 4. Deploying to the Storage Disk
+
+Copy `hello.bin` into the `/applications` directory of your IPO_OS disk:
+
+```bash
+python3 disk_editor.py put hello.bin /applications/hello.bin
+```
+
+---
+
+## 🖥️ 5. Running in the Shell
+
+Start IPO_OS in QEMU:
+```bash
+make run
+```
+
+At the interactive prompt (`> `), invoke your binary:
+```
+> /applications/hello.bin test_arg1 test_arg2
+========================================
+  Hello, World from IPO_OS userspace!  
+========================================
+Arguments count: 3
+  argv[0] = /applications/hello.bin
+  argv[1] = test_arg1
+  argv[2] = test_arg2
+> 
+```

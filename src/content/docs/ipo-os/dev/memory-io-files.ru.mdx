@@ -1,0 +1,110 @@
+---
+title: "Работа с памятью и файловый ввод-вывод"
+description: "Чтение, запись, создание файлов и директорий на IPO_FS с использованием системных вызовов ядра."
+---
+
+# Работа с памятью и файловый ввод-вывод
+
+Это руководство описывает практические приёмы чтения, записи и создания файлов в файловой системе `IPO_FS` с использованием нативных интерфейсов `<syscall.h>`.
+
+---
+
+## 📂 Системные вызовы работы с файлами в `syscall.h`
+
+IPO_OS предоставляет прямые низкоуровневые операции с файлами без накладных расходов абстракций POSIX:
+
+| Функция | Номер вызова | Аргументы | Описание |
+| :--- | :--- | :--- | :--- |
+| `ipo_open(path)` | `0x1011` | `path` | Открывает существующий файл; возвращает дескриптор `fd >= 0` или отрицательный код ошибки |
+| `ipo_create(path, type)` | `0x1010` | `path`, `type` | Создаёт запись (`0x1` = директория, `0x2` = обычный файл) |
+| `ipo_read(fd, buf, count, offset)` | `0x1012` | `fd`, `buf`, `count`, `offset` | Считывает `count` байт по заданному 64-битному смещению `offset` |
+| `ipo_write(fd, buf, count, offset)` | `0x1013` | `fd`, `buf`, `count`, `offset` | Записывает `count` байт по заданному 64-битному смещению `offset` |
+| `ipo_close(fd)` | `0x1018` | `fd` | Закрывает активный файловый дескриптор |
+| `ipo_delete(path)` | `0x1014` | `path` | Удаляет файл или директорию |
+| `ipo_stat(path, st)` | `0x1015` | `path`, `struct ipo_inode*` | Запрашивает размер, права и дескрипторы экстентов inode |
+| `ipo_list_dir(path, buf, size)` | `0x1016` | `path`, `buf`, `size` | Считывает список записей директории в строковый буфер |
+
+---
+
+## 📝 Полный пример: копирование файла
+
+Ниже приведена реализация утилиты копирования файла с динамическим выделением буфера в куче и вызовом нативных системных вызовов:
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <syscall.h>
+
+#define CHUNK_SIZE 4096
+
+int copy_file(const char *src_path, const char *dest_path) {
+    // 1. Открываем исходный файл
+    int src_fd = ipo_open(src_path);
+    if (src_fd < 0) {
+        printf("Не удалось открыть исходный файл: %s (ошибка %d)\n", src_path, src_fd);
+        return src_fd;
+    }
+
+    // 2. Создаём целевой файл (тип 0x2 = обычный файл)
+    int create_res = ipo_create(dest_path, 0x2);
+    int dest_fd = ipo_open(dest_path);
+    if (dest_fd < 0) {
+        printf("Не удалось создать целевой файл: %s (ошибка %d)\n", dest_path, dest_fd);
+        ipo_close(src_fd);
+        return dest_fd;
+    }
+
+    // 3. Выделяем буфер передачи в куче
+    char *buffer = (char *)malloc(CHUNK_SIZE);
+    if (!buffer) {
+        printf("Недостаточно памяти для буфера передачи!\n");
+        ipo_close(src_fd);
+        ipo_close(dest_fd);
+        return -1;
+    }
+
+    // 4. Потоковая передача данных с явным смещением
+    uint32_t offset = 0;
+    for (;;) {
+        int bytes_read = ipo_read(src_fd, buffer, CHUNK_SIZE, offset);
+        if (bytes_read <= 0) break; // Конец файла (EOF) или ошибка
+
+        int bytes_written = ipo_write(dest_fd, buffer, (uint32_t)bytes_read, offset);
+        if (bytes_written != bytes_read) {
+            printf("Ошибка записи по смещению %u!\n", offset);
+            break;
+        }
+
+        offset += (uint32_t)bytes_read;
+    }
+
+    // 5. Очищаем дескрипторы и освобождаем память кучи
+    free(buffer);
+    ipo_close(src_fd);
+    ipo_close(dest_fd);
+
+    printf("Успешно скопировано %u байт из %s в %s.\n", offset, src_path, dest_path);
+    return 0;
+}
+```
+
+---
+
+## 📁 Чтение содержимого директории
+
+Для получения списка записей внутри каталога используется системный вызов `ipo_list_dir()`:
+
+```c
+#include <stdio.h>
+#include <syscall.h>
+
+void show_directory(const char *path) {
+    char buffer[1024];
+    int res = ipo_list_dir(path, buffer, sizeof(buffer));
+    if (res < 0) {
+        printf("Не удалось прочитать директорию: %s\n", path);
+        return;
+    }
+    printf("Содержимое %s:\n%s\n", path, buffer);
+}
+```

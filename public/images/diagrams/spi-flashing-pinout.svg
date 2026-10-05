@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgSpi" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="840" height="500" fill="url(#bgSpi)" rx="12"/>
+  <text x="420" y="38" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="#f8fafc" text-anchor="middle">SPI Flash SOIC-8 / DIP-8 Pinout &amp; CH341A Wiring</text>
+  <text x="420" y="60" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">Hardware flashing hookup for 256KB Boot ROM images (W25Q32 / W25Q64)</text>
+
+  <!-- Chip Body -->
+  <g transform="translate(300, 100)">
+    <rect width="240" height="340" rx="10" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+    <circle cx="120" cy="30" r="14" fill="#0f172a" stroke="#475569"/>
+    <text x="120" y="160" font-family="monospace" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">SPI FLASH</text>
+    <text x="120" y="185" font-family="sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">SOIC-8 / 208mil</text>
+    <text x="120" y="205" font-family="monospace" font-size="11" fill="#38bdf8" text-anchor="middle">256 KB - 16 MB</text>
+
+    <!-- Dot for Pin 1 -->
+    <circle cx="30" cy="40" r="5" fill="#f59e0b"/>
+  </g>
+
+  <!-- Left Pins -->
+  <g transform="translate(80, 130)">
+    <!-- Pin 1 -->
+    <rect x="0" y="0" width="220" height="45" rx="4" fill="#0f172a" stroke="#e11d48"/>
+    <text x="15" y="27" font-family="monospace" font-size="12" font-weight="700" fill="#f43f5e">1: /CS (Chip Select)</text>
+
+    <!-- Pin 2 -->
+    <rect x="0" y="70" width="220" height="45" rx="4" fill="#0f172a" stroke="#3b82f6"/>
+    <text x="15" y="97" font-family="monospace" font-size="12" font-weight="700" fill="#60a5fa">2: DO / MISO (Data Out)</text>
+
+    <!-- Pin 3 -->
+    <rect x="0" y="140" width="220" height="45" rx="4" fill="#0f172a" stroke="#64748b"/>
+    <text x="15" y="167" font-family="monospace" font-size="12" font-weight="700" fill="#94a3b8">3: /WP (Write Protect)</text>
+
+    <!-- Pin 4 -->
+    <rect x="0" y="210" width="220" height="45" rx="4" fill="#0f172a" stroke="#10b981"/>
+    <text x="15" y="237" font-family="monospace" font-size="12" font-weight="700" fill="#34d399">4: GND (Ground)</text>
+  </g>
+
+  <!-- Right Pins -->
+  <g transform="translate(540, 130)">
+    <!-- Pin 8 -->
+    <rect x="0" y="0" width="220" height="45" rx="4" fill="#0f172a" stroke="#e11d48"/>
+    <text x="15" y="27" font-family="monospace" font-size="12" font-weight="700" fill="#f43f5e">8: VCC (+3.3V Power)</text>
+
+    <!-- Pin 7 -->
+    <rect x="0" y="70" width="220" height="45" rx="4" fill="#0f172a" stroke="#64748b"/>
+    <text x="15" y="97" font-family="monospace" font-size="12" font-weight="700" fill="#94a3b8">7: /HOLD (Hold)</text>
+
+    <!-- Pin 6 -->
+    <rect x="0" y="140" width="220" height="45" rx="4" fill="#0f172a" stroke="#eab308"/>
+    <text x="15" y="167" font-family="monospace" font-size="12" font-weight="700" fill="#facc15">6: CLK (SPI Clock)</text>
+
+    <!-- Pin 5 -->
+    <rect x="0" y="210" width="220" height="45" rx="4" fill="#0f172a" stroke="#3b82f6"/>
+    <text x="15" y="237" font-family="monospace" font-size="12" font-weight="700" fill="#60a5fa">5: DI / MOSI (Data In)</text>
+  </g>
+</svg>

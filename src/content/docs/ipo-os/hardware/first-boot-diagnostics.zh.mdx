@@ -1,0 +1,48 @@
+---
+title: "First Boot & POST Diagnostics"
+description: "Initial boot symptoms, speaker beep codes, hardware POST port 0x80 diagnostic codes, and troubleshooting."
+---
+
+# First Boot & POST Diagnostics
+
+Upon switching on power to your assembled system, hardware diagnostics provide immediate feedback regarding system health and software execution checkpoints.
+
+---
+
+## 🖥️ Normal Boot Symptoms
+
+当硬件正常工作时，启动过程呈现以下现象：
+1. **电源与风扇：** 按下电源按钮后，电源风扇和 CPU 散热风扇立即旋转。
+2. **主板蜂鸣器（Speaker）：** 硬件 POST 在 1–3 秒内发出一声短促的蜂鸣声，随后在内核完成驱动程序初始化时，通过 PC 蜂鸣器播放 4 音符提示音（C6-E6-G6-C7）。
+3. **显示输出：** 显示器从待机状态唤醒，并切换至 VGA 80x25 文本模式（模式 03h）。
+4. **串口输出：** COM1（`0x3F8`）端口以 **115200 波特率，8N1** 输出内核诊断日志（`[mount] success at lba 2048...`、`[driver] registered...`、`[system_state] transition...`）。
+5. **屏幕标题与交互式提示符：** 顶部状态行（第 0 行）以浅绿色在左侧显示 `IPO_OS`，在右侧显示 `Created by IPOleksenko`，并带有活动键盘语言标识。下方显示欢迎信息和交互式命令行提示符：
+   ```text
+   Type "help" or "?" on the keyboard to view commands, shortcuts, and OS features.
+
+   > 
+   ```
+
+---
+
+## 🔊 Speaker Beep Codes 技术参考手册
+
+| Audio Signal | Problem Description | Recommended Remedy |
+| :--- | :--- | :--- |
+| **1 Short Beep** | POST successfully passed | Normal operation; control handed to firmware. |
+| **Continuous Rapid Beeps** | Power Delivery Failure | Check PSU rails (+12V, +5V) with a multimeter. |
+| **Repeating Long Beeps** | Memory (RAM) Not Detected | Re-seat RAM sticks; test one module in Slot 0. |
+| **1 Long, 2 Short Beeps** | Video Adapter Error | Re-seat PCI/AGP VGA card; inspect monitor cable. |
+| **No Beep, Blank Screen** | Dead CPU, Cleared CMOS, or Short | Check 12V 4-pin CPU cable; verify chassis standoffs. |
+
+---
+
+## 🚦 Hardware Port 0x80 Diagnostic Codes
+
+If using an external 2-digit PCI/LPC diagnostic POST card, monitor port `0x80` hex codes to pinpoint low-level hang states:
+
+### Boot ROM Checkpoints:
+<SharedStruct id="bootrom_post_codes" lang="en" />
+
+### Firmware Runtime Checkpoints:
+<SharedStruct id="firmware_post_codes" lang="en" />

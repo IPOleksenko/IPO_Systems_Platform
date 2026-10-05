@@ -1,0 +1,51 @@
+---
+title: "エラーコード リファレンス"
+description: "IPO_OS における標準 POSIX エラーコード (errno)、システムコールの戻り値、および解決ガイドラインの参照表。"
+---
+
+# エラーコード リファレンス
+
+In **IPO_OS**, kernel system calls at the hardware interrupt level (`int 0x80`) return `0` (or a positive integer count: bytes transferred, file descriptor index, or process ID) on success, and `-1` on error (`IPO_SYSCALL_ENOSYS = 0xFFFFFFFFu` or `-1`).
+
+The userland C runtime library (`libc.a`, `src/userland/libc/sys.c`) catches syscall errors, sets the global `errno` variable to a standard positive code defined in `<errno.h>` (`applications/include/errno.h`), and returns `-1` (or `NULL` for memory allocators).
+
+---
+
+## 📋 POSIX エラーコード一覧 (`<errno.h>`)
+
+| `errno` | 定数名 | 説明および主な原因 |
+| :--- | :--- | :--- |
+| `0` | `0` (Success) | Operation completed successfully without errors. |
+| `1` | `EPERM` | Operation not permitted; insufficient process privilege. |
+| `2` | `ENOENT` | File, directory, or inode not found. |
+| `3` | `ESRCH` | No such process ID exists in scheduler table. |
+| `4` | `EINTR` | Interrupted system call (aborted by pending signal or event). |
+| `5` | `EIO` | Physical hardware I/O failure (bad ATA sector, bus timeout). |
+| `6` | `ENXIO` | No such device or address. |
+| `9` | `EBADF` | Invalid or closed file descriptor index. |
+| `11` | `EAGAIN` | Resource temporarily unavailable; try again. |
+| `12` | `ENOMEM` | Out of dynamic heap memory (`sbrk` exhausted). |
+| `13` | `EACCES` | Access denied (attempting to write to read-only inode). |
+| `14` | `EFAULT` | Bad pointer address; passed buffer violates user range. |
+| `16` | `EBUSY` | Device or resource busy; lock conflict. |
+| `17` | `EEXIST` | File or directory already exists on disk. |
+| `20` | `ENOTDIR` | Component of path prefix is not a directory. |
+| `21` | `EISDIR` | Attempted file operation on a directory node. |
+| `22` | `EINVAL` | Invalid parameter, illegal flag, or out-of-range argument. |
+| `24` | `EMFILE` | Process open file descriptors limit reached (64 max). |
+| `28` | `ENOSPC` | Filesystem partition has no free blocks available. |
+| `30` | `EROFS` | Read-only file system modification attempted. |
+| `32` | `EPIPE` | Broken pipe or socket connection closed by peer. |
+| `38` | `ENOSYS` | System call number not implemented or unregistered. |
+
+---
+
+## 🛠️ 一般的なエラーの解決
+
+### `EFAULT` (`14`)
+- Occurs when a buffer pointer passed to `read()`, `write()`, `stat()`, or `print()` points into kernel memory below `0x800000`, or when the user buffer spans into an unmapped page.
+- **Fix:** Allocate memory on the heap with `malloc()` or ensure local buffers are properly sized on the stack.
+
+### `EMFILE` (`24`)
+- Occurs when the task opens more than 64 file descriptors without closing them.
+- **Fix:** Verify every branch calling `ipo_open()` (`IPO_SYSCALL_FS_OPEN` `0x1011`) invokes `ipo_close()` (`IPO_SYSCALL_FS_CLOSE` `0x1018`).

@@ -1,0 +1,45 @@
+---
+title: "Assembly & Diagnostic Listes de contrôle"
+description: "Quick engineering checklists for physical computer assembly, BIOS verification, and diagnostics."
+---
+
+# Assembly & Diagnostic Listes de contrôle
+
+Use these rapid checklists during physical workstation assembly and initial bring-up to avoid common engineering oversights.
+
+---
+
+## ✅ Pre-Assembly Hardware Checklist
+
+- [ ] **Motherboard Capacitor Health:** All electrolytic capacitors around CPU VRM inspected; zero bulging tops, zero crusty electrolyte leakage.
+- [ ] **Chassis Standoff Alignment:** Standoffs installed in the chassis match motherboard mounting holes **1:1**; zero orphan standoffs touching the PCB underside.
+- [ ] **CPU Socket Inspection:** Socket 370 / LGA 775 pins inspected under bright light; zero bent, broken, or shorted pins.
+- [ ] **Thermal Compound:** Pea-sized droplet (4–5 mm) applied to center of heatspreader; heatsink mounting brackets latched with equal tension.
+- [ ] **RAM Latch Verification:** DIMM retaining latches snapped fully shut on both sides of each memory module.
+- [ ] **Power Supply Rails:** ATX 24-pin and CPU 4/8-pin 12V connectors plugged in; power supply switch in the `|` (ON) position.
+- [ ] **IDE Ribbon Cable Direction:** Pin 1 (red striped edge) aligned with Pin 1 on both motherboard and hard drive headers.
+- [ ] **Drive Master Jumper:** Physical jumper on boot HDD confirmed in **Master** position.
+- [ ] **Front Panel JFP1 Header:** `PWR_SW` pins connected; PC speaker connected to 4-pin `SPK` header.
+
+---
+
+## ⚙️ BIOS / CMOS Configuration Checklist
+
+- [ ] **SATA Controller Mode:** Set to **IDE / Legacy / Compatible Mode** (NOT AHCI / RAID).
+- [ ] **Boot Priority:** Primary IDE Master / Target SSD selected as **1st Boot Device**.
+- [ ] **Legacy USB Emulation:** Enabled (allows USB keyboards to function in real-mode bootloaders).
+- [ ] **Fast Boot:** **Disabled** (allows full peripheral enumeration and HDD spinup delays).
+- [ ] **Floppy Controller:** Set to **Disabled / None** if no physical 3.5" drive is connected.
+- [ ] **COM1 Serial Port:** Enabled at base address `0x3F8` with `IRQ 4`.
+- [ ] **Plug and Play OS:** Set to **No / Disabled** (BIOS handles PCI IRQ routing).
+
+---
+
+## 🚦 First Boot Diagnostics Checklist
+
+- [ ] **Power-On Test:** Fans spin up immediately; zero burning smells or smoke.
+- [ ] **Audio Feedback:** Single short beep sounds within 1–3 seconds from speaker.
+- [ ] **Video Initialization:** VGA monitor clears to Mode 03h (80x25 text mode).
+- [ ] **POST Port 0x80:** Diagnostic card advances from `0x10` through `0x31` without halting on error codes (`0x2E`, `0x3E`, `0xEE`).
+- [ ] **Kernel Handover:** Bootloader transfers control to kernel at `0x10000`.
+- [ ] **Shell Appearance:** Interactive shell prompt `> ` appears on screen.

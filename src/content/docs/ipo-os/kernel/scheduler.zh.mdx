@@ -1,0 +1,101 @@
+---
+title: "Process & Thread Scheduler"
+description: "Hybrid cooperative and timesliced scheduler, Process Control Block (PCB), rdtsc timer ticks, and context switching in IPO_OS."
+---
+
+# Process & Thread Scheduler
+
+The IPO_OS task scheduling subsystem manages application execution through a **hybrid cooperative and timesliced multitasking engine** with batch process pipelines, workspace isolation, and background asynchronous workers.
+
+---
+
+## 🔄 Task Lifecycle & States
+
+```
+           ┌──────────────┐
+           │   CREATED    │
+           └──────┬───────┘
+                  │ process_create()
+           ┌──────▼───────┐
+     ┌────►│    READY     ├─────┐
+     │     └──────▲───────┘     │
+     │ 10ms       │ Dispatched  │ Waiting
+     │ timeslice  │ by tick     │ for input
+┌────┴─────┐ ┌────┴───────┐ ┌───▼────────┐
+│ RUNNING  │ │ TERMINATED │ │  BLOCKED   │
+└────┬─────┘ └────────────┘ └───┬────────┘
+     │ Exit / Crash             │ Input available
+     └──────────────────────────┘
+```
+
+<LocalizedDiagram id="process_scheduler" />
+
+---
+
+## 📋 Process Control Block (`process_t`)
+
+Each process in IPO_OS is tracked in kernel memory by a `process_t` structure (defined in `src/include/kernel/process.h`):
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| **`pid`** | `uint32_t` | Unique Process ID (dynamically allocated) |
+| **`binary_base`** | `void *` | Base execution address (`0x800000` / `PROCESS_HEAP_START`) |
+| **`binary_size`** | `uint32_t` | Total size of binary image |
+| **`entry_point`** | `uint32_t` | Absolute execution entry point (`_start`) |
+| **`binary_storage`**| `void *` | Dedicated backup storage buffer when swapped out |
+| **`data_offset`** | `uint32_t` | Offset where writable `.data` and `.bss` begin |
+| **`data_size`** | `uint32_t` | Size of writable data to preserve |
+| **`stack_base`** | `void *` | Allocated process stack memory |
+| **`stack_ptr`** | `uint32_t` | Saved `%esp` stack pointer during context switch |
+| **`exit_code`** | `int` | Returned termination exit code |
+| **`is_running`** | `uint8_t` | Flag indicating active execution |
+| **`waiting_for_input`**| `bool` | True when blocked waiting for keyboard keystrokes |
+| **`text_vram_backup`** | `uint16_t *` | Saved 80x25 text mode framebuffer for workspace switching |
+| **`user_heap_break`** | `uint32_t` | Current `sbrk` dynamic heap break pointer |
+
+---
+
+## ⚡ Context Switching (`process_switch_context`)
+
+Context switching between tasks is performed via a naked assembly routine in `src/kernel/core/process.c`:
+
+```c
+__attribute__((naked)) static void process_switch_context(uint32_t *old_esp, uint32_t new_esp) {
+    __asm__ volatile(
+        "pushl %ebp\n\t"
+        "pushl %ebx\n\t"
+        "pushl %esi\n\t"
+        "pushl %edi\n\t"
+        "pushfl\n\t"
+        "movl 24(%esp), %eax\n\t"    /* old_esp pointer */
+        "movl 28(%esp), %edx\n\t"    /* new_esp value */
+        "movl %esp, (%eax)\n\t"      /* Save current ESP */
+        "movl %edx, %esp\n\t"        /* Load target ESP */
+        "popfl\n\t"
+        "popl %edi\n\t"
+        "popl %esi\n\t"
+        "popl %ebx\n\t"
+        "popl %ebp\n\t"
+        "ret\n\t"
+    );
+}
+```
+
+---
+
+## ⏱️ 10ms Timeslicing via `rdtsc` (`timer_tick`)
+
+In addition to explicit cooperative yielding via `IPO_SYSCALL_PROCESS_YIELD` (`0x1023`), the kernel enforces timeslicing during batch multitasking:
+
+1. The PIT is programmed at **1000 Hz** (`1 ms` resolution).
+2. The timer subsystem (`src/kernel/arch/x86/timer.c`) reads CPU cycles using `rdtsc`.
+3. Every **10 ms** (`timer_ms - last_slice_yield_ms >= 10u`), if executing in process context and terminal output is not locked, `timer_tick()` automatically calls `process_yield_kernel()`.
+4. This yields control back to `scheduler_esp`, allowing other concurrent batch processes to advance!
+
+---
+
+## 🔄 Asynchronous Worker Tasks (`async.c`)
+
+Background periodic routines are registered with the asynchronous scheduler (`IPO_SYSCALL_ASYNC_START` `0x1030`):
+- Managed via `async_task_t` structures containing callback function pointer `fn`, interval `interval_ms`, and owner process reference.
+- `async_scheduler_tick()` evaluates elapsed time and triggers ready tasks cleanly during the main kernel loop.

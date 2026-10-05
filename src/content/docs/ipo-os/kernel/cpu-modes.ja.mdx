@@ -1,0 +1,80 @@
+---
+title: "Processor Modes, GDT & IDT"
+description: "Transitions between real mode and protected mode, 3-entry GDT flat descriptor layout, and 256-entry IDT gates."
+---
+
+# Processor Modes, GDT & IDT
+
+IPO_OS transitions the CPU from 16-bit Real Mode into 32-bit Protected Mode, establishing a flat 4 GB memory model with unified segment addressing and interrupt vector gates.
+
+---
+
+## 🎛️ Processor Modes Transition
+
+```
+┌──────────────────────────────────────────────┐
+│             16-bit Real Mode                 │
+│  • 1 MB physical addressing (Segment:Offset) │
+│  • BIOS interrupt services (IVT INT 10h-1Ah) │
+│  • Memory detection (E820 stored at 0x8FF0)  │
+└──────────────────────┬───────────────────────┘
+                       │ lgdt [gdt_desc], CR0.PE = 1, Far jmp 0x08:pmode_entry
+┌──────────────────────▼───────────────────────┐
+│         32-bit Flat Protected Mode           │
+│  • Flat 4 GB linear physical memory          │
+│  • Base = 0x00000000, Limit = 4 GB (G=1)     │
+│  • CS = 0x08, DS = ES = SS = FS = GS = 0x10  │
+│  • IDT (256 gates) with INT 0x80 int gate    │
+└──────────────────────────────────────────────┘
+```
+
+---
+
+## 📑 Global Descriptor Table (GDT)
+
+In `src/boot/boot.asm`, the bootloader constructs a flat Global Descriptor Table with 3 descriptors:
+
+| Selector | Index | Privilege Level | Segment Type | Base Address | Limit | Granularity & Flags |
+| :--- | :---: | :---: | :--- | :---: | :---: | :--- |
+| **`0x00`** | 0 | — | Null Descriptor | `0x00000000` | `0x00000` | Reserved |
+| **`0x08`** | 1 | Ring 0 | Code Segment (Execute/Read) | `0x00000000` | `0xFFFFF` | 4 KB (`G=1`, 32-bit, `0x00CF9A000000FFFF`) |
+| **`0x10`** | 2 | Ring 0 | Data Segment (Read/Write) | `0x00000000` | `0xFFFFF` | 4 KB (`G=1`, 32-bit, `0x00CF92000000FFFF`) |
+
+### Protected Mode Setup:
+```asm
+lgdt [gdt_desc]
+mov eax, cr0
+or eax, 1                      ; Set Bit 0 (Protection Enable, PE)
+mov cr0, eax
+jmp 0x08:pmode_entry           ; Far jump flushes prefetch pipeline
+
+[BITS 32]
+pmode_entry:
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov fs, ax
+    mov gs, ax
+    mov esp, 0x500000          ; Initial 5 MB kernel stack
+    jmp 0x00010000             ; Enter kernel at _start
+```
+
+---
+
+## ⚡ Interrupt Descriptor Table (IDT)
+
+In `src/kernel/syscall/syscall.c`, the kernel allocates and loads a 256-entry IDT (`ipo_idt_table`):
+
+- **Vectors `0x00`–`0x1F` (0–31):** Architecture CPU Exceptions (`isr_0` through `isr_31`), dispatched to `cpu_exception_handler`.
+- **Vector `0x80` (128):** System Call Interrupt Gate (`IPO_IDT_ENTRY_FLAGS = 0xEE`), pointing directly to `syscall_isr_entry`.
+- **Vectors `32`–`127` & `129`–`255`:** Unmapped (zeroed). IPO_OS does not remap the 8259 PIC in protected mode; all peripheral hardware (timer, keyboard, mouse, storage, network) is handled via cooperative non-blocking polling in `kmain()`.
+
+The IDT pointer structure is loaded into the CPU using the `lidt` instruction:
+```c
+ipo_idt_ptr_t idt_ptr = {
+    .limit = (uint16_t)(sizeof(ipo_idt_table) - 1),
+    .base = (uint32_t)ipo_idt_table
+};
+__asm__ volatile("lidt %0" : : "m"(idt_ptr));
+```

@@ -1,0 +1,62 @@
+---
+title: "Модель драйверів пристроїв та HAL"
+description: "Аппаратные драйвери IPO_OS: контролер сети RTL8139, ATA PIO, мышь та клавиатура PS/2, Sound Blaster 16, VGA/VBE та подсистема динамических драйверів."
+---
+
+import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
+import Callout from '../../../../components/Callout.astro';
+
+# Модель драйверів пристроїв та HAL
+
+Архитектура драйверів **IPO_OS** объединяет монолитные базовые драйвери ввода-вывода та динамическую подсистему расширения, позволяющую регістрировать новые драйвери на лету через системний виклик `ipo_driver_register()`.
+
+<LocalizedDiagram id="driver_architecture" />
+
+---
+
+## 🔌 Встроенные аппаратные драйвери
+
+1. **Сетевой контролер Realtek RTL8139 (PCI):**
+   - Поиск за Vendor/Device ID `0x10EC:0x8139` на шині PCI.
+   - Кольцевой буфер приема RX (8 КБ + 16 байт) та 4 дескриптора передачи TX.
+   - Неблокуюче опитування регістрів статусу `ROK` (Receive OK) та `TOK` (Transmit OK).
+2. **Дисковый контролер ATA PIO:**
+   - Первичный та вторичный каналы IDE (`0x1F0` / `0x170`).
+3. **Контролер ввода 8042 PS/2:**
+   - Клавіатура: сканкоди Set 1/Set 2, опитування портів `0x60`/`0x64`.
+   - Миша: потоковий 3-байтний протокол PS/2 (дельта X, дельта Y, кнопки).
+4. **Аудиокарта Sound Blaster 16:**
+   - Порт `0x220`, 16-битный DMA Канал 5, программный микшер 22050 Гц стерео.
+5. **Видеоадаптер VGA / VBE BGA:**
+   - Текстовый режим Mode 03h (80x25, B8000).
+   - Графический режим VGA Mode 13h (320x200x256, A0000).
+   - Линейный кадровый буфер Bochs/QEMU VBE BGA (порти `0x1CE`/`0x1CF`).
+
+---
+
+## 🧩 Подсистема динамических драйверів (`ipo_driver_register`)
+
+Розробники можуть подключать драйвери без перекомпиляции ядра:
+
+```c
+#include <kernel/driver.h>
+#include <syscall.h>
+
+static int my_driver_init(void) {
+    printf("Ініціалізація зовнішнього драйвера!\n");
+    return 0;
+}
+
+static driver_t my_drv = {
+    .name = "my_custom_device",
+    .description = "Custom hardware hook driver",
+    .init = my_driver_init,
+    .read = NULL,
+    .write = NULL
+};
+
+int main(void) {
+    ipo_driver_register(&my_drv);
+    return 0;
+}
+```

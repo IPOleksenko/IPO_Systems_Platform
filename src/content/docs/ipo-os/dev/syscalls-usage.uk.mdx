@@ -1,0 +1,209 @@
+---
+title: "Использование системних викликів"
+description: "Полное практическое керівництво розробника за системним викликам в IPO_OS: регістровый маршалинг int 0x80, Си-обертки з syscall.h, ассемблерные шаблоны та обработка помилок."
+---
+
+import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
+import Callout from '../../../../components/Callout.astro';
+
+# Использование системних викликів в додатких
+
+В операційній системі **IPO_OS** користувацькі програми звертаються до сервісів ядра в 32-бітному захищеному режимі через програмне переривання `int 0x80`. 
+
+Заголовочный файл `<syscall.h>` предоставляет як низкоуровневые макросы та функцію диспетчеризации `ipo_syscall()`, так та готовые inline-обертки для всіх базовых подсистем.
+
+<LocalizedDiagram id="syscall_pipeline" />
+
+---
+
+## 🛠️ Соглашение ABI та базовая функція `ipo_syscall`
+
+В IPO_OS системний виклик требует передачи трех ключевых значень в регістрах x86:
+- **`EAX`** — номер системного виклику (наприклад, `0x1011` для `IPO_SYSCALL_FS_OPEN`)
+- **`EBX`** — количество передаваемых параметрів (`uint32_t argc`)
+- **`ECX`** — линейный вказівник на массив 32-битных значень аргументов (`const uint32_t *argv`)
+
+Реализация базовой функції диспетчера на C с использованием встроенного ассемблера GCC (`inline assembly`):
+
+```c
+#include <stdint.h>
+#include <syscall.h>
+
+int ipo_syscall(uint32_t num, uint32_t argc, uint32_t *argv) {
+    int ret;
+    __asm__ volatile (
+        "int $0x80"
+        : "=a" (ret)
+        : "a" (num), "b" (argc), "c" (argv)
+        : "memory"
+    );
+    return ret;
+}
+```
+
+---
+
+## 📖 Практические приклады вызовов ядра
+
+### 1. Вывод текста в консоль (`0x1001` — `IPO_SYSCALL_PRINT`)
+
+```c
+#include <syscall.h>
+
+int my_print(const char *message) {
+    uint32_t args[1];
+    args[0] = (uint32_t)(uintptr_t)message;
+    return ipo_syscall(IPO_SYSCALL_PRINT, 1u, args);
+}
+```
+
+### 2. Читання та запис файлів (`0x1011`, `0x1012`, `0x1013`, `0x1018`)
+
+Полный цикл работы с файлом на диску с использованием готовых inline-функцій з `<syscall.h>`:
+
+```c
+#include <stdio.h>
+#include <string.h>
+#include <syscall.h>
+
+int save_and_read_config(void) {
+    // 1. Створення нового файлу у файловій системі IPO_FS
+    // Тип: 0x2 = звичайний файл, 0x1 = каталог
+    int create_res = ipo_create("/etc/config.cfg", 0x2);
+    if (create_res < 0) {
+        printf("Попередження: файл вже існує або помилка %d\n", create_res);
+    }
+
+    // 2. Відкриття файлу за шляхом
+    int fd = ipo_open("/etc/config.cfg");
+    if (fd < 0) {
+        printf("Помилка відкриття файлу: %d\n", fd);
+        return fd;
+    }
+
+    // 3. Запис рядка у файл зі зміщенням 0
+    const char *text = "theme=dark\nresolution=1024x768\n";
+    int written = ipo_write(fd, text, strlen(text), 0u);
+    printf("Записано байтів: %d\n", written);
+
+    // 4. Читання записаних даних назад
+    char read_buf[64];
+    memset(read_buf, 0, sizeof(read_buf));
+    int bytes_read = ipo_read(fd, read_buf, sizeof(read_buf) - 1, 0u);
+    printf("Прочитано з файлу: %s\n", read_buf);
+
+    // 5. Обов'язкове закриття дескриптора
+    ipo_close(fd);
+    return 0;
+}
+```
+
+### 3. Управление кучей додатки (`0x1045` — `IPO_SYSCALL_SBRK`)
+
+Сдвиг границы сегмента данных для реализации динамической пам'яті `malloc` / `free`:
+
+```c
+#include <syscall.h>
+
+void *sys_sbrk(int32_t increment) {
+    uint32_t args[1];
+    args[0] = (uint32_t)increment;
+    int res = ipo_syscall(IPO_SYSCALL_SBRK, 1u, args);
+    return (void *)(intptr_t)res;
+}
+```
+
+### 4. Створення графического окна в оконном менеджере (`0x1070`)
+
+```c
+#include <wm.h>
+#include <stdio.h>
+
+static void draw_my_window(wm_window_t *win) {
+    // Заливка клієнтської області кольором 1 (синій)
+    wm_buf_fill_rect(win->framebuf, win->w, win->h, 0, 0, win->w, win->h, 1);
+    // Відмальовування білої рамки
+    wm_buf_draw_rect(win->framebuf, win->w, win->h, 1, 1, win->w - 2, win->h - 2, 15);
+    // Виведення тексту
+    wm_buf_draw_string(win->framebuf, win->w, win->h, 8, 12, "IPO_OS GUI Window", 15);
+}
+
+int main(int argc, char **argv) {
+    wm_window_options_t opt = WM_WINDOW_OPTIONS_DEFAULT;
+    opt.x = 20;
+    opt.y = 20;
+    opt.w = 140;
+    opt.h = 60;
+    opt.title = "Моє Вікно";
+    opt.draw_cb = draw_my_window;
+
+    wm_window_t *win = wm_create_window(&opt);
+    if (!win) {
+        printf("Збій створення вікна WM\n");
+        return 1;
+    }
+    // Вихід із main: вікно залишиться на екрані завдяки асинхронному композитору!
+    return 0;
+}
+```
+
+### 5. Запуск дочерней программы (`0x1020` — `IPO_SYSCALL_EXEC`)
+
+```c
+#include <syscall.h>
+#include <stdio.h>
+
+int launch_editor(void) {
+    char *argv[] = { "edit", "/autorun", NULL };
+    int pid = ipo_exec("/applications/edit", 2, argv);
+    if (pid < 0) {
+        printf("Помилка запуску редактора: %d\n", pid);
+        return pid;
+    }
+    printf("Редактор запущено з PID %d\n", pid);
+    return 0;
+}
+```
+
+---
+
+## ⚡ Вызов `int 0x80` з чистого ассемблера NASM
+
+Шаблон для написания легковесных ассемблерных программ без использования стандартной библиотеки:
+
+```asm
+[BITS 32]
+section .entry
+global _start
+
+_start:
+    ; 1. Друк вітального рядка: IPO_SYSCALL_PRINT (0x1001)
+    push msg_hello          ; args[0] = вказівник на рядок
+    mov ecx, esp            ; ECX = адреса масиву аргументів у стеку
+    mov ebx, 1              ; EBX = argc = 1
+    mov eax, 0x1001         ; EAX = номер системного виклику
+    int 0x80                ; Перехід у Ring 0
+    add esp, 4              ; Очищення стека від аргументу
+
+    ; 2. Завершення процесу: IPO_SYSCALL_EXIT (0xFFFF)
+    push dword 0            ; args[0] = код повернення 0
+    mov ecx, esp            ; ECX = адреса масиву аргументів
+    mov ebx, 1              ; EBX = argc = 1
+    mov eax, 0xFFFF         ; EAX = IPO_SYSCALL_EXIT
+    int 0x80                ; Завершення процесу
+
+section .data
+msg_hello: db "Hello, World from NASM via int 0x80 in IPO_OS!", 10, 0
+```
+
+---
+
+## ⚠️ Правила обработки кодов помилок
+
+Все системні виклики ядра IPO_OS возвращают целочисленный статус в регістре `EAX`:
+- `res >= 0` — Вызов завершился успешно. Значення містить количество переданных байт, файлівый дескриптор, PID або вказівник.
+- `res < 0` — Ошибка виконання. Число соответствует отрицательному значению кода помилки з `<ref/error-codes>`:
+  - `-1` (`-EPERM` / `-ENOENT`): Файл не найден або операция запрещена
+  - `-9` (`-EBADF`): Некорректный файлівый дескриптор
+  - `-12` (`-ENOMEM`): Недостаточно свободной оперативної пам'яті
+  - `-28` (`-ENOSPC`): На диску закончились свободные блоки пула экстентов

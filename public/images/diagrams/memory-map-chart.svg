@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 720" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgM" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="880" height="720" fill="url(#bgM)" rx="12"/>
+  <text x="440" y="38" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="#f8fafc" text-anchor="middle">x86 Physical &amp; Virtual Memory Map Specification</text>
+  <text x="440" y="60" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">Complete 4 GB linear address space organization and region reservation</text>
+
+  <!-- Bar container -->
+  <g transform="translate(60, 90)">
+    <!-- 0xFFFFFFFF Reset Vector -->
+    <rect x="0" y="0" width="160" height="36" fill="#dc2626" rx="4"/>
+    <text x="175" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#fca5a5">0xFFFFFFF0 - 0xFFFFFFFF</text>
+    <text x="430" y="22" font-family="system-ui, sans-serif" font-size="12" fill="#f8fafc">Hardware Reset Vector (16B) &amp; SPI Flash Aliased Top</text>
+
+    <!-- 0x00800000 Userspace Apps -->
+    <rect x="0" y="44" width="160" height="110" fill="#d97706" rx="4"/>
+    <text x="175" y="95" font-family="monospace" font-size="12" font-weight="700" fill="#fcd34d">0x00800000 - 0x7FFFFFFF</text>
+    <text x="430" y="85" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="#ffffff">Userspace Process Space (IPO_EXEC / ELF32)</text>
+    <text x="430" y="105" font-family="system-ui, sans-serif" font-size="11.5" fill="#fde68a">Loaded at 8 MB base • Process Heap break (sbrk) • User stack • GUI Window buffers</text>
+
+    <!-- 0x00500000 Kernel Stack -->
+    <rect x="0" y="162" width="160" height="40" fill="#2563eb" rx="4"/>
+    <text x="175" y="186" font-family="monospace" font-size="12" font-weight="700" fill="#93c5fd">0x00500000</text>
+    <text x="430" y="186" font-family="system-ui, sans-serif" font-size="12" fill="#f8fafc">Kernel Stack Top (ESP = 0x500000, 5 MB, grows downward)</text>
+
+    <!-- 0x00100000 - 0x004FFFFF Extended Memory -->
+    <rect x="0" y="210" width="160" height="70" fill="#1d4ed8" rx="4"/>
+    <text x="175" y="245" font-family="monospace" font-size="12" font-weight="700" fill="#93c5fd">0x00100000 - 0x004FFFFF</text>
+    <text x="430" y="240" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#ffffff">Kernel Dynamic Heap (kmalloc / kfree pool)</text>
+    <text x="430" y="258" font-family="system-ui, sans-serif" font-size="11.5" fill="#bfdbfe">Physical page frame allocator • VFS cache • Inode buffers • Network packets</text>
+
+    <!-- 0x000F0000 - 0x000FFFFF Shadow RAM -->
+    <rect x="0" y="288" width="160" height="42" fill="#7c3aed" rx="4"/>
+    <text x="175" y="313" font-family="monospace" font-size="12" font-weight="700" fill="#c4b5fd">0x000F0000 - 0x000FFFFF</text>
+    <text x="430" y="313" font-family="system-ui, sans-serif" font-size="12" fill="#f8fafc">Shadow RAM: IPO_Firmware Runtime &amp; Handover Entry (0xF000:0004)</text>
+
+    <!-- 0x000C0000 - 0x000EFFFF VBIOS & Option ROMs -->
+    <rect x="0" y="338" width="160" height="38" fill="#6d28d9" rx="4"/>
+    <text x="175" y="361" font-family="monospace" font-size="12" font-weight="700" fill="#c4b5fd">0x000C0000 - 0x000EFFFF</text>
+    <text x="430" y="361" font-family="system-ui, sans-serif" font-size="12" fill="#f8fafc">Video BIOS (VBIOS 0xC000:0003) &amp; Expansion Option ROMs</text>
+
+    <!-- 0x000A0000 - 0x000BFFFF VGA VRAM -->
+    <rect x="0" y="384" width="160" height="50" fill="#059669" rx="4"/>
+    <text x="175" y="413" font-family="monospace" font-size="12" font-weight="700" fill="#6ee7b7">0x000A0000 - 0x000BFFFF</text>
+    <text x="430" y="405" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#ffffff">VGA Video Buffers</text>
+    <text x="430" y="423" font-family="system-ui, sans-serif" font-size="11.5" fill="#a7f3d0">0xB8000: 80x25 Color Text Mode (32KB) • 0xA0000: Mode 13h Graphics (64KB)</text>
+
+    <!-- 0x0009FC00 EBDA -->
+    <rect x="0" y="442" width="160" height="32" fill="#475569" rx="4"/>
+    <text x="175" y="462" font-family="monospace" font-size="12" font-weight="700" fill="#cbd5e1">0x0009FC00 - 0x0009FFFF</text>
+    <text x="430" y="462" font-family="system-ui, sans-serif" font-size="12" fill="#f8fafc">EBDA (Extended BIOS Data Area) &amp; ACPI 1.0 Tables (RSDP, MADT)</text>
+
+    <!-- 0x00010000 Kernel Code -->
+    <rect x="0" y="482" width="160" height="52" fill="#1e40af" rx="4"/>
+    <text x="175" y="512" font-family="monospace" font-size="12" font-weight="700" fill="#93c5fd">0x00010000 - 0x0007FFFF</text>
+    <text x="430" y="504" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#ffffff">IPO_OS Kernel Code &amp; Data</text>
+    <text x="430" y="522" font-family="system-ui, sans-serif" font-size="11.5" fill="#bfdbfe">Loaded at 64 KB • entry32.asm • kmain() • IDT Table (256 descriptors)</text>
+
+    <!-- 0x00007C00 MBR Boot Sector -->
+    <rect x="0" y="542" width="160" height="30" fill="#047857" rx="4"/>
+    <text x="175" y="561" font-family="monospace" font-size="12" font-weight="700" fill="#6ee7b7">0x00007C00 - 0x00007DFF</text>
+    <text x="430" y="561" font-family="system-ui, sans-serif" font-size="12" fill="#f8fafc">Stage 1 MBR Bootloader (512 Bytes loaded by firmware)</text>
+
+    <!-- 0x00000500 Scratch RAM -->
+    <rect x="0" y="580" width="160" height="26" fill="#334155" rx="4"/>
+    <text x="175" y="597" font-family="monospace" font-size="12" font-weight="700" fill="#94a3b8">0x00000500 - 0x00007BFF</text>
+    <text x="430" y="597" font-family="system-ui, sans-serif" font-size="11.5" fill="#cbd5e1">Conventional Scratch RAM &amp; Real-Mode Stacks</text>
+
+    <!-- 0x00000400 BDA -->
+    <rect x="0" y="614" width="160" height="20" fill="#475569" rx="4"/>
+    <text x="175" y="628" font-family="monospace" font-size="12" font-weight="700" fill="#94a3b8">0x00000400 - 0x000004FF</text>
+    <text x="430" y="628" font-family="system-ui, sans-serif" font-size="11.5" fill="#cbd5e1">BIOS Data Area (BDA, 256 bytes): cursor pos, tick counter (0x6C)</text>
+
+    <!-- 0x00000000 IVT -->
+    <rect x="0" y="642" width="160" height="26" fill="#64748b" rx="4"/>
+    <text x="175" y="658" font-family="monospace" font-size="12" font-weight="700" fill="#94a3b8">0x00000000 - 0x000003FF</text>
+    <text x="430" y="658" font-family="system-ui, sans-serif" font-size="11.5" fill="#cbd5e1">Interrupt Vector Table (IVT, 1024 bytes, 256 real-mode far pointers)</text>
+  </g>
+</svg>

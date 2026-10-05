@@ -1,0 +1,81 @@
+---
+title: "开发规范与常见陷阱"
+description: "针对 IPO_OS 开发时的最佳实践、内存约束、栈限制以及避免常见的裸机编程陷阱。"
+---
+
+# 开发规范与常见陷阱
+
+Developing software for a freestanding bare-metal operating system requires discipline. Here are the core guidelines and common pitfalls to avoid.
+
+---
+
+## 🚫 The Top Pitfalls in IPO_OS Development
+
+### 1. Stack Allocation Limits
+The kernel dynamically allocates a 256 KB stack buffer for each process via `kmalloc`. Large buffers must be allocated on the heap:
+
+```c
+// ❌ WRONG: Allocating massive buffers on the stack
+void process_image(void) {
+    char image_buffer[2 * 1024 * 1024]; // Overflows user stack into app code!
+}
+
+// ✅ RIGHT: Allocate large buffers on the heap
+void process_image(void) {
+    char *image_buffer = (char *)malloc(2 * 1024 * 1024);
+    if (!image_buffer) return;
+    // ...
+    free(image_buffer);
+}
+```
+
+---
+
+### 2. Checking Syscall Return Codes
+System calls report errors via negative return values. Never assume an operation succeeded:
+
+```c
+// ❌ WRONG
+int fd = ipo_open("/etc/config.cfg");
+ipo_read(fd, buffer, 128, 0);
+
+// ✅ RIGHT
+int fd = ipo_open("/etc/config.cfg");
+if (fd < 0) {
+    printf("Failed to open file: %d\n", fd);
+    return;
+}
+```
+
+---
+
+### 3. CPU-Burning Busy Loops
+In single-core environments, spinning in an empty loop starves background services:
+
+```c
+// ❌ WRONG: Wastes 100% CPU cycles
+while (!ready) {}
+
+// ✅ RIGHT: Yield execution using process yield
+while (!ready) {
+    ipo_syscall(IPO_SYSCALL_PROCESS_YIELD, 0, NULL);
+}
+```
+
+---
+
+### 4. Forgetting `.bss` in Flat Binaries
+Because raw flat binaries do not have ELF segment headers, ensure `.bss` sections are zero-initialized during conversion with `objcopy`:
+```bash
+objcopy -O binary --set-section-flags .bss=alloc,load,contents app.elf app.bin
+```
+
+---
+
+### 5. Accessing Memory Below `0x800000`
+Addresses below `0x00800000` belong to kernel code, data, and I/O buffers. Writing below this threshold will corrupt kernel state.
+
+---
+
+### 6. Closing File Descriptors
+Always ensure every successful `ipo_open()` call has a corresponding `ipo_close()` on all return branches.

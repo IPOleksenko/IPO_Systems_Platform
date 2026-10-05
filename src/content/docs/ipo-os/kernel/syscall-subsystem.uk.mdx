@@ -1,0 +1,52 @@
+---
+title: "Підсистема системних викликів"
+description: "Архітектура диспетчеризації системних викликів ядра, конвенції виклику регістрів та виконання шлюзу пастки."
+---
+
+import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
+import SharedCode from '../../../../components/SharedCode.astro';
+
+# Підсистема системних викликів
+
+System calls provide the protected gateway through which applications request operating system services without directly touching hardware or corrupted memory structures.
+
+---
+
+## 🚪 Dispatch Pipeline Architecture
+
+<LocalizedDiagram id="syscall_pipeline" lang="en" figureNum={6} />
+
+---
+
+## 📑 Register Calling Convention
+
+IPO_OS implements an efficient 3-register calling convention через програмний шлюз переривань `int 0x80`:
+
+| Register | Role | Description |
+| :--- | :--- | :--- |
+| **`EAX` (In)** | System Call Number | 32-bit identifier (e.g., `0x1001` for print, `0x1012` for read) |
+| **`EBX` (In)** | Argument Count (`argc`) | Number of 32-bit parameters passed in the argument array |
+| **`ECX` (In)** | Arguments Array (`argv`) | Pointer to an array of `uint32_t` arguments on the stack |
+| **`EAX` (Out)** | Return Status Code | `0` or positive on success, or a negative error code (e.g., `-1`) |
+
+---
+
+## ⚙️ Kernel Dispatch Implementation
+
+In `src/kernel/syscall/syscall.c`, the kernel initializes the dispatch table:
+
+```c
+typedef uint32_t (*ipo_syscall_handler_t)(uint32_t num, uint32_t argc, uint32_t *argv);
+
+void ipo_register_syscall(uint32_t num, ipo_syscall_handler_t handler);
+```
+
+### Safety and Parameter Validation:
+1. **Range Checking:** The dispatcher verifies that `EAX` is within valid registered table bounds. If unregistered, it returns `IPO_SYSCALL_ENOSYS` (`0xFFFFFFFF`).
+2. **Buffer Pointer Validation:** Userland buffer pointers passed in `argv` are validated against memory boundaries to ensure an unprivileged program cannot overwrite kernel memory via a malicious `read()` or `write()`.
+3. **Захист шлюзу переривань:** Шлюз переривань `int 0x80` (прапорці `0xEE`, селектор `0x08`) автоматично скидає `IF = 0` при вході, гарантуючи атомарний перехід у диспетчер ядра без реентрантності та відновлюючи вихідний EFLAGS при `iretd`.
+
+### Userspace Assembly Wrapper:
+The universal assembly wrapper used across C library calls:
+
+<SharedCode id="syscall-c-wrapper" lang="en" />

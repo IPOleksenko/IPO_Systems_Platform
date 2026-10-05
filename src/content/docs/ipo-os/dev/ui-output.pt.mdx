@@ -1,0 +1,107 @@
+---
+title: "User Interface, Shell, GUI and Multimedia"
+description: "Complete guide to the console Shell, Gerenciador de janelas (WM), TinyGL 3D graphics (OpenGL 1.1), and Sound Blaster 16 audio subsystem in IPO_OS."
+---
+
+import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
+import Callout from '../../../../components/Callout.astro';
+
+# User Interface, Shell, GUI and Multimedia
+
+**IPO_OS** provides a comprehensive user experience:
+1. **Interactive Console Shell:** 27+ builtin commands, multitasking virtual workspaces (`run &`), pipes (`|`), scrollback history, and ANSI colors.
+2. **Gerenciador de janelas (WM):** 2D graphical desktop running in VGA Mode 13h (320x200x256), 60 FPS compositor async task, PS/2 software mouse pointer, and event-driven windows.
+3. **TinyGL 3D Engine (OpenGL 1.1):** Software 3D rasterizer inside kernel space, featuring Z-buffering, dynamic lighting, texture mapping, and flat/smooth shading.
+4. **Audio Arquitetura:** Sound Blaster 16 DSP hardware driver (16-bit DMA Ch 5, 22050 Hz stereo mixer) and fallback PC Speaker PWM.
+
+<LocalizedDiagram id="window_manager" />
+
+---
+
+## 💻 1. Shell Console and Builtin Commands
+
+The kernel command line interpreter (`terminal.c`) provides interactive text navigation and multitasking execution operators:
+
+### 📋 Complete Builtin Command Referência
+
+| Command | Aliases | Description & Syntax |
+| :--- | :--- | :--- |
+| `help` | `?` | Displays full system help and syntax reference. |
+| `clear` | `cls` | Clears terminal screen and resets cursor position. |
+| `pwd` | — | Prints canonical absolute path of current working directory. |
+| `cd` | — | Changes directory: `cd <path>`, `cd ..`, `cd ~` (root). |
+| `ls` | `dir` | Lists directory contents showing file type and exact byte size. |
+| `cat` | `type` | Displays contents of text files: `cat file.txt`. |
+| `touch` | — | Creates new empty file: `touch filename.txt`. |
+| `mkdir` | — | Creates new directory: `mkdir /mydir`. |
+| `rm` | `del`, `rmdir` | Deletes files or empty directories: `rm target`. |
+| `cp` | `copy` | Copies files from source to destination: `cp a.txt b.txt`. |
+| `mv` | `move`, `rename`| Moves or renames files and directories. |
+| `stat` | — | Displays inode metadata: exact 64-bit size, flags, extents. |
+| `echo` | — | Prints text to stdout or redirects to file (`>` or `>>`). |
+| `ps` | `tasks`, `procs`| Lists active processes with PID, state, and memory metrics. |
+| `kill` | — | Terminates process by PID: `kill <pid>`. |
+| `killall`| — | Terminates all active background processes. |
+| `run` | — | Launches executables with batch operators (`&`, `&&`, `|`, `;`). |
+| `startx` | — | Launches graphical Gerenciador de janelas desktop session. |
+| `stopx` | — | Terminates graphical WM session and restores text mode. |
+| `ifconfig`| `ip`, `ipconfig` | Displays or configures IP, subnet mask, gateway, and MAC. |
+| `df` | `diskinfo` | Reports IPO_FS storage capacity, used/free blocks, and inodes. |
+| `meminfo`| `free` | Reports kernel heap memory statistics. |
+| `driver` | `drivers`, `lsmod` | Lists registered dynamic driver de dispositivos. |
+| `keymap` | `layout`, `keymaps` | Manages keyboard layouts: `keymap list`, `keymap on <name>`, `keymap off`. |
+| `return` | `ret`, `retval` | Toggles display of process exit status codes. |
+| `reboot` | `restart` | Reboots machine via 8042 controller, port 0x92, or triple fault. |
+| `shutdown`| `poweroff`, `halt` | Shuts down machine safely via ACPI/APM. |
+
+---
+
+### ⚡ Multitasking Pipeline Operators in `run`
+
+```bash
+# 1. '&' operator — separate virtual workspaces (Ctrl+PgUp / Ctrl+PgDn to switch):
+run edit & player & hosting_server
+
+# 2. '&&' operator — asynchronous shared workspace (run multiple GUI apps on same desktop):
+run wm_demo && wm_demo2 && wm_fullscreen
+
+# 3. '|' operator — return-code pipelined execution:
+run test_sb16 | player sound.raw
+
+# 4. ';' operator — sequential execution:
+run setfont /fonts/terminus.fnt ; startx
+```
+
+### ⌨️ Terminal Navigation Shortcuts
+- **`Ctrl + Page Up` / `Ctrl + Page Down`:** Cycle between multitasking workspaces.
+- **`Ctrl + Left Shift` / `Ctrl + Right Shift`:** Cycle active keyboard layout.
+- **`Ctrl + C`:** Interrupt active task or close current workspace.
+- **`Page Up` / `Page Down`:** Scroll terminal output buffer (128 lines scrollback).
+- **`Up / Down Arrows`:** Command history recall.
+
+---
+
+## 🪟 2. Gerenciador de janelas (WM)
+
+The graphical desktop operates as a persistent 60 FPS kernel async task in VGA Mode 13h (320x200x256):
+- Window decoration styles: `WM_DECOR_DEFAULT`, `WM_DECOR_THIN`, `WM_DECOR_NONE`.
+- Event model: `WM_EVENT_CLICK`, `WM_EVENT_KEY_DOWN`, `WM_EVENT_MOVE`, `WM_EVENT_RESIZE`, `WM_EVENT_CLOSE`.
+- Persistent exit button `[✕]` in bottom-left corner ensures safe return to text mode.
+
+---
+
+## 🧊 3. TinyGL 3D Graphics (OpenGL 1.1)
+
+Integrated bare-metal software 3D rasterizer:
+- **Primitives:** Points, lines, triangles, quads, polygons.
+- **Lighting:** Up to 8 light sources, diffuse/specular/ambient illumination, normal vectors.
+- **Z-Buffer:** 16-bit depth buffer for hidden surface removal.
+- **Applications:** `gl_gears`, `gl_teapot`, `gl_cube`, `gl_fog`, `gl_blend`, `gl_stencil`.
+
+---
+
+## 🔊 4. Sound Blaster 16 & PC Speaker Audio
+
+- **Sound Blaster 16:** Base port `0x220`, 16-bit DMA Channel 5, double buffering at `0x600000`, 22050 Hz stereo mixer.
+- **PC Speaker:** Dynamic PWM frequency tracking using Zero-Crossing rate analysis.
+- **Audio utilities:** `player`, `test_sb16`, `sound_test`, `audio_test`.

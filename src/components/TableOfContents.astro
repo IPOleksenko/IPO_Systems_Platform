@@ -1,0 +1,93 @@
+---
+import { getTranslation } from '../utils/i18n';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+  lang: string;
+}
+
+const { headings = [], lang } = Astro.props;
+const tocTitle = getTranslation(lang, 'nav.toc_title');
+const filteredHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+{filteredHeadings.length > 0 && (
+  <nav class="toc" aria-label="Table of contents">
+    <div class="toc-title">{tocTitle}</div>
+    <ul class="toc-list">
+      {filteredHeadings.map((h) => (
+        <li class={`toc-item depth-${h.depth}`}>
+          <a href={`#${h.slug}`} class="toc-link">
+            {h.text}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}
+
+<style>
+  .toc {
+    width: var(--toc-width);
+    flex-shrink: 0;
+    position: sticky;
+    top: calc(var(--header-height) + 1.5rem);
+    height: fit-content;
+    max-height: calc(100vh - var(--header-height) - 3rem);
+    overflow-y: auto;
+    padding-left: 1rem;
+    font-size: 0.82rem;
+  }
+
+  @media (max-width: 1280px) {
+    .toc {
+      display: none;
+    }
+  }
+
+  .toc-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-left: 1px solid var(--border-color);
+  }
+
+  .toc-item {
+    margin-bottom: 0.35rem;
+  }
+
+  .toc-item.depth-3 {
+    padding-left: 0.75rem;
+  }
+
+  .toc-link {
+    display: block;
+    padding-left: 0.75rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    margin-left: -1px;
+    transition: all 0.15s ease;
+  }
+
+  .toc-link:hover {
+    color: var(--accent-primary);
+    border-left-color: var(--accent-primary);
+    text-decoration: none;
+  }
+</style>

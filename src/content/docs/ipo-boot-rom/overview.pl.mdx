@@ -1,0 +1,50 @@
+---
+title: "Przegląd ogólny & Wektor resetu"
+description: "Core architecture of IPO_Boot_ROM, the x86 hardware wektor resetu at 0xFFFFFFF0, and silicon initialization responsibilities."
+---
+
+import LocalizedDiagram from '../../../components/LocalizedDiagram.astro';
+import Callout from '../../../components/Callout.astro';
+
+# Przegląd ogólny & Wektor resetu
+
+**IPO_Boot_ROM** is the very first piece of software executed by the central processing unit upon power-on or hardware reset. Residing physically on a SPI NOR Flash ROM chip, it brings bare-metal silicon from cold uninitialized transistors to operational system RAM.
+
+---
+
+## 🏛️ Position in the Vertical Platform Stack
+
+<LocalizedDiagram id="vertical_platform_stack" />
+
+---
+
+## ⚡ The Hardware Wektor resetu (`0xFFFFFFF0`)
+
+When an x86 processor comes out of reset (RESET# pin de-asserted):
+- The CPU starts in **16-bit Tryb rzeczywisty**, but with hidden descriptor cache base address set to `0xFFFF0000`.
+- The Instruction Pointer (`%eip`) is initialized to `0x0000FFF0`.
+- Therefore, the very first instruction fetch occurs at physical address:
+**Wektor resetu** = `0xFFFF0000` + `0x0000FFF0` = `0xFFFFFFF0`
+(16 bytes below the top of 32-bit physical address space).
+
+```
+Top of 4 GB Memory Space
+0xFFFFFFFF +------------------------------------------+
+           | 16-byte Reset Vector Area                |
+0xFFFFFFF0 |  -> jmp bootrom_cold_entry (0xFFFF8000)  |  <- CPU starts here
+           +------------------------------------------+
+           | Physical SPI Flash ROM Contents          |
+           | (IPO_Boot_ROM binary payload)            |
+0xFFF00000 +------------------------------------------+
+```
+
+---
+
+## 🎯 Primary Responsibilities
+
+1. **CPU Early Self-Test:** Read CPUID, verify architecture compatibility, clear flags.
+2. **Cache-as-RAM (CAR):** Configure CPU MTRRs to establish an execution stack in L1/L2 cache without requiring DRAM.
+3. **Chipset Identification:** Probe Host-to-PCI Bridge (`0xCF8`/`0xCFC`) to identify chipset (e.g. Intel i440FX `0x8086:0x1237` or Q35 `0x8086:0x29C0`).
+4. **Memory Dokumentacja referencyjna Code (MRC):** Initialize DRAM controller registers and perform read/write bit-pattern training.
+5. **Pamięć cieniowa Configuration:** Unlock Programmable Attribute Map (PAM) registers, copy firmware payload to `0xF0000`..`0xFFFFF`, lock as read-only.
+6. **Contract 2 Handover:** Verify firmware magic signature `'IPOF'` (`0x464F5049`) and jump to `0xF000:0004`.

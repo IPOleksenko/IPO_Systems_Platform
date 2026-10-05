@@ -1,0 +1,100 @@
+---
+title: "Збирання та цепочечная загрузка"
+description: "Компиляция IPO_Firmware, налаштування параметрів эмуляции контролеров хранения та загрузка образов ОС в QEMU."
+---
+
+import Callout from '../../../components/Callout.astro';
+
+# Збирання та цепочечная загрузка
+
+В этом керівництві описывается процесс компиляции бинарного образа **IPO_Firmware** та его тестування в эмуляторе QEMU с различными топологиями накопителей.
+
+---
+
+## 🛠️ Необходимые утилиты
+
+Для збирання IPO_Firmware требуются:
+- **GCC** (с поддержкой генерации 16-битного кода `-m16`)
+- **NASM 2.14+**
+- **GNU Make 4.0+**
+- **QEMU** (`qemu-system-i386`)
+
+```bash
+# Ubuntu / Debian
+sudo apt update && sudo apt install -y build-essential nasm make qemu-system-x86
+```
+
+---
+
+## 🔨 Компиляция IPO_Firmware
+
+В каталоге репозитория `IPO_Firmware`:
+
+```bash
+# Збирання образу прошивки
+make all
+```
+
+Компилируются следующие модули:
+- `src/entry.asm` (точка входу за Контракту 2 за адресиу `0xF000:0004`)
+- `src/ivt.asm (Real-mode interrupt vector table handlers)
+- `src/pci_scan.asm, src/ahci.asm, src/nvme.asm (Multi-bus storage discovery)
+- `src/chainload.asm (Sector 0 reading and Contract 3 handover)
+
+Результат: бинарный файл `build/firmware.bin` (ровно 128 КБ або 64 КБ).
+
+---
+
+## 🖥️ Запуск IPO_Firmware в QEMU
+
+Для запуску IPO_Firmware автономно або з образом операційної системи передайте завантажувальний образ `build/firmware_rom.bin` у параметр `-bios` (або використовуйте `make run`):
+
+### 1. Завантаження з класичним накопичувачем ATA IDE
+```bash
+qemu-system-i386 \
+    -bios build/firmware_rom.bin \
+    -drive file=path/to/IPO_OS.img,format=raw,if=ide,index=0 \
+    -serial stdio
+```
+Або безпосередньо через Makefile проєкту:
+```bash
+make run OS=path/to/IPO_OS.img
+```
+
+### 2. Завантаження через контролер AHCI SATA
+```bash
+qemu-system-i386 \
+    -bios build/firmware_rom.bin \
+    -device ahci,id=ahci0 \
+    -drive file=path/to/IPO_OS.img,format=raw,if=none,id=disk0 \
+    -device ide-hd,bus=ahci0.0,drive=disk0 \
+    -serial stdio
+```
+
+### 3. Завантаження з сучасного накопичувача NVMe
+```bash
+qemu-system-i386 \
+    -bios build/firmware_rom.bin \
+    -drive file=path/to/IPO_OS.img,format=raw,if=none,id=nvm0 \
+    -device nvme,serial=IPO_NVME0,drive=nvm0 \
+    -serial stdio
+```
+
+---
+
+## 🔍 Діагностичний вивід у консоль
+
+При старті QEMU прошивка виводить докладний протокол у послідовний порт COM1:
+
+```
+[IPO_Firmware] BIOS-compatible Firmware initialized (Shadow RAM mode)
+[IPO_Firmware] IVT installed (INT 10h, 13h, 15h, 16h registered)
+[IPO_Firmware] ACPI 1.0 tables installed (RSDP in EBDA, RSDT, MADT)
+[IPO_Firmware] Video Mode 03h (80x25 text) configured
+[IPO_Firmware] Fast A20 Gate activated and verified
+[IPO_Firmware] Memory map prepared (E820/E801 ready)
+[IPO_Firmware] PS/2 keyboard controller configured (Set 2 -> Set 1 translation)
+[IPO_Firmware] PCI bus enumeration completed
+[IPO_Firmware] Probing drive 0x80
+[IPO_Firmware] Bootable storage found on drive 0x80... Handing over to OS!
+```

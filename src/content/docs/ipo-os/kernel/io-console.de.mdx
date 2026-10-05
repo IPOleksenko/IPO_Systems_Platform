@@ -1,0 +1,50 @@
+---
+title: "I/O, Video & Console Subsystem"
+description: "VGA Mode 03h text console, font loading, Bochs VBE graphics, and Fenstermanager (WM)."
+---
+
+# I/O, Video & Console Subsystem
+
+IPO_OS provides a dual-mode video architecture: a hardware VGA 80x25 text console with custom glyph rendering, and a managed graphical Fenstermanager (WM) with hardware acceleration under Bochs VBE/BGA.
+
+---
+
+## 📺 VGA Text Mode Console (`0xB8000`)
+
+The primary teletype console operates in standard IBM VGA Mode 03h:
+- **Base Memory:** Physical linear address `0x000B8000` (reserves 32 KB, active window 4000 bytes).
+- **Character Grid:** 80 columns by 25 rows = 2,000 character cells.
+- **Cell Structure:** Each screen position consists of two bytes:
+  - Byte 0: ASCII / Unicode font glyph index.
+  - Byte 1: Attribute byte (Bits 0–3: Foreground color 0–15; Bits 4–6: Background color 0–7; Bit 7: Blink/Bright).
+
+### Hardware Cursor Positioning:
+The blinking hardware cursor is programmed via VGA CRTC registers:
+```c
+void vga_set_cursor(uint16_t x, uint16_t y) {
+    uint16_t pos = y * 80 + x;
+    outb(0x3D4, 0x0E);          /* CRTC Register 0x0E: Cursor Location High */
+    outb(0x3D5, (pos >> 8) & 0xFF);
+    outb(0x3D4, 0x0F);          /* CRTC Register 0x0F: Cursor Location Low */
+    outb(0x3D5, pos & 0xFF);
+}
+```
+
+### Font Loading & Cyrillic Support:
+The Systemaufruf `IPO_SYSCALL_FONT_LOAD` (`0x1052`) allows loading custom 8x16 bitmap fonts into VGA character generator memory (Plane 2), enabling full native rendering of Latin and Cyrillic character sets without leaving text mode.
+
+---
+
+## 🖼️ Graphical Fenstermanager (WM)
+
+When switched to graphical mode, the kernel interfaces with the **Bochs VBE / BGA (Bochs Graphic Adapter)** registers:
+- **I/O Ports:** Index Register `0x01CE`, Data Register `0x01CF`.
+- **Supported Modes:** 1024x768 (32 bpp), 800x600 (32 bpp).
+- **Framebuffer Base:** Memory-mapped linear frame buffer assigned via PCI BAR 0.
+
+### Window Management Syscalls:
+Applications create and manage graphical windows using the WM API:
+- `IPO_SYSCALL_WM_CREATE_WINDOW` (`0x1070`): Allocates a window buffer with specified coordinates, width, height, and title.
+- `IPO_SYSCALL_WM_DESTROY_WINDOW` (`0x1071`): Closes window and invalidates its screen region.
+- `IPO_SYSCALL_WM_SET_FOCUS` (`0x1077`): Brings window to top of z-order and sets input focus.
+- `IPO_SYSCALL_WM_INVALIDATE` (`0x107A`): Marks window contents as dirty for the compositor to redraw.

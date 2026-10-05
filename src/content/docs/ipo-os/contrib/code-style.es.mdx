@@ -1,0 +1,72 @@
+---
+title: "Guía de Estilo de Código del Núcleo"
+description: "Estándares de codificación, convenciones de nomenclatura, reglas de sangría y formato de ensamblador para IPO_OS."
+---
+
+# Guía de Estilo de Código del Núcleo
+
+To maintain readability and architectural consistency across all kernel modules and drivers, contributors must follow the conventions outlined below.
+
+---
+
+## 🖋️ C Language Standards
+
+IPO_OS source code adheres to classic **Linux Kernel C style** with 4-space indentation:
+- Use **4 spaces** for indentation (no tabs in C source files; Makefiles retain standard tabs).
+- For functions, place opening and closing braces on separate lines:
+```c
+int ipo_fs_mount(uint64_t disk_start_lba)
+{
+    if (disk_start_lba == 0) {
+        return 0;
+    }
+    return do_mount(disk_start_lba);
+}
+```
+- For control structures (`if`, `for`, `while`, `switch`), place the opening brace on the same line.
+
+---
+
+## 🏷️ Naming Conventions
+
+### Subsystem Prefixes
+Public kernel symbols must begin with their respective subsystem prefix:
+- `process_*` — Process management & scheduler (`process_create`, `process_yield_kernel`, `process_switch_context`)
+- `kmalloc` / `kfree` — Kernel dynamic heap allocator
+- `ipo_fs_*` — IPO_FS storage engine (`ipo_fs_mount`, `ipo_fs_format`, `ipo_fs_read`)
+- `driver_*` — Device driver subsystem (`driver_register`, `driver_unregister`)
+- `vga_*` — VGA text and graphical routines
+- `ipo_*` — Global operating system APIs and user syscall wrappers
+
+### Types & Macros
+- Use fixed-width types from `<stdint.h>` (`uint8_t`, `uint16_t`, `uint32_t`, `uint64_t`).
+- Structure typedefs should end with `_t` (e.g. `process_t`, `driver_t`, `ipo_inode_t`).
+- Constants and macros must be in `ALL_CAPS` (e.g. `IPO_SYSCALL_PRINT`).
+
+---
+
+## ⚡ Assembly Formatting (NASM & AT&T)
+
+- Standalone `.asm` files use **NASM Intel syntax** with lowercase register names:
+```asm
+bits 32
+section .text
+global syscall_isr_entry
+
+syscall_isr_entry:
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    call syscall_dispatch
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    iretd
+```
+- Inline assembly in C files uses standard **GNU AT&T syntax** with explicit operand constraints and clobber lists.

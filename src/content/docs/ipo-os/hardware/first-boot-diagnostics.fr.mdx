@@ -1,0 +1,48 @@
+---
+title: "First Boot & POST Diagnostics"
+description: "Initial boot symptoms, speaker beep codes, hardware POST port 0x80 diagnostic codes, and troubleshooting."
+---
+
+# First Boot & POST Diagnostics
+
+Upon switching on power to your assembled system, hardware diagnostics provide immediate feedback regarding system health and software execution checkpoints.
+
+---
+
+## 🖥️ Normal Boot Symptoms
+
+Lorsque le matériel fonctionne correctement, la séquence de démarrage présente les indicateurs suivants :
+1. **Alimentation et ventilateurs :** Les ventilateurs du bloc d'alimentation et du processeur se mettent immédiatement en marche dès l'appui sur le bouton d'alimentation.
+2. **Haut-parleur de la carte mère (Speaker) :** Un bip court retentit au bout de 1 à 3 secondes lors du POST matériel, suivi d'une mélodie de 4 notes (C6-E6-G6-C7) émise par le haut-parleur du PC à la fin de l'initialisation des pilotes du noyau.
+3. **Affichage à l'écran :** Le moniteur sort du mode veille et bascule en mode texte VGA 80x25 (Mode 03h).
+4. **Sortie série :** Sur le port COM1 (`0x3F8`), les journaux de diagnostic du noyau sont transmis à **115200 bauds, 8N1** (`[mount] success at lba 2048...`, `[driver] registered...`, `[system_state] transition...`).
+5. **En-tête de l'écran et invite de commande :** La ligne d'état supérieure (ligne 0) affiche `IPO_OS` à gauche et `Created by IPOleksenko` à droite en vert clair, ainsi que l'indicateur de langue active. En dessous apparaissent le message de bienvenue et l'invite interactive :
+   ```text
+   Type "help" or "?" on the keyboard to view commands, shortcuts, and OS features.
+
+   > 
+   ```
+
+---
+
+## 🔊 Speaker Beep Codes Référence
+
+| Audio Signal | Problem Description | Recommended Remedy |
+| :--- | :--- | :--- |
+| **1 Short Beep** | POST successfully passed | Normal operation; control handed to firmware. |
+| **Continuous Rapid Beeps** | Power Delivery Failure | Check PSU rails (+12V, +5V) with a multimeter. |
+| **Repeating Long Beeps** | Memory (RAM) Not Detected | Re-seat RAM sticks; test one module in Slot 0. |
+| **1 Long, 2 Short Beeps** | Video Adapter Error | Re-seat PCI/AGP VGA card; inspect monitor cable. |
+| **No Beep, Blank Screen** | Dead CPU, Cleared CMOS, or Short | Check 12V 4-pin CPU cable; verify chassis standoffs. |
+
+---
+
+## 🚦 Hardware Port 0x80 Diagnostic Codes
+
+If using an external 2-digit PCI/LPC diagnostic POST card, monitor port `0x80` hex codes to pinpoint low-level hang states:
+
+### Boot ROM Checkpoints:
+<SharedStruct id="bootrom_post_codes" lang="en" />
+
+### Firmware Runtime Checkpoints:
+<SharedStruct id="firmware_post_codes" lang="en" />

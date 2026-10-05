@@ -1,0 +1,42 @@
+---
+title: "硬件配置要求 Matrix"
+description: "Minimum, recommended, and tested hardware configurations for running IPO_OS."
+---
+
+# 硬件配置要求 Matrix
+
+IPO_OS runs both on bare-metal physical hardware and in virtualization environments. The system requires standard PC-AT compatible components adhering to late-1990s through late-2000s architectural conventions.
+
+---
+
+## 📊 Requirements Specifications
+
+| Subsystem | Minimum Specification | Recommended Specification | Virtual Machine Emulation |
+| :--- | :--- | :--- | :--- |
+| **Processor (CPU)** | Intel Pentium II / III or AMD K6-2 (300 MHz) | Intel Core 2 Duo / Quad (LGA 775) or Pentium 4 (1.8+ GHz) | QEMU `-cpu pentium3` or `-cpu qemu32` |
+| **System Memory (RAM)** | 32 MB Conventional SDRAM | 128 MB — 512 MB DDR / DDR2 / DDR3 | QEMU `-m 2048` (2 GB tested baseline) |
+| **Chipset / Host Bridge** | Intel i440FX + PIIX3/PIIX4 | Intel Q35 + ICH9 | QEMU `-machine pc` (i440FX default) or `-machine q35` |
+| **Storage Controller** | Legacy IDE / PATA Controller (Ports `0x1F0`–`0x1F7`) | Primary Master IDE or SATA running in IDE/Legacy Compatibility Mode | QEMU `-drive format=raw,if=ide,index=0` |
+| **Video Subsystem** | Standard VGA Adapter (Mode 03h, 80x25 16-color text) | VBE 2.0 / 3.0 / Bochs VBE Display Adapter (BGA) | QEMU `-vga std` |
+| **Network Interface** | None (Networking disabled) | Realtek RTL8139 PCI Fast Ethernet (10/100 Mbps) | QEMU `-device rtl8139,netdev=net0` |
+| **Audio Subsystem** | Standard PC Speaker | Creative Sound Blaster 16 (ISA/PCI emulation) | QEMU `-device sb16` |
+| **Input Devices** | Standard PS/2 Keyboard (8042 controller) | PS/2 Keyboard + 3-Button PS/2 Mouse | QEMU standard PS/2 controllers |
+
+---
+
+## ⚡ Verified Hardware Platforms
+
+### Physical Systems Tested:
+1. **Intel Core 2 Duo E8400 (LGA 775) / Intel Q35 Motherboard:**
+   - 2 GB DDR2 RAM
+   - SATA HDD configured in BIOS IDE Legacy mode
+   - Onboard Realtek RTL8139 PCI card
+2. **Intel Pentium III Katmai (Slot 1) / i440BX Motherboard:**
+   - 256 MB PC100 SDRAM
+   - Primary 40-pin IDE ribbon cable with 4 GB Seagate HDD
+   - Sound Blaster 16 ISA audio card
+
+### Virtual Machine Environments Tested:
+- **QEMU:** `qemu-system-i386` (Primary development and automated testing platform).
+- **Bochs:** Highly accurate x86 CPU emulator with port logging.
+- **VirtualBox:** Standard PC configuration with IDE storage controller and Intel/Realtek NIC.

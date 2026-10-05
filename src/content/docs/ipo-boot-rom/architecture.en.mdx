@@ -1,0 +1,70 @@
+---
+title: "CAR Setup, MRC & PAM Shadow"
+description: "In-depth technical breakdown of Cache-as-RAM, MTRR programming, DRAM memory training, and PAM shadow RAM configuration."
+---
+
+import LocalizedDiagram from '../../../components/LocalizedDiagram.astro';
+import Callout from '../../../components/Callout.astro';
+
+# CAR Setup, MRC & PAM Shadow
+
+Before DRAM can store a single byte, modern x86 processors must execute thousands of instructions. **IPO_Boot_ROM** coordinates this complex sequence.
+
+---
+
+## 🔄 Boot ROM Initialization Flow
+
+<LocalizedDiagram id="boot_rom_flow" />
+
+---
+
+## ⚡ Phase 1: Cache-as-RAM (CAR) Mechanics
+
+On modern processors, external physical DRAM requires extensive initialization through Memory Reference Code (MRC). To execute C routines and maintain a call stack before DRAM is online, we configure the CPU's internal L1/L2 caches as temporary memory.
+
+### MTRR Configuration Sequence:
+1. **Disable Caches:** Clear `CD` (Cache Disable) and `NW` (Not Write-through) in register `%cr0`.
+2. **Configure MSR MTRRdefType (`0x2FF`):**
+   - Clear MTRR Enable bit (Bit 11) to disable active caching temporarily.
+   - Set Default Type to Uncacheable (`UC`, type `0x00`).
+3. **Configure Variable MTRR 0 (`MTRRphysBase0` `0x200`, `MTRRphysMask0` `0x201`):**
+   - Base = `0x70000` (Write-Back mode `0x06`).
+   - Mask = `0xFFFF8800` (Valid bit 11 set; creates 32 KB window) (Valid bit 11 set; creates a 32 KB cacheable window (0x70000..0x77FFF, SS:SP = 0x7000:0x8000)).
+4. **Enable MTRRs:** Set bit 11 in `MTRRdefType`.
+5. **Zero-Initialize CAR Region:** Execute `rep stosd` across `0x70000`..`0x77FFF`. Because Write-Back is active, this allocates cache lines in L1/L2 without hitting external pins!
+6. **Set Stack Pointer:**
+```asm
+mov esp, 0x8000   ; Operational C stack within CPU cache!
+```
+
+---
+
+## 🧠 Phase 2: Memory Reference Code (MRC) & DRAM Training
+
+With an operational stack in CAR, IPO_Boot_ROM detects the chipset and trains the memory controller:
+
+1. **Host-to-PCI Bridge Identification:**
+   - Reads Vendor/Device ID from Bus 0, Device 0, Function 0 (`0x0CF8` / `0x0CFC`).
+   - `0x8086:0x1237` $\to$ Intel i440FX (PCI/IDE chipset).
+   - `0x8086:0x29C0` $\to$ Intel Q35 (PCI Express chipset).
+2. **DRAM Register Configuration:** Sets row/column addresses, CAS latencies, and refresh counters.
+3. **Pattern Verification:**
+   - Writes alternating bit-patterns (`0x55AA55AA` and `0xAA55AA55`) across DRAM boundaries.
+   - Reads back and verifies zero bit-flip errors.
+
+---
+
+## 🛡️ Phase 3: PAM Shadowing & Contract 2 Handover
+
+Once physical DRAM is verified:
+
+1. **Unlock PAM Registers:** Programmable Attribute Map registers (e.g. PAM0 on i440FX register `0x59`) control the BIOS segment `0xF0000`..`0xFFFFF`:
+   - Set `WE = 1` (Write Enable) and `RE = 1` (Read Enable).
+2. **Payload Relocation:** Copy the decompressed `IPO_Firmware` payload from the SPI ROM memory window (`0xFFFE0000`) into physical RAM at `0x000F0000`.
+3. **Migrate Stack:** Repoint `%esp` from Cache-as-RAM into physical conventional DRAM (e.g. `0x00007C00`).
+4. **Teardown CAR:** Disable variable MTRR 0 and execute `wbinvd` (Write-Back and Invalidate Cache).
+5. **Lock PAM to Read-Only:** Configure PAM0 with `WE = 0` (Write Protect) and `RE = 1` (Read from Shadow RAM).
+6. **Handover Jump:** Validate header magic `'IPOF'` (`0x464F5049`) at `0xF000:0000` and execute far jump to entry point:
+```asm
+jmp 0xF000:0004       ; Enter IPO_Firmware (Contract 2)
+```

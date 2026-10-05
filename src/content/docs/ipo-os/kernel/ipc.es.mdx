@@ -1,0 +1,62 @@
+---
+title: "Comunicación Interprocesos (IPC)"
+description: "Registro de variables del sistema del núcleo, tareas asíncronas cooperativas y sockets loopback TCP/IP."
+---
+
+import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
+import Callout from '../../../../components/Callout.astro';
+
+# Comunicación Interprocesos (IPC)
+
+To facilitate data sharing and background coordination between processes and drivers, IPO_OS provides three primary Inter-Process Communication (IPC) mechanisms.
+
+---
+
+## 🔑 Kernel System Variables Registry
+
+The System Variables subsystem (`IPO_SYSCALL_VAR_SET` `0x1042`, `IPO_SYSCALL_VAR_GET` `0x1043`, `IPO_SYSCALL_VAR_DELETE` `0x1044`) acts as an in-memory key-value data bus:
+
+```c
+// Setting typed variables
+ipo_var_set_int("net.active_connections", 4);
+ipo_var_set_str("system.hostname", "ipo-node-01");
+
+// Reading typed variables
+int conns;
+ipo_var_get_int("net.active_connections", &conns);
+
+char hostname[32];
+ipo_var_get_str("system.hostname", hostname, sizeof(hostname));
+```
+
+### Characteristics:
+- **Kernel-Managed Heap Storage:** Backed by dynamically allocated `ipo_shared_vars` table in kernel heap memory (`kmalloc`), duplicating name and payload data.
+- **Type Flexibility:** Supports arbitrary binary buffers, zero-terminated strings, 32-bit integers, floats, and booleans.
+- **Cross-Process Persistence:** Variables set by a parent process or script remain accessible to subsequent programs until deleted or system reboot.
+
+---
+
+## 🔄 Asynchronous Task Management
+
+Processes can register background periodic callbacks using the kernel asynchronous scheduler:
+- `IPO_SYSCALL_ASYNC_START` (`0x1030`): Registers a function callback (`async_task_fn_t`) with a specified execution interval in milliseconds.
+- `IPO_SYSCALL_ASYNC_STOP` (`0x1031`): Unregisters and cancels the active task.
+
+```c
+typedef void (*async_task_fn_t)(void);
+
+int async_start_task(const char *name, uint32_t interval_ms, async_task_fn_t fn);
+```
+
+### Cooperative Execution:
+- Asynchronous tasks run in the kernel main loop via `async_scheduler_tick()`.
+- When an async task fires, the scheduler temporarily maps the owner process's memory (`process_map_app(owner)`), runs the callback, and restores the previous context.
+
+---
+
+## 🌐 Local Loopback Sockets (`127.0.0.1`)
+
+For full-duplex stream or datagram message passing, processes establish local connections through the native TCP/IP stack:
+- Communicates across the internal loopback pseudo-interface (`src/net/loopback.c`).
+- Utilizes standard POSIX-like socket calls (`socket()`, `bind()`, `connect()`, `send()`, `recv()`).
+- Bypasses physical NIC hardware with zero packet loss and microsecond latency.

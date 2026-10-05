@@ -1,0 +1,160 @@
+---
+title: "Using Wywołanie systemowes"
+description: "Complete developer guide for wywołanie systemowes in IPO_OS: int 0x80 register marshaling, C wrappers from syscall.h, pure assembly templates, and error handling."
+---
+
+import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
+import Callout from '../../../../components/Callout.astro';
+
+# Using Wywołanie systemowes in Applications
+
+In **IPO_OS**, applications request kernel services in 32-bit flat protected mode exclusively via the software interrupt trap gate `int 0x80`.
+
+The `<syscall.h>` header provides low-level dispatch routines (`ipo_syscall()`) as well as type-safe inline wrappers for all core system operacyjny subsystems.
+
+<LocalizedDiagram id="syscall_pipeline" />
+
+---
+
+## 🛠️ ABI Convention and the `ipo_syscall` Primitive
+
+Syscalls in IPO_OS require three CPU registers to be set:
+- **`EAX`** — 32-bit wywołanie systemowe identifier (e.g., `0x1011` for `IPO_SYSCALL_FS_OPEN`)
+- **`EBX`** — Argument count (`uint32_t argc`)
+- **`ECX`** — Pointer to the arguments array stored in stack memory (`const uint32_t *argv`)
+
+GCC inline assembly implementation:
+
+```c
+#include <stdint.h>
+#include <syscall.h>
+
+int ipo_syscall(uint32_t num, uint32_t argc, uint32_t *argv) {
+    int ret;
+    __asm__ volatile (
+        "int $0x80"
+        : "=a" (ret)
+        : "a" (num), "b" (argc), "c" (argv)
+        : "memory"
+    );
+    return ret;
+}
+```
+
+---
+
+## 📖 Practical Wywołanie systemowe Examples
+
+### 1. Printing Text to Console (`0x1001` — `IPO_SYSCALL_PRINT`)
+
+```c
+#include <syscall.h>
+
+int my_print(const char *message) {
+    uint32_t args[1];
+    args[0] = (uint32_t)(uintptr_t)message;
+    return ipo_syscall(IPO_SYSCALL_PRINT, 1u, args);
+}
+```
+
+### 2. Reading and Writing Files (`0x1011`, `0x1012`, `0x1013`, `0x1018`)
+
+```c
+#include <stdio.h>
+#include <string.h>
+#include <syscall.h>
+
+int save_and_read_config(void) {
+    // 1. Create file (0x2=file, 0x1=dir)
+    ipo_create("/etc/config.cfg", 0x2);
+
+    // 2. Open file
+    int fd = ipo_open("/etc/config.cfg");
+    if (fd < 0) {
+        printf("Error opening file: %d\n", fd);
+        return fd;
+    }
+
+    // 3. Write data at offset 0
+    const char *text = "theme=dark\nresolution=1024x768\n";
+    ipo_write(fd, text, strlen(text), 0u);
+
+    // 4. Read back data
+    char buf[64];
+    memset(buf, 0, sizeof(buf));
+    ipo_read(fd, buf, sizeof(buf) - 1, 0u);
+    printf("Read from disk: %s\n", buf);
+
+    // 5. Close descriptor
+    ipo_close(fd);
+    return 0;
+}
+```
+
+### 3. Process Heap Expansion (`0x1045` — `IPO_SYSCALL_SBRK`)
+
+```c
+#include <syscall.h>
+
+void *sys_sbrk(int32_t increment) {
+    uint32_t args[1];
+    args[0] = (uint32_t)increment;
+    int res = ipo_syscall(IPO_SYSCALL_SBRK, 1u, args);
+    return (void *)(intptr_t)res;
+}
+```
+
+### 4. Spawning a Desktop GUI Window (`0x1070`)
+
+```c
+#include <wm.h>
+#include <stdio.h>
+
+static void draw_my_window(wm_window_t *win) {
+    wm_buf_fill_rect(win->framebuf, win->w, win->h, 0, 0, win->w, win->h, 1);
+    wm_buf_draw_rect(win->framebuf, win->w, win->h, 1, 1, win->w - 2, win->h - 2, 15);
+    wm_buf_draw_string(win->framebuf, win->w, win->h, 8, 12, "IPO_OS Window", 15);
+}
+
+int main(int argc, char **argv) {
+    wm_window_options_t opt = WM_WINDOW_OPTIONS_DEFAULT;
+    opt.x = 20;
+    opt.y = 20;
+    opt.w = 140;
+    opt.h = 60;
+    opt.title = "App Window";
+    opt.draw_cb = draw_my_window;
+
+    wm_window_t *win = wm_create_window(&opt);
+    return win ? 0 : 1;
+}
+```
+
+---
+
+## ⚡ Pure NASM Assembly Template
+
+```asm
+[BITS 32]
+section .entry
+global _start
+
+_start:
+    ; 1. Print message: IPO_SYSCALL_PRINT (0x1001)
+    push msg_hello
+    mov ecx, esp
+    mov ebx, 1
+    mov eax, 0x1001
+    int 0x80
+    add esp, 4
+
+    ; 2. Exit process: IPO_SYSCALL_EXIT (0xFFFF)
+    push dword 0
+    mov ecx, esp
+    mov ebx, 1
+    mov eax, 0xFFFF
+    int 0x80
+
+section .data
+msg_hello: db "Hello from pure NASM in IPO_OS!", 10, 0
+```

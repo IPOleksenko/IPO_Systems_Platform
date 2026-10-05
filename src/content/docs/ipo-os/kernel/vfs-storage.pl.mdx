@@ -1,0 +1,31 @@
+---
+title: "Virtual System plików (VFS) and Storage Driver"
+description: "Architektura of 64-bit extent-based IPO_FS, superblock, inodes, bitmaps, and ATA PIO hardware storage driver in IPO_OS."
+---
+
+import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
+import Callout from '../../../../components/Callout.astro';
+
+# Virtual System plików (VFS) and IPO_FS
+
+The storage architecture of **IPO_OS** comprises the abstract VFS interface, the custom 64-bit extent-based **IPO_FS**, and the hardware **ATA PIO** disk driver.
+
+<LocalizedDiagram id="fs_layout" />
+
+---
+
+## 💾 IPO_FS Disk Layout
+
+Located at LBA 2048 with 512-byte blocks:
+- **Superblock (64 bytes header):** Signature `'IPO_FS\0\0'`, 64-bit total block count, 64-bit inode count.
+- **Bitmaps:** Inode allocation bitmap and Data block bitmap.
+- **Inodes (128 bytes, 4 per sector):** 64-bit size, 4 embedded contiguous extent descriptors (24 bytes each), chained extent node pointer.
+- **Extents (24 bytes):** Physical start block, block count, logical file offset.
+
+---
+
+## 🔌 ATA PIO Driver
+
+Communicates over legacy IDE I/O ports (`0x1F0`–`0x1F7`, `0x3F6`):
+- Data port: `0x1F0` (16-bit word transfer via `insw` / `outsw`).
+- Commands: `0x20` Read Sectors, `0x30` Write Sectors, `0x24`/`0x34` for 48-bit LBA.

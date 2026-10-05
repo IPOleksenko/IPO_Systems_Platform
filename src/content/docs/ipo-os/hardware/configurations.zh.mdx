@@ -1,0 +1,51 @@
+---
+title: "技术参考手册 Hardware Builds"
+description: "Tested PC hardware configurations: Minimal Retro, Recommended Workstation, and Experimental Embedded builds."
+---
+
+# 技术参考手册 Hardware Builds
+
+To guarantee predictable stability, three reference configurations have been tested and verified across all subsystems.
+
+---
+
+## 🛠️ Build Configurations Matrix
+
+### 1. Minimal Retro Build (Late 1990s Pure PC-AT)
+- **Target Audience:** Retrocomputing enthusiasts, authentic hardware preservation.
+- **CPU:** Intel Pentium III (Katmai / Coppermine) 500–800 MHz (Socket 370 or Slot 1).
+- **Motherboard:** Intel i440BX / i440ZX ATX motherboard (e.g., ASUS P3B-F, Abit BF6).
+- **Memory:** 128 MB — 256 MB PC100/PC133 SDRAM (CL2).
+- **Storage:** 4 GB — 20 GB IDE HDD (Master on Primary IDE).
+- **Graphics:** 3dfx Voodoo 3 2000 AGP or S3 Trio3D PCI (VGA Mode 03h).
+- **Networking:** Realtek RTL8139D PCI 10/100 NIC.
+- **Audio:** Creative Sound Blaster 16 ISA (CT2940).
+- **PSU Requirement:** 250W with strong +5V line (20A+).
+
+### 2. Recommended Workstation Build (Mid-2000s High Performance)
+- **Target Audience:** Fast compilation, full 窗口管理器 multitasking, TCP/IP servers.
+- **CPU:** Intel Core 2 Duo E8400 (3.0 GHz) or Core 2 Quad Q6600 (LGA 775).
+- **Motherboard:** Intel Q35 / G33 / ICH9 Express motherboard (e.g., Intel DQ35JO).
+- **Memory:** 2 GB DDR2-800 MHz (2x 1 GB dual-channel).
+- **Storage:** 120 GB 2.5" SATA SSD connected via SATA Port 0 in IDE Legacy mode.
+- **Graphics:** Integrated Intel GMA 3100 or NVIDIA GeForce 6200 PCI/PCIe.
+- **Networking:** Dedicated Realtek RTL8139 PCI card.
+- **Audio:** Onboard AC'97 or PCI Sound Blaster Live!.
+- **PSU Requirement:** 300W–350W ATX power supply.
+
+### 3. Experimental Embedded Build (Low Power / Fanless)
+- **Target Audience:** Embedded robotics, automated controllers, headless servers.
+- **CPU/SoC:** Intel Atom D525 / N270 or Vortex86DX SoC (x86 32-bit).
+- **Motherboard:** Mini-ITX embedded industrial motherboard with CF slot.
+- **Memory:** 512 MB — 1 GB DDR2/DDR3 SO-DIMM.
+- **Storage:** 8 GB Industrial CompactFlash card in true-IDE mode.
+- **Networking:** RTL8139 PCI or onboard Realtek controller.
+- **PSU Requirement:** 60W–90W 12V DC-DC power brick.
+
+---
+
+## ⚡ Interactive Power Supply (PSU) Sizing
+
+Use the interactive tool below to compute the power profile for your planned IPO_OS physical build:
+
+<PsuCalculator lang="en" />

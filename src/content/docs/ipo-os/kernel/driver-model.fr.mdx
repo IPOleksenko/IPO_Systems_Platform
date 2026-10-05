@@ -1,0 +1,43 @@
+---
+title: "Pilote de périphérique Model and HAL"
+description: "Hardware drivers in IPO_OS: Realtek RTL8139 NIC, ATA PIO, 8042 PS/2 mouse/keyboard, Sound Blaster 16, VGA/VBE, and dynamic runtime driver subsystem."
+---
+
+import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
+import Callout from '../../../../components/Callout.astro';
+
+# Pilote de périphérique Model and HAL
+
+The driver subsystem in **IPO_OS** integrates core low-level drivers with a runtime loadable driver framework accessible via `ipo_driver_register()`.
+
+<LocalizedDiagram id="driver_architecture" />
+
+---
+
+## 🔌 Builtin Hardware Drivers
+
+- **Realtek RTL8139 PCI NIC:** Vendor `0x10EC`, Device `0x8139`. Hardware ring buffers for packet RX/TX.
+- **ATA PIO Storage:** Primary/Secondary IDE channels (`0x1F0`, `0x170`).
+- **8042 PS/2 Input:** Polled port 0x60/0x64 scancodes, 3-byte mouse packets.
+- **Sound Blaster 16 DSP:** Port `0x220`, 16-bit DMA Channel 5, 22050 Hz stereo audio.
+- **Video Adaptors:** Text Mode 03h, VGA Mode 13h, and Bochs VBE Linear Framebuffer.
+
+---
+
+## 🧩 Dynamic Driver Registration
+
+```c
+#include <kernel/driver.h>
+#include <syscall.h>
+
+static driver_t my_drv = {
+    .name = "custom_dev",
+    .description = "Custom driver extension",
+    .init = NULL
+};
+
+int main(void) {
+    ipo_driver_register(&my_drv);
+    return 0;
+}
+```

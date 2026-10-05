@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 580" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgHw" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="900" height="580" fill="url(#bgHw)" rx="12"/>
+  <text x="450" y="38" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="#f8fafc" text-anchor="middle">ATX Motherboard Architecture &amp; Front Panel Header</text>
+  <text x="450" y="60" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">Reference component interconnection layout for bare-metal x86 physical platform</text>
+
+  <!-- Motherboard schematic PCB -->
+  <g transform="translate(60, 90)">
+    <rect width="440" height="440" rx="8" fill="#064e3b" stroke="#10b981" stroke-width="2"/>
+    <text x="220" y="30" font-family="sans-serif" font-size="14" font-weight="700" fill="#a7f3d0" text-anchor="middle">MATX MOTHERBOARD PCB (i440FX / Q35)</text>
+
+    <!-- CPU Socket -->
+    <rect x="50" y="60" width="120" height="120" rx="4" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="110" y="115" font-family="sans-serif" font-size="12" font-weight="700" fill="#fef3c7" text-anchor="middle">CPU SOCKET</text>
+    <text x="110" y="135" font-family="monospace" font-size="10" fill="#fcd34d" text-anchor="middle">x86 32-bit</text>
+
+    <!-- RAM Slots -->
+    <rect x="200" y="60" width="20" height="150" fill="#1e3a8a" stroke="#60a5fa" rx="2"/>
+    <rect x="230" y="60" width="20" height="150" fill="#1e3a8a" stroke="#60a5fa" rx="2"/>
+    <text x="225" y="230" font-family="sans-serif" font-size="10.5" font-weight="600" fill="#93c5fd" text-anchor="middle">DDR DIMM</text>
+
+    <!-- Chipset Northbridge -->
+    <rect x="90" y="210" width="80" height="70" rx="4" fill="#334155" stroke="#94a3b8"/>
+    <text x="130" y="245" font-family="sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">CHIPSET</text>
+    <text x="130" y="262" font-family="monospace" font-size="9" fill="#94a3b8" text-anchor="middle">Host Bridge</text>
+
+    <!-- PCI Slots -->
+    <rect x="40" y="310" width="220" height="24" rx="2" fill="#475569" stroke="#cbd5e1"/>
+    <text x="150" y="326" font-family="sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="middle">PCI SLOT 1: VGA Graphic Card</text>
+
+    <rect x="40" y="350" width="220" height="24" rx="2" fill="#475569" stroke="#cbd5e1"/>
+    <text x="150" y="366" font-family="sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="middle">PCI SLOT 2: Realtek RTL8139 NIC</text>
+
+    <!-- Storage Ports -->
+    <rect x="330" y="320" width="80" height="30" rx="2" fill="#b45309" stroke="#f59e0b"/>
+    <text x="370" y="340" font-family="sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="middle">ATA / IDE</text>
+
+    <rect x="330" y="365" width="80" height="30" rx="2" fill="#b45309" stroke="#f59e0b"/>
+    <text x="370" y="385" font-family="sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="middle">SATA Ports</text>
+
+    <!-- SPI Flash Chip -->
+    <rect x="320" y="240" width="50" height="40" rx="2" fill="#dc2626" stroke="#fca5a5"/>
+    <text x="345" y="265" font-family="monospace" font-size="9" font-weight="700" fill="#ffffff" text-anchor="middle">SPI ROM</text>
+  </g>
+
+  <!-- Front Panel JFP1 Pinout -->
+  <g transform="translate(530, 90)">
+    <rect width="320" height="440" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="160" y="32" font-family="sans-serif" font-size="14" font-weight="700" fill="#60a5fa" text-anchor="middle">FRONT PANEL HEADER (JFP1)</text>
+
+    <g transform="translate(25, 60)">
+      <!-- Row 1: Pins 1,3,5,7,9 -->
+      <rect x="20" y="20" width="110" height="40" rx="4" fill="#065f46" stroke="#34d399"/>
+      <text x="75" y="38" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">HD LED (+)</text>
+      <text x="75" y="52" font-family="monospace" font-size="9" fill="#a7f3d0" text-anchor="middle">Pin 1 (Anode)</text>
+
+      <rect x="150" y="20" width="110" height="40" rx="4" fill="#065f46" stroke="#34d399"/>
+      <text x="205" y="38" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">HD LED (-)</text>
+      <text x="205" y="52" font-family="monospace" font-size="9" fill="#a7f3d0" text-anchor="middle">Pin 3 (Cathode)</text>
+
+      <!-- Row 2: Reset Switch -->
+      <rect x="20" y="80" width="110" height="40" rx="4" fill="#1e3a8a" stroke="#60a5fa"/>
+      <text x="75" y="98" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">RESET SW</text>
+      <text x="75" y="112" font-family="monospace" font-size="9" fill="#93c5fd" text-anchor="middle">Pin 5</text>
+
+      <rect x="150" y="80" width="110" height="40" rx="4" fill="#1e3a8a" stroke="#60a5fa"/>
+      <text x="205" y="98" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">RESET GND</text>
+      <text x="205" y="112" font-family="monospace" font-size="9" fill="#93c5fd" text-anchor="middle">Pin 7</text>
+
+      <!-- Row 3: Power Switch -->
+      <rect x="20" y="150" width="110" height="40" rx="4" fill="#b45309" stroke="#f59e0b"/>
+      <text x="75" y="168" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">POWER SW</text>
+      <text x="75" y="182" font-family="monospace" font-size="9" fill="#fde68a" text-anchor="middle">Pin 6</text>
+
+      <rect x="150" y="150" width="110" height="40" rx="4" fill="#b45309" stroke="#f59e0b"/>
+      <text x="205" y="168" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">POWER GND</text>
+      <text x="205" y="182" font-family="monospace" font-size="9" fill="#fde68a" text-anchor="middle">Pin 8</text>
+
+      <!-- Row 4: Power LED -->
+      <rect x="20" y="210" width="110" height="40" rx="4" fill="#7c3aed" stroke="#c084fc"/>
+      <text x="75" y="228" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">PWR LED (+)</text>
+      <text x="75" y="242" font-family="monospace" font-size="9" fill="#ddd6fe" text-anchor="middle">Pin 2 (+5V)</text>
+
+      <rect x="150" y="210" width="110" height="40" rx="4" fill="#7c3aed" stroke="#c084fc"/>
+      <text x="205" y="228" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">PWR LED (-)</text>
+      <text x="205" y="242" font-family="monospace" font-size="9" fill="#ddd6fe" text-anchor="middle">Pin 4 (GND)</text>
+
+      <rect y="270" width="270" height="75" rx="4" fill="#0f172a" stroke="#475569"/>
+      <text x="135" y="295" font-family="sans-serif" font-size="11" font-weight="600" fill="#f8fafc" text-anchor="middle">DIAGNOSTIC BEEP CODES</text>
+      <text x="135" y="315" font-family="sans-serif" font-size="10" fill="#94a3b8" text-anchor="middle">1 Short Beep: DRAM &amp; Video OK (POST Clean)</text>
+      <text x="135" y="330" font-family="sans-serif" font-size="10" fill="#fca5a5" text-anchor="middle">3 Long Beeps: Memory (DRAM/MRC) Error</text>
+    </g>
+  </g>
+</svg>

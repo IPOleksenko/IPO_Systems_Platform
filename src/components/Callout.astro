@@ -1,0 +1,101 @@
+---
+import { getTranslation } from '../utils/i18n';
+
+interface Props {
+  type: 'note' | 'tip' | 'important' | 'warning' | 'caution' | 'beginners' | 'deep_dive';
+  lang?: string;
+  title?: string;
+}
+
+const { type = 'note', lang = 'en', title } = Astro.props;
+
+const icons: Record<string, string> = {
+  note: 'ℹ️',
+  tip: '💡',
+  important: '❗',
+  warning: '⚠️',
+  caution: '🛑',
+  beginners: '🌱',
+  deep_dive: '🔬'
+};
+
+const defaultTitle = getTranslation(lang, `ui.callout.${type}`) || type.toUpperCase();
+const displayTitle = title || defaultTitle;
+---
+
+<aside class={`callout callout-${type}`} role="note">
+  <div class="callout-header">
+    <span class="callout-icon" aria-hidden="true">{icons[type] || '📌'}</span>
+    <strong class="callout-title">{displayTitle}</strong>
+  </div>
+  <div class="callout-content">
+    <slot />
+  </div>
+</aside>
+
+<style>
+  .callout {
+    margin: 1.5rem 0;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    font-size: 0.95rem;
+  }
+
+  .callout-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+
+  .callout-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  .callout-content :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .callout-note {
+    border-left-color: var(--color-info);
+    background-color: var(--color-info-bg);
+  }
+
+  .callout-tip {
+    border-left-color: var(--color-success);
+    background-color: var(--color-success-bg);
+  }
+
+  .callout-important {
+    border-left-color: var(--accent-primary);
+    background-color: var(--accent-light);
+  }
+
+  .callout-warning {
+    border-left-color: var(--color-warning);
+    background-color: var(--color-warning-bg);
+  }
+
+  .callout-caution {
+    border-left-color: var(--color-danger);
+    background-color: var(--color-danger-bg);
+  }
+
+  .callout-beginners {
+    border-left-color: #10b981;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid #10b981;
+  }
+
+  .callout-deep_dive {
+    border-left-color: #8b5cf6;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid #8b5cf6;
+  }
+</style>

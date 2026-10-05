@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 520" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgNet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1120"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="880" height="520" fill="url(#bgNet)" rx="12"/>
+  <text x="440" y="38" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="#f8fafc" text-anchor="middle">IPO_OS Network Subsystem &amp; RTL8139 PCI Pipeline</text>
+  <text x="440" y="60" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">From hardware DMA packet reception to POSIX userspace sockets</text>
+
+  <g transform="translate(80, 90)">
+    <!-- Level 1: RTL8139 Hardware -->
+    <rect width="720" height="60" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="20" y="28" font-family="sans-serif" font-size="13" font-weight="700" fill="#60a5fa">PHYSICAL NIC: Realtek RTL8139 PCI (0x10EC:0x8139)</text>
+    <text x="20" y="48" font-family="monospace" font-size="11" fill="#93c5fd">64KB Ring Buffer (DMA) • I/O Ports: 0xC000 • IRQ: 11 • Promiscuous / Broadcast filter</text>
+
+    <!-- Arrow -->
+    <path d="M 360 60 L 360 95" stroke="#3b82f6" stroke-width="2"/>
+    <polygon points="356,95 360,103 364,95" fill="#3b82f6"/>
+
+    <!-- Level 2: Ethernet / ARP -->
+    <g transform="translate(0, 105)">
+      <rect width="720" height="60" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+      <text x="20" y="28" font-family="sans-serif" font-size="13" font-weight="700" fill="#34d399">LINK LAYER: Ethernet II &amp; ARP Protocol</text>
+      <text x="20" y="48" font-family="monospace" font-size="11" fill="#a7f3d0">MAC Resolution • 0x0806 (ARP Request/Reply) • Dynamic ARP Cache (16 entries)</text>
+    </g>
+
+    <!-- Arrow -->
+    <path d="M 360 165 L 360 200" stroke="#10b981" stroke-width="2"/>
+    <polygon points="356,200 360,208 364,200" fill="#10b981"/>
+
+    <!-- Level 3: IPv4 / ICMP -->
+    <g transform="translate(0, 210)">
+      <rect width="720" height="60" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="20" y="28" font-family="sans-serif" font-size="13" font-weight="700" fill="#fbbf24">NETWORK LAYER: IPv4 &amp; ICMP Echo</text>
+      <text x="20" y="48" font-family="monospace" font-size="11" fill="#fde68a">IP: 192.168.7.2 • Netmask: 255.255.255.0 • Gateway: 192.168.7.1 • ICMP ping reply</text>
+    </g>
+
+    <!-- Arrow -->
+    <path d="M 360 270 L 360 305" stroke="#f59e0b" stroke-width="2"/>
+    <polygon points="356,305 360,313 364,305" fill="#f59e0b"/>
+
+    <!-- Level 4: TCP / UDP -->
+    <g transform="translate(0, 315)">
+      <rect width="720" height="60" rx="6" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/>
+      <text x="20" y="28" font-family="sans-serif" font-size="13" font-weight="700" fill="#c084fc">TRANSPORT LAYER: TCP State Machine &amp; UDP</text>
+      <text x="20" y="48" font-family="monospace" font-size="11" fill="#ddd6fe">3-Way Handshake (SYN, SYN-ACK, ACK) • Sliding Window • DNS Resolver (Port 53)</text>
+    </g>
+
+    <!-- Arrow -->
+    <path d="M 360 375 L 360 410" stroke="#8b5cf6" stroke-width="2"/>
+    <polygon points="356,410 360,418 364,410" fill="#8b5cf6"/>
+
+    <!-- Level 5: BSD Sockets API -->
+    <g transform="translate(0, 420)">
+      <rect width="720" height="50" rx="6" fill="#3b0764" stroke="#e879f9" stroke-width="1.5"/>
+      <text x="360" y="25" font-family="sans-serif" font-size="13" font-weight="700" fill="#f5d0fe" text-anchor="middle">USERSPACE SOCKETS API: socket(), bind(), connect(), send(), recv()</text>
+      <text x="360" y="42" font-family="sans-serif" font-size="11" fill="#ffffff" text-anchor="middle">Used by hosting_server, hosting_client, ping, and curl utilities</text>
+    </g>
+  </g>
+</svg>

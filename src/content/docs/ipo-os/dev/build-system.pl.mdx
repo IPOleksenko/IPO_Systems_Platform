@@ -1,0 +1,43 @@
+---
+title: "Build System and Deployment Utilities"
+description: "Complete guide to GNU Make build pipeline, disk_editor.py, load_applications.py, and host TAP networking in IPO_OS."
+---
+
+import SharedCode from '../../../../components/SharedCode.astro';
+import Callout from '../../../../components/Callout.astro';
+
+# Build System and Deployment Utilities
+
+**IPO_OS** features a modular build system powered by GNU Make, custom Python filesystem tooling, and host TAP networking scripts.
+
+---
+
+## 🔨 Makefile Targets
+
+<SharedCode id="makefile-all-targets" />
+
+### Build Configuration Parameters:
+- `NET_MODE ?= tap` — Network mode: `tap` (direct L2 access to all 65,535 ports) or `user` (QEMU SLIRP NAT).
+- `TAP_DEV ?= tap0` — Name of virtual TAP device on Linux host.
+- `AUDIODEV ?= pa` — QEMU audio backend (`pa`, `alsa`, `sdl`, `none`).
+- `DRIVE_TYPE ?= ide` — Primary storage bus (`ide`, `ahci`, `usb`).
+
+---
+
+## 💾 Disk Management with `disk_editor.py`
+
+<SharedCode id="disk-editor-cmds" />
+
+---
+
+## 📦 Application Ingestion via `load_applications.py`
+
+```bash
+python3 load_applications.py
+```
+
+---
+
+## 🌐 TAP Network Setup (`tools/setup-tap.sh`)
+
+<SharedCode id="tap-networking-setup" />

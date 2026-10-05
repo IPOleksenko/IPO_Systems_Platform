@@ -1,0 +1,70 @@
+---
+title: "Пакування та розгортання"
+description: "Розгортання застосунків на IPO_FS через disk_editor.py, load_applications.py, hosting_client та фізичні носії."
+---
+
+import SharedCode from '../../../../components/SharedCode.astro';
+import Callout from '../../../../components/Callout.astro';
+
+# Пакування та розгортання
+
+Once your application binary is compiled into a flat binary (`.bin`), it must be placed into the `IPO_FS` filesystem partition so the interactive shell can execute it.
+
+---
+
+## 🛠️ Managing Files with `disk_editor.py`
+
+The standalone Python utility `disk_editor.py` allows offline manipulation of raw disk images without requiring root loopback mounts:
+
+```bash
+# 1. Put compiled binary into the /applications directory
+python3 disk_editor.py put hello.bin /applications/hello.bin
+
+# 2. Inspect directory contents
+python3 disk_editor.py ls /applications
+
+# 3. View file contents
+python3 disk_editor.py cat /applications/hello.bin
+```
+
+---
+
+## 📦 Batch Loading via `load_applications.py`
+
+To compile and load all built-in applications and test utilities in the `applications/` directory into the secondary storage disk `build/disk.img`:
+
+```bash
+python3 load_applications.py
+```
+
+This utility automatically formats the partition, creates standard directories (`/applications`, `/etc`, `/fonts`), and populates them with executable binaries and font bitmaps.
+
+---
+
+## 🌐 Network Retrieval via `hosting_client`
+
+If IPO_OS is running with networking enabled (`NET_MODE=tap` or `NET_MODE=user`), files can be downloaded directly inside the running OS:
+
+```bash
+# 1. On host system: serve build files via HTTP
+python3 -m http.server 8000 --directory ./build
+
+# 2. Inside IPO_OS terminal shell: fetch file via hosting_client
+> /applications/hosting_client 192.168.7.1 8000 /hello.bin
+```
+
+---
+
+## 💾 Deploying to Physical Media
+
+To boot on physical hardware:
+
+<Callout type="warning" title="Verify Target Device">
+Always confirm the target drive identifier (`/dev/sdX`) using `lsblk` before running `dd`. Overwriting the wrong disk causes irreversible data loss!
+</Callout>
+
+```bash
+# Write OS image to USB or CompactFlash drive
+sudo dd if=build/IPO_OS.img of=/dev/sdX bs=4M status=progress conv=fsync
+sudo sync
+```

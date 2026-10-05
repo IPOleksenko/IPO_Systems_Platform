@@ -1,0 +1,182 @@
+---
+interface Props {
+  lang: string;
+}
+
+const { lang } = Astro.props;
+const isRu = lang === 'ru';
+---
+
+<div class="mem-visualizer-widget">
+  <div class="widget-header">
+    <strong>🧮 {isRu ? 'Интерактивный навигатор карты памяти' : 'Interactive Memory Map Navigator'}</strong>
+    <span class="widget-badge">{isRu ? 'Офлайн инструмент' : 'Offline Tool'}</span>
+  </div>
+
+  <div class="mem-layout-grid">
+    <div class="mem-sidebar-list" role="tablist">
+      <button class="mem-btn active" data-addr-start="0x00000" data-addr-end="0x003FF" data-size="1024 B" data-name="IVT" data-desc-en="Real Mode Interrupt Vector Table (256 vectors * 4 bytes CS:IP)." data-desc-ru="Таблица векторов прерываний реального режима (256 векторов по 4 байта CS:IP).">
+        0x00000 — IVT (1 KB)
+      </button>
+      <button class="mem-btn" data-addr-start="0x00400" data-addr-end="0x004FF" data-size="256 B" data-name="BDA" data-desc-en="BIOS Data Area: COM/LPT base ports, keyboard buffer, timer ticks at 0x46C." data-desc-ru="Область данных BIOS: базовые порты COM/LPT, буфер клавиатуры, тики таймера в 0x46C.">
+        0x00400 — BDA (256 B)
+      </button>
+      <button class="mem-btn" data-addr-start="0x07C00" data-addr-end="0x07DFF" data-size="512 B" data-name="MBR Buffer" data-desc-en="Conventional DRAM target where BIOS loads LBA 0 (Contract 3 handover)." data-desc-ru="Традиционная область загрузки сектора LBA 0 прошивкой BIOS (Контракт 3).">
+        0x07C00 — MBR Load Sector
+      </button>
+      <button class="mem-btn" data-addr-start="0x10000" data-addr-end="0x7FFFF" data-size="448 KB" data-name="IPO_OS Kernel" data-desc-en="Protected Mode 32-bit Kernel core (.text, .rodata, .data, .bss)." data-desc-ru="Ядро IPO_OS в 32-битном защищенном режиме (.text, .rodata, .data, .bss).">
+        0x10000 — Kernel Code (0x10000)
+      </button>
+      <button class="mem-btn" data-addr-start="0xA0000" data-addr-end="0xBFFFF" data-size="128 KB" data-name="VGA Framebuffer" data-desc-en="VGA Mode 03h text mode screen memory at 0xB8000 (80x25 characters)." data-desc-ru="Видеобуфер VGA Mode 03h по адресу 0xB8000 (текстовый режим 80x25).">
+        0xA0000 — VGA Text / Video VRAM
+      </button>
+      <button class="mem-btn" data-addr-start="0xC0000" data-addr-end="0xFFFFF" data-size="256 KB" data-name="Shadow RAM & ROM" data-desc-en="VBIOS Option ROM at 0xC0000, IPO_Boot_ROM and IPO_Firmware in Shadow RAM." data-desc-ru="VBIOS в 0xC0000, IPO_Boot_ROM и IPO_Firmware в теневой памяти (Shadow RAM).">
+        0xC0000 — VBIOS & Shadow RAM
+      </button>
+      <button class="mem-btn" data-addr-start="0x100000" data-addr-end="0x7FFFFF" data-size="7 MB" data-name="Kernel Heap Pool" data-desc-en="Extended memory used by kmalloc() and page frame allocations." data-desc-ru="Расширенная память для динамической кучи ядра kmalloc() и страниц.">
+        0x100000 — Kernel Heap Pool
+      </button>
+      <button class="mem-btn" data-addr-start="0x800000" data-addr-end="0xFFFFFF" data-size="8 MB+" data-name="Userspace Apps" data-desc-en="Base physical loading address for raw ELF/binary applications (linked with app.ld)." data-desc-ru="Базовый адрес размещения пользовательских приложений (скомпилированных с app.ld).">
+        0x800000 — Userspace Applications
+      </button>
+    </div>
+
+    <div class="mem-details-panel">
+      <h4 id="mem-region-name">0x00000 — IVT</h4>
+      <div class="mem-meta-row">
+        <span><strong>{isRu ? 'Начало:' : 'Start:'}</strong> <code id="mem-start">0x00000</code></span>
+        <span><strong>{isRu ? 'Конец:' : 'End:'}</strong> <code id="mem-end">0x003FF</code></span>
+        <span><strong>{isRu ? 'Размер:' : 'Size:'}</strong> <span id="mem-size">1024 B</span></span>
+      </div>
+      <p id="mem-desc" class="mem-desc">
+        {isRu ? 'Таблица векторов прерываний реального режима (256 векторов по 4 байта CS:IP).' : 'Real Mode Interrupt Vector Table (256 vectors * 4 bytes CS:IP).'}
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .mem-visualizer-widget {
+    margin: 2rem 0;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background-color: var(--bg-card);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+
+  .widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .widget-badge {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-sm);
+    background-color: var(--accent-light);
+    color: var(--accent-primary);
+  }
+
+  .mem-layout-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+
+  @media (max-width: 768px) {
+    .mem-layout-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .mem-sidebar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .mem-btn {
+    text-align: start;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .mem-btn:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--accent-primary);
+  }
+
+  .mem-btn.active {
+    background-color: var(--accent-light);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    font-weight: 600;
+  }
+
+  .mem-details-panel {
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-secondary);
+  }
+
+  .mem-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 0.75rem 0;
+    font-size: 0.9rem;
+  }
+
+  .mem-desc {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+</style>
+
+<script>
+  const isRuPage = document.documentElement.lang === 'ru';
+  document.querySelectorAll('.mem-visualizer-widget').forEach((widget) => {
+    const buttons = widget.querySelectorAll('.mem-btn');
+    const nameEl = widget.querySelector('#mem-region-name');
+    const startEl = widget.querySelector('#mem-start');
+    const endEl = widget.querySelector('#mem-end');
+    const sizeEl = widget.querySelector('#mem-size');
+    const descEl = widget.querySelector('#mem-desc');
+
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        buttons.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const name = btn.getAttribute('data-name');
+        const start = btn.getAttribute('data-addr-start');
+        const end = btn.getAttribute('data-addr-end');
+        const size = btn.getAttribute('data-size');
+        const descEn = btn.getAttribute('data-desc-en');
+        const descRu = btn.getAttribute('data-desc-ru');
+
+        if (nameEl) nameEl.textContent = `${start} — ${name}`;
+        if (startEl) startEl.textContent = start || '';
+        if (endEl) endEl.textContent = end || '';
+        if (sizeEl) sizeEl.textContent = size || '';
+        if (descEl) descEl.textContent = (isRuPage ? descRu : descEn) || descEn || '';
+      });
+    });
+  });
+</script>

@@ -1,0 +1,88 @@
+---
+title: "Memory Isolation & Protection"
+description: "Process memory isolation, application swapping, workspace buffers, and two-tier exception crash recovery in IPO_OS."
+---
+
+# Memory Isolation & Protection
+
+IPO_OS implements a robust execution and stability model designed for bare-metal x86 hardware. Operating in flat 32-bit protected mode, the system protects kernel stability and isolates running tasks through **partitioned memory slicing**, **application storage swapping**, **dedicated workspace VRAM backups**, and **two-tier exception crash recovery**.
+
+---
+
+## 🛡️ Architectural Isolation Pillars
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                   Active Application Execution                   │
+│   • Code mapped at 0x800000 (PROCESS_HEAP_START)                 │
+│   • Dynamic stack allocated via kmalloc (256 KB initial stack)   │
+│   • Arguments placed at 0xBFF000                                 │
+└────────────────────────────────┬─────────────────────────────────┘
+                                 │ process_map_app() swapping
+┌────────────────────────────────▼─────────────────────────────────┐
+│                Background Applications Storage                   │
+│   • Dedicated binary_storage buffers allocated in heap           │
+│   • Modified .data and .bss segments preserved across switches   │
+│   • Per-process heap slices: 0x08000000 + (pid-1)*0x04000000     │
+└──────────────────────────────────────────────────────────────────┘
+                                 │
+┌────────────────────────────────▼─────────────────────────────────┐
+│                    Kernel Executive Protection                   │
+│   • Kernel code at 0x10000, 5 MB stack at 0x500000               │
+│   • Dedicated 16 MB kmalloc pool at 0x1000000                    │
+│   • Two-tier cpu_exception_handler: crashes isolated to proc     │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🧠 1. Partitioned Dynamic Memory Slicing
+
+To prevent user processes from colliding with the kernel heap or each other:
+1. **Kernel Heap:** Statically allocated at `0x1000000` (16 MB) with 16 MB capacity.
+2. **Process Heaps (`sbrk`):** Dynamic user allocations are partitioned into deterministic 64 MB slices:
+   `Base Address = 0x08000000 + (PID - 1) * 0x04000000`
+   The capacity is checked against physical RAM detected during boot via BIOS E820 at `0x8FF0`.
+
+---
+
+## 🔄 2. Application Memory Mapping & Swapping (`process_map_app`)
+
+In cooperative multitasking batch mode, applications run from `0x800000`:
+- When switching between processes, `process_map_app(process_t *proc)` saves the previous process's modified `.data` and `.bss` into its private `binary_storage` buffer.
+- The incoming process's data is copied back into `0x800000`.
+- This ensures concurrent applications never overwrite each other's global state or static variables.
+
+---
+
+## 📺 3. Workspace & Terminal VRAM Isolation
+
+Each process running in batch mode maintains an isolated virtual console:
+- **`text_vram_backup`:** Dedicated 80x25 character/attribute buffer (4000 bytes).
+- **Scrollback Buffers:** Top and bottom history buffers (`scroll_top_buffer`, `scroll_bottom_buffer`).
+- **Cursor State:** Dedicated cursor coordinates and visibility flags.
+Switching foreground processes immediately swaps the physical screen at `0xB8000`, preventing background processes from corrupting the display.
+
+---
+
+## 🚨 4. Two-Tier Exception Crash Recovery
+
+CPU exceptions (vectors 0–31: Divide by Zero, Invalid Opcode, General Protection Fault) are intercepted by `cpu_exception_handler(uint32_t *frame)` in `src/kernel/syscall/syscall.c`:
+
+1. **Process Crash Isolation:**
+   If a fault occurs while executing user code (`proc != NULL`), the kernel logs the error (vector, name, EIP, error code) and modifies the saved return address:
+   ```c
+   frame[9] = (uint32_t)process_crash_exit;
+   ```
+   When `iretd` executes, the CPU enters `process_crash_exit`, cleaning up the crashed process and returning safely to the interactive shell without a kernel panic!
+2. **Kernel Panic Boundary:**
+   If an exception occurs within core kernel code (`proc == NULL`), the kernel logs a panic message to VGA and serial COM1, then executes `while(1) { __asm__ volatile("cli; hlt"); }`.
+
+---
+
+## 🔍 5. Syscall Parameter & Range Validation
+
+All pointers passed into system calls via `ECX` (`const uint32_t *argv`) are verified by the kernel dispatcher:
+- Null pointer detection.
+- Buffer size and integer overflow checks.
+- Invalid or unmapped filesystem paths reject with `-IPO_ERR_INVALID_PARAM` or `-IPO_ERR_BAD_ADDRESS`.

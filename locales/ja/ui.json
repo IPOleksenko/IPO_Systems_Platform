@@ -1,0 +1,146 @@
+{
+  "site": {
+    "title": "IPO Systems Platform",
+    "description": "IPO_OS、IPO_Boot_ROM、IPO_Firmware の統合公式ドキュメント。",
+    "tagline": "ハードウェアリセットからユーザ空間アプリケーションまでのベアメタルエンジニアリング。"
+  },
+  "nav": {
+    "home": "ホーム",
+    "projects": "プロジェクト",
+    "ipo_os": "IPO_OS",
+    "ipo_boot_rom": "IPO_Boot_ROM",
+    "ipo_firmware": "IPO_Firmware",
+    "search": "ドキュメントを検索...",
+    "github": "GitHub",
+    "toc_title": "目次",
+    "prev": "前へ",
+    "next": "次へ",
+    "whats_next": "次のステップ",
+    "edit_page": "GitHub で編集を提案",
+    "report_issue": "問題を報告",
+    "roles": {
+      "user": "IPO_OS ユーザー",
+      "app_dev": "アプリケーション開発者",
+      "kernel_dev": "カーネル・ドライバ開発者",
+      "pc_builder": "ハードウェア組立者"
+    }
+  },
+  "sections": {
+    "ipo_os": {
+      "title": "IPO_OS オペレーティングシステム",
+      "part_a": "パート A: 概要とアーキテクチャ",
+      "part_b": "パート B: ハードウェア選定とPC組立",
+      "part_c": "パート C: カーネルとブートサブシステム",
+      "part_d": "パート D: アプリケーションプログラミング",
+      "part_e": "パート E: テクニカルリファレンス",
+      "part_f": "パート F: カーネル開発"
+    },
+    "ipo_boot_rom": {
+      "title": "IPO_Boot_ROM リセットイニシャライザ",
+      "overview": "概要とリセットアーキテクチャ",
+      "getting_started": "ツールチェーンとスタンドアロン実行",
+      "architecture": "内部アーキテクチャとMRC",
+      "hardware_flashing": "物理SPI書き込みと対応マザーボード",
+      "reference": "メモリマップとPOST 0x80コード",
+      "troubleshooting": "診断とトラブルシューティング"
+    },
+    "ipo_firmware": {
+      "title": "IPO_Firmware BIOS サービス層",
+      "overview": "概要とランタイムサービス",
+      "getting_started": "エミュレーションとブート設定",
+      "architecture": "IVT、マルチバスストレージ検出と引き渡し",
+      "interrupt_reference": "BIOS 割り込みサービス (INT 10h–1Ah)",
+      "reference": "ACPI、POST 0x80 とデータ領域",
+      "troubleshooting": "起動エラーとリカバリ"
+    }
+  },
+  "pages": {
+    "ipo_os": {
+      "overview": "System Overview & Philosophy",
+      "architecture": "Global Architecture & Data Flow",
+      "hardware_requirements": "Hardware Requirements Matrix",
+      "platform_selection": "Platform Selection & Chipsets",
+      "components": "PC Components & Subsystems",
+      "configurations": "Reference Hardware Builds",
+      "assembly_guide": "Step-by-Step PC Assembly",
+      "firmware_setup": "BIOS/UEFI Configuration",
+      "media_preparation": "Storage Preparation & Partitioning",
+      "first_boot": "First Boot & POST Diagnostics",
+      "virtual_machines": "QEMU, Bochs & VirtualBox Setup",
+      "checklists": "Assembly & Diagnostic Checklists",
+      "boot_sequence": "Cold Boot Sequence & Timeline",
+      "bootloader_contract": "Bootloader Handover Protocol",
+      "cpu_modes": "Processor Modes, GDT & IDT",
+      "memory_management": "Physical & Virtual Memory Management",
+      "scheduler": "Process & Thread Scheduler",
+      "syscalls_kernel": "System Call Subsystem",
+      "interrupts": "Interrupts, PIC/APIC & Timers",
+      "vfs_storage": "Virtual File System & IPO_FS",
+      "driver_model": "Device Driver Architecture",
+      "io_console": "I/O, Video & Console Subsystem",
+      "ipc": "Inter-Process Communication",
+      "security": "Memory Isolation & Protection",
+      "kernel_debugging": "Kernel Debugging & Panic Analysis",
+      "toolchain_setup": "Development Toolchain Setup",
+      "hello_world": "First Program: Hello, IPO_OS",
+      "binary_format": "Binary Layout & Memory Map",
+      "abi": "ABI & Calling Conventions",
+      "syscalls_app": "Invoking System Calls",
+      "stdlib": "C Standard Library & Runtime",
+      "memory_io": "Memory Allocation & File I/O",
+      "ui_programming": "Console & GUI Output (WM)",
+      "build_system": "Makefiles & Linker Scripts",
+      "packaging": "Packaging & Disk Deployment",
+      "app_debugging": "Application Debugging",
+      "best_practices": "Style Guide & Common Pitfalls",
+      "examples": "Practical Code Examples",
+      "ref_syscalls": "Complete System Calls Reference",
+      "ref_memory_io": "Memory & I/O Ports Map",
+      "ref_structures": "Data Structures & Headers",
+      "ref_errors": "Error Codes Reference",
+      "ref_glossary": "Systems Architecture Glossary",
+      "contrib_build": "Building IPO_OS from Source",
+      "contrib_style": "Kernel Code Style Guide",
+      "contrib_testing": "Testing & Pull Requests"
+    },
+    "ipo_boot_rom": {
+      "overview": "Overview & Reset Vector",
+      "getting_started": "Build Commands & QEMU",
+      "architecture": "CAR Setup, MRC & PAM Shadow",
+      "hardware_flashing": "Physical SPI Flashing (CH341A)",
+      "reference": "Contract 2 & Port 0x80 Codes",
+      "troubleshooting": "Diagnostics & Hardware Failures"
+    },
+    "ipo_firmware": {
+      "overview": "Overview & Architecture",
+      "getting_started": "Build & Chainloading",
+      "architecture": "IVT & Multi-Bus Storage Discovery",
+      "interrupt_reference": "BIOS Interrupts Reference (INT 10h–1Ah)",
+      "reference": "Contract 3, EBDA & POST Codes",
+      "troubleshooting": "Storage Probing & Recovery"
+    }
+  },
+  "ui": {
+    "language": "言語",
+    "theme": "テーマ",
+    "theme_light": "ライト",
+    "theme_dark": "ダーク",
+    "theme_auto": "自動",
+    "copy": "コピー",
+    "copied": "コピーしました！",
+    "not_translated_title": "翻訳に関するお知らせ",
+    "not_translated_msg": "このページは選択した言語にまだ翻訳されていません。英語バージョンを表示しています。",
+    "figure": "図",
+    "diagram_caption": "図の説明:",
+    "interactive_widget": "インタラクティブツール",
+    "callout": {
+      "note": "注意",
+      "tip": "ヒント",
+      "important": "重要",
+      "warning": "警告",
+      "caution": "危険",
+      "beginners": "初心者向け",
+      "deep_dive": "詳細解説"
+    }
+  }
+}

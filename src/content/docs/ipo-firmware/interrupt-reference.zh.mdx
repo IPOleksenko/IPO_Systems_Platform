@@ -1,0 +1,104 @@
+---
+title: "BIOS Interrupts 技术参考手册 (INT 10h–1Ah)"
+description: "Complete register-level reference for real-mode BIOS interrupt services implemented by IPO_Firmware."
+---
+
+import Callout from '../../../components/Callout.astro';
+
+# BIOS Interrupts 技术参考手册 (INT 10h–1Ah)
+
+This reference documents the real-mode software interrupt vectors provided by **IPO_Firmware** to 操作系统 bootloaders and real-mode setup stages.
+
+---
+
+## 📺 INT 10h — Video Display Services
+
+### `AH = 0Eh` — Teletype Output
+Outputs a single ASCII character to the active display page, advancing the cursor.
+- **Input:** `AH = 0Eh`, `AL = Character`, `BH = Page (0)`, `BL = Color attribute`
+- **Output:** Character printed to screen and mirrored to COM1.
+
+### `AH = 00h` — Set Video Mode
+- **Input:** `AH = 00h`, `AL = Mode Number` (`03h` = 80x25 16-color VGA text mode).
+- **Output:** Display reinitialized and cleared.
+
+### `AX = 4F02h` — VESA VBE Set Video Mode
+- **Input:** `AX = 4F02h`, `BX = VBE Mode Number | 0x4000` (bit 14 sets Linear Framebuffer).
+- **Output:** `AX = 004Fh` on success.
+
+---
+
+## 💾 INT 13h — Disk Storage Services
+
+<LocalizedDiagram id="storage_transfer_flow" />
+
+### `AH = 42h` — Extended LBA Read
+Reads contiguous 512-byte sectors from storage media using a 64-bit Logical Block Address.
+
+- **Input:**
+  - `AH = 42h`
+  - `DL = Drive Number` (`0x80` = Drive 0, `0x81` = Drive 1)
+  - `DS:SI = Pointer to Disk Address Packet (DAP)`
+- **Output:**
+  - `CF = 0` on success, `AH = 0`
+  - `CF = 1` on error, `AH = Error status code`
+
+```c
+struct disk_address_packet {
+    uint8_t  packet_size;   /* Size of packet (always 16 / 0x10) */
+    uint8_t  reserved;      /* Must be 0 */
+    uint16_t block_count;   /* Number of 512-byte blocks to read (max 127) */
+    uint16_t buffer_offset; /* Target buffer memory offset */
+    uint16_t buffer_segment;/* Target buffer memory segment */
+    uint64_t lba_start;     /* Starting 64-bit Logical Block Address */
+} __attribute__((packed));
+```
+
+### `AH = 02h` — Legacy CHS Sector Read
+- **Input:** `AH = 02h`, `AL = Sectors count`, `CH = Cylinder low`, `CL = Sector / Cylinder high`, `DH = Head`, `DL = Drive`, `ES:BX = Buffer`.
+- **Output:** `CF = 0` on success.
+
+---
+
+## ⚙️ INT 15h — System & Memory Services
+
+### `AX = E820h` — Query System Address Map
+The fundamental method for 操作系统s to discover physical RAM ranges:
+
+- **Input:**
+  - `EAX = 0x0000E820`
+  - `EBX = Continuation token` (starts at `0`)
+  - `ES:DI = Pointer to 24-byte E820 buffer`
+  - `ECX = Buffer size` (`20` or `24` bytes)
+  - `EDX = 0x534D4150` (`'SMAP'` magic)
+- **Output:**
+  - `CF = 0` on success
+  - `EAX = 0x534D4150` (`'SMAP'`)
+  - `EBX = Next continuation value` (`0` indicates end of map)
+
+```c
+struct e820_entry {
+    uint64_t base_address;
+    uint64_t length;
+    uint32_t type;          /* 1 = Usable RAM, 2 = Reserved, 3 = ACPI */
+    uint32_t extended_attr; /* ACPI 3.0 attributes */
+} __attribute__((packed));
+```
+
+### `AX = 2401h` — Enable Fast A20 Gate
+- **Input:** `AX = 2401h`
+- **Output:** `CF = 0`, `AH = 0` on success.
+
+---
+
+## ⌨️ INT 16h — Keyboard Services
+
+- **`AH = 00h` (Read Keystroke):** Halts CPU until key is pressed. Returns `AH = Scancode`, `AL = ASCII character`.
+- **`AH = 01h` (Check Keystroke):** Non-blocking check. Sets `ZF = 1` if buffer empty, `ZF = 0` if key ready.
+
+---
+
+## ⏱️ INT 1Ah — Real-Time Clock Services
+
+- **`AH = 00h` (Read Tick Counter):** Returns `CX:DX = Timer ticks since midnight` (18.2 Hz clock).
+- **`AH = 02h` (Read CMOS RTC Time):** Returns `CH = Hours (BCD)`, `CL = Minutes (BCD)`, `DH = Seconds (BCD)`.

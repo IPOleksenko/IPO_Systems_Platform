@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 680" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="hwGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#475569"/>
+    </linearGradient>
+    <linearGradient id="romGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#047857"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+    <linearGradient id="fwGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6d28d9"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="osGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="appGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#b45309"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <rect width="900" height="680" fill="url(#bgGrad)" rx="12"/>
+
+  <!-- Title -->
+  <text x="450" y="45" font-family="system-ui, sans-serif" font-size="22" font-weight="700" fill="#f8fafc" text-anchor="middle">IPO Systems Platform: Vertical Computing Stack</text>
+  <text x="450" y="72" font-family="system-ui, sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">Bare-metal execution hierarchy from CPU hardware reset vector to userspace applications</text>
+
+  <!-- Layer 5: Applications -->
+  <g filter="url(#shadow)">
+    <rect x="70" y="100" width="760" height="75" rx="8" fill="url(#appGrad)" stroke="#fcd34d" stroke-width="1.5"/>
+    <text x="100" y="132" font-family="system-ui, sans-serif" font-size="17" font-weight="700" fill="#ffffff">Userspace Applications (Ring 3)</text>
+    <text x="100" y="156" font-family="system-ui, sans-serif" font-size="13" fill="#fef3c7">Base: 0x800000 • ELF32 • LibC • Shell • Window Manager (WM) GUI • DOOM • MicroPython • Sockets</text>
+    <rect x="720" y="115" width="90" height="26" rx="4" fill="#78350f"/>
+    <text x="765" y="132" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#fef3c7" text-anchor="middle">USER MODE</text>
+  </g>
+
+  <!-- Contract Arrow: Syscalls -->
+  <path d="M 450 175 L 450 205" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="4,4"/>
+  <polygon points="445,205 450,215 455,205" fill="#38bdf8"/>
+  <rect x="360" y="183" width="180" height="20" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1"/>
+  <text x="450" y="197" font-family="monospace" font-size="10.5" fill="#38bdf8" font-weight="600" text-anchor="middle">INT 0x80 (Syscall Gate)</text>
+
+  <!-- Layer 4: IPO_OS Kernel -->
+  <g filter="url(#shadow)">
+    <rect x="70" y="215" width="760" height="100" rx="8" fill="url(#osGrad)" stroke="#60a5fa" stroke-width="1.5"/>
+    <text x="100" y="247" font-family="system-ui, sans-serif" font-size="17" font-weight="700" fill="#ffffff">IPO_OS 32-bit Monolithic Kernel (Ring 0)</text>
+    <text x="100" y="271" font-family="system-ui, sans-serif" font-size="13" fill="#dbeafe">Entry: 0x10000 • Stack: 0x500000 • Physical Memory Manager • Round-Robin Scheduler</text>
+    <text x="100" y="293" font-family="system-ui, sans-serif" font-size="13" fill="#bfdbfe">VFS Extent Engine (IPO_FS) • ATA PIO • RTL8139 PCI NIC • TCP/IP IPv4 Stack • VGA/VBE</text>
+    <rect x="720" y="230" width="90" height="26" rx="4" fill="#1e3a8a"/>
+    <text x="765" y="247" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#93c5fd" text-anchor="middle">PROTECTED</text>
+  </g>
+
+  <!-- Contract 3 Arrow: MBR Handover -->
+  <path d="M 450 315 L 450 345" stroke="#a78bfa" stroke-width="2.5" stroke-dasharray="4,4"/>
+  <polygon points="445,345 450,355 455,345" fill="#a78bfa"/>
+  <rect x="300" y="323" width="300" height="20" rx="4" fill="#0f172a" stroke="#a78bfa" stroke-width="1"/>
+  <text x="450" y="337" font-family="monospace" font-size="10.5" fill="#c4b5fd" font-weight="600" text-anchor="middle">Contract 3: MBR (0x0000:7C00, DL=0x80)</text>
+
+  <!-- Layer 3: IPO_Firmware -->
+  <g filter="url(#shadow)">
+    <rect x="70" y="355" width="760" height="90" rx="8" fill="url(#fwGrad)" stroke="#c084fc" stroke-width="1.5"/>
+    <text x="100" y="387" font-family="system-ui, sans-serif" font-size="17" font-weight="700" fill="#ffffff">IPO_Firmware (BIOS Compatibility Runtime)</text>
+    <text x="100" y="411" font-family="system-ui, sans-serif" font-size="13" fill="#ede9fe">Execution: Shadow RAM 0xF000:0004 • Real Mode 16-bit • IVT (INT 10h–1Ah) • BDA (0x400) • EBDA</text>
+    <text x="100" y="431" font-family="system-ui, sans-serif" font-size="13" fill="#ddd6fe">Fast A20 Gate (0x92) • E820 SMAP • Multi-bus Storage Probing (ATA, AHCI, NVMe, USB EHCI)</text>
+    <rect x="720" y="370" width="90" height="26" rx="4" fill="#4c1d95"/>
+    <text x="765" y="387" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#c4b5fd" text-anchor="middle">REAL MODE</text>
+  </g>
+
+  <!-- Contract 2 Arrow: Boot ROM Handover -->
+  <path d="M 450 445 L 450 475" stroke="#34d399" stroke-width="2.5" stroke-dasharray="4,4"/>
+  <polygon points="445,475 450,485 455,475" fill="#34d399"/>
+  <rect x="290" y="453" width="320" height="20" rx="4" fill="#0f172a" stroke="#34d399" stroke-width="1"/>
+  <text x="450" y="467" font-family="monospace" font-size="10.5" fill="#6ee7b7" font-weight="600" text-anchor="middle">Contract 2: Handover (0xF000:0004, 'IPOF')</text>
+
+  <!-- Layer 2: IPO_Boot_ROM -->
+  <g filter="url(#shadow)">
+    <rect x="70" y="485" width="760" height="85" rx="8" fill="url(#romGrad)" stroke="#34d399" stroke-width="1.5"/>
+    <text x="100" y="517" font-family="system-ui, sans-serif" font-size="17" font-weight="700" fill="#ffffff">IPO_Boot_ROM (Cold Silicon Reset Initializer)</text>
+    <text x="100" y="541" font-family="system-ui, sans-serif" font-size="13" fill="#d1fae5">Reset Vector: 0xFFFFFFF0 • Cache-as-RAM (MTRR NEM) • Chipset Probe (i440FX vs Q35)</text>
+    <text x="100" y="559" font-family="system-ui, sans-serif" font-size="13" fill="#a7f3d0">MRC DRAM Controller Training • 8259 PIC / 8254 PIT • PAM Shadow RAM Copy & Lock (RO)</text>
+    <rect x="720" y="500" width="90" height="26" rx="4" fill="#064e3b"/>
+    <text x="765" y="517" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#6ee7b7" text-anchor="middle">SPI FLASH</text>
+  </g>
+
+  <!-- Reset Arrow -->
+  <path d="M 450 570 L 450 595" stroke="#94a3b8" stroke-width="2.5" stroke-dasharray="4,4"/>
+  <polygon points="445,595 450,605 455,595" fill="#94a3b8"/>
+
+  <!-- Layer 1: Hardware -->
+  <g filter="url(#shadow)">
+    <rect x="70" y="605" width="760" height="50" rx="8" fill="url(#hwGrad)" stroke="#64748b" stroke-width="1.5"/>
+    <text x="450" y="635" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#f8fafc" text-anchor="middle">Physical x86 Hardware / QEMU Motherboard (CPU, DRAM, Chipset, Storage, Network, Video)</text>
+  </g>
+</svg>

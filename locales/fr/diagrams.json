@@ -1,0 +1,185 @@
+{
+  "global_stack": {
+    "title": "IPO Systems Platform Vertical Stack",
+    "caption": "Complete execution hierarchy from power-on hardware reset vector to userspace graphical/console applications.",
+    "labels": {
+      "hardware": "Physical Hardware (CPU x86, RAM, Chipset, Storage)",
+      "boot_rom": "IPO_Boot_ROM (Reset Vector 0xFFFFFFF0, CAR, MRC, PAM)",
+      "contract_2": "Contract 2 Handover (CS:IP 0xF000:0004, Shadow RAM)",
+      "firmware": "IPO_Firmware (IVT, A20, Storage Discovery, MBR Load)",
+      "contract_3": "Contract 3 Handover (CS:IP 0x0000:7C00, DL=Drive ID)",
+      "kernel": "IPO_OS Kernel (PMM, VFS, Sched, Drivers, TCP/IP)",
+      "syscall_gate": "Syscall Gate (int 0x80, EAX=num, EBX=argc, ECX=argv)",
+      "userland": "Userspace Applications (0x800000, LibC, Shell, GUI WM)"
+    }
+  },
+  "boot_rom_flow": {
+    "title": "IPO_Boot_ROM Low-Level Execution Sequence",
+    "caption": "Step-by-step progression of the hardware reset vector through Cache-as-RAM, memory training, and firmware handover.",
+    "labels": {
+      "reset_vector": "CPU Reset Vector (0xFFFFFFF0 / F000:FFF0)",
+      "jump_base": "Jump to ROM Base (0xF000:8000)",
+      "car_setup": "Phase 1: Cache-as-RAM Setup (MTRRs, Stack at 0x7000:8000)",
+      "chipset_probe": "Phase 2: PCI Chipset Probing (i440FX vs Q35)",
+      "mrc_training": "Phase 3: Memory Reference Code (MRC DRAM Training)",
+      "car_teardown": "Phase 4: CAR Teardown & DRAM Stack (0x0000:7000)",
+      "pic_pit": "Phase 5: Cascaded 8259 PIC & 8254 PIT Setup",
+      "uart_init": "Phase 6: COM1 UART Init (115200 8N1)",
+      "shadow_ram": "Phase 7: PAM Copy to Shadow RAM (0xF0000..0xFFFFF)",
+      "pam_lock": "Phase 8: PAM Read-Only Lock",
+      "magic_check": "Phase 9: Validate 'IPOF' Magic (0x464F5049)",
+      "handover": "Transfer to Firmware: jmp 0xF000:0004"
+    }
+  },
+  "firmware_flow": {
+    "title": "IPO_Firmware Service Setup & Storage Discovery",
+    "caption": "Execution pipeline from Boot ROM handover through BIOS interrupts installation to storage drive discovery and OS handover.",
+    "labels": {
+      "entry": "Firmware Entry Point (0xF000:0004)",
+      "ivt_setup": "Register IVT: INT 10h, 12h, 13h, 15h, 16h, 1Ah",
+      "bda_ebda": "Init BDA (0x400) & EBDA / ACPI 1.0 (0x9FC00)",
+      "pci_enum": "PCI Bus Enumeration (VGA, Storage, USB Controllers)",
+      "video_init": "Video Subsystem (VBIOS Option ROM or Text Mode 03h)",
+      "a20_gate": "Fast A20 Gate Activation (Port 0x92)",
+      "memory_detect": "E820 / E801 Memory Map Construction",
+      "storage_probe": "Multi-Bus Storage Scan: ATA (0x1F0), AHCI, NVMe, USB",
+      "mbr_load": "Read LBA 0 to 0x0000:7C00 via INT 13h AH=42h",
+      "validate_mbr": "Check MBR Signature 0x55AA",
+      "os_handover": "OS Handover: DL=0x80..0x82, jmp 0x0000:7C00"
+    }
+  },
+  "kernel_boot": {
+    "title": "IPO_OS Kernel Initialization Pipeline",
+    "caption": "Transition from MBR bootloader through Protected Mode to the running kernel, filesystem mount, and interactive shell.",
+    "labels": {
+      "mbr_stage1": "Stage 1 Bootloader (MBR Sector 0x7C00)",
+      "stage2_load": "Stage 2 Bootloader Loaded from Disk",
+      "prot_mode": "Enter 32-bit Protected Mode (GDT loaded, CR0 PE=1)",
+      "kernel_load": "Load Kernel ELF32 to Physical Address 0x10000",
+      "kernel_entry": "Kernel Entry (_start in linker.ld)",
+      "mm_init": "Physical Memory Manager & Kernel Heap (kmalloc)",
+      "idt_init": "Interrupt Descriptor Table (IDT) & Syscall Gate (0x80)",
+      "fs_mount": "Mount Root File System (IPO_FS Partition at LBA 2048)",
+      "drivers_init": "Init Drivers (ATA, Keyboard, Mouse, RTL8139, VBE/WM)",
+      "launch_shell": "Spawn Initial Process (/applications/shell.bin)"
+    }
+  },
+  "memory_map": {
+    "title": "IPO_OS Physical & Virtual Memory Layout",
+    "caption": "Map of memory zones: Real-mode legacy tables, kernel space at 64 KB, and userspace applications at 8 MB.",
+    "labels": {
+      "ivt_bda": "0x00000 - 0x004FF: IVT (1 KB) & BDA (256 B)",
+      "free_conv": "0x00500 - 0x07BFF: Scratch RAM & Stacks",
+      "boot_mbr": "0x07C00 - 0x07DFF: Bootloader MBR Buffer (512 B)",
+      "kernel_bin": "0x10000 - 0x7FFFF: IPO_OS Kernel Core (.text, .data, .bss)",
+      "video_ram": "0xA0000 - 0xBFFFF: Video Framebuffer (VGA Text 0xB8000)",
+      "ebda_rom": "0xC0000 - 0xFFFFF: VBIOS, Shadow RAM & ROM Firmware",
+      "kernel_heap": "0x100000 - 0x7FFFFF: Extended Memory & Kernel kmalloc Pool",
+      "user_apps": "0x800000+: Userspace Applications (Entry at 0x800000)"
+    }
+  },
+  "syscall_pipeline": {
+    "title": "System Call Dispatch Pipeline (int 0x80)",
+    "caption": "Flow of control and argument passing when a userspace application requests an operating system service.",
+    "labels": {
+      "app_call": "Application executes ipo_syscall(num, argc, argv)",
+      "trap_gate": "Assembly 'int 0x80' triggers CPU Software Interrupt Gate",
+      "ring_switch": "Hardware CPU Switch: Ring 3 (User) -> Ring 0 (Kernel)",
+      "dispatcher": "Kernel Syscall Dispatcher validates number & arguments",
+      "handler_exec": "Target Subsystem Handler executes (FS, Process, Net, WM)",
+      "return_ring": "Result placed in EAX, 'iret' returns to Ring 3"
+    }
+  },
+  "fs_layout": {
+    "title": "IPO_FS 64-bit Extent-Based On-Disk Structure",
+    "caption": "Partition layout showing 512-byte blocks, 64-bit extents, and 128-byte inode organization.",
+    "labels": {
+      "mbr_reserved": "Sector 0..2047: MBR and Reserved Boot Sectors",
+      "superblock": "LBA 2048: Superblock ('IPO_FS\\0\\0', Block Size, Pointers)",
+      "inode_bitmap": "Block Bitmap / Inode Bitmap (Allocation Tracking)",
+      "inode_table": "Inode Table (128 bytes per inode, 4 inodes / block)",
+      "data_blocks": "Data Extent Pool (Contiguous Multi-Block Extents)"
+    }
+  },
+  "pc_assembly_flow": {
+    "title": "Hardware Assembly & Safety Progression",
+    "caption": "Order of physical assembly from workbench ESD safety preparation to power-on self test.",
+    "labels": {
+      "esd_prep": "Step 1: ESD Protection & Workstation Preparation",
+      "cpu_install": "Step 2: CPU Socket Installation & Thermal Compound",
+      "cooler_mount": "Step 3: CPU Cooler & Retention Bracket",
+      "ram_install": "Step 4: Dual-Channel DDR/SDRAM Insertion",
+      "case_mb": "Step 5: Standoff Alignment & Motherboard Mounting",
+      "psu_cabling": "Step 6: Power Supply (24-pin ATX, 8-pin EPS)",
+      "storage_conn": "Step 7: Storage Drives & SATA/IDE Data Cables",
+      "front_panel": "Step 8: Front Panel Pinout (Power SW, Reset SW, LEDs)",
+      "post_test": "Step 9: Bench POST Self-Test & Diagnostic Speaker Check"
+    }
+  },
+  "front_panel_pinout": {
+    "title": "Standard Motherboard Front Panel Header Pinout",
+    "caption": "Pin layout and polarity guidelines for power button, reset button, and status LEDs.",
+    "labels": {
+      "pwr_led": "LED d'alimentation (+ vers Pin 1, - vers Pin 3)",
+      "hdd_led": "LED d'activité HDD (+ vers Pin 2, - vers Pin 4)",
+      "reset_sw": "Bouton Reset (sans polarité)",
+      "pwr_sw": "Bouton Power (sans polarité)"
+    }
+  },
+  "net_stack": {
+    "title": "IPO_OS Bare-Metal TCP/IP Protocol Stack",
+    "caption": "Network packet processing hierarchy from physical RTL8139 PCI NIC to BSD-like Socket API.",
+    "labels": {
+      "nic_driver": "RTL8139 PCI NIC Driver (Ring Buffers, RX/TX Packets)",
+      "ethernet_l2": "Ethernet II Framing & MAC Filtering",
+      "arp_layer": "ARP Cache & Address Resolution Protocol",
+      "ipv4_l3": "IPv4 Layer (Routing Table, Checksum, Fragmentation)",
+      "transport_l4": "Transport Layer: UDP & TCP RFC 793/9293 State Machine",
+      "socket_api": "Socket Layer: socket(), bind(), connect(), listen(), accept(), send(), recv()"
+    }
+  },
+  "vertical_platform_stack": {
+    "title": "Pile verticale de la plateforme IPO Systems Platform",
+    "caption": "Hiérarchie complète d'exécution du vecteur de réinitialisation aux applications utilisateur."
+  },
+  "spi_flashing_pinout": {
+    "title": "Brochage du programmateur CH341A vers SOIC-8 SPI Flash",
+    "caption": "Connexions entre le programmateur USB CH341A et la puce SPI Flash 8 broches (W25Q64)."
+  },
+  "process_scheduler": {
+    "title": "Cycle de vie des processus et automate du planificateur",
+    "caption": "Transitions d'états : CREATED, READY, RUNNING, WAITING/BLOCKED et TERMINATED."
+  },
+  "window_manager": {
+    "title": "Pipeline de composition du gestionnaire de fenêtres et VBE",
+    "caption": "Composition des mémoires tampons clientes et transfert vers le framebuffer linéaire VBE."
+  },
+  "car_memory_layout": {
+    "title": "Organisation Cache-as-RAM (CAR) et configuration MTRR",
+    "caption": "Zone de 64 Ko de cache L1/L2 configurée en mémoire temporaire SRAM avant la DRAM."
+  },
+  "chipset_init_flow": {
+    "title": "Détection du chipset et Shadow RAM PAM",
+    "caption": "Détection du pont hôte (i440FX vs Q35), verrouillage SMRAM, registres PAM et copie du firmware."
+  },
+  "pci_bus_topology": {
+    "title": "Hiérarchie du bus PCI et énumération des périphériques",
+    "caption": "Balayage récursif via les ports d'E/S 0xCF8 (CONFIG_ADDRESS) et 0xCFC (CONFIG_DATA)."
+  },
+  "storage_transfer_flow": {
+    "title": "Séquence de lecture/écriture en mode ATA PIO",
+    "caption": "Attente de BSY/DRQ sur 0x1F7, émission de la commande 0x20 et lecture de 512 octets via rep insw sur 0x1F0."
+  },
+  "interrupt_routing": {
+    "title": "Table IDT et routage des interruptions matérielles",
+    "caption": "Routage des IRQ via le double PIC 8259 (0x20..0x2F), exceptions CPU et porte int 0x80."
+  },
+  "driver_architecture": {
+    "title": "Modèle de pilotes de périphériques et liaison VFS",
+    "caption": "Table d'opérations struct device_ops reliant les nœuds /dev aux registres matériels."
+  },
+  "ipc_architecture": {
+    "title": "Sous-système de communication inter-processus (IPC)",
+    "caption": "Files de messages, tubes anonymes (pipes), signaux asynchrones et mémoire partagée."
+  }
+}

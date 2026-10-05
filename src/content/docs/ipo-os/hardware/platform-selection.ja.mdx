@@ -1,0 +1,41 @@
+---
+title: "Platform Selection & Chipsets"
+description: "Selecting motherboards, host chipsets, and CPU generations compatible with IPO_OS and IPO_Boot_ROM."
+---
+
+# Platform Selection & Chipsets
+
+Choosing the right motherboard and processor is critical when assembling a physical machine for the IPO Systems Platform. Because `IPO_Boot_ROM` initializes DRAM via Memory 技術リファレンス Code (MRC) and `IPO_OS` accesses legacy storage controllers, the hardware must strictly match supported chipset register sets.
+
+---
+
+## 🧭 Chipset Compatibility Matrix
+
+| Chipset Family | Generation | Status | MRC Support in Boot ROM | Storage Mode Required |
+| :--- | :--- | :---: | :--- | :--- |
+| **Intel i440FX / i440BX** | Pentium II / III | **Fully Supported** | Complete SDRAM MRC sequence | Native 40-pin PATA / IDE Master |
+| **Intel Q35 / G33 / ICH9** | Core 2 Duo / Quad | **Fully Supported** | Supported (ICH9 PAM + PCI probe) | SATA in IDE / Legacy mode |
+| **Intel 865G / 875P / ICH5** | Pentium 4 (Socket 478) | **Supported with BIOS** | Requires standard BIOS (IPO_Firmware) | Primary PATA / IDE Controller |
+| **Modern Intel (Core i3–i9)** | 1st–14th Gen Core | **Incompatible** | Lacks Intel FSP; Boot Guard blocks SPI | Requires UEFI / AHCI emulation |
+| **AMD Zen (AM4 / AM5)** | Ryzen 1000–9000 | **Incompatible** | Handled by AMD PSP before リセットベクタ | Non-PC-AT bootstrap sequence |
+
+<Callout type="warning" lang="en" title="Why Modern Chipsets Cannot Boot Custom Reset ROMs">
+Modern Intel and AMD processors do not begin execution directly at `0xFFFFFFF0` in conventional flash. Intel Boot Guard cryptographically authenticates Microcode and Firmware Interface Tables (FIT) before releasing CPU reset. AMD platforms rely on the Platform Security Processor (PSP / ARM core). For bare-metal SPI experiments, choose **Intel i440FX** or **Intel Q35/ICH9** platforms.
+</Callout>
+
+---
+
+## 🔌 BIOS vs. Custom Boot ROM Modes
+
+When running on physical hardware, two deployment models exist:
+
+### Model 1: Full Bare-Metal Stack (IPO_Boot_ROM + IPO_Firmware + IPO_OS)
+- Flash chip on the motherboard is rewritten with `build/bootrom.bin` or `build/spi_flash.bin`.
+- CPU starts at リセットベクタ `0xFFFFFFF0`.
+- Requires i440FX or Q35 motherboard with socketed or clip-accessible SPI/DIP flash.
+
+### Model 2: Standard Factory BIOS + IPO_OS
+- Motherboard keeps its factory BIOS.
+- Storage drive (HDD, SSD, or USB) is formatted with `IPO_FS` and loaded with the IPO_OS MBR bootloader.
+- The factory BIOS performs POST and executes the IPO_OS MBR at `0x0000:7C00`.
+- Compatible with a wider variety of vintage x86 motherboards (including Pentium 4, Athlon XP).

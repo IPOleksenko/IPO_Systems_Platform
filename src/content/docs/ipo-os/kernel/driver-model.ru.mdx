@@ -1,0 +1,70 @@
+---
+title: "Архитектура драйверов устройств"
+description: "Модель драйверов ядра, интерфейс регистрации устройств и встроенные аппаратные драйверы."
+---
+
+# Архитектура драйверов устройств
+
+Драйверы устройств в IPO_OS функционируют на уровне ядра Ring 0, взаимодействуя напрямую с портами ввода-вывода x86, конфигурационным пространством PCI и аппаратными линиями прерываний IRQ.
+
+---
+
+## 🔌 Интерфейс регистрации драйверов
+
+Подсистема драйверов (`src/include/kernel/driver.h`) предоставляет унифицированную структуру интерфейса устройства:
+
+```c
+typedef struct driver {
+    char *name;
+    char *description;
+    uint32_t flags;
+
+    /* Lifecycle callbacks */
+    int (*init)(void);
+    int (*cleanup)(void);
+
+    /* Event hooks */
+    void (*on_tick)(void);                                       /* called every timer tick */
+    bool (*on_key)(uint8_t scancode, bool is_break);            /* called on key event; return true to consume */
+    int  (*on_command)(const char *cmd, int argc, char **argv); /* custom shell command; return 0 if handled */
+    char (*on_char_output)(char c);                             /* intercept / transform stdout chars */
+
+    /* Custom device I/O */
+    int (*read)(void *buffer, size_t size, uint32_t offset);
+    int (*write)(const void *buffer, size_t size, uint32_t offset);
+    int (*ioctl)(uint32_t cmd, void *arg);
+
+    void *owner;                                                /* owner process_t pointer (for user-space drivers) */
+    struct driver *next;
+} driver_t;
+
+int driver_register(driver_t *drv);
+int driver_unregister(const char *name);
+```
+
+Пользовательские программы могут получать список и управлять драйверами через системные вызовы:
+- `IPO_SYSCALL_DRIVER_REGISTER` (`0x1060`)
+- `IPO_SYSCALL_DRIVER_UNREGISTER` (`0x1061`)
+- `IPO_SYSCALL_DRIVER_LIST` (`0x1062`)
+
+---
+
+## 🛠️ Встроенные драйверы устройств
+
+### 1. Драйвер дисков ATA / IDE
+- **Базовые порты:** Командный блок Primary IDE `0x1F0`–`0x1F7`, блок управления `0x3F6`.
+- **Адресация:** Режимы LBA28 и LBA48 через программный ввод-вывод (PIO).
+- **Опрос статуса (Polled PIO):** Подача команд Read Sectors (`0x20`) или Write Sectors (`0x30`) с циклом опроса порта `0x1F7` (ожидание сброса бита BSY и установки бита DRQ).
+
+### 2. Драйвер сетевой карты Realtek RTL8139 PCI
+- **Поиск на шине:** Сканирование конфигурационного пространства PCI (Vendor `0x10EC`, Device `0x8139`).
+- **Буферы:** Настройка четырёх физических 2 КБ буферов отправки (`TSD0`–`TSD3`) и кольцевого непрерывного буфера приёма RX (8 КБ + 16 байт).
+- **Прерывания:** Обработка событий успешного приёма (`ROK`) и передачи (`TOK`) со сбросом пакетов в сетевой стек TCP/IP.
+
+### 3. Подсистема ввода PS/2 и динамические раскладки
+- **Контроллер 8042:** Порты `0x60` (данные) и `0x64` (статус/команды).
+- **Трансляция раскладок:** Скан-коды преобразуются через активную таблицу перекодировки. Поддерживается динамическое переключение между латиницей и кириллицей через вызов `IPO_SYSCALL_KEYMAP_CYCLE_NEXT` (`0x1058`).
+
+### 4. Звуковая подсистема: Sound Blaster 16 и PC Speaker
+- **Sound Blaster 16:** Базовый порт DSP `0x220`. Обмен командами и сброс через регистры буферов ввода-вывода `0x22C`/`0x22A`.
+- **PC Speaker:** Канал 2 таймера PIT подключён к логическому вентилю порта динамика `0x61` (биты 0 и 1).

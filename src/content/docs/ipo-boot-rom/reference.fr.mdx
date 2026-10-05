@@ -1,0 +1,47 @@
+---
+title: "Contract 2 & Port 0x80 Codes"
+description: "Specification of Contract 2 handover to IPO_Firmware and complete diagnostic POST codes output to hardware Port 0x80."
+---
+
+import SharedStruct from '../../../components/SharedStruct.astro';
+import Callout from '../../../components/Callout.astro';
+
+# Contract 2 & Port 0x80 Codes
+
+This reference specifies the binary handover contract between **IPO_Boot_ROM** and **IPO_Firmware** (Contract 2), alongside the hardware diagnostic codes emitted to I/O port `0x80`.
+
+---
+
+## 📋 Port 0x80 POST Diagnostic Codes
+
+Throughout initialization, IPO_Boot_ROM outputs single-byte progress and error codes to port `0x80`. These can be read using an LPC/PCI diagnostic card or in QEMU:
+
+<SharedStruct id="bootrom_post_codes" />
+
+---
+
+## 🤝 Contract 2 Specification (Boot ROM $\to$ Firmware Handover)
+
+Contract 2 defines the binary interface when IPO_Boot_ROM transfers control to IPO_Firmware in Shadow RAM.
+
+### 1. Memory Location & Header
+The firmware payload must reside at segment `0xF000` with this exact 16-byte header:
+
+```
+Address         Offset   Field          Value
+0x000F0000      0x00     magic          0x464F5049 ("IPOF" in ASCII)
+0x000F0004      0x04     entry_point    Firmware initialization code begins directly here
+```
+
+### 2. CPU State at Handover Jump (`0xF000:0004`)
+
+| Register | Expected State at Entry |
+| :--- | :--- |
+| **`CS:IP`** | `0xF000:0x0004` (Mode réel segment addressing) |
+| **`EAX`** | Detected Chipset ID (`0x1237` for i440FX, `0x29C0` for Q35) |
+| **`EBX`** | Total verified physical DRAM size in Kilobytes |
+| **`ESP`** | `0x00007C00` (Stack located safely in conventional low DRAM) |
+| **`SS`** | `0x0000` |
+| **`DS`, `ES`** | `0x0000` or `0xF000` |
+| **`EFLAGS`** | `0x00000002` (Interrupts disabled, `IF = 0`) |
+| **PAM State** | PAM0 register locked read-only (`RE = 1, WE = 0`) |

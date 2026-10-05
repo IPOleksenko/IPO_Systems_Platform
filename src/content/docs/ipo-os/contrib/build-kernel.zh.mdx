@@ -1,0 +1,85 @@
+---
+title: "Building IPO_OS from Source"
+description: "Step-by-step instructions for compiling the kernel, building disk images, and configuring build flags."
+---
+
+import Callout from '../../../../components/Callout.astro';
+
+# Building IPO_OS from Source
+
+This guide explains how to compile the IPO_OS microkernel, build its userland utilities, generate bootable disk images, and run automated targets using GNU Make.
+
+---
+
+## 🛠️ Build Prerequisites
+
+Verify you have installed the necessary toolchains:
+
+```bash
+# Ubuntu / Debian
+sudo apt update
+sudo apt install -y build-essential gcc-multilib nasm make python3 qemu-system-x86
+```
+
+---
+
+## 📁 Source Code Organization
+
+The repository tree is organized into isolated modular layers:
+
+```
+IPO_OS/
+├── Makefile             # Root build orchestrator
+├── src/
+│   ├── boot/            # Stage 1 MBR and Stage 2 protected mode loader
+│   ├── kernel/          # Microkernel core (scheduler, memory, syscalls)
+│   ├── drivers/         # Hardware drivers (ATA, RTL8139, PIT, PS/2, Serial)
+│   ├── fs/              # IPO_FS filesystem implementation
+│   ├── net/             # Bare-metal TCP/IP network stack
+│   ├── userland/        # Default shell, utilities, and libc
+│   └── include/         # Public kernel and user headers
+└── tools/
+    ├── disk_editor.py   # Filesystem partition editor
+    └── setup-tap.sh     # TAP network interface configurator
+```
+
+---
+
+## 🔨 Build Commands
+
+### 1. Compile Everything
+```bash
+make all
+```
+Compiles the stage 1 and stage 2 bootloaders, kernel ELF, drivers, standard utilities, and builds `build/disk.img`.
+
+### 2. Format and Generate Disk Image
+```bash
+make disks
+```
+Initializes a 128 MB disk image (`build/disk.img`) formatted with `IPO_FS`, creates `build/disk.iso` (5 MB), compiles default fonts, and populates applications using `load_applications.py`.
+
+### 3. Clean Build Artifacts
+```bash
+make clean
+```
+Removes all compiled `.o`, `.bin`, `.elf`, and `.img` files.
+
+---
+
+## ⚙️ Makefile Configuration Flags
+
+| Flag | Default | Description |
+| :--- | :--- | :--- |
+| `DEBUG` | `0` | When set to `1`, compiles with `-g -O0` and enables verbose serial debugging |
+| `NET_MODE` | `user` | Network mode: `user` (QEMU SLIRP NAT) or `tap` (bridged host TAP) |
+| `SERIAL_LOG` | `1` | Mirrors all kernel console output to UART COM1 (`0x3F8`) |
+
+### Example Invocations:
+```bash
+# Build in debug mode and run in QEMU with GDB stub:
+make run DEBUG=1 QEMU_ARGS="-s -S"
+
+# Run with bridged TAP networking:
+make run NET_MODE=tap
+```

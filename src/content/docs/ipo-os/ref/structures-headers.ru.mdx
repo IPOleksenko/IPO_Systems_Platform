@@ -1,0 +1,66 @@
+---
+title: "Структуры данных и системные заголовки"
+description: "Бинарные структуры IPO_FS, дескриптор процесса process_t, статистика кучи kmalloc и аппаратные структуры ядра."
+---
+
+import SharedStruct from '../../../../components/SharedStruct.astro';
+
+# Структуры данных и системные заголовки
+
+В этом справочнике приведены бинарные структуры ядра **IPO_OS** и файловой системы **IPO_FS**, полностью сверенные с заголовочными файлами кодовой базы ядра (`src/include/`).
+
+---
+
+## 🗄️ Суперблок IPO_FS (`struct ipo_superblock`)
+
+Расположен в секторе LBA 2048 (смещение 1 МБ от начала накопителя) корневого раздела:
+
+<SharedStruct id="ipo_superblock" />
+
+---
+
+## 📄 Индексный дескриптор файла (`struct ipo_inode`)
+
+Каждый дескриптор занимает ровно 128 байт (ровно 4 дескриптора на один 512-байтный сектор диска):
+
+<SharedStruct id="ipo_inode" />
+
+---
+
+## 🧩 Дескриптор экстента файла (`struct ipo_extent`)
+
+Описывает непрерывный диапазон секторов на физическом носителе (`src/include/file_system/ipo_fs.h`):
+
+<SharedStruct id="ipo_extent" />
+
+---
+
+## ⚙️ Дескриптор процесса ядра (`process_t`)
+
+Определён в `src/include/kernel/process.h` и хранит полный контекст выполнения процесса:
+
+<SharedStruct id="process_pcb" />
+
+---
+
+## 🧠 Статистика аллокатора кучи (`kmalloc_stats_t`)
+
+Используется для мониторинга состояния ядра и памяти (`src/include/memory/kmalloc.h`):
+
+<SharedStruct id="kmalloc_stats" />
+
+---
+
+## 💾 Информация о накопителе ATA (`ata_device_t`)
+
+Заполняется драйвером ATA PIO при опросе контроллера командой IDENTIFY (`src/include/driver/ata/ata.h`):
+
+<SharedStruct id="ata_device" />
+
+---
+
+## ⚡ Шлюз таблицы прерываний IDT (`ipo_idt_entry_t`)
+
+Формат 8-байтного дескриптора шлюза прерывания/системного вызова x86 (`src/kernel/syscall/syscall.c`):
+
+<SharedStruct id="ipo_idt_entry" />

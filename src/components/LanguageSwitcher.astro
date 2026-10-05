@@ -1,0 +1,241 @@
+---
+import { siteConfig } from '../../site.config';
+import { getTranslation } from '../utils/i18n';
+import FlagIcon from './FlagIcon.astro';
+
+interface Props {
+  currentLang: string;
+  currentSlug?: string;
+}
+
+const { currentLang, currentSlug = '' } = Astro.props;
+const languages = siteConfig.languages;
+const langLabel = getTranslation(currentLang, 'ui.language');
+const currentLangMeta = languages[currentLang] || { name: currentLang, flag: '🌐' };
+---
+
+<div class="lang-switcher" id="lang-switcher">
+  <label for="lang-select" class="sr-only">{langLabel}</label>
+  <select id="lang-select" class="sr-only" aria-label={langLabel} data-current-slug={currentSlug} data-base={siteConfig.base}>
+    {Object.entries(languages).map(([code, meta]) => (
+      <option value={code} selected={code === currentLang}>
+        {meta.flag} {meta.name}
+      </option>
+    ))}
+  </select>
+
+  <button
+    type="button"
+    class="lang-trigger"
+    id="lang-trigger"
+    aria-haspopup="listbox"
+    aria-expanded="false"
+    aria-label={`${langLabel}: ${currentLangMeta.name}`}
+  >
+    <FlagIcon code={currentLang} />
+    <span class="lang-current-label">{currentLangMeta.name}</span>
+    <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  </button>
+
+  <div class="lang-dropdown" id="lang-dropdown" role="listbox" aria-label={langLabel}>
+    {Object.entries(languages).map(([code, meta]) => (
+      <button
+        type="button"
+        class={`lang-item ${code === currentLang ? 'active' : ''}`}
+        data-lang={code}
+        role="option"
+        aria-selected={code === currentLang}
+      >
+        <FlagIcon code={code} />
+        <span class="lang-name">{meta.name}</span>
+        {code === currentLang && <span class="active-check" aria-hidden="true">✓</span>}
+      </button>
+    ))}
+  </div>
+</div>
+
+<style>
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+
+  .lang-switcher {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .lang-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .lang-trigger:hover,
+  .lang-trigger:focus-visible {
+    border-color: var(--accent-primary);
+    outline: none;
+    box-shadow: 0 0 0 2px var(--accent-subtle, rgba(59, 130, 246, 0.15));
+  }
+
+  .lang-current-label {
+    white-space: nowrap;
+  }
+
+  .chevron-icon {
+    opacity: 0.7;
+    transition: transform 0.2s ease;
+  }
+
+  .lang-trigger[aria-expanded="true"] .chevron-icon {
+    transform: rotate(180deg);
+  }
+
+  .lang-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 170px;
+    max-height: 360px;
+    overflow-y: auto;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm, 6px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    padding: 0.35rem;
+    display: none;
+    flex-direction: column;
+    gap: 0.15rem;
+    z-index: 100;
+  }
+
+  .lang-dropdown.open {
+    display: flex;
+  }
+
+  .lang-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.45rem 0.65rem;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm, 4px);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+  }
+
+  .lang-item:hover,
+  .lang-item:focus-visible {
+    background-color: var(--bg-secondary);
+    color: var(--accent-primary);
+    outline: none;
+  }
+
+  .lang-item.active {
+    font-weight: 600;
+    color: var(--accent-primary);
+    background-color: var(--bg-secondary);
+  }
+
+  .lang-name {
+    flex: 1;
+    white-space: nowrap;
+  }
+
+  .active-check {
+    font-size: 0.8rem;
+    color: var(--accent-primary);
+    margin-left: auto;
+  }
+
+  @media (max-width: 640px) {
+    .lang-current-label {
+      display: none;
+    }
+    .lang-trigger {
+      padding: 0.35rem 0.45rem;
+    }
+  }
+</style>
+
+<script>
+  function setupLanguageSwitcher() {
+    const trigger = document.getElementById('lang-trigger');
+    const dropdown = document.getElementById('lang-dropdown');
+    const select = document.getElementById('lang-select') as HTMLSelectElement | null;
+    if (!trigger || !dropdown || !select) return;
+
+    const currentSlug = select.getAttribute('data-current-slug') || '';
+    const base = select.getAttribute('data-base') || '/';
+    const cleanBase = base.endsWith('/') ? base : `${base}/`;
+
+    function closeDropdown() {
+      dropdown.classList.remove('open');
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleDropdown() {
+      const isOpen = dropdown.classList.toggle('open');
+      trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleDropdown();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!trigger.contains(e.target as Node) && !dropdown.contains(e.target as Node)) {
+        closeDropdown();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && dropdown.classList.contains('open')) {
+        closeDropdown();
+        trigger.focus();
+      }
+    });
+
+    dropdown.querySelectorAll('.lang-item').forEach((item) => {
+      item.addEventListener('click', () => {
+        const targetLang = item.getAttribute('data-lang');
+        if (!targetLang) return;
+
+        localStorage.setItem('doc_lang', targetLang);
+        closeDropdown();
+
+        const newPath = currentSlug
+          ? `${cleanBase}${targetLang}/${currentSlug}`
+          : `${cleanBase}${targetLang}/`;
+        window.location.href = newPath;
+      });
+    });
+  }
+
+  setupLanguageSwitcher();
+  document.addEventListener('astro:after-swap', setupLanguageSwitcher);
+</script>

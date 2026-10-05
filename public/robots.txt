@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ipoleksenko.github.io/IPO_Systems_Platform/sitemap-index.xml

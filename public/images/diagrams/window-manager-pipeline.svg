@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgWm" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="880" height="500" fill="url(#bgWm)" rx="12"/>
+  <text x="440" y="38" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="#f8fafc" text-anchor="middle">Dual-Mode Display &amp; Window Manager Compositing Pipeline</text>
+  <text x="440" y="60" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">Hardware text mode (0xB8000) and VBE / Mode 13h graphics compositing</text>
+
+  <!-- Left: Mode 03h Text -->
+  <g transform="translate(60, 90)">
+    <rect width="360" height="360" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="180" y="32" font-family="sans-serif" font-size="14" font-weight="700" fill="#60a5fa" text-anchor="middle">VGA MODE 03h (80x25 TEXT)</text>
+    
+    <g transform="translate(20, 50)">
+      <rect width="320" height="60" rx="4" fill="#0f172a" stroke="#475569"/>
+      <text x="10" y="24" font-family="sans-serif" font-size="11" font-weight="700" fill="#93c5fd">VRAM Framebuffer: 0xB8000</text>
+      <text x="10" y="44" font-family="monospace" font-size="10" fill="#cbd5e1">2 Bytes/char: [ASCII Byte] + [Attribute Byte]</text>
+
+      <rect y="75" width="320" height="110" rx="4" fill="#022c22" stroke="#10b981"/>
+      <text x="10" y="98" font-family="sans-serif" font-size="11" font-weight="700" fill="#34d399">Dynamic Cyrillic &amp; CP866 Fonts</text>
+      <text x="10" y="118" font-family="sans-serif" font-size="10" fill="#a7f3d0">• Cyrillic font loaded into VGA Plane 2</text>
+      <text x="10" y="136" font-family="sans-serif" font-size="10" fill="#a7f3d0">• Keyboard layouts: EN, RU, UA, ZH</text>
+      <text x="10" y="154" font-family="sans-serif" font-size="10" fill="#a7f3d0">• Hotkey cycling: Ctrl+Shift or Alt+Shift</text>
+
+      <rect y="200" width="320" height="85" rx="4" fill="#1e1e38" stroke="#8b5cf6"/>
+      <text x="10" y="224" font-family="sans-serif" font-size="11" font-weight="700" fill="#c084fc">Scrollback &amp; Virtual Workspaces</text>
+      <text x="10" y="244" font-family="sans-serif" font-size="10" fill="#ddd6fe">Per-process VRAM backup on swap</text>
+      <text x="10" y="262" font-family="sans-serif" font-size="10" fill="#ddd6fe">Dedicated top/bottom scroll buffers</text>
+    </g>
+  </g>
+
+  <!-- Right: VBE Graphics & WM -->
+  <g transform="translate(460, 90)">
+    <rect width="360" height="360" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="180" y="32" font-family="sans-serif" font-size="14" font-weight="700" fill="#fcd34d" text-anchor="middle">VBE &amp; WINDOW MANAGER (GUI)</text>
+    
+    <g transform="translate(20, 50)">
+      <rect width="320" height="60" rx="4" fill="#0f172a" stroke="#475569"/>
+      <text x="10" y="24" font-family="sans-serif" font-size="11" font-weight="700" fill="#fde68a">Graphics VRAM: 0xA0000 / Linear BAR</text>
+      <text x="10" y="44" font-family="monospace" font-size="10" fill="#cbd5e1">Mode 13h (320x200 256c) • VBE BGA (640x480+)</text>
+
+      <rect y="75" width="320" height="110" rx="4" fill="#3b0764" stroke="#c084fc"/>
+      <text x="10" y="98" font-family="sans-serif" font-size="11" font-weight="700" fill="#e879f9">Desktop &amp; Window Compositor</text>
+      <text x="10" y="118" font-family="sans-serif" font-size="10" fill="#f5d0fe">• Window frames, titlebars, close buttons</text>
+      <text x="10" y="136" font-family="sans-serif" font-size="10" fill="#f5d0fe">• Focus list (Z-order stacking)</text>
+      <text x="10" y="154" font-family="sans-serif" font-size="10" fill="#f5d0fe">• PS/2 mouse cursor sprite overlay</text>
+
+      <rect y="200" width="320" height="85" rx="4" fill="#451a03" stroke="#f59e0b"/>
+      <text x="10" y="224" font-family="sans-serif" font-size="11" font-weight="700" fill="#fcd34d">3D Graphics Acceleration (TinyGL)</text>
+      <text x="10" y="244" font-family="sans-serif" font-size="10" fill="#fef3c7">Native OpenGL 1.1 pipeline running in IPO_OS</text>
+      <text x="10" y="262" font-family="sans-serif" font-size="10" fill="#fef3c7">Apps: gl_gears, gl_teapot, gl_cube</text>
+    </g>
+  </g>
+</svg>

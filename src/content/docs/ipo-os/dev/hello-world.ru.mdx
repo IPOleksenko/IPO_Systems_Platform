@@ -1,0 +1,86 @@
+---
+title: "Первая программа: Hello, IPO_OS"
+description: "Написание, ассемблирование, компиляция и запуск ваших первых программ на C и Ассемблере для IPO_OS."
+---
+
+import SharedCode from '../../../../components/SharedCode.astro';
+import Callout from '../../../../components/Callout.astro';
+
+# Первая программа: Hello, IPO_OS
+
+Это руководство проведёт вас через процесс создания вашего первого нативного приложения для IPO_OS с нуля — как на языке C, так и на чистом ассемблере x86 (NASM).
+
+---
+
+## 💻 1. Написание приложения на C
+
+В программах на C используются функции вывода `printf()` и стандартные соглашения функции `main()`. В среде исполнения IPO_OS строка передаётся в консоль ядра через системный вызов `IPO_SYSCALL_PRINT` (`0x1001`):
+
+<SharedCode id="hello-c" />
+
+---
+
+## ⚡ 2. Написание приложения на чистом ассемблере (NASM)
+
+Для низкоуровневых утилит на ассемблере точка входа `_start` загружается по адресу `0x800000` и вызывает сервисы ядра напрямую через инструкцию `int 0x80`:
+
+<SharedCode id="hello-asm" />
+
+### Механизм передачи параметров в системный вызов:
+1. `push msg`: Помещает адрес строки в стек.
+2. `mov ecx, esp`: Устанавливает регистр `ECX` на указатель массива аргументов `argv` в стеке.
+3. `mov eax, 0x1001`: Помещает в `EAX` номер системного вызова (`IPO_SYSCALL_PRINT`).
+4. `mov ebx, 1`: Помещает в `EBX` количество аргументов (`argc = 1`).
+5. `int 0x80`: Вызывает системный шлюз ядра в Ring 0.
+
+---
+
+## 🔨 3. Компиляция и компоновка приложения на C
+
+Для сборки программы необходимы ассемблерная заглушка точки входа `entry.s`, реализация вывода `printf.c` и скрипт компоновщика `app.ld`:
+
+```bash
+# 1. Компиляция исходного кода C с флагами freestanding
+gcc -m32 -O2 -ffreestanding -fno-pie -fno-pic -nostdlib -Isrc/include -c main.c -o main.o
+
+# 2. Ассемблирование точки входа entry.s
+gcc -m32 -c applications/entry.s -o entry.o
+
+# 3. Компиляция рантайма вывода printf ядра для пользовательского приложения
+gcc -m32 -c src/kernel/stdio/printf.c -o app_printf.o -DIPO_APP -Isrc/include
+
+# 4. Линковка в исполняемый ELF-файл, привязанный к адресу 0x800000
+gcc -m32 -Wl,-T,applications/app.ld -nostdlib entry.o main.o app_printf.o -o hello.elf
+
+# 5. Извлечение плоского бинарного образа с инициализированной секцией .bss
+objcopy -O binary --set-section-flags .bss=alloc,load,contents hello.elf hello.bin
+```
+
+---
+
+## 🚀 4. Размещение на диске операционной системы
+
+Скопируйте полученный файл `hello.bin` в каталог `/applications` виртуального диска IPO_OS с помощью утилиты `disk_editor.py`:
+
+```bash
+python3 disk_editor.py put hello.bin /applications/hello.bin
+```
+
+---
+
+## 🖥️ 5. Запуск в командной строке
+
+Запустите операционную систему в QEMU:
+```bash
+make run
+```
+
+В интерактивном терминале ядра (`> `) запустите собранную программу:
+```
+> /applications/hello.bin
+Hello, World!
+> /applications/hello.bin test_arg1 test_arg2
+Hello, test_arg1
+Hello, test_arg2
+> 
+```

@@ -1,0 +1,46 @@
+---
+title: "PC Components & Subsystems"
+description: "Detailed component selection guide for CPU, RAM, storage, video, networking, and power."
+---
+
+# PC Components & Subsystems
+
+Building a physical machine for IPO_OS requires selecting components with verifiable low-level register behaviors. This section examines each component and how the kernel and firmware interact with it.
+
+---
+
+## 🧩 Subsystem Specifications
+
+### 1. Central Processing Unit (CPU)
+- **Sockets:** Socket 370 (Pentium III), Slot 1, or LGA 775 (Core 2 Duo).
+- **Features Required:** 32-bit IA-32 instruction set, MTRRs (Memory Type Range Registers) for Cache-as-RAM operation, and fast A20 gate compatibility.
+- **Cooling:** Quality copper/aluminum heatsink with a 3-pin or 4-pin PWM fan.
+
+### 2. Random Access Memory (RAM)
+- **Technology:** PC100/PC133 SDRAM (for i440FX/BX) or DDR2-667/800 (for Q35).
+- **Configuration:** Matched pairs for dual-channel throughput.
+- **Diagnostics:** Always test memory modules using an external pattern tester or MemTest86 before installing the OS.
+
+### 3. Motherboard & Electrolytic Capacitors
+- **Form Factor:** Standard ATX or Micro-ATX with at least two 32-bit 33 MHz PCI expansion slots.
+- **Inspection Checklist:** On motherboards manufactured between 1999 and 2007, inspect all electrolytic capacitors around the CPU VRM for bulging, leaking, or electrolyte crusting (the notorious "capacitor plague").
+
+### 4. Storage Subsystems & Master/Slave Jumpers
+- **Legacy IDE:** 40-pin or 80-conductor ribbon cable connected to Primary IDE Header (`0x1F0`). The boot drive must have its jumper set to **MASTER**.
+- **Modern SATA Alternative:** A standard SATA SSD connected to SATA Port 0, with the chipset configured to **IDE / Legacy Compatibility Mode** in BIOS settings.
+
+### 5. Video Adapters & Monitors
+- **Supported Standards:** Any PCI or AGP card supporting standard VGA Mode 03h (80x25 text at `0xB8000`) and Bochs VBE/BGA extensions.
+- **Display Connection:** Native VGA (D-Sub 15-pin) or an active D-Sub to HDMI converter.
+
+### 6. Network Interface Card (NIC)
+- **Target Controller:** **Realtek RTL8139C / RTL8139D** Fast Ethernet PCI card.
+- **Why RTL8139:** It is the official reference NIC supported by the IPO_OS native kernel driver, featuring simple memory-mapped ring buffers and robust hardware packet filtering.
+
+### 7. Real-Time Clock (RTC) & Battery
+- **Battery:** Standard 3V **CR2032** coin cell.
+- **Role:** Preserves CMOS registers `0x70` and `0x71` where system date, time, and floppy/drive geometries are stored.
+
+### 8. Power Supply Unit (PSU)
+- **Cables:** Standard ATX 24-pin (or 20-pin) main power cable and 4-pin/8-pin 12V CPU power cable.
+- **Rail Requirement:** Vintage motherboards draw significant amperage from the **+5V and +3.3V rails** (unlike modern PCs that rely primarily on +12V). Choose a PSU rated for at least 20A–25A on +5V.

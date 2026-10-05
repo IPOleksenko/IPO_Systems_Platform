@@ -1,0 +1,86 @@
+---
+import { sharedStructTables } from '../data/shared-code';
+
+interface Props {
+  id: string;
+  lang: string;
+}
+
+const { id, lang } = Astro.props;
+const table = sharedStructTables.find((t) => t.id === id);
+
+if (!table) {
+  throw new Error(`SharedStruct table not found for ID: ${id}`);
+}
+
+const isRu = lang === 'ru';
+const title = isRu ? table.titleRu : table.titleEn;
+---
+
+<div class="struct-table-wrapper" id={`struct-${id}`}>
+  <div class="struct-header">
+    <span class="struct-title">📊 {title}</span>
+    <span class="struct-badge">{table.totalSize}</span>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 12%;">{isRu ? 'Смещение' : 'Offset'}</th>
+        <th style="width: 14%;">{isRu ? 'Размер' : 'Size'}</th>
+        <th style="width: 18%;">{isRu ? 'Тип' : 'Type'}</th>
+        <th style="width: 22%;">{isRu ? 'Имя поля' : 'Field Name'}</th>
+        <th>{isRu ? 'Назначение и описание' : 'Description'}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {table.fields.map((f) => (
+        <tr>
+          <td><code>{f.offset}</code></td>
+          <td>{f.size}</td>
+          <td><code>{f.type}</code></td>
+          <td><strong><code>{f.name}</code></strong></td>
+          <td>{isRu ? f.descriptionRu : f.descriptionEn}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .struct-table-wrapper {
+    margin: 1.5rem 0;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background-color: var(--bg-card);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .struct-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .struct-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+  }
+
+  .struct-badge {
+    background-color: var(--accent-light);
+    color: var(--accent-primary);
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+  }
+
+  .struct-table-wrapper table {
+    margin-bottom: 0;
+  }
+</style>

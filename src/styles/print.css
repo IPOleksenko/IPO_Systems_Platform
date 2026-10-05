@@ -1,0 +1,53 @@
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  header, aside, .sidebar, .toc, .theme-toggle, .language-switcher, .search-button, .pagination-nav, footer {
+    display: none !important;
+  }
+
+  main {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  a {
+    color: #000000 !important;
+    text-decoration: underline !important;
+  }
+
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 85%;
+    color: #444444;
+  }
+
+  pre, blockquote, table, figure {
+    page-break-inside: avoid;
+  }
+
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+
+  pre {
+    border: 1px solid #cccccc !important;
+    background-color: #f5f5f5 !important;
+    color: #000000 !important;
+    font-size: 9pt;
+  }
+
+  table {
+    border: 1px solid #000000;
+  }
+
+  th, td {
+    border: 1px solid #999999;
+  }
+}

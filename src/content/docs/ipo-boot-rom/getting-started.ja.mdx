@@ -1,0 +1,84 @@
+---
+title: "Build Commands & QEMU"
+description: "Compiling IPO_Boot_ROM from assembly sources, packaging ROM images, and running emulation in QEMU."
+---
+
+import SharedCode from '../../../components/SharedCode.astro';
+import Callout from '../../../components/Callout.astro';
+
+# Build Commands & QEMU
+
+This guide covers building the **IPO_Boot_ROM** payload from source code, creating composite SPI Flash images, and testing ROM initialization inside QEMU.
+
+---
+
+## 🛠️ Build Prerequisites
+
+Compiling IPO_Boot_ROM requires:
+- **NASM 2.14+** (Netwide Assembler)
+- **GNU Make 4.0+**
+- **Python 3.8+** (for ROM concatenation and checksum padding)
+
+```bash
+# Ubuntu / Debian
+sudo apt update && sudo apt install -y nasm make python3 qemu-system-x86
+```
+
+---
+
+## 🔨 Building the Boot ROM Binary
+
+Inside the `IPO_Boot_ROM` project root:
+
+```bash
+# 1. Compile pure assembly ROM image
+make all
+```
+
+This compiles:
+- `src/reset.asm` (16 bytes placed strictly at `0xFFFFFFF0`)
+- `src/car.asm` (Cache-as-RAM MTRR configuration)
+- `src/mrc_440fx.asm, src/mrc_q35.asm` (DRAM training code)
+- `src/chipset.asm, src/payload_call.asm` (PAM chipset shadowing and Contract 2 handover)
+
+Outputs: `build/bootrom.bin` (padded to exactly 256 KB).
+
+---
+
+## 🧩 Creating a Composite SPI Flash Image
+
+To flash onto a real physical SPI Flash chip (or test in QEMU), the 256 KB `bootrom.bin` (which embeds the firmware payload in its 32 KB slot at offset `0x30000`) can be packaged into a standard 4 MB or 8 MB SPI ROM image:
+
+```bash
+# Generate 4 MB SPI ROM image with bootrom at top of memory
+make spi-flash FLASH_SIZE=4M
+```
+
+```
+4 MB SPI Flash Memory Layout (spi_flash.bin):
+0x00000000 +---------------------------------------------------+
+           | Free / Reserved Flash Storage (3840 KB)           |
+0x003C0000 +---------------------------------------------------+
+           | ROM Padding (192 KB)                              |
+0x003F0000 +---------------------------------------------------+
+           | IPO_Firmware Payload Slot (32 KB, offset 0x30000)  |
+0x003F8000 +---------------------------------------------------+
+           | IPO_Boot_ROM Init Code (32 KB, offset 0x38000)    |
+0x003FFFF0 | Reset Vector JMP (16 bytes)                       |
+0x00400000 +---------------------------------------------------+
+```
+
+---
+
+## 🖥️ Running Emulation in QEMU
+
+You can test IPO_Boot_ROM directly using QEMU's `-bios` parameter:
+
+```bash
+# Test standalone Boot ROM
+qemu-system-i386 -bios build/bootrom.bin -serial stdio
+```
+
+### Running the Entire Vertical Stack (Boot ROM + Firmware + IPO_OS):
+
+<SharedCode id="qemu-full-stack-run" />

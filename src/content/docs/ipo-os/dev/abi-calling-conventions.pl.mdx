@@ -1,0 +1,98 @@
+---
+title: "ABI & Calling Conventions"
+description: "The x86 cdecl calling convention, register preservation rules, stack alignment, and the IPO_OS wywołanie systemowe ABI."
+---
+
+# ABI & Calling Conventions
+
+The Application Binary Interface (ABI) defines the low-level contract between functions, libraries, and the IPO_OS kernel. Consistency in register preservation and argument passing is required for predictable execution.
+
+---
+
+## 🏛️ C Function Calling Convention (`cdecl`)
+
+IPO_OS standard userland C code adheres to the standard 32-bit x86 **cdecl** calling convention:
+
+```
+Stack frame prior to entering a 3-argument function: foo(arg1, arg2, arg3):
+
+Higher Memory
++---------------+
+|     arg3      |  [ebp + 16]
++---------------+
+|     arg2      |  [ebp + 12]
++---------------+
+|     arg1      |  [ebp + 8]
++---------------+
+|  Return EIP   |  [ebp + 4] (Pushed automatically by CALL)
++---------------+
+|   Saved EBP   |  [ebp]     (Pushed by callee prologue: push %ebp; mov %esp, %ebp)
++---------------+
+|  Local Vars   |  [ebp - 4], [ebp - 8]...
++---------------+
+Lower Memory (ESP)
+```
+
+### Key Principles of `cdecl`:
+1. **Argument Order:** Arguments are pushed onto the stack from **right to left**.
+2. **Stack Cleanup:** The **caller** cleans up arguments from the stack after the function returns (`add esp, N`).
+3. **Return Values:**
+   - 32-bit integers and pointers are returned in `%eax`.
+   - 64-bit integers (`int64_t`, `uint64_t`) are returned across `%edx:%eax` (`%edx` contains high 32 bits, `%eax` contains low 32 bits).
+   - Floating-point numbers are returned at the top of the x87 FPU stack (`ST(0)`).
+
+---
+
+## 🛡️ Register Preservation Rules
+
+| Register | Classification | Responsibility |
+| :--- | :--- | :--- |
+| `%eax` | Caller-saved | Scratch register, function return value |
+| `%ecx` | Caller-saved | Scratch register, loop counter |
+| `%edx` | Caller-saved | Scratch register, high 32 bits of 64-bit return |
+| `%ebx` | **Callee-saved** | Must be preserved across function calls |
+| `%esi` | **Callee-saved** | Must be preserved across function calls |
+| `%edi` | **Callee-saved** | Must be preserved across function calls |
+| `%ebp` | **Callee-saved** | Base pointer; must be preserved |
+| `%esp` | **Callee-saved** | Stack pointer; must be restored |
+
+---
+
+## ⚡ The Kernel Syscall ABI (`int 0x80`)
+
+Unlike Linux (which places up to 6 parameters directly in registers `EBX`, `ECX`, `EDX`, `ESI`, `EDI`, `EBP`), IPO_OS uses a uniform **Array Pointer ABI**:
+
+```
+CPU State at 'int 0x80':
+  EAX = System Call Number (e.g. 0x1001)
+  EBX = Argument Count (uint32_t argc)
+  ECX = Pointer to Arguments Array (uint32_t *argv)
+```
+
+### Benefits of the IPO_OS Syscall ABI:
+1. **Variable Parameter Count:** System calls can accept any arbitrary number of arguments without running out of general-purpose CPU registers.
+2. **Simplified Kernel Dispatcher:** The kernel simply validates the `ECX` buffer range and copies `EBX * 4` bytes into a local structure.
+3. **Register Conservation:** Preserves `EDX`, `ESI`, and `EDI` across wywołanie systemowes for user application use.
+
+---
+
+## 🔧 Inline Assembly Syscall Wrapper
+
+In C, the universal wrapper function is defined as:
+
+```c
+#include <stdint.h>
+
+int ipo_syscall(uint32_t num, uint32_t argc, uint32_t *argv) {
+    int ret;
+    __asm__ volatile(
+        "int $0x80"
+        : "=a"(ret)             /* Output: EAX contains return value */
+        : "a"(num),             /* Input:  EAX = Syscall Number */
+          "b"(argc),            /* Input:  EBX = Number of parameters */
+          "c"(argv)             /* Input:  ECX = Pointer to arguments array */
+        : "memory"              /* Clobbers: Memory may be modified */
+    );
+    return ret;
+}
+```

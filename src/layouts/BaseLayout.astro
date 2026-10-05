@@ -1,0 +1,49 @@
+---
+import { siteConfig } from '../../site.config';
+import { getTranslation } from '../utils/i18n';
+import '../styles/global.css';
+import '../styles/print.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  currentLang: string;
+}
+
+const { title, description, currentLang } = Astro.props;
+const siteTitle = siteConfig.siteTitle;
+const pageTitle = title ? `${title} — ${siteTitle}` : siteTitle;
+const pageDesc = description || getTranslation(currentLang, 'site.description');
+const dir = siteConfig.languages[currentLang]?.dir || 'ltr';
+---
+
+<!DOCTYPE html>
+<html lang={currentLang} dir={dir}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDesc} />
+    <link rel="icon" type="image/svg+xml" href={`${siteConfig.base}favicon.svg`} />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- OpenGraph -->
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDesc} />
+    <meta property="og:type" content="website" />
+
+    <!-- Zero-FOUC Theme Restoration Script -->
+    <script is:inline>
+      const storedTheme = localStorage.getItem('doc_theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+    </script>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

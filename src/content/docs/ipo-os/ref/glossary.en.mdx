@@ -1,0 +1,70 @@
+---
+title: "Systems Architecture Glossary"
+description: "Comprehensive terminology definitions for bare-metal firmware, x86 architecture, kernels, and filesystems."
+---
+
+# Systems Architecture Glossary
+
+This glossary clarifies technical terminology and hardware concepts used throughout the documentation for **IPO_OS**, **IPO_Boot_ROM**, and **IPO_Firmware**.
+
+---
+
+### A20 Gate
+A hardware gate line (controlled via keyboard controller port `0x64` or Fast Port `0x92`) that enables or disables address bit 20. When disabled, addresses wrap around at 1 MB (emulating 8086 20-bit addressing). It must be enabled to access memory beyond 1 MB in real and protected modes.
+
+### BDA (BIOS Data Area)
+A 256-byte data structure located at physical address `0x00000400`..`0x000004FF` containing low-level hardware state initialized by the BIOS (COM ports, LPT ports, keyboard buffer, video mode).
+
+### CAR (Cache-as-RAM)
+A boot technique where the CPU's internal L1/L2 caches are configured as temporary read-write RAM via MTRRs before physical DRAM has been initialized. Enables executing C code and maintaining a stack before DRAM training.
+
+### Contract 1
+The inter-layer interface contract defining handover from hardware reset (`0xFFFFFFF0`) to the Boot ROM entry point.
+
+### Contract 2
+The binary handover contract where **IPO_Boot_ROM** transfers control to **IPO_Firmware** at physical address `0xF000:0004` after DRAM training and PAM shadowing. Validated via the magic signature `'IPOF'` (`0x464F5049`).
+
+### Contract 3
+The classic PC BIOS boot contract where **IPO_Firmware** transfers control to the operating system bootloader by loading sector 0 (MBR) to `0x0000:7C00` with register `DL` set to the boot drive ID and verifying magic `0x55AA`.
+
+### E820 Memory Map
+The standard BIOS system service (`INT 0x15, AX=0xE820`) used by operating systems to discover physical RAM ranges, reserved ACPI regions, and unusable address windows.
+
+### EBDA (Extended BIOS Data Area)
+A reserved segment of conventional memory (typically located at `0x9FC00`) allocated by the BIOS for runtime private state, ACPI tables, and multi-processor MPS tables.
+
+### Extent
+A contiguous sequence of physical disk blocks allocated to a file. In `IPO_FS`, each inode stores four primary 24-byte extent descriptors, providing high throughput for large file sequential reads.
+
+### GDT (Global Descriptor Table)
+An x86 processor structure defining flat memory segment base addresses and limits (0x00 Null, 0x08 Code, 0x10 Data) mapping the full 4 GB physical address space in Protected Mode.
+
+### IDT (Interrupt Descriptor Table)
+An x86 table containing 256 gate descriptors mapping hardware IRQs, CPU exceptions, and software interrupts (`int 0x80`) to kernel handler routines.
+
+### Inode
+An on-disk data structure (128 bytes in `IPO_FS`) that represents a file or directory, containing metadata, file sizes, permissions, and extent block pointers.
+
+### LBA (Logical Block Addressing)
+A linear addressing scheme where disk sectors are numbered sequentially starting from block 0, replacing legacy Cylinder-Head-Sector (CHS) geometry.
+
+### LFB (Linear Framebuffer)
+A continuous physical memory aperture mapped into CPU address space allowing direct 32-bit ARGB pixel writing without bank switching.
+
+### MRC (Memory Reference Code)
+Low-level silicon initialization code responsible for discovering, configuring, and training DDR DRAM timing registers and memory controllers.
+
+### MTRR (Memory Type Range Register)
+Model-specific CPU registers that define cacheability attributes (Write-Back, Write-Combining, Uncacheable) for designated physical address ranges.
+
+### PAM (Programmable Attribute Map)
+Chipset registers controlling read and write permissions to the shadow BIOS memory region (`0x000C0000`..`0x000FFFFF`).
+
+### PMM (Physical Memory Manager)
+Memory allocation architecture in IPO_OS: total physical RAM is read from BIOS E820 at 0x8FF0, kernel heap is managed via kmalloc (16 MB at 0x1000000), and dynamic process heaps are partitioned into 64 MB slices.
+
+### TSS (Task State Segment)
+Legacy x86 hardware task structure. In IPO_OS's flat protected mode model, context switching and system call dispatch are implemented in software routines without hardware TSS stack switching.
+
+### VMM (Virtual Memory Manager)
+The kernel subsystem that manages page directories and page tables, providing isolated linear 4 GB address spaces for each process.

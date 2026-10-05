@@ -1,0 +1,61 @@
+---
+import { sharedSyscallsList } from '../data/shared-code';
+
+interface Props {
+  lang?: string;
+}
+
+const { lang } = Astro.props;
+const currentPath = Astro.url.pathname;
+const pathSegments = currentPath.split('/').filter(Boolean);
+// Usually /IPO_Systems_Platform/<lang>/... or /<lang>/...
+const detectedLang = lang || (pathSegments.includes('ru') ? 'ru' : (pathSegments.includes('uk') ? 'uk' : 'en'));
+const isRu = detectedLang === 'ru';
+---
+
+<div class="syscalls-table-container">
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 10%;">{isRu ? 'Hex' : 'Hex'}</th>
+        <th style="width: 25%;">{isRu ? 'Системный вызов' : 'System Call'}</th>
+        <th style="width: 30%;">{isRu ? 'Сигнатура' : 'C Signature'}</th>
+        <th>{isRu ? 'Аргументы и описание' : 'Arguments & Description'}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {sharedSyscallsList.map((sc) => (
+        <tr id={`syscall-${sc.numHex}`}>
+          <td><code>{sc.numHex}</code></td>
+          <td><strong><code>{sc.name}</code></strong></td>
+          <td><code>{sc.signature}</code></td>
+          <td>
+            <div style="margin-bottom: 0.35rem;">
+              {isRu ? sc.descriptionRu : sc.descriptionEn}
+            </div>
+            <details style="font-size: 0.85rem; color: var(--text-secondary);">
+              <summary style="cursor: pointer; font-weight: 500;">
+                {isRu ? 'Параметры и возврат' : 'Arguments & Return'}
+              </summary>
+              <ul style="margin: 0.35rem 0 0.35rem 1rem;">
+                {(isRu ? sc.argsRu : sc.argsEn).map((arg) => (
+                  <li><code>{arg}</code></li>
+                ))}
+              </ul>
+              <div>
+                <strong>{isRu ? 'Возврат:' : 'Returns:'}</strong> {isRu ? sc.returnRu : sc.returnEn}
+              </div>
+            </details>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .syscalls-table-container {
+    margin: 1.5rem 0;
+    overflow-x: auto;
+  }
+</style>

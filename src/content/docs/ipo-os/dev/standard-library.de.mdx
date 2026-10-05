@@ -1,0 +1,74 @@
+---
+title: "C-Standardbibliothek und Laufzeitumgebung"
+description: "Die eigene freestanding libc in IPO_OS: Speicherallokation über sbrk (0x1045), Zeichenkettenoperationen und formatierte Ausgabe."
+---
+
+# C-Standardbibliothek und Laufzeitumgebung
+
+Because standard POSIX GNU C Library (`glibc`) assumes a full Linux kernel environment with signals, threads, and dynamic linkers, IPO_OS applications link against a lightweight, dedicated freestanding C runtime (`libc.a`).
+
+---
+
+## 📚 Supported Headers & Functions
+
+### 1. Formatted I/O (`<stdio.h>`)
+- `int printf(const char *format, ...)`: Prints formatted output to the active console and COM1 serial port. Supports format specifiers: `%s`, `%c`, `%d`, `%i`, `%u`, `%x`, `%X`, `%p`, `%%`.
+- `int snprintf(char *str, size_t size, const char *format, ...)`: Safe in-memory string formatting.
+- `int puts(const char *s)`: Writes string followed by newline.
+- `int putchar(int c)`: Writes single ASCII character.
+
+### 2. String & Memory Utilities (`<string.h>`)
+- `size_t strlen(const char *s)`
+- `int strcmp(const char *s1, const char *s2)`
+- `int strncmp(const char *s1, const char *s2, size_t n)`
+- `char *strcpy(char *dest, const char *src)`
+- `char *strncpy(char *dest, const char *src, size_t n)`
+- `void *memset(void *s, int c, size_t n)`
+- `void *memcpy(void *dest, const void *src, size_t n)`
+- `void *memmove(void *dest, const void *src, size_t n)`
+
+### 3. Memory Allocation (`<stdlib.h>`)
+- `void *malloc(size_t size)`: Dynamically allocates heap memory.
+- `void free(void *ptr)`: Returns memory chunk back to the heap pool.
+- `void *realloc(void *ptr, size_t size)`: Resizes existing allocated block.
+- `void *calloc(size_t nmemb, size_t size)`: Allocates and zeroes out memory.
+- `int atoi(const char *nptr)`: Converts ASCII string to integer.
+- `void exit(int status)`: Flushes buffers and terminates process via `IPO_SYSCALL_EXIT`.
+
+---
+
+## 🧱 The Dynamic Memory Allocator
+
+In `src/userland/libc/stdlib.c`, dynamic memory is managed by an 8-byte aligned doubly-linked list allocator operating on top of the `sbrk` system call (`IPO_SYSCALL_SBRK` `0x1045`):
+
+```c
+#define BLOCK_MAGIC 0x4D414C43 /* "MALC" */
+
+typedef struct block_hdr {
+    size_t size;               /* Payload size in bytes */
+    uint32_t magic;
+    int is_free;
+    struct block_hdr *next;
+    struct block_hdr *prev;
+} block_hdr_t;
+
+#define HDR_SIZE sizeof(block_hdr_t)
+#define ALIGN8(s) (((s) + 7u) & ~7u)
+```
+
+### Allocation Strategy:
+1. **Free-List Reuse:** Scans previously freed blocks validating `BLOCK_MAGIC`. If a block with sufficient size is found, it is reused.
+2. **Chunked Kernel Growth:** When the heap is exhausted, memory is requested from the kernel in **64 KB chunks** (`65536` bytes) to minimize system call overhead.
+3. **Safety Validation:** `free()` verifies `magic == BLOCK_MAGIC` before returning a block to the free list, catching memory corruption and double-free bugs immediately.
+
+---
+
+## 🚫 Runtime Differences vs Linux glibc
+
+| Feature | Linux `glibc` | IPO_OS `libipo` |
+| :--- | :--- | :--- |
+| **Threads** | Full POSIX pthreads | Cooperative async tasks (`IPO_SYSCALL_ASYNC_START`) |
+| **Locale / Wide Chars** | Complex locale tables | UTF-8 passthrough and ASCII |
+| **Dynamic Linking** | `dlopen()`, `dlsym()` | Raw flat static binaries linked at `0x800000` |
+| **File Descriptors** | `read(fd, buf, count)` | `ipo_read(fd, buf, count, offset)` with explicit 64-bit offsets |
+| **Signals** | 32+ POSIX signals | CPU exception interceptor & `process_crash_exit` |

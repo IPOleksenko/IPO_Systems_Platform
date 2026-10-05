@@ -1,0 +1,55 @@
+---
+title: "Cold Boot Sequence & Timeline"
+description: "Step-by-step cold boot pipeline from power-on hardware reset to modo protegido kernel and userspace shell."
+---
+
+# Cold Boot Sequence & Timeline
+
+The transition of the system from cold hardware power-on to an interactive userspace shell occurs across several coordinated phases.
+
+---
+
+## ⏱️ Boot Sequence Pipeline
+
+<LocalizedDiagram id="kernel_boot" lang="en" figureNum={4} />
+
+---
+
+## 🔍 Detailed Boot Stages Breakdown
+
+### 1. Power Supply Good & Hardware Vetor de reinicialização
+1. Upon pressing the power button, the power supply asserts the active-high **Power Good (PWR_OK)** signal after internal voltages stabilize (+12V, +5V, +3.3V).
+2. The processor de-asserts its internal `RESET` pin.
+3. In hardware modo real, the instruction pointer starts at the x86 vetor de reinicialização:
+   `CS:IP = 0xF000:0xFFF0` (Physical Address: `0xFFFFFFF0`)
+
+### 2. Boot ROM & Firmware Initialization (Contracts 2 & 3)
+1. **IPO_Boot_ROM** configures Cache-as-RAM (CAR), detects the host chipset (i440FX or Q35), runs Memory Referência Code (MRC) to train the DRAM controller, locks PAM Shadow RAM, and hands over control to the firmware at `0xF000:0004` (**Contract 2**).
+2. **IPO_Firmware** installs the real-mode Interrupt Vector Table (IVT: INT 10h–1Ah), enables the Fast A20 gate via port `0x92`, queries memory via E820, scans storage buses, and reads LBA 0 (MBR) into DRAM at `0x0000:7C00` (**Contract 3**).
+
+### 3. Stage 1 Bootloader Execution (`0x7C00`)
+1. The firmware issues a far jump to `0x0000:7C00` with `DL` set to the boot drive ID (`0x80`).
+2. The 512-byte MBR bootloader sets up a temporary real-mode stack, reads Stage 2 sectors from the reserved disk area into memory, and jumps to Stage 2.
+
+### 4. Transition to 32-bit Modo protegido
+1. The Stage 2 loader constructs a 32-bit **Tabela global de descritores (GDT)** containing flat 4 GB code and data segments:
+   - Code Segment: Base `0x00000000`, Limit `0xFFFFFFFF`, Ring 0, Execute/Read.
+   - Data Segment: Base `0x00000000`, Limit `0xFFFFFFFF`, Ring 0, Read/Write.
+2. The loader activates Modo protegido by setting Bit 0 (Protection Enable, `PE`) in control register `CR0`:
+   ```asm
+   mov eax, cr0
+   or eax, 1
+   mov cr0, eax
+   jmp 0x08:.protected_entry   ; Far jump flushes 16-bit prefetch queue
+   ```
+
+### 5. Kernel Loading & Execution (`0x10000`)
+1. In 32-bit mode, the loader reads the kernel binary into memória física starting at `0x10000` (64 KB).
+2. Control transfers to `_start` in `src/kernel/arch/x86/entry32.asm`.
+3. The kernel executes initialization routines in strict dependency order:
+   - Sets up the kernel GDT and stack.
+   - Installs the Interrupt Descriptor Table (IDT) with CPU exception handlers (`0x00`–`0x1F`) and system call vector `0x80` (hardware peripherals use polling in `kmain()`).
+   - Initializes the Memória física Manager (PMM) and kernel heap allocator (`kmalloc`).
+   - Mounts the root `IPO_FS` partition from LBA 2048.
+   - Initializes driver de dispositivos: ATA storage, PS/2 keyboard/mouse, RTL8139 NIC, and Gerenciador de janelas.
+   - Initializes the built-in interactive shell and terminal console (`terminal_initialize()`, `terminal_console()`).

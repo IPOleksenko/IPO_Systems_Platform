@@ -1,0 +1,100 @@
+---
+title: "Interrupciones, IDT y Temporizadores"
+description: "Manejo de excepciones de CPU (0–31), puertas IDT, arquitectura de sondeo de dispositivos y temporizadores 8254 PIT / TSC."
+---
+
+import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
+import Callout from '../../../../components/Callout.astro';
+
+# Interrupciones, IDT y Temporizadores
+
+IPO_OS implements a flat 32-bit Protected Mode interrupt and trap architecture centered around the CPU **Interrupt Descriptor Table (IDT)**, software interrupt gates for system calls, and non-blocking peripheral polling.
+
+---
+
+## 🚨 CPU Hardware Exceptions (Gates 0–31)
+
+The first 32 IDT gates (`0x00`–`0x1F`) trap CPU faults and aborts:
+- **`#DE` (0x00) — Divide-by-Zero:** Triggered when integer division overflows or divisor is 0.
+- **`#DB` (0x01) — Debug:** Triggered on hardware watchpoints or single-step execution.
+- **`#NMI` (0x02) — Non-Maskable Interrupt:** Parity errors or critical motherboard signals.
+- **`#BP` (0x03) — Breakpoint:** Triggered by the `int 3` instruction.
+- **`#UD` (0x06) — Invalid Opcode:** Unrecognized CPU instruction encountered.
+- **`#DF` (0x08) — Double Fault:** Exception occurring during delivery of a prior exception.
+- **`#GP` (0x0D) — General Protection Fault:** Segment limit violation or privileged instruction execution.
+- **`#PF` (0x0E) — Page Fault:** Trapped if paging structures are referenced (reserved in flat protected mode).
+
+### Two-Tier Crash Recovery Pipeline
+
+In `src/kernel/syscall/syscall.c`, all 32 exception handlers point to stubs in `isr_stub_table`, converging into `cpu_exception_handler(uint32_t *frame)`:
+
+```c
+void cpu_exception_handler(uint32_t *frame) {
+    uint32_t vector   = frame[7];
+    uint32_t err_code = frame[8];
+    uint32_t eip      = frame[9];
+    const char *name  = (vector < 32) ? exception_names[vector] : "Unknown Exception";
+
+    process_t *proc = process_get_current();
+    if (proc != NULL) {
+        printf("\n[Process %u] Terminated: CPU Exception %u (%s) at 0x%08x (err=0x%x)\n",
+               proc->pid, vector, name, eip, err_code);
+        serial_printf("[cpu_exception] Process %u crashed: vec=%u (%s) eip=0x%08x err=0x%x\n",
+                      proc->pid, vector, name, eip, err_code);
+        frame[9] = (uint32_t)process_crash_exit;
+        return;
+    }
+
+    printf("\nKERNEL PANIC: CPU Exception %u (%s) at 0x%08x (err=0x%x)\n",
+           vector, name, eip, err_code);
+    while (1) {
+        __asm__ volatile("cli; hlt");
+    }
+}
+```
+
+1. **Userland Isolation:** If an active process triggers an exception, the kernel intercepts it, logs the faulting `EIP` and error code, and overwrites the return address with `process_crash_exit`. The process terminates gracefully and returns cleanly to the shell.
+2. **Kernel Panic:** If an exception occurs in kernel context (`proc == NULL`), the system prints a panic report to screen and serial COM1, disabling interrupts with `cli; hlt`.
+
+---
+
+## ⚡ Software Interrupt Gate: `int 0x80`
+
+System calls use software interrupt gate **`0x80`**:
+- Configured in IDT with flags `0xEE` (Present, 32-bit Interrupt Gate, DPL=3).
+- Code Segment selector `0x08` (Kernel 32-bit flat code).
+- Directs execution to `syscall_isr_entry` in `src/kernel/arch/x86/syscall.asm`.
+- **Hardware Interrupt Flag Behavior:** Unlike a trap gate, x86 hardware automatically clears `IF = 0` in EFLAGS upon entering through an interrupt gate (`0xEE`), preventing reentrancy during kernel dispatch. The original caller `EFLAGS` is restored upon `iretd`.
+
+---
+
+## 🔄 Device I/O Polling Architecture
+
+Rather than relying on asynchronous hardware PIC IRQ dispatching in protected mode, IPO_OS drivers use an efficient, non-blocking polling model integrated directly into the kernel main loop (`kmain()`):
+
+```c
+for (;;) {
+    timer_tick();              /* High-precision timing & batch timeslicing */
+    async_scheduler_tick();    /* Cooperative background worker callbacks */
+    net_poll();                /* Realtek RTL8139 packet reception & transmission */
+    terminal_console();        /* Shell input polling & command execution */
+}
+```
+
+- **PS/2 Keyboard & Mouse:** `keyboard_poll()` checks status port `0x64` and reads scancodes from port `0x60`. Mouse packets are accumulated via `mouse_handle_byte()`.
+- **ATA Hard Disk:** Polled PIO transfers check Status register port `0x1F7` for BSY (Busy) and DRQ (Data Request) bits.
+- **Network Interface:** `net_poll()` reads RTL8139 ring buffers directly via memory-mapped and port I/O registers.
+
+---
+
+## ⏱️ 8254 PIT & TSC Timekeeping
+
+1. **8254 Programmable Interval Timer (PIT):**
+   - Base clock: **1.193182 MHz**.
+   - Initialized at **1000 Hz** (`pit_init(1000u)`) in Channel 0 Rate Generator mode.
+2. **CPU Time Stamp Counter (TSC):**
+   - Elapsed wall-clock time and 10 ms timeslices for batch multitasking are measured using the CPU's `rdtsc` instruction:
+   ```c
+   #define TSC_PER_MS 2000000ULL
+   ```
+   - Enables sub-microsecond timing accuracy without hardware timer interrupt jitter.

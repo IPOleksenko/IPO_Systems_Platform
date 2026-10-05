@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Production build outputs
+dist/
+.astro/
+
+# Environment and caches
+.cache/
+.temp/
+*.log
+.DS_Store
+
+# Generated search indexes
+public/pagefind/

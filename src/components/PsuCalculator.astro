@@ -1,0 +1,184 @@
+---
+interface Props {
+  lang: string;
+}
+
+const { lang } = Astro.props;
+const isRu = lang === 'ru';
+---
+
+<div class="psu-calculator-widget">
+  <div class="widget-header">
+    <strong>⚡ {isRu ? 'Калькулятор мощности блока питания (БП)' : 'Power Supply (PSU) Wattage Calculator'}</strong>
+    <span class="widget-badge">{isRu ? 'Интерактивный расчёт' : 'Interactive Sizing'}</span>
+  </div>
+
+  <div class="calc-body">
+    <div class="calc-form">
+      <div class="calc-field">
+        <label for="psu-cpu">{isRu ? 'Процессор (TDP):' : 'Processor Platform (TDP):'}</label>
+        <select id="psu-cpu">
+          <option value="65">{isRu ? 'Pentium II / III / Celeron (65W)' : 'Intel Pentium II/III / Celeron (65W)'}</option>
+          <option value="95" selected>{isRu ? 'Core 2 Duo / Quad LGA775 (95W)' : 'Intel Core 2 Duo / Quad (95W)'}</option>
+          <option value="35">{isRu ? 'Встраиваемый x86 SoC / Atom (35W)' : 'Embedded x86 SoC / Atom (35W)'}</option>
+        </select>
+      </div>
+
+      <div class="calc-field">
+        <label for="psu-ram">{isRu ? 'Модули оперативной памяти:' : 'Memory DIMM Modules:'}</label>
+        <select id="psu-ram">
+          <option value="10">2x SDRAM / DDR2 (10W)</option>
+          <option value="20" selected>4x DDR2 / DDR3 (20W)</option>
+        </select>
+      </div>
+
+      <div class="calc-field">
+        <label for="psu-storage">{isRu ? 'Накопители (HDD / SSD / CF-Card):' : 'Storage Drives (HDD / SSD):'}</label>
+        <select id="psu-storage">
+          <option value="5">{isRu ? '1x SATA SSD / CF-Card IDE (5W)' : '1x SATA SSD / CF-IDE (5W)'}</option>
+          <option value="25" selected>{isRu ? '1x 3.5" HDD 7200 RPM + 1x SSD (25W)' : '1x 3.5" HDD + 1x SSD (25W)'}</option>
+          <option value="45">{isRu ? '2x 3.5" HDD + IDE CD-ROM (45W)' : '2x 3.5" HDD + IDE Optical (45W)'}</option>
+        </select>
+      </div>
+
+      <div class="calc-field">
+        <label for="psu-pci">{isRu ? 'Платы расширения (PCI / NIC):' : 'Expansion Cards (PCI / NIC):'}</label>
+        <select id="psu-pci">
+          <option value="15" selected>{isRu ? 'RTL8139 NIC + Звуковая карта SB16 (15W)' : 'RTL8139 NIC + SB16 Audio (15W)'}</option>
+          <option value="40">{isRu ? 'PCI VGA видеокарта + NIC + Audio (40W)' : 'Discrete PCI Video + NIC + Audio (40W)'}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="calc-result-box">
+      <div class="res-label">{isRu ? 'Пиковое расчетное потребление:' : 'Estimated Peak Load:'}</div>
+      <div class="res-watts" id="psu-base-watts">155 W</div>
+      <div class="res-rec">
+        {isRu ? 'Рекомендуемая мощность БП (+30% запас):' : 'Recommended PSU Rating (+30% Headroom):'}
+      </div>
+      <div class="res-rec-watts" id="psu-rec-watts">250 W — 300 W</div>
+      <p class="res-note">
+        {isRu 
+          ? 'Для стабильной работы со старыми материнскими платами ATX критически важна достаточная сила тока по линии +5V и +3.3V (не менее 20–25A).' 
+          : 'For legacy ATX motherboards, adequate amperage on the +5V and +3.3V rails (at least 20–25A) is critical for system stability.'}
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .psu-calculator-widget {
+    margin: 2rem 0;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background-color: var(--bg-card);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+
+  .calc-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    padding: 1.25rem;
+  }
+
+  @media (max-width: 768px) {
+    .calc-body {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .calc-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .calc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .calc-field label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .calc-field select {
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+  }
+
+  .calc-result-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-secondary);
+  }
+
+  .res-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  .res-watts {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0.25rem 0 1rem;
+  }
+
+  .res-rec {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  .res-rec-watts {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-success);
+    margin-top: 0.25rem;
+  }
+
+  .res-note {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 1rem;
+    line-height: 1.4;
+  }
+</style>
+
+<script>
+  function updatePsuCalc() {
+    const cpu = parseInt((document.getElementById('psu-cpu') as HTMLSelectElement)?.value || '95', 10);
+    const ram = parseInt((document.getElementById('psu-ram') as HTMLSelectElement)?.value || '20', 10);
+    const storage = parseInt((document.getElementById('psu-storage') as HTMLSelectElement)?.value || '25', 10);
+    const pci = parseInt((document.getElementById('psu-pci') as HTMLSelectElement)?.value || '15', 10);
+
+    const base = cpu + ram + storage + pci;
+    const recMin = Math.ceil((base * 1.3) / 50) * 50;
+    const recMax = recMin + 50;
+
+    const baseEl = document.getElementById('psu-base-watts');
+    const recEl = document.getElementById('psu-rec-watts');
+
+    if (baseEl) baseEl.textContent = `${base} W`;
+    if (recEl) recEl.textContent = `${recMin} W — ${recMax} W`;
+  }
+
+  document.querySelectorAll('#psu-cpu, #psu-ram, #psu-storage, #psu-pci').forEach((el) => {
+    el.addEventListener('change', updatePsuCalc);
+  });
+</script>

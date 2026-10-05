@@ -1,0 +1,19 @@
+{
+  "name": "ipo-systems-platform-docs",
+  "version": "1.0.0",
+  "description": "Unified comprehensive documentation for IPO Systems Platform (IPO_OS, IPO_Boot_ROM, IPO_Firmware)",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && pagefind --site dist && cp -r dist/pagefind public/",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^3.1.8",
+    "astro": "^4.16.10",
+    "pagefind": "^1.1.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

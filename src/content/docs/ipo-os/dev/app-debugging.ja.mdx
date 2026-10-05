@@ -1,0 +1,78 @@
+---
+title: "アプリケーションのデバッグ"
+description: "クラッシュの診断、CPU例外ハンドラー、QEMUでのGDBリモートデバッグ、およびクラッシュダンプ。"
+---
+
+# アプリケーションのデバッグ
+
+When an application encounters an invalid instruction or unhandled fault, IPO_OS intercepts the exception, displays diagnostic telemetry, and terminates the offending process cleanly without crashing the operating system.
+
+---
+
+## 💥 Anatomy of a Userspace Crash
+
+When an application triggers an exception, the kernel's `cpu_exception_handler()` intercepts it:
+
+```
+[Process 1] Terminated: CPU Exception 0 (Divide-by-zero (#DE)) at 0x00801248 (err=0x0)
+```
+
+The crash report provides:
+- **Process PID:** ID of the offending process.
+- **CPU Exception Vector & Name:** e.g., Exception 0 (`Divide-by-zero`), Exception 6 (`Invalid Opcode`), Exception 13 (`General Protection Fault`).
+- **Faulting EIP:** Exact instruction address where the exception occurred (e.g. `0x00801248`).
+- **Error Code:** Hardware error code provided by the CPU architecture.
+
+### Automatic Clean Return to Shell
+Because the kernel replaces the return address with `process_crash_exit`, process resources and terminal state are restored, and the shell prompt (`> `) is immediately returned.
+
+---
+
+## 🔍 Locating Faulting Lines with `addr2line` and `objdump`
+
+To translate the faulting `EIP` address back to source code:
+
+```bash
+# 1. Translate hex address directly to source file and line
+addr2line -e build/my_app.elf 0x00801248
+
+# 2. View assembly disassembly around the crash address
+objdump -d -S build/my_app.elf | grep -B 5 -A 10 "801248:"
+```
+
+---
+
+## 🪲 Live Debugging with GDB in QEMU
+
+Because applications load at fixed memory base `0x00800000`, you can inspect them in real time with GDB:
+
+```bash
+# 1. Launch QEMU with GDB stub listening on port 1234
+make run QEMU_FLAGS="-s -S"
+
+# 2. In another terminal, connect GDB
+gdb -q
+(gdb) target remote localhost:1234
+(gdb) add-symbol-file build/my_app.elf 0x800000
+(gdb) break main
+(gdb) continue
+```
+
+---
+
+## 🛡️ Custom Assert Macro
+
+To prevent subtle bugs from cascading into kernel faults, use an assertion macro:
+
+```c
+#include <stdio.h>
+#include <syscall.h>
+
+#define assert(condition) \
+    do { \
+        if (!(condition)) { \
+            printf("[ASSERT FAILED] %s:%d: %s\n", __FILE__, __LINE__, #condition); \
+            ipo_exit(1); \
+        } \
+    } while (0)
+```

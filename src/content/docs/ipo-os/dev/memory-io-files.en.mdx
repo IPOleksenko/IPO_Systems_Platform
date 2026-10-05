@@ -1,0 +1,110 @@
+---
+title: "Memory Allocation & File I/O"
+description: "Reading, writing, creating files and directories on IPO_FS using native syscall wrappers."
+---
+
+# Memory Allocation & File I/O
+
+This guide demonstrates practical patterns for reading, writing, and creating files on the `IPO_FS` filesystem using the native `<syscall.h>` interfaces.
+
+---
+
+## 📂 Native File Operations in `syscall.h`
+
+IPO_OS provides direct, explicit file operations without POSIX abstraction overhead:
+
+| Function | Syscall ID | Arguments | Description |
+| :--- | :--- | :--- | :--- |
+| `ipo_open(path)` | `0x1011` | `path` | Opens existing file; returns descriptor `fd >= 0` or negative error |
+| `ipo_create(path, type)` | `0x1010` | `path`, `type` | Creates entry (`0x1` = Directory, `0x2` = Regular File) |
+| `ipo_read(fd, buf, count, offset)` | `0x1012` | `fd`, `buf`, `count`, `offset` | Reads `count` bytes from given 64-bit `offset` |
+| `ipo_write(fd, buf, count, offset)` | `0x1013` | `fd`, `buf`, `count`, `offset` | Writes `count` bytes to given 64-bit `offset` |
+| `ipo_close(fd)` | `0x1018` | `fd` | Closes active file descriptor |
+| `ipo_delete(path)` | `0x1014` | `path` | Deletes file or directory node |
+| `ipo_stat(path, st)` | `0x1015` | `path`, `struct ipo_inode*` | Queries inode size, mode, and extent descriptors |
+| `ipo_list_dir(path, buf, size)` | `0x1016` | `path`, `buf`, `size` | Lists directory entries into string buffer |
+
+---
+
+## 📝 Complete Example: Copying a File
+
+Here is an implementation of a file copy utility using dynamic buffer allocation and native system calls:
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <syscall.h>
+
+#define CHUNK_SIZE 4096
+
+int copy_file(const char *src_path, const char *dest_path) {
+    // 1. Open source file
+    int src_fd = ipo_open(src_path);
+    if (src_fd < 0) {
+        printf("Failed to open source file: %s (err %d)\n", src_path, src_fd);
+        return src_fd;
+    }
+
+    // 2. Create destination file (type 0x2 = regular file)
+    int create_res = ipo_create(dest_path, 0x2);
+    int dest_fd = ipo_open(dest_path);
+    if (dest_fd < 0) {
+        printf("Failed to create destination file: %s (err %d)\n", dest_path, dest_fd);
+        ipo_close(src_fd);
+        return dest_fd;
+    }
+
+    // 3. Allocate transfer buffer on heap
+    char *buffer = (char *)malloc(CHUNK_SIZE);
+    if (!buffer) {
+        printf("Out of memory for transfer buffer!\n");
+        ipo_close(src_fd);
+        ipo_close(dest_fd);
+        return -1;
+    }
+
+    // 4. Stream data using explicit offsets
+    uint32_t offset = 0;
+    for (;;) {
+        int bytes_read = ipo_read(src_fd, buffer, CHUNK_SIZE, offset);
+        if (bytes_read <= 0) break; // EOF or error
+
+        int bytes_written = ipo_write(dest_fd, buffer, (uint32_t)bytes_read, offset);
+        if (bytes_written != bytes_read) {
+            printf("Write failure at offset %u!\n", offset);
+            break;
+        }
+
+        offset += (uint32_t)bytes_read;
+    }
+
+    // 5. Cleanup descriptors and free heap memory
+    free(buffer);
+    ipo_close(src_fd);
+    ipo_close(dest_fd);
+
+    printf("Copied %u bytes successfully from %s to %s.\n", offset, src_path, dest_path);
+    return 0;
+}
+```
+
+---
+
+## 📁 Listing Directory Contents
+
+To read entries inside a directory, use `ipo_list_dir()`:
+
+```c
+#include <stdio.h>
+#include <syscall.h>
+
+void show_directory(const char *path) {
+    char buffer[1024];
+    int res = ipo_list_dir(path, buffer, sizeof(buffer));
+    if (res < 0) {
+        printf("Failed to read directory: %s\n", path);
+        return;
+    }
+    printf("Contents of %s:\n%s\n", path, buffer);
+}
+```

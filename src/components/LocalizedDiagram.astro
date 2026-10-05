@@ -1,0 +1,62 @@
+---
+import { getDiagramData, getTranslation } from '../utils/i18n';
+import { generateDiagramSvg } from '../utils/diagram-svgs';
+
+interface Props {
+  id: string;
+  lang?: string;
+  figureNum?: number | string;
+}
+
+const { id, lang: propLang, figureNum } = Astro.props;
+const lang = propLang || (Astro.params.lang as string) || 'en';
+const data = getDiagramData(lang, id);
+const svgContent = generateDiagramSvg(id, data.labels || {});
+
+const figurePrefix = getTranslation(lang, 'ui.figure');
+const captionPrefix = getTranslation(lang, 'ui.diagram_caption');
+---
+
+<figure class="diagram-figure" id={`diagram-${id}`}>
+  <div class="diagram-container" role="img" aria-label={data.title}>
+    <Fragment set:html={svgContent} />
+  </div>
+  <figcaption class="diagram-caption">
+    <strong>{figurePrefix} {figureNum ? `${figureNum}: ` : ''}{data.title}</strong>
+    <p class="caption-desc"><em>{captionPrefix}</em> {data.caption}</p>
+  </figcaption>
+</figure>
+
+<style>
+  .diagram-figure {
+    margin: 2rem 0;
+    padding: 1.25rem;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .diagram-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: auto;
+    padding: 0.5rem 0;
+  }
+
+  .diagram-caption {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--border-color);
+    font-size: 0.9rem;
+    color: var(--text-primary);
+  }
+
+  .caption-desc {
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.45;
+  }
+</style>

@@ -1,0 +1,74 @@
+---
+title: "Paso a paso PC Assembly"
+description: "Comprehensive step-by-step physical computer assembly guide, electrostatic safety, and cabling."
+---
+
+# Paso a paso PC Assembly
+
+Assembling a physical x86 computer requires systematic mechanical care and strict adherence to electrostatic discharge (ESD) safety protocols. Follow this sequence to assemble your platform from bare components to a functional workstation.
+
+---
+
+## ⚡ Electrostatic & Electrical Safety
+
+<Callout type="caution" lang="en" title="Electrostatic Discharge (ESD) Hazards">
+Integrated circuits (especially vintage Northbridge chipsets and CPU L2 cache chips) are vulnerable to static voltages as low as 100V — far below what humans can feel.
+- Work on a static-dissipative mat or wooden surface. Never assemble a PC on carpeting.
+- Wear an anti-static wrist strap connected to earth ground, or periodically discharge static by touching the bare metal chassis of an unpowered, plugged-in power supply.
+- Never install or remove RAM sticks, PCI expansion cards, or IDE ribbon cables while the power supply is connected to AC mains.
+</Callout>
+
+---
+
+## 📋 Complete Assembly Progression
+
+<LocalizedDiagram id="pc_assembly_flow" lang="en" figureNum={2} />
+
+### Step 1: Workbench Setup & Inspection
+1. Unpack the motherboard onto a non-conductive cardboard box (the motherboard's retail box is ideal). Never place the board on the outside of an anti-static bag (the conductive silver coating can cause short circuits if a CMOS battery is active).
+2. Inspect the CPU socket pins or Slot 1 contacts for bent pins or debris.
+
+### Step 2: CPU Installation
+- **Socket 370 / Socket 478:** Lift the metal retention lever to a 90° angle. Align the gold triangle indicator on the CPU with the diagonal pin marking on the socket. Drop the CPU into place without downward pressure (Zero Insertion Force, ZIF). Lower and lock the lever.
+- **LGA 775:** Release the load arm and open the load plate. Align the two alignment keys on the processor PCB with the socket notches. Carefully set the CPU straight down into the socket pins. Close the plate and latch the load arm.
+- **Thermal Paste:** Apply a small pea-sized drop (approx. 4–5 mm) of high-grade non-conductive thermal compound (e.g., Arctic MX-4) to the center of the CPU heatspreader.
+
+### Step 3: CPU Cooler Mounting
+1. Position the heatsink squarely over the CPU to spread the thermal paste evenly.
+2. Secure the retention clips or tighten mounting screws in a crosswise (diagonal) pattern to ensure uniform contact pressure.
+3. Plug the CPU fan header into the `CPU_FAN` connector on the motherboard.
+
+### Step 4: Installing RAM Modules
+1. Push open the retaining clips at the ends of the memory slots.
+2. Align the notch on the memory stick with the key in the slot (DDR2 and SDRAM notches are physically offset to prevent reverse insertion).
+3. Press firmly downward on both ends until the side retaining clips snap shut with an audible click.
+
+### Step 5: Chassis Standoffs & Motherboard Mounting
+<Callout type="important" lang="en" title="Preventing Motherboard Shorts">
+Ensure brass standoffs in the computer chassis are installed **only** where there are matching mounting holes on your motherboard. A stray standoff touching the underside of the PCB will create a dead short on power delivery traces.
+</Callout>
+1. Snap the I/O shield into the rear chassis cutout from the inside.
+2. Carefully lower the motherboard over the standoffs, engaging the rear ports with the I/O shield.
+3. Fasten the board with matching screws, tightening until snug without over-torquing.
+
+### Step 6: Power Supply Cabling
+1. Connect the **24-pin (or 20-pin) ATX main power cable** to the motherboard header until the locking clip engages.
+2. Connect the **4-pin or 8-pin +12V CPU power cable** near the processor VRM.
+3. Route peripheral power cables (Molex for IDE drives, SATA power for SSDs).
+
+### Step 7: Storage Drives & Ribbon Cables
+- For an IDE HDD: Connect the blue end of the 80-conductor ribbon cable to the motherboard Primary IDE port (`0x1F0`). Connect the black end to the Master drive. Connect a 4-pin Molex power cable.
+- For a SATA SSD: Connect a SATA data cable between SATA Port 0 and the SSD. Connect a 15-pin SATA power connector.
+
+---
+
+## 🔌 Front Panel Header Wiring (JFP1)
+
+Connecting the front panel power switch, reset button, and status LEDs is a common source of confusion on vintage motherboards:
+
+<LocalizedDiagram id="front_panel_pinout" lang="en" figureNum={3} />
+
+- **Power Switch (`PWR_SW`):** Pins 6 and 8. Momentary push-button. Has **no polarity** (can be connected in either orientation).
+- **Reset Switch (`RESET_SW`):** Pins 5 and 7. Momentary push-button. Has **no polarity**.
+- **Power LED (`PWR_LED`):** Pin 1 is Positive (`+`), Pin 3 is Negative (`-`). If reversed, the LED will not illuminate, but no damage occurs.
+- **HDD Activity LED (`HDD_LED`):** Pin 2 is Positive (`+`), Pin 4 is Negative (`-`).

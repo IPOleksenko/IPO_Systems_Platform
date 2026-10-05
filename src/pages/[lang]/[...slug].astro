@@ -1,0 +1,79 @@
+---
+import DocLayout from '../../layouts/DocLayout.astro';
+import Callout from '../../components/Callout.astro';
+import LocalizedDiagram from '../../components/LocalizedDiagram.astro';
+import SharedCode from '../../components/SharedCode.astro';
+import SharedStruct from '../../components/SharedStruct.astro';
+import SharedSyscallTable from '../../components/SharedSyscallTable.astro';
+import MemoryMapVisualizer from '../../components/MemoryMapVisualizer.astro';
+import PsuCalculator from '../../components/PsuCalculator.astro';
+import { getAllSlugs } from '../../data/navigation';
+import { getTranslation } from '../../utils/i18n';
+import { siteConfig } from '../../../site.config';
+
+export async function getStaticPaths() {
+  const slugs = getAllSlugs();
+  const langs = Object.keys(siteConfig.languages);
+  const paths: any[] = [];
+
+  for (const lang of langs) {
+    for (const slug of slugs) {
+      paths.push({
+        params: { lang, slug }
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { lang, slug } = Astro.params;
+const currentLang = lang || 'en';
+const currentSlug = slug || '';
+
+// Glob import all MDX files in src/content/docs
+const allMdx = import.meta.glob('../../content/docs/**/*.mdx');
+
+// Target file pattern: ../../content/docs/<slug>.<lang>.mdx
+const targetPath = `../../content/docs/${currentSlug}.${currentLang}.mdx`;
+const fallbackPath = `../../content/docs/${currentSlug}.en.mdx`;
+
+let mod: any = null;
+let isFallback = false;
+
+if (allMdx[targetPath]) {
+  mod = await allMdx[targetPath]();
+} else if (allMdx[fallbackPath]) {
+  mod = await allMdx[fallbackPath]();
+  isFallback = (currentLang !== 'en');
+} else {
+  throw new Error(`Documentation page not found for slug '${currentSlug}' in language '${currentLang}' or fallback 'en'`);
+}
+
+const Content = mod.default;
+const frontmatter = mod.frontmatter || {};
+const headings = mod.getHeadings ? await mod.getHeadings() : [];
+
+// Frontmatter title or localized nav title
+const pageTitle = frontmatter.title || getTranslation(currentLang, `pages.${currentSlug.replace(/[\/-]/g, '_')}`);
+const pageDesc = frontmatter.description || '';
+---
+
+<DocLayout
+  title={pageTitle}
+  description={pageDesc}
+  currentLang={currentLang}
+  currentSlug={currentSlug}
+  headings={headings}
+  isFallback={isFallback}
+>
+  <Content components={{
+    Callout,
+    LocalizedDiagram,
+    SharedCode,
+    SharedStruct,
+    SharedSyscallTable,
+    MemoryMapVisualizer,
+    PsuCalculator
+  }} />
+</DocLayout>

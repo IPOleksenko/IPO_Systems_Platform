@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 620" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1120"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="stepGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="920" height="620" fill="url(#bg)" rx="12"/>
+  <text x="460" y="38" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="#f8fafc" text-anchor="middle">Full Bare-Metal Boot Sequence &amp; Timing Pipeline</text>
+
+  <!-- Step 1 -->
+  <g transform="translate(60, 60)">
+    <rect width="240" height="70" rx="6" fill="#065f46" stroke="#10b981" stroke-width="1.5"/>
+    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#6ee7b7">PHASE 1: SILICON RESET</text>
+    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">PWR_OK -&gt; CS:IP F000:FFF0</text>
+    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#a7f3d0">Phys: 0xFFFFFFF0 (4GB Top)</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M 300 95 L 340 95" stroke="#10b981" stroke-width="2"/>
+  <polygon points="340,91 348,95 340,99" fill="#10b981"/>
+
+  <!-- Step 2 -->
+  <g transform="translate(350, 60)">
+    <rect width="240" height="70" rx="6" fill="#065f46" stroke="#10b981" stroke-width="1.5"/>
+    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#6ee7b7">PHASE 2: CACHE-AS-RAM</text>
+    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">MTRR NEM Configuration</text>
+    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#a7f3d0">Stack at 0x7000:8000</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M 590 95 L 630 95" stroke="#10b981" stroke-width="2"/>
+  <polygon points="630,91 638,95 630,99" fill="#10b981"/>
+
+  <!-- Step 3 -->
+  <g transform="translate(640, 60)">
+    <rect width="230" height="70" rx="6" fill="#065f46" stroke="#10b981" stroke-width="1.5"/>
+    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#6ee7b7">PHASE 3: MRC TRAINING</text>
+    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">i440FX / Q35 PCI Probing</text>
+    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#a7f3d0">DRAM Pattern: 0x55AA55AA</text>
+  </g>
+
+  <!-- Downward Arrow -->
+  <path d="M 755 130 L 755 170 L 180 170 L 180 200" stroke="#8b5cf6" stroke-width="2" fill="none"/>
+  <polygon points="176,200 180,208 184,200" fill="#8b5cf6"/>
+
+  <!-- Step 4 -->
+  <g transform="translate(60, 208)">
+    <rect width="240" height="70" rx="6" fill="#4c1d95" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#c4b5fd">CONTRACT 2: FIRMWARE</text>
+    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">jmp 0xF000:0004</text>
+    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#ddd6fe">PAM Shadow RAM (Read-Only)</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M 300 243 L 340 243" stroke="#8b5cf6" stroke-width="2"/>
+  <polygon points="340,239 348,243 340,247" fill="#8b5cf6"/>
+
+  <!-- Step 5 -->
+  <g transform="translate(350, 208)">
+    <rect width="240" height="70" rx="6" fill="#4c1d95" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#c4b5fd">BIOS SERVICES &amp; A20</text>
+    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">IVT INT 10h-1Ah • BDA 0x400</text>
+    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#ddd6fe">Fast A20 Gate Port 0x92</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M 590 243 L 630 243" stroke="#8b5cf6" stroke-width="2"/>
+  <polygon points="630,239 638,243 630,247" fill="#8b5cf6"/>
+
+  <!-- Step 6 -->
+  <g transform="translate(640, 208)">
+    <rect width="230" height="70" rx="6" fill="#4c1d95" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#c4b5fd">MULTI-BUS DISCOVERY</text>
+    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">ATA • AHCI • NVMe • USB</text>
+    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#ddd6fe">INT 13h AH=42h LBA 0 Read</text>
+  </g>
+
+  <!-- Downward Arrow -->
+  <path d="M 755 278 L 755 318 L 180 318 L 180 348" stroke="#3b82f6" stroke-width="2" fill="none"/>
+  <polygon points="176,348 180,356 184,348" fill="#3b82f6"/>
+
+  <!-- Step 7 -->
+  <g transform="translate(60, 356)">
+    <rect width="240" height="70" rx="6" fill="#1e3a8a" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#93c5fd">CONTRACT 3: MBR EXEC</text>
+    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">jmp 0x0000:7C00 (DL=0x80)</text>
+    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#bfdbfe">Validates 0xAA55 Signature</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M 300 391 L 340 391" stroke="#3b82f6" stroke-width="2"/>
+  <polygon points="340,387 348,391 340,395" fill="#3b82f6"/>
+
+  <!-- Step 8 -->
+  <g transform="translate(350, 356)">
+    <rect width="240" height="70" rx="6" fill="#1e3a8a" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#93c5fd">STAGE 2 &amp; PROTECTED MODE</text>
+    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">Load GDT • CR0 |= 1</text>
+    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#bfdbfe">DAP read to Phys 0x10000</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M 590 391 L 630 391" stroke="#3b82f6" stroke-width="2"/>
+  <polygon points="630,387 638,391 630,395" fill="#3b82f6"/>
+
+  <!-- Step 9 -->
+  <g transform="translate(640, 356)">
+    <rect width="230" height="70" rx="6" fill="#1e3a8a" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#93c5fd">KERNEL32.C INITIALIZATION</text>
+    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">kmain() at 0x10000</text>
+    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#bfdbfe">Stack: 0x500000 (5 MB)</text>
+  </g>
+
+  <!-- Downward Arrow -->
+  <path d="M 755 426 L 755 466 L 460 466 L 460 496" stroke="#f59e0b" stroke-width="2" fill="none"/>
+  <polygon points="456,496 460,504 464,496" fill="#f59e0b"/>
+
+  <!-- Final Step -->
+  <g transform="translate(200, 504)">
+    <rect width="520" height="85" rx="8" fill="#78350f" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="260" y="28" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#fef3c7" text-anchor="middle">IPO_OS OPERATIONAL STATE</text>
+    <text x="260" y="50" font-family="system-ui, sans-serif" font-size="12" fill="#ffffff" text-anchor="middle">IPO_FS Mounted at LBA 2048 • RTL8139 TCP/IP Ready • Audio Startup Chord (C6-E6-G6-C7)</text>
+    <text x="260" y="70" font-family="monospace" font-size="11" fill="#fde68a" text-anchor="middle">Interactive Shell / GUI WM Running • Apps loaded at 0x800000</text>
+  </g>
+</svg>

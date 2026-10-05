@@ -1,0 +1,55 @@
+---
+title: "Система сборки и утилиты развертывания"
+description: "Полное руководство по Makefile, disk_editor.py, load_applications.py и конфигурации сети TAP для IPO_OS."
+---
+
+import SharedCode from '../../../../components/SharedCode.astro';
+import Callout from '../../../../components/Callout.astro';
+
+# Система сборки и утилиты развертывания
+
+Проект **IPO_OS** собирается с помощью модульной системы GNU Make и включает специализированные инструменты для манипуляции образами дисков и настройки виртуальной сети.
+
+---
+
+## 🔨 Цели сборки Makefile
+
+Сборочный конвейер разделен на независимые модули:
+
+<SharedCode id="makefile-all-targets" />
+
+### Параметры конфигурации (`mk/config.mk`):
+- `NET_MODE ?= tap` — Режим сети: `tap` (виртуальный сетевой адаптер хоста с прямым доступом ко всем 65535 портам) или `user` (эмуляция QEMU SLIRP с пробросом портов).
+- `TAP_DEV ?= tap0` — Имя виртуального сетевого интерфейса TAP на хосте.
+- `AUDIODEV ?= pa` — Аудиодрайвер QEMU: `pa` (PulseAudio/PipeWire), `alsa` (ALSA), `sdl` (SDL), `none` (отключен).
+- `DRIVE_TYPE ?= ide` — Тип дискового контроллера: `ide` (ATA/PATA), `ahci` (SATA AHCI), `usb` (USB 2.0 Mass Storage).
+
+---
+
+## 💾 Дисковая утилита `disk_editor.py`
+
+Скрипт `disk_editor.py` предназначен для прямого чтения, записи и форматирования файловой системы **IPO_FS** внутри файла образа диска (`build/disk.img`):
+
+<SharedCode id="disk-editor-cmds" />
+
+### Опции командной строки:
+- `-i, --image <path>` — Путь к образу диска (по умолчанию: `build/disk.img`).
+- `-s, --start-lba <lba>` — Смещение начала раздела IPO_FS в секторах LBA (по умолчанию: `2048`).
+
+---
+
+## 📦 Автоматическая загрузка приложений `load_applications.py`
+
+Утилита сканирует скомпилированные бинарники в каталоге `build/applications/` и автоматически импортирует их в образ диска в директорию `/applications`, делая их немедленно доступными для запуска из shell:
+
+```bash
+python3 load_applications.py
+```
+
+---
+
+## 🌐 Настройка сети TAP (`tools/setup-tap.sh`)
+
+Скрипт настраивает сетевой мост на стороне Linux-хоста:
+
+<SharedCode id="tap-networking-setup" />

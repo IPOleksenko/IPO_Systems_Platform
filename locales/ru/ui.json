@@ -1,0 +1,146 @@
+{
+  "site": {
+    "title": "IPO Systems Platform",
+    "description": "Единая официальная документация по IPO_OS, IPO_Boot_ROM и IPO_Firmware.",
+    "tagline": "Полный стек низкоуровневой инженерии: от аппаратного сброса кремния до пользовательских приложений."
+  },
+  "nav": {
+    "home": "Главная",
+    "projects": "Проекты",
+    "ipo_os": "IPO_OS",
+    "ipo_boot_rom": "IPO_Boot_ROM",
+    "ipo_firmware": "IPO_Firmware",
+    "search": "Поиск по документации...",
+    "github": "GitHub",
+    "toc_title": "На этой странице",
+    "prev": "Назад",
+    "next": "Вперёд",
+    "whats_next": "Что дальше",
+    "edit_page": "Предложить правку на GitHub",
+    "report_issue": "Сообщить о проблеме",
+    "roles": {
+      "user": "Пользователь IPO_OS",
+      "app_dev": "Разработчик приложений",
+      "kernel_dev": "Разработчик ядра и драйверов",
+      "pc_builder": "Сборщик ПК"
+    }
+  },
+  "sections": {
+    "ipo_os": {
+      "title": "Операционная система IPO_OS",
+      "part_a": "Часть A: Обзор и философия",
+      "part_b": "Часть B: Сборка ПК под IPO_OS",
+      "part_c": "Часть C: Загрузка и ядро",
+      "part_d": "Часть D: Программирование под IPO_OS",
+      "part_e": "Часть E: Справочники",
+      "part_f": "Часть F: Разработка и вклад"
+    },
+    "ipo_boot_rom": {
+      "title": "IPO_Boot_ROM (Reset Initializer)",
+      "overview": "Обзор и архитектура сброса",
+      "getting_started": "Инструменты и автономный запуск",
+      "architecture": "Внутреннее устройство и MRC",
+      "hardware_flashing": "Прошивка физического SPI (CH341A)",
+      "reference": "Карта памяти и коды POST 0x80",
+      "troubleshooting": "Диагностика и устранение сбоев"
+    },
+    "ipo_firmware": {
+      "title": "IPO_Firmware (BIOS Service Layer)",
+      "overview": "Обзор и рантайм-сервисы",
+      "getting_started": "Эмуляция и настройка запуска",
+      "architecture": "IVT, автопоиск накопителей и передача управления",
+      "interrupt_reference": "Сервисы прерываний BIOS (IVT)",
+      "reference": "Спецификация ACPI, POST 0x80 и EBDA",
+      "troubleshooting": "Отказы загрузки и восстановление"
+    }
+  },
+  "pages": {
+    "ipo_os": {
+      "overview": "Обзор системы и философия",
+      "architecture": "Глобальная архитектура и потоки данных",
+      "hardware_requirements": "Матрица требований к оборудованию",
+      "platform_selection": "Выбор платформы и чипсетов",
+      "components": "Компоненты ПК и подсистемы",
+      "configurations": "Эталонные аппаратные конфигурации",
+      "assembly_guide": "Пошаговая сборка компьютера",
+      "firmware_setup": "Настройка параметров BIOS/UEFI",
+      "media_preparation": "Подготовка носителя и разметка",
+      "first_boot": "Первый запуск и POST-диагностика",
+      "virtual_machines": "Запуск в QEMU, Bochs и VirtualBox",
+      "checklists": "Инженерные чек-листы сборки и проверки",
+      "boot_sequence": "Последовательность и таймлайн загрузки",
+      "bootloader_contract": "Контракт передачи управления от загрузчика",
+      "cpu_modes": "Режимы процессора, GDT и IDT",
+      "memory_management": "Физическая и виртуальная память",
+      "scheduler": "Планировщик процессов и потоков",
+      "syscalls_kernel": "Подсистема системных вызовов",
+      "interrupts": "Прерывания, PIC/APIC и таймеры",
+      "vfs_storage": "Виртуальная файловая система и IPO_FS",
+      "driver_model": "Архитектура драйверов устройств",
+      "io_console": "Ввод/вывод, видео и текстовая консоль",
+      "ipc": "Межпроцессное взаимодействие",
+      "security": "Изоляция и защита адресных пространств",
+      "kernel_debugging": "Отладка ядра и обработка Panic",
+      "toolchain_setup": "Настройка окружения разработки",
+      "hello_world": "Первая программа: Hello, IPO_OS",
+      "binary_format": "Формат исполняемого файла и карта памяти",
+      "abi": "ABI и соглашения о вызовах",
+      "syscalls_app": "Вызов системных функций из программ",
+      "stdlib": "Стандартная библиотека C и рантайм",
+      "memory_io": "Управление кучей и файловый ввод-вывод",
+      "ui_programming": "Консольный и графический интерфейс (WM)",
+      "build_system": "Скрипты сборки Makefile и Linker Script",
+      "packaging": "Упаковка и установка программ на диск",
+      "app_debugging": "Методы отладки приложений",
+      "best_practices": "Руководство по стилю и частые ошибки",
+      "examples": "Практические обучающие примеры",
+      "ref_syscalls": "Полный справочник системных вызовов",
+      "ref_memory_io": "Карта памяти и портов ввода-вывода",
+      "ref_structures": "Структуры данных и заголовочные файлы",
+      "ref_errors": "Справочник кодов ошибок",
+      "ref_glossary": "Глоссарий системной архитектуры",
+      "contrib_build": "Сборка IPO_OS из исходных кодов",
+      "contrib_style": "Стандарты оформления кода ядра",
+      "contrib_testing": "Тестирование и создание Pull Request"
+    },
+    "ipo_boot_rom": {
+      "overview": "Обзор и вектор аппаратного сброса",
+      "getting_started": "Команды сборки и эмуляция в QEMU",
+      "architecture": "Инициализация CAR, MRC и Shadow RAM",
+      "hardware_flashing": "Физическая прошивка SPI (CH341A)",
+      "reference": "Спецификация Contract 2 и коды порта 0x80",
+      "troubleshooting": "Диагностика и аппаратные сбои"
+    },
+    "ipo_firmware": {
+      "overview": "Обзор и архитектура прошивки",
+      "getting_started": "Сборка и chainload-запуск",
+      "architecture": "IVT и автопоиск контроллеров дисков",
+      "interrupt_reference": "Справочник прерываний BIOS (INT 10h–1Ah)",
+      "reference": "Спецификация Contract 3, EBDA и коды POST",
+      "troubleshooting": "Отказы поиска дисков и восстановление"
+    }
+  },
+  "ui": {
+    "language": "Язык",
+    "theme": "Тема",
+    "theme_light": "Светлая",
+    "theme_dark": "Тёмная",
+    "theme_auto": "Системная",
+    "copy": "Скопировать",
+    "copied": "Скопировано!",
+    "not_translated_title": "Внимание",
+    "not_translated_msg": "Эта страница ещё не переведена на русский язык. Отображается английская версия.",
+    "figure": "Рисунок",
+    "diagram_caption": "Что на рисунке:",
+    "interactive_widget": "Интерактивный инструмент",
+    "callout": {
+      "note": "Примечание",
+      "tip": "Совет",
+      "important": "Важно",
+      "warning": "Предупреждение",
+      "caution": "Осторожно",
+      "beginners": "Для начинающих",
+      "deep_dive": "Углублённо"
+    }
+  }
+}

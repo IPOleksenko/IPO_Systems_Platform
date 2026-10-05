@@ -1,0 +1,70 @@
+---
+title: "Упаковка и развертывание"
+description: "Развертывание приложений на IPO_FS через disk_editor.py, load_applications.py, hosting_client и физические носители."
+---
+
+import SharedCode from '../../../../components/SharedCode.astro';
+import Callout from '../../../../components/Callout.astro';
+
+# Упаковка и развертывание
+
+После компиляции программы в плоский бинарный файл (`.bin`) его необходимо поместить в раздел файловой системы `IPO_FS`, чтобы командная оболочка ядра смогла его запустить.
+
+---
+
+## 🛠️ Управление файлами через `disk_editor.py`
+
+Автономная утилита на Python `disk_editor.py` позволяет работать с сырыми образами дисков напрямую без необходимости монтирования через loopback-устройства с правами root:
+
+```bash
+# 1. Поместить скомпилированный бинарный файл в директорию /applications
+python3 disk_editor.py put hello.bin /applications/hello.bin
+
+# 2. Просмотреть список файлов директории
+python3 disk_editor.py ls /applications
+
+# 3. Просмотреть содержимое файла
+python3 disk_editor.py cat /applications/hello.bin
+```
+
+---
+
+## 📦 Пакетная загрузка через `load_applications.py`
+
+Для автоматической компиляции и загрузки всех встроенных программ и тестов из каталога `applications/` во вторичный образ накопителя `build/disk.img`:
+
+```bash
+python3 load_applications.py
+```
+
+Эта утилита автоматически форматирует раздел, создаёт базовые директории (`/applications`, `/etc`, `/fonts`) и заполняет их исполняемыми файлами и растровыми шрифтами.
+
+---
+
+## 🌐 Загрузка по сети через `hosting_client`
+
+Если IPO_OS запущена с активной сетевой подсистемой (`NET_MODE=tap` или `NET_MODE=user`), файлы можно скачивать прямо из запущенной операционной системы:
+
+```bash
+# 1. На хост-системе: запуск HTTP-сервера раздачи файлов сборки
+python3 -m http.server 8000 --directory ./build
+
+# 2. В терминале оболочки IPO_OS: загрузка файла через утилиту hosting_client
+> /applications/hosting_client 192.168.7.1 8000 /hello.bin
+```
+
+---
+
+## 💾 Запись на физические накопители
+
+Для загрузки системы на реальном оборудовании:
+
+<Callout type="warning" lang="ru" title="Проверяйте целевое устройство">
+Всегда сверяйте идентификатор целевого накопителя (`/dev/sdX`) с помощью команды `lsblk` перед выполнением `dd`. Ошибочная перезапись не того диска приведёт к безвозвратной потере данных!
+</Callout>
+
+```bash
+# Запись образа ОС на USB-флешку или карту CompactFlash
+sudo dd if=build/IPO_OS.img of=/dev/sdX bs=4M status=progress conv=fsync
+sudo sync
+```

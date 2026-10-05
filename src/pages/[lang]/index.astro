@@ -1,0 +1,395 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import LocalizedDiagram from '../../components/LocalizedDiagram.astro';
+import { siteConfig } from '../../../site.config';
+import { getTranslation } from '../../utils/i18n';
+
+export function getStaticPaths() {
+  return Object.keys(siteConfig.languages).map((lang) => ({
+    params: { lang }
+  }));
+}
+
+const { lang } = Astro.params;
+const currentLang = lang || 'en';
+const isRu = currentLang === 'ru';
+
+const base = siteConfig.base;
+const cleanBase = base.endsWith('/') ? base : `${base}/`;
+---
+
+<BaseLayout currentLang={currentLang}>
+  <Header currentLang={currentLang} />
+
+  <main class="landing-main">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-badge">
+        <span>🚀 Bare-Metal x86 Systems Architecture</span>
+      </div>
+      <h1 class="hero-title">{siteConfig.siteTitle}</h1>
+      <p class="hero-subtitle">
+        {isRu 
+          ? 'Единая всеобъемлющая документация программно-аппаратного стека: от аппаратного вектора сброса питания процессора до графических и консольных приложений.' 
+          : 'Unified comprehensive documentation of the complete low-level compute stack: from the CPU hardware reset vector to userspace applications.'}
+      </p>
+
+      <div class="hero-actions">
+        <a href={`${cleanBase}${currentLang}/ipo-os/overview`} class="btn btn-primary">
+          {isRu ? 'Начать изучение IPO_OS →' : 'Explore IPO_OS →'}
+        </a>
+        <a href={`${cleanBase}${currentLang}/ipo-boot-rom/overview`} class="btn btn-secondary">
+          {isRu ? 'Стек сброса (Boot ROM) →' : 'Reset Architecture →'}
+        </a>
+        <a href={`${cleanBase}${currentLang}/ipo-firmware/overview`} class="btn btn-secondary">
+          {isRu ? 'Прошивка (IPO_Firmware) →' : 'Explore Firmware →'}
+        </a>
+      </div>
+    </section>
+
+    <!-- Global Stack Architecture Diagram -->
+    <section class="stack-diagram-section">
+      <div class="section-header">
+        <h2>{isRu ? 'Вертикальная архитектура стека' : 'Vertical Stack Architecture'}</h2>
+        <p>
+          {isRu 
+            ? 'Все три проекта спроектированы для совместной работы в качестве единой вычислительной платформы с четко специфицированными контрактами взаимодействия.' 
+            : 'All three projects integrate seamlessly as a unified bare-metal computing platform with strictly defined handover contracts.'}
+        </p>
+      </div>
+      <LocalizedDiagram id="global_stack" lang={currentLang} figureNum={1} />
+    </section>
+
+    <!-- Project Cards Grid -->
+    <section class="projects-grid-section">
+      <div class="section-header">
+        <h2>{isRu ? 'Проекты платформы' : 'Platform Projects'}</h2>
+        <p>{isRu ? 'Каждый компонент автономен, строго документирован и не зависит от внешних исходников при изучении.' : 'Each component is self-contained, rigorously documented, and fully independent.'}</p>
+      </div>
+
+      <div class="projects-cards">
+        <!-- Card 1: IPO_OS -->
+        <div class="project-card">
+          <div class="card-header">
+            <span class="card-badge" style="background-color: #eff6ff; color: #2563eb;">OS / Kernel</span>
+            <a href={siteConfig.projects.ipo_os.repoUrl} target="_blank" rel="noopener noreferrer" class="repo-badge">GitHub ↗</a>
+          </div>
+          <h3 class="card-title">IPO_OS</h3>
+          <p class="card-desc">
+            {isRu
+              ? 'Полноценная 32-битная x86 операционная система: монолитное ядро, менеджер памяти, VFS с собственной 64-битной FS (IPO_FS), оконный менеджер (WM), драйверы ATA/PS-2/RTL8139 и встроенный TCP/IP стек с POSIX-сокетами.'
+              : 'Full bare-metal 32-bit x86 operating system: protected-mode kernel, VFS with native 64-bit IPO_FS, GUI Window Manager, RTL8139 NIC driver, and complete TCP/IP stack with POSIX socket API.'}
+          </p>
+          <div class="card-footer">
+            <a href={`${cleanBase}${currentLang}/ipo-os/overview`} class="card-link">
+              {isRu ? 'Документация IPO_OS →' : 'IPO_OS Documentation →'}
+            </a>
+          </div>
+        </div>
+
+        <!-- Card 2: IPO_Boot_ROM -->
+        <div class="project-card">
+          <div class="card-header">
+            <span class="card-badge" style="background-color: #ecfdf5; color: #059669;">Reset Initializer</span>
+            <a href={siteConfig.projects.ipo_boot_rom.repoUrl} target="_blank" rel="noopener noreferrer" class="repo-badge">GitHub ↗</a>
+          </div>
+          <h3 class="card-title">IPO_Boot_ROM</h3>
+          <p class="card-desc">
+            {isRu
+              ? 'Аппаратный инициализатор вектора сброса 0xFFFFFFF0 для физического железа и QEMU. Реализует режим Cache-as-RAM (CAR), тренировку памяти MRC для чипсетов i440FX и Q35, перенос в Shadow RAM и передачу в прошивку по Контракту 2.'
+              : 'Hardware reset vector (0xFFFFFFF0) initializer for physical machines and QEMU. Features Cache-as-RAM (CAR), MRC DRAM training for i440FX and Q35, PAM Shadow RAM mirroring, and Contract 2 handover.'}
+          </p>
+          <div class="card-footer">
+            <a href={`${cleanBase}${currentLang}/ipo-boot-rom/overview`} class="card-link">
+              {isRu ? 'Документация Boot ROM →' : 'Boot ROM Documentation →'}
+            </a>
+          </div>
+        </div>
+
+        <!-- Card 3: IPO_Firmware -->
+        <div class="project-card">
+          <div class="card-header">
+            <span class="card-badge" style="background-color: #f5f3ff; color: #7c3aed;">BIOS Service Layer</span>
+            <a href={siteConfig.projects.ipo_firmware.repoUrl} target="_blank" rel="noopener noreferrer" class="repo-badge">GitHub ↗</a>
+          </div>
+          <h3 class="card-title">IPO_Firmware</h3>
+          <p class="card-desc">
+            {isRu
+              ? 'BIOS-совместимый сервисный слой реального режима. Устанавливает таблицу IVT (INT 10h–1Ah), строит карту E820, активирует Fast A20, выполняет многошинный автопоиск дисков (IDE/AHCI/NVMe/USB) и загружает MBR по Контракту 3.'
+              : 'BIOS-compatible real-mode firmware runtime. Installs IVT interrupt services (INT 10h–1Ah), builds E820 memory map, opens Fast A20, scans storage buses (IDE, AHCI, NVMe, USB), and performs Contract 3 MBR handover.'}
+          </p>
+          <div class="card-footer">
+            <a href={`${cleanBase}${currentLang}/ipo-firmware/overview`} class="card-link">
+              {isRu ? 'Документация Firmware →' : 'Firmware Documentation →'}
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Start Profiles -->
+    <section class="roles-section">
+      <div class="section-header">
+        <h2>{isRu ? 'С чего начать (Руководства по ролям)' : 'Where to Start (Reader Profiles)'}</h2>
+        <p>{isRu ? 'Выберите ваш профиль для перехода к профильному руководству:' : 'Select your pathway for tailored step-by-step guidance:'}</p>
+      </div>
+
+      <div class="roles-grid">
+        <div class="role-box">
+          <div class="role-icon">🖥️</div>
+          <h4>{isRu ? 'Пользователь системы' : 'End User'}</h4>
+          <p>{isRu ? 'Запуск в QEMU, работа в командной строке shell, управление сетью ifconfig, запуск веб-сервера.' : 'Running in QEMU, shell command-line usage, dynamic networking via ifconfig, and hosting services.'}</p>
+          <a href={`${cleanBase}${currentLang}/ipo-os/hardware/virtual-machines`}>{isRu ? 'Быстрый запуск в эмуляторе →' : 'Quick Start in QEMU →'}</a>
+        </div>
+
+        <div class="role-box">
+          <div class="role-icon">💻</div>
+          <h4>{isRu ? 'Разработчик приложений' : 'Application Developer'}</h4>
+          <p>{isRu ? 'Создание программ на C/ASM, вызов системных функций через int 0x80, упаковка на диск с disk_editor.py.' : 'Writing userland C/ASM code, invoking int 0x80 syscalls, linking at 0x800000, and deploying via disk_editor.py.'}</p>
+          <a href={`${cleanBase}${currentLang}/ipo-os/dev/hello-world`}>{isRu ? 'Первая программа «Hello, World» →' : 'Write Hello, World App →'}</a>
+        </div>
+
+        <div class="role-box">
+          <div class="role-icon">🛡️</div>
+          <h4>{isRu ? 'Разработчик ядра и драйверов' : 'Kernel Engineer'}</h4>
+          <p>{isRu ? 'Устройство VFS, таблица прерываний IDT, драйверы устройств (ATA, RTL8139, VBE/WM), отладка паник.' : 'Kernel memory layout, IDT traps, device driver models, TCP/IP state machine, and panic analysis.'}</p>
+          <a href={`${cleanBase}${currentLang}/ipo-os/kernel/boot-sequence`}>{isRu ? 'Архитектура ядра и загрузка →' : 'Kernel Architecture & Boot →'}</a>
+        </div>
+
+        <div class="role-box">
+          <div class="role-icon">🔧</div>
+          <h4>{isRu ? 'Сборщик физического ПК' : 'Hardware Assembler'}</h4>
+          <p>{isRu ? 'Подбор материнских плат (i440FX/Q35), калькулятор мощности БП, распиновка JFP1, прошивка SPI через CH341A.' : 'Chipset compatibility matrix, PSU sizing, motherboard front panel pinout, and flashing chips via CH341A.'}</p>
+          <a href={`${cleanBase}${currentLang}/ipo-os/hardware/assembly-guide`}>{isRu ? 'Инструкция по сборке ПК →' : 'PC Assembly & Flashing →'}</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .landing-main {
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+  }
+
+  .hero-section {
+    text-align: center;
+    padding: 3rem 1rem 4rem;
+  }
+
+  .hero-badge {
+    display: inline-block;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    background-color: var(--accent-light);
+    color: var(--accent-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--accent-border);
+  }
+
+  .hero-title {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 1.25rem;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  .hero-subtitle {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    max-width: 48rem;
+    margin: 0 auto 2rem;
+    line-height: 1.6;
+  }
+
+  .hero-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: all 0.15s ease;
+  }
+
+  .btn-primary {
+    background-color: var(--accent-primary);
+    color: #ffffff;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--accent-primary-hover);
+    text-decoration: none;
+  }
+
+  .btn-secondary {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--bg-tertiary);
+    text-decoration: none;
+  }
+
+  .section-header {
+    text-align: center;
+    max-width: 45rem;
+    margin: 0 auto 2.5rem;
+  }
+
+  .section-header h2 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    border-bottom: none;
+  }
+
+  .section-header p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+  }
+
+  .stack-diagram-section {
+    margin: 4rem 0;
+  }
+
+  .projects-grid-section {
+    margin: 5rem 0;
+  }
+
+  .projects-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .project-card {
+    display: flex;
+    flex-direction: column;
+    padding: 1.75rem;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .project-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-primary);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .card-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+  }
+
+  .repo-badge {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  .repo-badge:hover {
+    color: var(--text-primary);
+    text-decoration: underline;
+  }
+
+  .card-title {
+    font-size: 1.4rem;
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+  }
+
+  .card-desc {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    flex: 1;
+    margin-bottom: 1.5rem;
+  }
+
+  .card-link {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--accent-primary);
+    text-decoration: none;
+  }
+
+  .card-link:hover {
+    text-decoration: underline;
+  }
+
+  .roles-section {
+    margin: 5rem 0 2rem;
+  }
+
+  .roles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .role-box {
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .role-icon {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .role-box h4 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+  }
+
+  .role-box p {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    flex: 1;
+    margin-bottom: 1rem;
+  }
+
+  .role-box a {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--accent-primary);
+    text-decoration: none;
+  }
+
+  .role-box a:hover {
+    text-decoration: underline;
+  }
+</style>

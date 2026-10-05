@@ -1,0 +1,91 @@
+---
+title: "Contrato de transferencia del cargador de arranque"
+description: "Estado de hardware de la CPU en la entrada del kernel, transferencia directa de RAM a través de 0x8FF0 y punto de entrada entry32.asm."
+---
+
+import SharedCode from '../../../../components/SharedCode.astro';
+
+# Contrato de transferencia del cargador de arranque
+
+When the primary MBR bootloader (`src/boot/boot.asm`) hands over control to the IPO_OS kernel entrypoint (`_start` in `src/kernel/entry32.asm`), the CPU and memory state strictly conform to the following hardware contract.
+
+---
+
+## 📋 CPU State at Kernel Entry (0x10000)
+
+The bootloader establishes a flat 32-bit Protected Mode environment (Ring 0) with paging disabled:
+
+| CPU Register | State at Handover | Purpose & Hardware Description |
+| :--- | :--- | :--- |
+| **CPU Mode** | 32-bit Protected Mode | Ring 0 privilege level, flat 4 GB memory addressing |
+| **`CS`** | `0x08` | Flat code selector (Base `0x0`, Limit `0xFFFFFFFF`, Ring 0 Exec/Read) |
+| **`DS`, `ES`, `SS`, `FS`, `GS`** | `0x10` | Flat data selector (Base `0x0`, Limit `0xFFFFFFFF`, Ring 0 Read/Write) |
+| **`ESP`** | `0x00500000` | 5 MB kernel stack (initialized in `boot.asm` and reset in `entry32.asm`) |
+| **`CR0`** | `PE = 1 (bit 0), PG = 0 (bit 31)` | Protected Mode active, Paging disabled |
+| **`EFLAGS`** | `0x00000002` (`IF = 0`) | Hardware interrupts disabled (`cli`) until IDT installation in kernel |
+| **`EIP`** | `0x00010000` | Kernel physical entry point address (`_start`) |
+| **A20 Line** | Enabled (Fast A20) | Asserted via system I/O port `0x92` (`in al, 0x92; or al, 2; out 0x92, al`) |
+| **VGA Cursor** | Hidden | BIOS text cursor disabled prior to protected mode entry (`INT 10h, AH=01h, CH=20h`) |
+
+---
+
+## 🧠 Memory Handover Protocol (Address 0x8FF0)
+
+**IPO_OS** deliberately does not use Multiboot 1/2 structures or pointer registers (`EBX`).
+
+Instead, the real-mode bootloader probes physical memory using BIOS `INT 15h, AX=E820` (with fallback to `AX=E801`) and computes the total usable RAM. The total memory size in bytes is written directly into physical memory location **`0x8FF0`**:
+
+```asm
+; From src/boot/boot.asm:
+; detect RAM size using BIOS E820 and store total bytes at 0x8FF0
+call detect_memory
+```
+
+During process manager initialization, the kernel reads this address directly in `src/kernel/core/process.c`:
+
+```c
+static uint64_t get_process_heap_capacity(void) {
+    volatile uint32_t *ram_size_ptr = (volatile uint32_t *)0x8FF0;
+    uint32_t detected = *ram_size_ptr;
+    return (uint64_t)detected;
+}
+```
+
+---
+
+## 🚦 Visual Boot Progress Indicators (ARG -> K)
+
+For bare-metal debugging on systems without active serial lines, the bootloader and kernel render visual progress markers:
+
+1. **`A`** (`0x41`): Bootloader verified BIOS disk extensions (`INT 13h, AH=41h, BX=55AAh`).
+2. **`R`** (`0x52`): Kernel binary sectors read from LBA 1 into physical address `0x10000` via DAP (`INT 13h, AH=42h`).
+3. **`G`** (`0x47`): Physical RAM detected and saved to `0x8FF0`, GDT loaded, entering Protected Mode.
+4. **`K`** (`0x4B`): Kernel entrypoint `_start` wrote `'K'` (attribute `0x07`, light grey on black) to top-left VGA buffer `0xB8000` immediately prior to calling `kmain()`!
+
+---
+
+## 🎯 Kernel Entrypoint (src/kernel/entry32.asm)
+
+The kernel assembly entrypoint consists of exactly 11 instructions:
+
+```asm
+BITS 32
+global _start
+extern kmain
+
+_start:
+    mov esp, 0x500000
+    mov dword [0xB8000], 0x07204B    ; 'K' at top-left
+    call kmain
+.hang:
+    hlt
+    jmp .hang
+```
+
+---
+
+## ⚙️ Kernel Linker Script (src/kernel/linker.ld)
+
+The kernel binary is linked to start at physical address `0x10000` (64 KB):
+
+<SharedCode id="kernel-linker-script" lang="es" />

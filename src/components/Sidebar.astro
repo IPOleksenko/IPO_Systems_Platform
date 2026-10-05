@@ -1,0 +1,184 @@
+---
+import { navigationData } from '../data/navigation';
+import { getTranslation } from '../utils/i18n';
+import { siteConfig } from '../../site.config';
+
+interface Props {
+  currentLang: string;
+  currentSlug: string;
+}
+
+const { currentLang, currentSlug } = Astro.props;
+const base = siteConfig.base;
+const cleanBase = base.endsWith('/') ? base : `${base}/`;
+---
+
+<aside class="sidebar" id="docs-sidebar" aria-label="Documentation Navigation">
+  <div class="sidebar-inner">
+    {navigationData.map((proj) => (
+      <div class="project-nav-section">
+        <h3 class="project-nav-title">{getTranslation(currentLang, proj.titleKey)}</h3>
+        {proj.groups.map((grp) => (
+          <div class="nav-group">
+            <h4 class="group-title">{getTranslation(currentLang, grp.titleKey)}</h4>
+            <ul class="nav-list">
+              {grp.items.map((item) => {
+                const itemUrl = `${cleanBase}${currentLang}/${item.slug}`;
+                const isActive = currentSlug === item.slug;
+                return (
+                  <li class="nav-list-item">
+                    <a href={itemUrl} class={`nav-link ${isActive ? 'active' : ''}`}>
+                      {getTranslation(currentLang, item.titleKey)}
+                      {item.badge && <span class="nav-badge">{item.badge}</span>}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+    ))}
+  </div>
+</aside>
+
+<style>
+  .sidebar {
+    width: var(--sidebar-width);
+    flex-shrink: 0;
+    height: calc(100vh - var(--header-height));
+    position: sticky;
+    top: var(--header-height);
+    overflow-y: auto;
+    border-right: 1px solid var(--border-color);
+    background-color: var(--bg-sidebar);
+    padding: 1.5rem 1rem 3rem 1.25rem;
+  }
+
+  @media (max-width: 1024px) {
+    .sidebar {
+      position: fixed;
+      top: var(--header-height);
+      left: 0;
+      bottom: 0;
+      z-index: 40;
+      background-color: var(--bg-primary);
+      transform: translateX(-100%);
+      transition: transform 0.25s ease-in-out;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+  }
+
+  .project-nav-section {
+    margin-bottom: 2rem;
+  }
+
+  .project-nav-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent-primary);
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .nav-group {
+    margin-bottom: 1rem;
+  }
+
+  .group-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .nav-list-item {
+    margin-bottom: 0.15rem;
+  }
+
+  .nav-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: all 0.15s ease;
+  }
+
+  .nav-link:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-tertiary);
+    text-decoration: none;
+  }
+
+  .nav-link.active {
+    color: var(--accent-primary);
+    background-color: var(--accent-light);
+    font-weight: 600;
+    border-inline-start: 3px solid var(--accent-primary);
+  }
+
+  .nav-badge {
+    font-size: 0.7rem;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 0.1rem 0.35rem;
+    border-radius: var(--radius-sm);
+  }
+</style>
+
+<script is:inline>
+  (function() {
+    const sidebar = document.getElementById('docs-sidebar');
+    if (!sidebar) return;
+
+    const savedScroll = sessionStorage.getItem('sidebar_scroll_pos');
+    const isInternalNav = sessionStorage.getItem('sidebar_internal_nav') === '1';
+    sessionStorage.removeItem('sidebar_internal_nav');
+
+    if (isInternalNav && savedScroll !== null) {
+      sidebar.scrollTop = parseInt(savedScroll, 10);
+    } else {
+      const activeLink = sidebar.querySelector('.nav-link.active');
+      if (activeLink) {
+        activeLink.scrollIntoView({ block: 'center' });
+        sessionStorage.setItem('sidebar_scroll_pos', sidebar.scrollTop.toString());
+      } else if (savedScroll !== null) {
+        sidebar.scrollTop = parseInt(savedScroll, 10);
+      }
+    }
+
+    sidebar.addEventListener('scroll', function() {
+      sessionStorage.setItem('sidebar_scroll_pos', sidebar.scrollTop.toString());
+    }, { passive: true });
+
+    sidebar.addEventListener('click', function(e) {
+      if (e.target.closest('a')) {
+        sessionStorage.setItem('sidebar_scroll_pos', sidebar.scrollTop.toString());
+        sessionStorage.setItem('sidebar_internal_nav', '1');
+      }
+    });
+
+    window.addEventListener('beforeunload', function() {
+      sessionStorage.setItem('sidebar_scroll_pos', sidebar.scrollTop.toString());
+    });
+  })();
+</script>

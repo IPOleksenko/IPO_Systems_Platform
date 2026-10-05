@@ -1,0 +1,30 @@
+---
+title: "IPO_OS Architecture"
+description: "In-depth architectural overview of IPO_OS: 32-bit monolithic x86 kernel, memory layout, VFS with IPO_FS, Gestionnaire de fenêtres, TinyGL (OpenGL 1.1), Sound Blaster 16, and TCP/IP stack."
+---
+
+import LocalizedDiagram from '../../../components/LocalizedDiagram.astro';
+import Callout from '../../../components/Callout.astro';
+
+# IPO_OS Architecture
+
+**IPO_OS** is a bare-metal 32-bit x86 monolithic système d'exploitation designed to run on physical hardware and QEMU virtual machines.
+
+<LocalizedDiagram id="vertical_platform_stack" />
+
+---
+
+## 🏛️ Monolithic Kernel Architecture
+
+- **Mode protégé Kernel (Ring 0):** GDT/IDT tables, hardware interrupt dispatching.
+- **TinyGL 3D Engine (OpenGL 1.1):** Kernel-space software 3D rasterizer with Z-buffering and lighting.
+- **Gestionnaire de fenêtres (WM):** 60 FPS compositor async task, PS/2 software mouse pointer.
+- **Audio Core:** Sound Blaster 16 DSP hardware driver (16-bit DMA Ch 5) and PC Speaker PWM.
+- **Network Stack:** Realtek RTL8139 NIC, Ethernet II, ARP, IPv4, ICMP, UDP, TCP state machine, and POSIX Sockets.
+- **IPO_FS Filesystem:** 64-bit extent-based storage engine with ATA PIO disk driver.
+
+---
+
+## 🗺️ Mémoire physique Map
+
+<LocalizedDiagram id="memory_map" />

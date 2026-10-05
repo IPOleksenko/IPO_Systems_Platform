@@ -1,0 +1,185 @@
+{
+  "global_stack": {
+    "title": "IPO Systems Platform Vertical Stack",
+    "caption": "Complete execution hierarchy from power-on hardware reset vector to userspace graphical/console applications.",
+    "labels": {
+      "hardware": "Physical Hardware (CPU x86, RAM, Chipset, Storage)",
+      "boot_rom": "IPO_Boot_ROM (Reset Vector 0xFFFFFFF0, CAR, MRC, PAM)",
+      "contract_2": "Contract 2 Handover (CS:IP 0xF000:0004, Shadow RAM)",
+      "firmware": "IPO_Firmware (IVT, A20, Storage Discovery, MBR Load)",
+      "contract_3": "Contract 3 Handover (CS:IP 0x0000:7C00, DL=Drive ID)",
+      "kernel": "IPO_OS Kernel (PMM, VFS, Sched, Drivers, TCP/IP)",
+      "syscall_gate": "Syscall Gate (int 0x80, EAX=num, EBX=argc, ECX=argv)",
+      "userland": "Userspace Applications (0x800000, LibC, Shell, GUI WM)"
+    }
+  },
+  "boot_rom_flow": {
+    "title": "IPO_Boot_ROM Low-Level Execution Sequence",
+    "caption": "Step-by-step progression of the hardware reset vector through Cache-as-RAM, memory training, and firmware handover.",
+    "labels": {
+      "reset_vector": "CPU Reset Vector (0xFFFFFFF0 / F000:FFF0)",
+      "jump_base": "Jump to ROM Base (0xF000:8000)",
+      "car_setup": "Phase 1: Cache-as-RAM Setup (MTRRs, Stack at 0x7000:8000)",
+      "chipset_probe": "Phase 2: PCI Chipset Probing (i440FX vs Q35)",
+      "mrc_training": "Phase 3: Memory Reference Code (MRC DRAM Training)",
+      "car_teardown": "Phase 4: CAR Teardown & DRAM Stack (0x0000:7000)",
+      "pic_pit": "Phase 5: Cascaded 8259 PIC & 8254 PIT Setup",
+      "uart_init": "Phase 6: COM1 UART Init (115200 8N1)",
+      "shadow_ram": "Phase 7: PAM Copy to Shadow RAM (0xF0000..0xFFFFF)",
+      "pam_lock": "Phase 8: PAM Read-Only Lock",
+      "magic_check": "Phase 9: Validate 'IPOF' Magic (0x464F5049)",
+      "handover": "Transfer to Firmware: jmp 0xF000:0004"
+    }
+  },
+  "firmware_flow": {
+    "title": "IPO_Firmware Service Setup & Storage Discovery",
+    "caption": "Execution pipeline from Boot ROM handover through BIOS interrupts installation to storage drive discovery and OS handover.",
+    "labels": {
+      "entry": "Firmware Entry Point (0xF000:0004)",
+      "ivt_setup": "Register IVT: INT 10h, 12h, 13h, 15h, 16h, 1Ah",
+      "bda_ebda": "Init BDA (0x400) & EBDA / ACPI 1.0 (0x9FC00)",
+      "pci_enum": "PCI Bus Enumeration (VGA, Storage, USB Controllers)",
+      "video_init": "Video Subsystem (VBIOS Option ROM or Text Mode 03h)",
+      "a20_gate": "Fast A20 Gate Activation (Port 0x92)",
+      "memory_detect": "E820 / E801 Memory Map Construction",
+      "storage_probe": "Multi-Bus Storage Scan: ATA (0x1F0), AHCI, NVMe, USB",
+      "mbr_load": "Read LBA 0 to 0x0000:7C00 via INT 13h AH=42h",
+      "validate_mbr": "Check MBR Signature 0x55AA",
+      "os_handover": "OS Handover: DL=0x80..0x82, jmp 0x0000:7C00"
+    }
+  },
+  "kernel_boot": {
+    "title": "IPO_OS Kernel Initialization Pipeline",
+    "caption": "Transition from MBR bootloader through Protected Mode to the running kernel, filesystem mount, and interactive shell.",
+    "labels": {
+      "mbr_stage1": "Stage 1 Bootloader (MBR Sector 0x7C00)",
+      "stage2_load": "Stage 2 Bootloader Loaded from Disk",
+      "prot_mode": "Enter 32-bit Protected Mode (GDT loaded, CR0 PE=1)",
+      "kernel_load": "Load Kernel ELF32 to Physical Address 0x10000",
+      "kernel_entry": "Kernel Entry (_start in linker.ld)",
+      "mm_init": "Physical Memory Manager & Kernel Heap (kmalloc)",
+      "idt_init": "Interrupt Descriptor Table (IDT) & Syscall Gate (0x80)",
+      "fs_mount": "Mount Root File System (IPO_FS Partition at LBA 2048)",
+      "drivers_init": "Init Drivers (ATA, Keyboard, Mouse, RTL8139, VBE/WM)",
+      "launch_shell": "Spawn Initial Process (/applications/shell.bin)"
+    }
+  },
+  "memory_map": {
+    "title": "IPO_OS Physical & Virtual Memory Layout",
+    "caption": "Map of memory zones: Real-mode legacy tables, kernel space at 64 KB, and userspace applications at 8 MB.",
+    "labels": {
+      "ivt_bda": "0x00000 - 0x004FF: IVT (1 KB) & BDA (256 B)",
+      "free_conv": "0x00500 - 0x07BFF: Scratch RAM & Stacks",
+      "boot_mbr": "0x07C00 - 0x07DFF: Bootloader MBR Buffer (512 B)",
+      "kernel_bin": "0x10000 - 0x7FFFF: IPO_OS Kernel Core (.text, .data, .bss)",
+      "video_ram": "0xA0000 - 0xBFFFF: Video Framebuffer (VGA Text 0xB8000)",
+      "ebda_rom": "0xC0000 - 0xFFFFF: VBIOS, Shadow RAM & ROM Firmware",
+      "kernel_heap": "0x100000 - 0x7FFFFF: Extended Memory & Kernel kmalloc Pool",
+      "user_apps": "0x800000+: Userspace Applications (Entry at 0x800000)"
+    }
+  },
+  "syscall_pipeline": {
+    "title": "System Call Dispatch Pipeline (int 0x80)",
+    "caption": "Flow of control and argument passing when a userspace application requests an operating system service.",
+    "labels": {
+      "app_call": "Application executes ipo_syscall(num, argc, argv)",
+      "trap_gate": "Assembly 'int 0x80' triggers CPU Software Interrupt Gate",
+      "ring_switch": "Hardware CPU Switch: Ring 3 (User) -> Ring 0 (Kernel)",
+      "dispatcher": "Kernel Syscall Dispatcher validates number & arguments",
+      "handler_exec": "Target Subsystem Handler executes (FS, Process, Net, WM)",
+      "return_ring": "Result placed in EAX, 'iret' returns to Ring 3"
+    }
+  },
+  "fs_layout": {
+    "title": "IPO_FS 64-bit Extent-Based On-Disk Structure",
+    "caption": "Partition layout showing 512-byte blocks, 64-bit extents, and 128-byte inode organization.",
+    "labels": {
+      "mbr_reserved": "Sector 0..2047: MBR and Reserved Boot Sectors",
+      "superblock": "LBA 2048: Superblock ('IPO_FS\\0\\0', Block Size, Pointers)",
+      "inode_bitmap": "Block Bitmap / Inode Bitmap (Allocation Tracking)",
+      "inode_table": "Inode Table (128 bytes per inode, 4 inodes / block)",
+      "data_blocks": "Data Extent Pool (Contiguous Multi-Block Extents)"
+    }
+  },
+  "pc_assembly_flow": {
+    "title": "Hardware Assembly & Safety Progression",
+    "caption": "Order of physical assembly from workbench ESD safety preparation to power-on self test.",
+    "labels": {
+      "esd_prep": "Step 1: ESD Protection & Workstation Preparation",
+      "cpu_install": "Step 2: CPU Socket Installation & Thermal Compound",
+      "cooler_mount": "Step 3: CPU Cooler & Retention Bracket",
+      "ram_install": "Step 4: Dual-Channel DDR/SDRAM Insertion",
+      "case_mb": "Step 5: Standoff Alignment & Motherboard Mounting",
+      "psu_cabling": "Step 6: Power Supply (24-pin ATX, 8-pin EPS)",
+      "storage_conn": "Step 7: Storage Drives & SATA/IDE Data Cables",
+      "front_panel": "Step 8: Front Panel Pinout (Power SW, Reset SW, LEDs)",
+      "post_test": "Step 9: Bench POST Self-Test & Diagnostic Speaker Check"
+    }
+  },
+  "front_panel_pinout": {
+    "title": "Standard Motherboard Front Panel Header Pinout",
+    "caption": "Pin layout and polarity guidelines for power button, reset button, and status LEDs.",
+    "labels": {
+      "pwr_led": "电源指示灯 (+ 极接 Pin 1, - 极接 Pin 3)",
+      "hdd_led": "硬盘指示灯 (+ 极接 Pin 2, - 极接 Pin 4)",
+      "reset_sw": "重启开关 (微动开关，无极性)",
+      "pwr_sw": "电源开关 (微动开关，无极性)"
+    }
+  },
+  "net_stack": {
+    "title": "IPO_OS Bare-Metal TCP/IP Protocol Stack",
+    "caption": "Network packet processing hierarchy from physical RTL8139 PCI NIC to BSD-like Socket API.",
+    "labels": {
+      "nic_driver": "RTL8139 PCI NIC Driver (Ring Buffers, RX/TX Packets)",
+      "ethernet_l2": "Ethernet II Framing & MAC Filtering",
+      "arp_layer": "ARP Cache & Address Resolution Protocol",
+      "ipv4_l3": "IPv4 Layer (Routing Table, Checksum, Fragmentation)",
+      "transport_l4": "Transport Layer: UDP & TCP RFC 793/9293 State Machine",
+      "socket_api": "Socket Layer: socket(), bind(), connect(), listen(), accept(), send(), recv()"
+    }
+  },
+  "vertical_platform_stack": {
+    "title": "IPO Systems Platform 纵向平台技术栈",
+    "caption": "从开机硬件复位向量到用户空间图形与命令行应用程序的完整执行层级。"
+  },
+  "spi_flashing_pinout": {
+    "title": "CH341A USB 烧录器至 SOIC-8 SPI Flash 引脚定义",
+    "caption": "CH341A 硬件编程器与 8 引脚 SPI NOR Flash (W25Q64 / MX25L6405) 之间的引脚物理连接拓扑。"
+  },
+  "process_scheduler": {
+    "title": "进程生命周期与任务调度器状态机",
+    "caption": "状态转换：CREATED、READY (就绪队列)、RUNNING (执行)、WAITING/BLOCKED (等待I/O/睡眠) 及 TERMINATED。"
+  },
+  "window_manager": {
+    "title": "窗口管理器图层合成与 VBE 帧缓冲区流水线",
+    "caption": "客户端应用程序后台缓冲区经剪裁区域合成后直接位块传输至 VBE 线性显存。"
+  },
+  "car_memory_layout": {
+    "title": "Cache-as-RAM (CAR) 内存映射与 MTRR 配置",
+    "caption": "在物理 DRAM 初始化之前，将 64 KB L1/L2 缓存配置为临时 SRAM 工作区与堆栈。"
+  },
+  "chipset_init_flow": {
+    "title": "芯片组硬件探测与 PAM 影子内存 (Shadow RAM)",
+    "caption": "PCI 宿主桥探测 (i440FX 与 Q35)、SMRAM 锁定、PAM0-PAM6 寄存器解锁及固件代码镜像。"
+  },
+  "pci_bus_topology": {
+    "title": "PCI 总线拓扑结构与设备递归枚举",
+    "caption": "通过 I/O 端口 0xCF8 (CONFIG_ADDRESS) 与 0xCFC (CONFIG_DATA) 递归遍历总线、设备及功能。"
+  },
+  "storage_transfer_flow": {
+    "title": "ATA PIO 模式扇区读写控制流水线",
+    "caption": "轮询 0x1F7 状态端口 BSY/DRQ 位，下发 0x20 读扇区命令，并通过 rep insw 从 0x1F0 读取 512 字节。"
+  },
+  "interrupt_routing": {
+    "title": "IDT 中断向量表映射与硬件 IRQ 路由",
+    "caption": "双片级联 8259 PIC (0x20..0x2F)、CPU 异常陷阱 (0x00..0x1F) 及 int 0x80 系统调用门。"
+  },
+  "driver_architecture": {
+    "title": "内核设备驱动模型与 VFS 节点抽象绑定",
+    "caption": "抽象设备操作表 struct device_ops 隔离 /dev 虚拟节点与底层端口 I/O 及 MMIO。"
+  },
+  "ipc_architecture": {
+    "title": "进程间通信 (IPC) 核心子系统",
+    "caption": "256 字节定长消息队列、4 KB 匿名管道、异步 POSIX 信号及零拷贝共享内存页。"
+  }
+}

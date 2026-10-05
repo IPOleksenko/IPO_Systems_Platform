@@ -1,0 +1,328 @@
+---
+import { getTranslation } from '../utils/i18n';
+import { siteConfig } from '../../site.config';
+
+interface Props {
+  lang: string;
+}
+
+const { lang } = Astro.props;
+const placeholder = getTranslation(lang, 'nav.search');
+---
+
+<div class="search-wrapper">
+  <button type="button" class="search-trigger" id="open-search-btn" aria-label={placeholder}>
+    <span class="search-icon">🔍</span>
+    <span class="search-placeholder">{placeholder}</span>
+  </button>
+
+  <dialog class="search-dialog" id="search-dialog">
+    <div class="dialog-content">
+      <div class="dialog-header">
+        <input 
+          type="search" 
+          id="search-input" 
+          class="dialog-search-input" 
+          placeholder={placeholder} 
+          autocomplete="off"
+          data-lang={lang}
+          data-base={siteConfig.base}
+        />
+        <button type="button" class="dialog-close" id="close-search-btn" aria-label="Close search">✕</button>
+      </div>
+      <div id="search-results" class="search-results-list">
+        <div class="search-empty-state">
+          {lang === 'ru' ? 'Введите поисковый запрос (например: syscall, PIC, MBR, CAR)...' : 'Type a query to search documentation (e.g., syscall, PIC, MBR, CAR)...'}
+        </div>
+      </div>
+    </div>
+  </dialog>
+</div>
+
+<style>
+  .search-wrapper {
+    display: flex;
+    align-items: center;
+  }
+
+  .search-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .search-trigger:hover {
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+    background-color: var(--bg-tertiary);
+  }
+
+  .search-dialog {
+    margin: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    width: min(90vw, 600px);
+    max-height: 80vh;
+    box-shadow: var(--shadow-lg);
+    padding: 0;
+  }
+
+  .search-dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+  }
+
+  .dialog-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dialog-header {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
+    background-color: var(--bg-secondary);
+  }
+
+  .dialog-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    outline: none;
+  }
+
+  .dialog-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .dialog-close:hover {
+    color: var(--text-primary);
+  }
+
+  .search-results-list {
+    padding: 1rem;
+    overflow-y: auto;
+    max-height: 60vh;
+  }
+
+  .search-empty-state {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  :global(.pagefind-result-item) {
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+  }
+
+  :global(.pagefind-result-item:hover) {
+    border-color: var(--accent-primary);
+    background-color: var(--accent-light);
+  }
+
+  :global(.pagefind-result-item a) {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--accent-primary);
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  :global(.pagefind-result-item p) {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  :global(.pagefind-result-item mark) {
+    background-color: var(--accent-light);
+    color: var(--accent-primary);
+    font-weight: 600;
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+
+  @media (max-width: 640px) {
+    .search-placeholder {
+      display: none;
+    }
+    .search-trigger {
+      padding: 0.35rem 0.5rem;
+    }
+  }
+</style>
+
+<script>
+  const dialog = document.getElementById('search-dialog') as HTMLDialogElement;
+  const openBtn = document.getElementById('open-search-btn');
+  const closeBtn = document.getElementById('close-search-btn');
+  const input = document.getElementById('search-input') as HTMLInputElement;
+  const resultsContainer = document.getElementById('search-results');
+
+  let pagefindPromise: Promise<any> | null = null;
+  let pagefindInstance: any = null;
+
+  async function getPagefind() {
+    if (pagefindInstance) return pagefindInstance;
+    if (!pagefindPromise) {
+      pagefindPromise = (async () => {
+        try {
+          const base = input?.getAttribute('data-base') || '/';
+          const cleanBase = base.endsWith('/') ? base : `${base}/`;
+          const pf = await import(/* @vite-ignore */ `${cleanBase}pagefind/pagefind.js`);
+          if (pf.options) {
+            await pf.options({ basePath: `${cleanBase}pagefind/` });
+          }
+          if (pf.init) {
+            await pf.init();
+          }
+          pagefindInstance = pf;
+          return pf;
+        } catch (err) {
+          console.warn('Pagefind index not available:', err);
+          return null;
+        }
+      })();
+    }
+    return pagefindPromise;
+  }
+
+  function openModal() {
+    dialog?.showModal();
+    getPagefind();
+    setTimeout(() => input?.focus(), 50);
+  }
+
+  openBtn?.addEventListener('click', openModal);
+  closeBtn?.addEventListener('click', () => dialog?.close());
+
+  dialog?.addEventListener('click', (e) => {
+    const rect = dialog.getBoundingClientRect();
+    if (
+      e.clientX < rect.left ||
+      e.clientX > rect.right ||
+      e.clientY < rect.top ||
+      e.clientY > rect.bottom
+    ) {
+      dialog.close();
+    }
+  });
+
+  resultsContainer?.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'A' || target.closest('a')) {
+      dialog?.close();
+    }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      openModal();
+    }
+  });
+
+  let debounceTimer: any;
+  input?.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+      const q = input.value.trim();
+      const lang = input.getAttribute('data-lang') || 'en';
+
+      if (!q || !resultsContainer) {
+        if (resultsContainer) {
+          resultsContainer.innerHTML = `<div class="search-empty-state">${
+            lang === 'ru' ? 'Введите поисковый запрос (например: syscall, PIC, MBR, CAR)...' : 'Type a query to search documentation (e.g., syscall, PIC, MBR, CAR)...'
+          }</div>`;
+        }
+        return;
+      }
+
+      const pf = await getPagefind();
+      if (!pf) {
+        resultsContainer.innerHTML = `<div class="search-empty-state">${
+          lang === 'ru' ? 'Индекс поиска загружается или недоступен.' : 'Search index is loading or unavailable.'
+        }</div>`;
+        return;
+      }
+
+      try {
+        // Try with language filter first if indexed, then fallback to global search
+        let searchRes = await pf.search(q, { filters: { lang } });
+        if (!searchRes || !searchRes.results || searchRes.results.length === 0) {
+          searchRes = await pf.search(q);
+        }
+
+        if (!searchRes || !searchRes.results || searchRes.results.length === 0) {
+          resultsContainer.innerHTML = `<div class="search-empty-state">${
+            lang === 'ru' ? 'Ничего не найдено по вашему запросу.' : 'No matching documentation pages found.'
+          }</div>`;
+          return;
+        }
+
+        const rawItems = await Promise.all(searchRes.results.slice(0, 15).map((r: any) => r.data()));
+        const langMatches = rawItems.filter((item: any) => item.url && item.url.includes(`/${lang}/`));
+        const finalItems = langMatches.length > 0 ? langMatches.slice(0, 8) : rawItems.slice(0, 8);
+
+        const base = input.getAttribute('data-base') || '/';
+        const cleanBase = base.endsWith('/') ? base : `${base}/`;
+        const normalizeUrl = (url: string) => {
+          if (!url) return '#';
+          if (cleanBase !== '/' && !url.startsWith(cleanBase)) {
+            return cleanBase.replace(/\/$/, '') + (url.startsWith('/') ? url : '/' + url);
+          }
+          return url;
+        };
+
+        resultsContainer.innerHTML = finalItems
+          .map(
+            (item: any) => `
+          <div class="pagefind-result-item">
+            <a href="${normalizeUrl(item.url)}">${item.meta?.title || item.url}</a>
+            <p>${item.excerpt || ''}</p>
+          </div>
+        `
+          )
+          .join('');
+      } catch (err) {
+        console.error('Search error:', err);
+        resultsContainer.innerHTML = `<div class="search-empty-state">${
+          lang === 'ru' ? 'Произошла ошибка при выполнении поиска.' : 'An error occurred during search.'
+        }</div>`;
+      }
+    }, 200);
+  });
+
+  input?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const firstLink = resultsContainer?.querySelector('a') as HTMLAnchorElement;
+      if (firstLink) {
+        firstLink.click();
+      }
+    }
+  });
+</script>

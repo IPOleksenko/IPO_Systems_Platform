@@ -1,0 +1,42 @@
+---
+title: "Gestión de memoria física y virtual"
+description: "Detección de RAM mediante 0x8FF0, montón del kernel kmalloc (16 MB), segmentos de montón de procesos y mapa de memoria interactivo."
+---
+
+import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
+import MemoryMapVisualizer from '../../../../components/MemoryMapVisualizer.astro';
+
+# Gestión de memoria física y virtual
+
+Memory management in **IPO_OS** is organized into hardware RAM detection during boot, kernel dynamic heap allocation (`kmalloc`), and isolated address space slices for user applications.
+
+---
+
+## 🗺️ System Memory Layout
+
+<LocalizedDiagram id="memory_map" lang="es" figureNum={5} />
+
+---
+
+## 🧮 Interactive Memory Map Navigator
+
+<MemoryMapVisualizer lang="es" />
+
+---
+
+## 📦 Memory Management Subsystems
+
+### 1. Hardware RAM Detection (Address 0x8FF0)
+Total system RAM is detected by the MBR bootloader in real mode using BIOS `INT 15h, AX=E820` (with fallback to `AX=E801`).
+- The bootloader sums available memory and writes the 32-bit total byte count directly into physical address `0x8FF0`.
+- The kernel accesses this value via `*(volatile uint32_t *)0x8FF0` in `get_process_heap_capacity()` to enforce memory limits for user processes.
+
+### 2. Kernel Heap Allocator (`src/kernel/mm/kmalloc.c`)
+The kernel heap starts at physical address `0x1000000` (16 MB) with a capacity of 16 MB (`KMALLOC_HEAP_SIZE = 0x1000000`):
+- Each allocated block has a 16-byte boundary-tag header `kmalloc_block_t` containing validation magic `0xDEADBEEF` (allocated) or `0xDEADC0DE` (freed).
+- The allocator runs `kmalloc_coalesce_and_shrink()` to merge contiguous free blocks and lower the heap watermark.
+
+### 3. Process Address Space & Heap Allocation (`sbrk`)
+User executables are loaded at base address `0x800000`.
+- Dynamic memory expansion is handled via `IPO_SYSCALL_SBRK` (`0x1045`), adjusting `user_heap_break`.
+- Process heap allocations are isolated per PID into 64 MB slices: `0x08000000 + (pid - 1) * 0x04000000`.

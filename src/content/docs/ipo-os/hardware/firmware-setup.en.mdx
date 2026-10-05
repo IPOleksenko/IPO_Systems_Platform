@@ -1,0 +1,34 @@
+---
+title: "BIOS/UEFI Configuration"
+description: "Essential BIOS and firmware settings for reliable IPO_OS and IPO_Boot_ROM operation."
+---
+
+# BIOS/UEFI Configuration
+
+Before booting IPO_OS on physical hardware, configure the motherboard CMOS firmware settings to match the system's architectural expectations.
+
+---
+
+## ⚙️ Essential CMOS Settings
+
+### 1. SATA Controller Mode Selection
+<Callout type="caution" lang="en" title="Critical Storage Controller Setting">
+If using a SATA hard drive or SSD on ICH7/ICH9 motherboards, locate **SATA Configuration** or **On-Chip Serial ATA** and set it to **IDE / Legacy / Compatible Mode**.
+Do NOT select `RAID` or `Native AHCI`, as the IPO_OS base kernel accesses storage through standard ATA ports `0x1F0`–`0x1F7`.
+</Callout>
+
+### 2. Boot Order & Priority
+- **1st Boot Device:** Set to your target storage drive (`Primary IDE Master` or `SATA Port 0`).
+- **2nd Boot Device:** USB-HDD (if updating images via external media).
+- **Hard Disk Boot Priority:** Ensure your physical drive containing the `IPO_FS` partition is prioritized over any secondary disks.
+
+### 3. UEFI / CSM & Secure Boot
+- **Boot Mode:** Select **Legacy BIOS** or **CSM (Compatibility Support Module)**.
+- **Secure Boot:** Must be **Disabled** (IPO_OS is a bare-metal MBR operating system and does not carry Microsoft UEFI certificates).
+- **Fast Boot:** **Disabled**. Fast Boot skips device enumeration and cuts drive spinup timeouts, which can prevent legacy disks from being detected.
+
+### 4. Legacy Peripheral & I/O Ports
+- **Serial Port 1 (COM1):** Enable at base I/O port `0x3F8` with `IRQ 4`. The IPO_OS kernel mirrors all diagnostic print statements to COM1 at **115200 baud, 8N1**.
+- **Floppy Controller (FDC):** If no physical 3.5" disk drive is connected, set `Drive A:` to **Disabled / None** in standard CMOS setup. This prevents an unnecessary 30-second mechanical seek timeout during POST.
+- **ACPI Suspend Type:** Set to `S1 (POS)` or `S3 (STR)`.
+- **Plug and Play OS:** Set to **No / Disabled** so BIOS initializes PCI resources and assigns IRQs to all slots.

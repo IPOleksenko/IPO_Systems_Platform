@@ -1,0 +1,58 @@
+---
+import { siteConfig } from '../../site.config';
+
+const base = siteConfig.base;
+const cleanBase = base.endsWith('/') ? base : `${base}/`;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{siteConfig.siteTitle}</title>
+    <script is:inline define:vars={{ cleanBase, languages: Object.keys(siteConfig.languages) }}>
+      (function() {
+        // 1. Saved user preference in localStorage
+        const stored = localStorage.getItem('doc_lang');
+        if (stored && languages.includes(stored)) {
+          window.location.replace(cleanBase + stored + '/');
+          return;
+        }
+
+        // 2. Browser languages priority list
+        const navLangs = navigator.languages || [navigator.language || 'en'];
+        let matched = 'en';
+
+        for (const l of navLangs) {
+          const lower = l.toLowerCase();
+          // exact match
+          if (languages.includes(lower)) {
+            matched = lower;
+            break;
+          }
+          // prefix match (e.g. ru-RU -> ru)
+          const primary = lower.split('-')[0];
+          if (languages.includes(primary)) {
+            matched = primary;
+            break;
+          }
+        }
+
+        window.location.replace(cleanBase + matched + '/');
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 4rem auto; text-align: center; padding: 2rem;">
+        <h1>{siteConfig.siteTitle}</h1>
+        <p>Please select your preferred language / Пожалуйста, выберите язык:</p>
+        <div style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 1rem;">
+          <a href={`${cleanBase}en/`} style="padding: 0.5rem 1rem; border: 1px solid #ccc; border-radius: 4px; text-decoration: none;">English (EN)</a>
+          <a href={`${cleanBase}ru/`} style="padding: 0.5rem 1rem; border: 1px solid #ccc; border-radius: 4px; text-decoration: none;">Русский (RU)</a>
+        </div>
+      </div>
+    </noscript>
+  </body>
+</html>

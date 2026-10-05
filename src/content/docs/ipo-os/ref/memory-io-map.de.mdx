@@ -1,0 +1,53 @@
+---
+title: "Memory & I/O Ports Map"
+description: "Reference tables for the physical memory layout, user address spaces, and hardware I/O port assignments in IPO_OS."
+---
+
+# Memory & I/O Ports Map
+
+This page documents the complete hardware physical memory layout and standard x86 I/O port assignments utilized across IPO_OS, IPO_Boot_ROM, and IPO_Firmware.
+
+---
+
+## 🗺️ Physical Memory Map
+
+| Address Range | Size | Allocation / Content | Usage |
+| :--- | :--- | :--- | :--- |
+| `0x00000000 - 0x000003FF` | 1 KB | Real-Mode Interrupt Vector Table (IVT) | Kernel (Protected) |
+| `0x00000400 - 0x000004FF` | 256 B | BIOS Data Area (BDA) | Read-only |
+| `0x00000500 - 0x00007BFF` | ~30 KB | Conventional Low RAM / Temp buffers | Kernel Scratch |
+| `0x00007C00 - 0x00007DFF` | 512 B | MBR Boot Sector Entrypoint (Stage 1) | Boot Handover |
+| `0x00007E00 - 0x00008FEF` | ~4.5 KB | Bootloader execution buffers | Bootloader |
+| `0x00008FF0 - 0x00008FF3` | 4 B | **Total Physical RAM in Bytes** (written by BIOS E820) | Handover Slot |
+| `0x00010000 - 0x0007FFFF` | ~448 KB | **IPO_OS Kernel Binary** (`.text`, `.rodata`, `.data`, `.bss`) | Kernel Core |
+| `0x00080000 - 0x0009FBFF` | ~127 KB | Kernel Boot Buffers & Temporary Allocations | Kernel Core |
+| `0x0009FC00 - 0x0009FFFF` | 1 KB | Extended BIOS Data Area (EBDA) / ACPI Tables | Read-only |
+| `0x000A0000 - 0x000BFFFF` | 128 KB | Video RAM (`0xB8000` VGA Color Text Framebuffer) | Console VRAM |
+| `0x000C0000 - 0x000C7FFF` | 32 KB | Video BIOS ROM Expansion Area | Read-only |
+| `0x000F0000 - 0x000FFFFF` | 64 KB | **IPO_Firmware / Boot_ROM Payload** (PAM Shadow RAM) | Read-only |
+| `0x00100000 - 0x004FFFFF` | ~4 MB | Extended Kernel Storage, VFS Buffers, ATA Cache | Kernel Core |
+| `0x00500000 - 0x0050FFFF` | 64 KB | **Kernel Stack** (`0x500000`, set in `entry32.asm`) | Kernel Core |
+| `0x00800000 - 0x00FFFFFF` | 8 MB | **Active Application Image** (`PROCESS_HEAP_START`, code & data/bss) | User Process |
+| `0x01000000 - 0x01FFFFFF` | 16 MB | **Kernel Heap Pool (`kmalloc`)** (dynamic 256 KB process stacks, `argv`, allocations) | Kernel Heap |
+| `0x08000000 - Top of RAM` | Variable | **Partitioned User Dynamic Heaps (`sbrk`)** (`0x08000000 + (pid-1)*64M`) | Process Heaps |
+
+---
+
+## 🔌 Hardware I/O Ports Map
+
+| Port Range | Device / Controller | Function |
+| :--- | :--- | :--- |
+| `0x0020 - 0x0021` | Master 8259A PIC | Command and Interrupt Mask Register |
+| `0x0040 - 0x0043` | 8254 PIT (Timer) | Channel 0 data (1000 Hz), Mode/Command (`0x43`) |
+| `0x0060, 0x0064` | 8042 PS/2 Controller | Data port (`0x60`), Status/Command register (`0x64`) |
+| `0x0080` | Diagnostic Port | POST hex debug output (readable by diagnostic card) |
+| `0x0092` | System Control Port A | Fast A20 gate enable (Bit 1), Fast Reset (Bit 0) |
+| `0x00A0 - 0x00A1` | Slave 8259A PIC | Command and Interrupt Mask Register |
+| `0x0170 - 0x0177` | Secondary ATA IDE | Data, Error, Sector Count, LBA registers |
+| `0x01CE - 0x01CF` | Bochs VBE Graphics | Index register (`0x1CE`), Data register (`0x1CF`) |
+| `0x01F0 - 0x01F7` | Primary ATA IDE | Data, Error, Sector Count, LBA registers |
+| `0x0376` | Secondary ATA Control | Device control / alternate status |
+| `0x03D4 - 0x03D5` | VGA CRT Controller | CRTC Index register (`0x3D4`), Data register (`0x3D5`) |
+| `0x03F6` | Primary ATA Control | Device control / alternate status |
+| `0x03F8 - 0x03FF` | UART 16550A (COM1) | Transmit/Receive, Interrupt Enable, Baud Divisors (115200 8N1) |
+| `0x0CF8 - 0x0CFC` | PCI Host Bridge | Configuration Address (`0xCF8`), Data (`0xCFC`) |

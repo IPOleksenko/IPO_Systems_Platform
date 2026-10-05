@@ -1,0 +1,103 @@
+---
+title: "Development Toolchain Setup"
+description: "Setting up GCC, NASM, GNU Make, and cross-compilation environments for building native 32-bit IPO_OS applications."
+---
+
+# Development Toolchain Setup
+
+Developing native user applications for IPO_OS requires a 32-bit x86 C compiler, the Netwide Assembler (NASM), GNU binutils, and Make. Because IPO_OS is a bare-metal 32-bit OS executing without the standard Linux glibc runtime, applications must be compiled in freestanding mode (`-ffreestanding -m32 -nostdlib`).
+
+---
+
+## 🛠️ Required Software Packages
+
+| Tool | Minimum Version | Purpose |
+| :--- | :--- | :--- |
+| **GCC** (or `i686-elf-gcc`) | 9.0+ | Compiles 32-bit C code with freestanding flags |
+| **NASM** | 2.14+ | Assembles x86 32-bit assembly routines and entry stubs |
+| **GNU binutils** (`ld`, `objcopy`) | 2.30+ | Links and extracts raw flat binaries from ELF files |
+| **GNU Make** | 4.0+ | Automates multi-file application builds |
+| **Python** | 3.8+ | Executes `disk_editor.py` for copying files into disk images |
+
+---
+
+## 📦 Installation by Operating System
+
+### Ubuntu / Debian Linux
+On 64-bit Debian and Ubuntu systems, install the multilib toolchain to enable `-m32`:
+
+```bash
+sudo apt update
+sudo apt install -y build-essential gcc-multilib g++-multilib nasm make python3
+```
+
+Verify your compiler supports 32-bit compilation:
+```bash
+gcc -m32 -v
+nasm -v
+```
+
+### Arch Linux / Manjaro
+```bash
+sudo pacman -S base-devel multilib-devel nasm python
+```
+
+### macOS (Apple Silicon / Intel)
+macOS Apple Clang does not support producing 32-bit ELF binaries. You must use an `i686-elf` cross-compiler:
+
+```bash
+# Using Homebrew with a cross-compilation tap
+brew install x86_64-elf-binutils nasm
+
+# Or build i686-elf-gcc using GCC cross-toolchain scripts
+```
+
+### Windows (WSL2)
+We strongly recommend using **WSL2** (Windows Subsystem for Linux with Ubuntu):
+```bash
+wsl --install -d Ubuntu
+# Inside WSL Ubuntu:
+sudo apt update && sudo apt install -y build-essential gcc-multilib nasm make python3
+```
+
+---
+
+## 📁 Standard Application Directory Layout
+
+Every native IPO_OS userland application typically follows this clean structure:
+
+```
+my_app/
+├── Makefile             # Compiles and creates raw binary
+├── app.ld               # Custom linker script (maps app at 0x800000)
+├── entry.s              # Initial startup stub calling main()
+├── include/
+│   ├── syscall.h        # IPO_OS system call numbers and definitions
+│   └── stdio.h          # Minimal userspace I/O headers
+└── src/
+    └── main.c           # Application entrypoint
+```
+
+---
+
+## ⚙️ Key Compiler & Linker Flags
+
+When compiling native programs for IPO_OS, the following compiler flags are mandatory:
+
+```bash
+CFLAGS = -m32 \
+         -O2 \
+         -ffreestanding \
+         -fno-pic -fno-pie \
+         -fno-builtin \
+         -nostdlib -nostartfiles \
+         -fno-stack-protector \
+         -Wall -Wextra
+```
+
+### Why these flags are necessary:
+- `-m32`: Forces the compiler to emit 32-bit x86 instructions and use 32-bit pointer sizing.
+- `-ffreestanding`: Directs GCC not to assume the standard C library exists (e.g. no automatic `main` prologue or libc initialization).
+- `-fno-pic -fno-pie`: Disables Position-Independent Code; IPO_OS applications are linked to fixed base address `0x800000`.
+- `-nostdlib -nostartfiles`: Prevents the host system's `crt0.o` and `libc.so` from being linked in.
+- `-fno-stack-protector`: Prevents GCC from emitting references to host `__stack_chk_fail` canary symbols.

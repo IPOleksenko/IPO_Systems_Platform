@@ -1,0 +1,289 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Sidebar from '../components/Sidebar.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import { getTranslation } from '../utils/i18n';
+import { getAdjacentPages } from '../data/navigation';
+import { siteConfig } from '../../site.config';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  title?: string;
+  description?: string;
+  currentLang: string;
+  currentSlug: string;
+  headings?: Heading[];
+  isFallback?: boolean;
+}
+
+const { title, description, currentLang, currentSlug, headings = [], isFallback = false } = Astro.props;
+const { prev, next } = getAdjacentPages(currentSlug);
+
+const base = siteConfig.base;
+const cleanBase = base.endsWith('/') ? base : `${base}/`;
+
+const fallbackTitle = getTranslation(currentLang, 'ui.not_translated_title');
+const fallbackMsg = getTranslation(currentLang, 'ui.not_translated_msg');
+const prevLabel = getTranslation(currentLang, 'nav.prev');
+const nextLabel = getTranslation(currentLang, 'nav.next');
+---
+
+<BaseLayout title={title} description={description} currentLang={currentLang}>
+  <Header currentLang={currentLang} currentSlug={currentSlug} />
+
+  <div class="doc-container">
+    <Sidebar currentLang={currentLang} currentSlug={currentSlug} />
+
+    <main class="doc-main" id="main-content" data-pagefind-body data-pagefind-filter={`lang:${currentLang}`}>
+      {isFallback && (
+        <aside class="fallback-banner" role="alert">
+          <span class="fallback-icon">🌐</span>
+          <div>
+            <strong>{fallbackTitle}:</strong> {fallbackMsg}
+          </div>
+        </aside>
+      )}
+
+      <!-- Breadcrumbs -->
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href={`${cleanBase}${currentLang}/`}>{getTranslation(currentLang, 'nav.home')}</a>
+        <span class="bc-sep">/</span>
+        <span class="bc-current">{title || currentSlug}</span>
+      </nav>
+
+      <article class="doc-article">
+        <slot />
+      </article>
+
+      <!-- Pagination Buttons -->
+      <nav class="doc-pagination" aria-label="Pagination">
+        {prev ? (
+          <a href={`${cleanBase}${currentLang}/${prev.slug}`} class="page-link prev-link">
+            <span class="link-dir">← {prevLabel}</span>
+            <span class="link-title">{getTranslation(currentLang, prev.titleKey)}</span>
+          </a>
+        ) : <div />}
+
+        {next && (
+          <a href={`${cleanBase}${currentLang}/${next.slug}`} class="page-link next-link">
+            <span class="link-dir">{nextLabel} →</span>
+            <span class="link-title">{getTranslation(currentLang, next.titleKey)}</span>
+          </a>
+        )}
+      </nav>
+    </main>
+
+    <TableOfContents headings={headings} lang={currentLang} />
+  </div>
+</BaseLayout>
+
+<style>
+  .doc-container {
+    display: flex;
+    max-width: 90rem;
+    margin: 0 auto;
+    width: 100%;
+    min-height: calc(100vh - var(--header-height));
+  }
+
+  .doc-main {
+    flex: 1;
+    min-width: 0;
+    padding: 2rem 2.5rem 4rem 2.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .doc-main {
+      padding: 1.5rem 1rem 3rem 1rem;
+    }
+  }
+
+  .fallback-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 2rem;
+    background-color: var(--color-warning-bg);
+    border: 1px solid var(--color-warning);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 0.92rem;
+  }
+
+  .fallback-icon {
+    font-size: 1.25rem;
+  }
+
+  .breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .bc-sep {
+    opacity: 0.5;
+  }
+
+  .bc-current {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .doc-article {
+    line-height: 1.7;
+  }
+
+  .doc-pagination {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 3.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .page-link {
+    display: flex;
+    flex-direction: column;
+    padding: 0.75rem 1.25rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-secondary);
+    text-decoration: none;
+    max-width: 48%;
+    transition: all 0.15s ease;
+  }
+
+  .page-link:hover {
+    border-color: var(--accent-primary);
+    background-color: var(--bg-tertiary);
+    text-decoration: none;
+  }
+
+  .next-link {
+    text-align: end;
+    margin-left: auto;
+  }
+
+  .link-dir {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .link-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--accent-primary);
+  }
+
+  /* Interactive Task Lists */
+  :global(.contains-task-list) {
+    list-style: none;
+    padding-left: 0.25rem;
+  }
+
+  :global(.task-list-item) {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin: 0.5rem 0;
+    padding: 0.45rem 0.65rem;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  :global(.task-list-item:hover) {
+    background-color: var(--bg-secondary);
+  }
+
+  :global(.task-list-item input[type="checkbox"]) {
+    margin-top: 0.35rem;
+    width: 1.15rem;
+    height: 1.15rem;
+    accent-color: var(--accent-primary, #3b82f6);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  :global(.task-list-item.is-completed) {
+    opacity: 0.6;
+  }
+
+  :global(.task-list-item.is-completed strong) {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+</style>
+
+<script>
+  function initInteractiveChecklists() {
+    const article = document.querySelector('.doc-article');
+    if (!article) return;
+
+    const taskItems = article.querySelectorAll('.task-list-item');
+    if (taskItems.length === 0) return;
+
+    const storageKey = `checklist_state_${window.location.pathname}`;
+    let savedState = {};
+    try {
+      savedState = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    } catch (e) {
+      savedState = {};
+    }
+
+    taskItems.forEach((li, index) => {
+      const checkbox = li.querySelector('input[type="checkbox"]');
+      if (!checkbox) return;
+
+      // Enable checkbox and set cursor
+      checkbox.removeAttribute('disabled');
+      checkbox.disabled = false;
+
+      // Restore saved state
+      if (savedState[index]) {
+        checkbox.checked = true;
+        li.classList.add('is-completed');
+      }
+
+      const updateState = (checked) => {
+        checkbox.checked = checked;
+        if (checked) {
+          li.classList.add('is-completed');
+        } else {
+          li.classList.remove('is-completed');
+        }
+        savedState[index] = checked;
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(savedState));
+        } catch (e) {}
+      };
+
+      checkbox.addEventListener('change', (e) => {
+        updateState(e.target.checked);
+      });
+
+      li.addEventListener('click', (e) => {
+        if (e.target === checkbox || e.target.tagName === 'A') return;
+        updateState(!checkbox.checked);
+      });
+    });
+  }
+
+  initInteractiveChecklists();
+  document.addEventListener('astro:page-load', initInteractiveChecklists);
+</script>

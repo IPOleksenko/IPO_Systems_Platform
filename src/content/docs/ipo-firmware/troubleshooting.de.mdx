@@ -1,0 +1,62 @@
+---
+title: "Storage Probing & Recovery"
+description: "Resolving storage detection timeouts, deciphering error 0xEE (no boot device), and analyzing serial COM1 firmware diagnostics."
+---
+
+import Callout from '../../../components/Callout.astro';
+
+# Storage Probing & Recovery
+
+When IPO_Firmware fails to detect attached hard drives or bootable sectors, it outputs diagnostic codes to I/O port `0x80` and streams detailed hardware status messages to the COM1 serial console.
+
+---
+
+## 🛑 Deciphering Error Code `0xEE` (`FW_ERR_NO_BOOT`)
+
+The most frequent firmware halt code is **`0xEE`**, which signifies that storage controllers were initialized successfully, but **no drive contained a valid MBR boot sector** (`0x55AA` signature at byte 510).
+
+```
+[IPO_Firmware] Scanning storage drives for bootable MBR...
+  Drive 0x80 (ATA IDE Master): Sector 0 read OK, magic = 0x0000 (INVALID)
+  Drive 0x81 (AHCI Port 0): Sector 0 read OK, magic = 0x0000 (INVALID)
+  Drive 0x82: Not present
+  Drive 0x83: Not present
+*** HALT (0xEE): No bootable drive found! ***
+```
+
+### Steps to Resolve:
+1. **Verify MBR Signature:** Inspect sector 0 of your disk image using `hexdump`:
+   ```bash
+   hexdump -C -n 512 build/IPO_OS.img | tail -n 2
+   # Last two bytes MUST be: 55 aa
+   ```
+2. **Verify QEMU Drive Parameters:** Ensure `-drive file=...,format=raw,if=ide` is present on the command line.
+3. **Re-run Disk Format:** Recreate and write the boot sector:
+   ```bash
+   make disk
+   ```
+
+---
+
+## 🔌 Fehlerbehebung Controller Subsystems
+
+### 1. AHCI Port Communication Timeouts
+If the firmware hangs during `FW_STORAGE_PROBE` (`0x28`):
+- **Root Cause:** An AHCI SATA port failed to report PHY link established (`PxSSTS.DET != 3`).
+- **Remedy:** Ensure the emulated or physical drive is properly powered and SATA data cables are securely seated.
+
+### 2. NVMe Controller Not Ready
+- **Root Cause:** The NVMe controller failed to assert `CSTS.RDY = 1` within the timeout window specified in the `CAP.TO` register.
+- **Remedy:** Verify PCIe BAR0 is mapped above 1 MB and bus mastering is enabled in the PCI command register (`Bit 2 = 1`).
+
+---
+
+## 📺 Boot Failure Diagnostics & Halt
+
+When no bootable disk containing a valid `0x55AA` signature is discovered across scanned drives (`0x80`, `0x81`, `0x82`):
+1. Emits diagnostic code `0xEE` (`POST_ERR_NO_BOOT`) to port `0x80`.
+2. Prints an immediate diagnostic error message to both VGA display and serial COM1:
+   ```text
+   [IPO_Firmware] Boot Failure: No bootable disk found (missing 0x55AA). System halted.
+   ```
+3. Halts execution cleanly via `cli; hlt` loop to protect storage and bus hardware.

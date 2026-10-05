@@ -1,0 +1,91 @@
+---
+title: "内核调试与 CPU 异常处理"
+description: "cpu_exception_handler 架构、进程崩溃恢复、serial_printf COM1 日志记录及 QEMU GDB 调试。"
+---
+
+# 内核调试与 CPU 异常处理
+
+In **IPO_OS**, the kernel exception handling and debugging subsystems are implemented directly in `src/kernel/syscall/syscall.c` and low-level dispatchers in `src/kernel/arch/x86/syscall.asm`.
+
+---
+
+## 💥 CPU Exception Handler (`cpu_exception_handler`)
+
+When a hardware CPU exception occurs (such as Divide-by-zero `#DE`, General Protection Fault `#GP`, Page Fault `#PF`), the vector is routed through `ISR_NOERR` / `ISR_ERR` macros in `syscall.asm`.
+
+The assembly stub pushes registers onto the stack (`isr_common`) and invokes `cpu_exception_handler()` with the stack frame pointer:
+
+```c
+void cpu_exception_handler(uint32_t *frame) {
+    uint32_t vector = frame[7];
+    uint32_t err_code = frame[8];
+    uint32_t eip = frame[9];
+    const char *name = (vector < 32) ? exception_names[vector] : "Unknown Exception";
+
+    process_t *proc = process_get_current();
+    if (proc != NULL) {
+        printf("\n[Process %u] Terminated: CPU Exception %u (%s) at 0x%08x (err=0x%x)\n",
+               proc->pid, vector, name, eip, err_code);
+        serial_printf("[cpu_exception] Process %u crashed: vec=%u (%s) eip=0x%08x err=0x%x\n",
+                      proc->pid, vector, name, eip, err_code);
+        frame[9] = (uint32_t)process_crash_exit;
+        return;
+    }
+
+    printf("\nKERNEL PANIC: CPU Exception %u (%s) at 0x%08x (err=0x%x)\n",
+           vector, name, eip, err_code);
+    serial_printf("KERNEL PANIC: CPU Exception %u (%s) at 0x%08x (err=0x%x)\n",
+                  vector, name, eip, err_code);
+    while (1) {
+        __asm__ volatile("cli; hlt");
+    }
+}
+```
+
+### Two-Tier Fault Isolation Strategy:
+1. **Userspace Process Exception (`proc != NULL`):**
+   - Emits process crash diagnostics: PID, vector, name, `EIP` address, and error code.
+   - Rewrites return `EIP` in `frame[9]` to `process_crash_exit`.
+   - Cleans up process resources and returns safely to the interactive terminal without halting the OS!
+2. **Kernel Context Exception:**
+   - Prints **`KERNEL PANIC`** banner with fault details.
+   - Duplicates telemetry to COM1 via `serial_printf`.
+   - Halts the CPU safely in an infinite `cli; hlt` loop.
+
+---
+
+## 📡 Serial Logging via COM1 (`0x3F8`)
+
+The `serial_printf(const char *format, ...)` facility (`src/include/stdio.h`) provides non-blocking, reliable logging at 115200 baud (8N1).
+
+### Running QEMU with Serial Redirection:
+```bash
+# Stream kernel logs directly to host terminal
+qemu-system-i386 -hda ipo-os.img -serial stdio
+
+# Save logs to file
+qemu-system-i386 -hda ipo-os.img -serial file:kernel.log
+```
+
+---
+
+## 🪲 Interactive Debugging with QEMU & GDB
+
+For step-by-step kernel debugging with loaded ELF symbols:
+
+```bash
+# 1. Start QEMU and wait for GDB connection on localhost:1234
+qemu-system-i386 -hda ipo-os.img -serial stdio -s -S
+
+# 2. Attach GDB with kernel ELF symbols
+gdb build/kernel.elf
+```
+
+Inside GDB:
+```bash
+(gdb) target remote localhost:1234
+(gdb) break kmain
+(gdb) continue
+(gdb) x/16xw 0x10000
+(gdb) next
+```

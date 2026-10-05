@@ -1,0 +1,48 @@
+---
+title: "First Boot & POST Diagnostics"
+description: "Initial boot symptoms, speaker beep codes, hardware POST port 0x80 diagnostic codes, and troubleshooting."
+---
+
+# First Boot & POST Diagnostics
+
+Upon switching on power to your assembled system, hardware diagnostics provide immediate feedback regarding system health and software execution checkpoints.
+
+---
+
+## 🖥️ Normal Boot Symptoms
+
+ハードウェアが正常に機能している場合、起動シーケンスは次の動作を示します：
+1. **電源とファン:** 電源ボタンを押すと、PSU ファンと CPU クーラーが直ちに回転を開始します。
+2. **マザーボード スピーカー (Speaker):** ハードウェア POST により 1〜3 秒以内に短いビープ音が 1 回鳴り、カーネルのドライバー初期化完了時に PC スピーカーから 4 音のメロディ (C6-E6-G6-C7) が再生されます。
+3. **ディスプレイ出力:** モニターがスタンバイから復帰し、VGA 80x25 テキスト モード (モード 03h) に切り替わります。
+4. **シリアル出力:** COM1 (`0x3F8`) ポートから、**115200 ボー、8N1** でカーネル診断ログが出力されます (`[mount] success at lba 2048...`、`[driver] registered...`、`[system_state] transition...`)。
+5. **画面ヘッダーとシェル プロンプト:** 最上部のステータス行 (0行目) に、左側に `IPO_OS`、右側に `Created by IPOleksenko` がライトグリーンで表示され、アクティブな言語が表示されます。その下にウェルカム メッセージと対話型プロンプトが表示されます：
+   ```text
+   Type "help" or "?" on the keyboard to view commands, shortcuts, and OS features.
+
+   > 
+   ```
+
+---
+
+## 🔊 Speaker Beep Codes 技術リファレンス
+
+| Audio Signal | Problem Description | Recommended Remedy |
+| :--- | :--- | :--- |
+| **1 Short Beep** | POST successfully passed | Normal operation; control handed to firmware. |
+| **Continuous Rapid Beeps** | Power Delivery Failure | Check PSU rails (+12V, +5V) with a multimeter. |
+| **Repeating Long Beeps** | Memory (RAM) Not Detected | Re-seat RAM sticks; test one module in Slot 0. |
+| **1 Long, 2 Short Beeps** | Video Adapter Error | Re-seat PCI/AGP VGA card; inspect monitor cable. |
+| **No Beep, Blank Screen** | Dead CPU, Cleared CMOS, or Short | Check 12V 4-pin CPU cable; verify chassis standoffs. |
+
+---
+
+## 🚦 Hardware Port 0x80 Diagnostic Codes
+
+If using an external 2-digit PCI/LPC diagnostic POST card, monitor port `0x80` hex codes to pinpoint low-level hang states:
+
+### Boot ROM Checkpoints:
+<SharedStruct id="bootrom_post_codes" lang="en" />
+
+### Firmware Runtime Checkpoints:
+<SharedStruct id="firmware_post_codes" lang="en" />

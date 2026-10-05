@@ -1,0 +1,53 @@
+---
+title: "系统概述与哲学"
+description: "IPO_OS 的基本概念、设计目标与硬件支持范围。"
+---
+
+import LocalizedDiagram from '../../../components/LocalizedDiagram.astro';
+import Callout from '../../../components/Callout.astro';
+
+# 系统概述与哲学
+
+**IPO_OS** is an independent, bare-metal operating system engineered for the **x86 32-bit (IA-32 / i386 / i686)** processor architecture. Built entirely from scratch, it targets PC-AT compatible personal computers, embedded hardware platforms, and virtual machines without reliance on third-party kernel code or bloated abstraction runtimes.
+
+<Callout type="beginners" lang="en" title="Why build a bare-metal OS?">
+Modern operating systems often hide hardware interactions behind millions of lines of legacy abstractions. IPO_OS strips away opacity: every hardware interrupt, memory block, disk extent, and network frame has an explicit, traceable path from silicon to screen.
+</Callout>
+
+---
+
+## 🎯 Core Design Principles
+
+1. **Direct Hardware Sovereignty:**
+   The kernel controls system resources directly through standard x86 ports (`inb`/`outb`), memory-mapped I/O (MMIO), and CPU descriptor tables (GDT, IDT).
+2. **Deterministic Monolithic Design:**
+   Subsystems for process management, memory management, file systems, device drivers, and networking reside in a unified 32-bit protected-mode address space, ensuring minimal context-switching latency.
+3. **Extent-Based Modern Storage:**
+   Rather than relying on legacy FAT12/16 filesystems, IPO_OS introduces **IPO_FS** — a 64-bit extent-based file system capable of scaling to massive storage volumes with 512-byte block granularity.
+4. **Autonomous Bare-Metal Networking:**
+   Includes a native, self-contained **TCP/IP stack** with a full RFC 793/RFC 9293 state machine, RTL8139 PCI NIC driver, and a BSD-like Socket API.
+5. **Integrated Graphical and Console Environment:**
+   Provides both an 80x25 VGA teletype console with Cyrillic font loading and a managed Window Manager (WM) with Bochs VBE/BGA graphics acceleration.
+
+---
+
+## 🚫 Non-Goals and Explicit Scope Limitations
+
+To preserve architectural clarity and stability, IPO_OS intentionally avoids:
+- **64-bit Long Mode:** The system is explicitly targeted at 32-bit protected mode.
+- **Complex Multi-User Trees:** Focuses on single-operator workstation and embedded controller environments.
+- **Microkernel Message Passing:** Avoids IPC messaging overhead in core driver loops.
+
+---
+
+## 🗺️ Architectural Position in the IPO Platform
+
+IPO_OS represents the top execution layer of the three-tier **IPO Systems Platform**:
+
+<LocalizedDiagram id="global_stack" lang="en" figureNum={1} />
+
+- **Layer 1: Physical Hardware** — CPU, DRAM, Chipset, Storage, and Peripherals.
+- **Layer 2: IPO_Boot_ROM** — Reset vector code, Cache-as-RAM, and DRAM training.
+- **Layer 3: IPO_Firmware** — BIOS runtime services, IVT, and storage scanning.
+- **Layer 4: IPO_OS Kernel** — Resource virtualization and subsystem arbitration.
+- **Layer 5: Userspace Applications** — Sandboxed programs running at physical address `0x800000`.

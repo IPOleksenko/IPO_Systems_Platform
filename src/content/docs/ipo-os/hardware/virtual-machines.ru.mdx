@@ -1,0 +1,66 @@
+---
+title: "Настройка QEMU, Bochs и VirtualBox"
+description: "Конфигурация, запуск и отладка IPO_OS на основных виртуальных машинах и эмуляторах x86."
+---
+
+import SharedCode from '../../../../components/SharedCode.astro';
+import Callout from '../../../../components/Callout.astro';
+
+# Настройка QEMU, Bochs и VirtualBox
+
+Эмуляторы обеспечивают мгновенный цикл разработки и потактовую интроспекцию оборудования без риска повреждения физических компонентов.
+
+---
+
+## 🚀 Запуск в QEMU (основная платформа разработки)
+
+QEMU (`qemu-system-i386`) является эталонным эмулятором, используемым во время активной разработки.
+
+### Полная конфигурация командной строки:
+<SharedCode id="qemu-full-stack-run" />
+
+### Архитектура накопителей в QEMU:
+- **Диск 0 (`build/IPO_OS.img`):** содержит MBR-загрузчик и объединённый бинарный образ ядра.
+- **Диск 1 (`build/disk.img`):** 128 МБ сырой образ диска данных, содержащий раздел `IPO_FS` и директорию `/applications`.
+
+### Сетевые конфигурации: TAP против User Mode (NAT)
+- **Режим TAP (`NET_MODE=tap`):** прямой интерфейс 2-го уровня (L2) хоста (`tap0`). Все 65 535 портов напрямую доступны для маршрутизации между хостом (`192.168.7.1`) и гостевой ОС (`192.168.7.2`).
+- **Режим User Mode (`NET_MODE=user`):** стек QEMU SLIRP NAT с пробросом портов (`8080`, `8000`).
+
+---
+
+## 📦 Запуск в эмуляторе Bochs x86 PC
+
+Bochs предоставляет точную потактовую эмуляцию инструкций и подробный лог обращений к портам ввода-вывода.
+
+### Конфигурационный файл `bochsrc.txt`:
+```ini
+megs: 2048
+romimage: file=/usr/share/bochs/BIOS-bochs-latest
+vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest
+ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+ata0-master: type=disk, path="build/IPO_OS.img", mode=flat, cylinders=1024, heads=16, spt=63
+ata0-slave:  type=disk, path="build/disk.img", mode=flat
+pci: enabled=1, chipset=i440fx
+pnic: enabled=1, mac=52:54:00:12:34:56, ethmod=tuntap, ethdev=tap0
+sb16: enabled=1, midimode=0, wavemode=1, dmatimer=250000
+boot: disk
+log: bochsout.txt
+mouse: enabled=1, type=ps2
+```
+
+---
+
+## 🖥️ Запуск в Oracle VirtualBox
+
+1. **Создание виртуальной машины:**
+   - Тип: `Other`, Версия: `Other/Unknown (32-bit)`, Оперативная память: `2048 MB`.
+2. **Контроллер накопителей:**
+   - Добавьте **IDE Controller** (PIIX4).
+   - Сконвертируйте сырой образ диска в формат VDI:
+     ```bash
+     VBoxManage convertfromraw build/IPO_OS.img build/IPO_OS.vdi --format VDI
+     ```
+   - Подключите `IPO_OS.vdi` как Primary Master.
+3. **Сетевой адаптер:**
+   - Тип адаптера: **Realtek RTL8139** (PCI ID `0x10EC:0x8139`). Примечание: PCnet и Intel PRO/1000 ядром не поддерживаются.

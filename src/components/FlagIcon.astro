@@ -1,0 +1,94 @@
+---
+interface Props {
+  code: string;
+  class?: string;
+}
+
+const { code, class: className = '' } = Astro.props;
+---
+{code === 'en' && (
+  <svg class={`flag-svg ${className}`} viewBox="0 0 60 30" width="18" height="12" aria-hidden="true">
+    <clipPath id="flag-gb-clip"><rect width="60" height="30" rx="2"/></clipPath>
+    <g clip-path="url(#flag-gb-clip)">
+      <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
+      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/>
+      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="2"/>
+      <path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/>
+      <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/>
+    </g>
+  </svg>
+)}
+{code === 'ru' && (
+  <svg class={`flag-svg ${className}`} viewBox="0 0 9 6" width="18" height="12" aria-hidden="true">
+    <rect width="9" height="6" fill="#fff"/>
+    <rect fill="#0039A6" y="2" width="9" height="2"/>
+    <rect fill="#D52B1E" y="4" width="9" height="2"/>
+  </svg>
+)}
+{code === 'uk' && (
+  <svg class={`flag-svg ${className}`} viewBox="0 0 9 6" width="18" height="12" aria-hidden="true">
+    <rect fill="#0057B7" width="9" height="3"/>
+    <rect fill="#FFDD00" y="3" width="9" height="3"/>
+  </svg>
+)}
+{code === 'de' && (
+  <svg class={`flag-svg ${className}`} viewBox="0 0 5 3" width="18" height="12" aria-hidden="true">
+    <rect fill="#000" width="5" height="1"/>
+    <rect fill="#DD0000" y="1" width="5" height="1"/>
+    <rect fill="#FFCE00" y="2" width="5" height="1"/>
+  </svg>
+)}
+{code === 'es' && (
+  <svg class={`flag-svg ${className}`} viewBox="0 0 750 500" width="18" height="12" aria-hidden="true">
+    <rect fill="#AA151B" width="750" height="500"/>
+    <rect fill="#F1BF00" y="125" width="750" height="250"/>
+  </svg>
+)}
+{code === 'fr' && (
+  <svg class={`flag-svg ${className}`} viewBox="0 0 3 2" width="18" height="12" aria-hidden="true">
+    <rect fill="#002654" width="1" height="2"/>
+    <rect fill="#fff" x="1" width="1" height="2"/>
+    <rect fill="#ED2939" x="2" width="1" height="2"/>
+  </svg>
+)}
+{code === 'zh' && (
+  <svg class={`flag-svg ${className}`} viewBox="0 0 30 20" width="18" height="12" aria-hidden="true">
+    <rect fill="#DE2910" width="30" height="20"/>
+    <polygon fill="#FFDE00" points="5,2 6.18,5.62 3.09,3.38 6.91,3.38 3.82,5.62"/>
+    <polygon fill="#FFDE00" points="10,2 10.3,3.1 9.4,2.4 10.6,2.4 9.7,3.1"/>
+    <polygon fill="#FFDE00" points="12,4 12.3,5.1 11.4,4.4 12.6,4.4 11.7,5.1"/>
+    <polygon fill="#FFDE00" points="12,7 12.3,8.1 11.4,7.4 12.6,7.4 11.7,8.1"/>
+    <polygon fill="#FFDE00" points="10,9 10.3,10.1 9.4,9.4 10.6,9.4 9.7,10.1"/>
+  </svg>
+)}
+{code === 'ja' && (
+  <svg class={`flag-svg ${className}`} viewBox="0 0 3 2" width="18" height="12" aria-hidden="true">
+    <rect fill="#fff" width="3" height="2"/>
+    <circle fill="#BC002D" cx="1.5" cy="1" r="0.6"/>
+  </svg>
+)}
+{code === 'pt' && (
+  <svg class={`flag-svg ${className}`} viewBox="0 0 600 400" width="18" height="12" aria-hidden="true">
+    <rect fill="#006600" width="240" height="400"/>
+    <rect fill="#FF0000" x="240" width="360" height="400"/>
+    <circle fill="#FFD700" cx="240" cy="200" r="70"/>
+    <circle fill="#FFFFFF" cx="240" cy="200" r="45"/>
+    <circle fill="#003399" cx="240" cy="200" r="30"/>
+  </svg>
+)}
+{code === 'pl' && (
+  <svg class={`flag-svg ${className}`} viewBox="0 0 16 10" width="18" height="12" aria-hidden="true">
+    <rect fill="#fff" width="16" height="5"/>
+    <rect fill="#DC143C" y="5" width="16" height="5"/>
+  </svg>
+)}
+
+<style>
+  .flag-svg {
+    display: inline-block;
+    vertical-align: middle;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+  }
+</style>

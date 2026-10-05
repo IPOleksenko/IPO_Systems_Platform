@@ -1,0 +1,70 @@
+---
+title: "Device Driver Architecture"
+description: "Kernel driver registration API, lifecycle callbacks, and built-in hardware driver subsystems."
+---
+
+# Device Driver Architecture
+
+Drivers in IPO_OS operate in Ring 0, interfacing directly with hardware I/O ports, PCI configuration space, and physical interrupt lines.
+
+---
+
+## 🔌 Driver Registration API
+
+The driver management subsystem (`src/include/kernel/driver.h`) allows modules to register unified driver interfaces:
+
+```c
+typedef struct driver {
+    char *name;
+    char *description;
+    uint32_t flags;
+
+    /* Lifecycle callbacks */
+    int (*init)(void);
+    int (*cleanup)(void);
+
+    /* Event hooks */
+    void (*on_tick)(void);                                       /* called every timer tick */
+    bool (*on_key)(uint8_t scancode, bool is_break);            /* called on key event; return true to consume */
+    int  (*on_command)(const char *cmd, int argc, char **argv); /* custom shell command; return 0 if handled */
+    char (*on_char_output)(char c);                             /* intercept / transform stdout chars */
+
+    /* Custom device I/O */
+    int (*read)(void *buffer, size_t size, uint32_t offset);
+    int (*write)(const void *buffer, size_t size, uint32_t offset);
+    int (*ioctl)(uint32_t cmd, void *arg);
+
+    void *owner;                                                /* owner process_t pointer (for user-space drivers) */
+    struct driver *next;
+} driver_t;
+
+int driver_register(driver_t *drv);
+int driver_unregister(const char *name);
+```
+
+Userland applications can inspect or manage drivers via dedicated system calls:
+- `IPO_SYSCALL_DRIVER_REGISTER` (`0x1060`)
+- `IPO_SYSCALL_DRIVER_UNREGISTER` (`0x1061`)
+- `IPO_SYSCALL_DRIVER_LIST` (`0x1062`)
+
+---
+
+## 🛠️ Built-In Hardware Drivers
+
+### 1. ATA / IDE Hard Disk Driver
+- **Base Ports:** Primary IDE Channel Command block `0x1F0`–`0x1F7`, Control block `0x3F6`.
+- **Addressing:** LBA28 and LBA48 addressing via PIO (Programmed Input/Output).
+- **Polled PIO:** Issues ATA Read Sectors (`0x20`) or Write Sectors (`0x30`), polling status register `0x1F7` for `BSY` clear and `DRQ` set.
+
+### 2. Realtek RTL8139 PCI Fast Ethernet Driver
+- **PCI Discovery:** Scans PCI configuration space (Vendor `0x10EC`, Device `0x8139`).
+- **Buffers:** Configures four physical 2 KB TX buffers (`TSD0`–`TSD3`) and a continuous 8 KB + 16 B circular RX ring buffer.
+- **Interrupt Handling:** Handles RX OK (`ROK`) and TX OK (`TOK`) events, streaming packets directly into the TCP/IP queue.
+
+### 3. PS/2 Input Subsystem & Dynamic Keymaps
+- **8042 Controller:** Ports `0x60` (Data) and `0x64` (Status/Command).
+- **Keymap Translation:** Raw scancodes are mapped through an active keymap table. Supports dynamic switching between Latin (QWERTY) and Cyrillic (ЙЦУКЕН) layouts via `IPO_SYSCALL_KEYMAP_CYCLE_NEXT` (`0x1058`).
+
+### 4. Audio: Sound Blaster 16 & PC Speaker
+- **Sound Blaster 16:** DSP base port `0x220`. Communicates via DSP Read/Write buffer ports `0x22C`/`0x22A`.
+- **PC Speaker:** Programmable Interval Timer Channel 2 connected to speaker gate port `0x61` (Bits 0 & 1).

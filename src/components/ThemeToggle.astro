@@ -1,0 +1,82 @@
+---
+import { getTranslation } from '../utils/i18n';
+
+interface Props {
+  lang: string;
+}
+
+const { lang } = Astro.props;
+const lightLabel = getTranslation(lang, 'ui.theme_light');
+const darkLabel = getTranslation(lang, 'ui.theme_dark');
+const autoLabel = getTranslation(lang, 'ui.theme_auto');
+---
+
+<div class="theme-toggle" role="group" aria-label="Color theme">
+  <button type="button" class="theme-btn" id="btn-theme-light" title={lightLabel} aria-label={lightLabel}>
+    ☀️
+  </button>
+  <button type="button" class="theme-btn" id="btn-theme-dark" title={darkLabel} aria-label={darkLabel}>
+    🌙
+  </button>
+</div>
+
+<style>
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-secondary);
+    padding: 2px;
+  }
+
+  .theme-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.35rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    line-height: 1;
+    color: var(--text-secondary);
+    transition: all 0.15s ease;
+  }
+
+  .theme-btn:hover {
+    color: var(--text-primary);
+  }
+
+  .theme-btn.active {
+    background-color: var(--bg-primary);
+    color: var(--accent-primary);
+    box-shadow: var(--shadow-sm);
+  }
+</style>
+
+<script>
+  function initThemeToggle() {
+    const storedTheme = localStorage.getItem('doc_theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const currentTheme = storedTheme || (prefersDark ? 'dark' : 'light');
+
+    function applyTheme(theme: string) {
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('btn-theme-dark')?.classList.add('active');
+        document.getElementById('btn-theme-light')?.classList.remove('active');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        document.getElementById('btn-theme-light')?.classList.add('active');
+        document.getElementById('btn-theme-dark')?.classList.remove('active');
+      }
+      localStorage.setItem('doc_theme', theme);
+    }
+
+    applyTheme(currentTheme);
+
+    document.getElementById('btn-theme-light')?.addEventListener('click', () => applyTheme('light'));
+    document.getElementById('btn-theme-dark')?.addEventListener('click', () => applyTheme('dark'));
+  }
+
+  initThemeToggle();
+</script>

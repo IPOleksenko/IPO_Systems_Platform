@@ -1,0 +1,100 @@
+---
+title: "Build & Chainloading"
+description: "Compiling IPO_Firmware, configuring storage emulation options, and chainloading système d'exploitation disk images in QEMU."
+---
+
+import Callout from '../../../components/Callout.astro';
+
+# Build & Chainloading
+
+This guide details building the **IPO_Firmware** BIOS payload and executing it inside QEMU with various emulated storage topologies.
+
+---
+
+## 🛠️ Build Prerequisites
+
+Compiling IPO_Firmware requires:
+- **GCC** (with 16-bit code generation support `-m16`)
+- **NASM 2.14+**
+- **GNU Make 4.0+**
+- **QEMU** (`qemu-system-i386`)
+
+```bash
+# Ubuntu / Debian
+sudo apt update && sudo apt install -y build-essential nasm make qemu-system-x86
+```
+
+---
+
+## 🔨 Compiling IPO_Firmware
+
+Inside the `IPO_Firmware` repository directory:
+
+```bash
+# Compile firmware image
+make all
+```
+
+This compiles:
+- `src/entry.asm` (Contract 2 entrypoint at `0xF000:0004`)
+- `src/ivt.asm (Real-mode interrupt vector table handlers)
+- `src/pci_scan.asm, src/ahci.asm, src/nvme.asm (Multi-bus storage discovery)
+- `src/chainload.asm (Sector 0 reading and Contract 3 handover)
+
+The build creates: `build/firmware.bin` (padded to exactly under 32 KB (firmware.bin) / 256 KB ROM image (firmware_rom.bin)).
+
+---
+
+## 🖥️ Running IPO_Firmware in QEMU
+
+To run IPO_Firmware standalone or with an operating system image, pass the bootable ROM `build/firmware_rom.bin` (or run via `make run`):
+
+### 1. Booting with Legacy ATA IDE Storage
+```bash
+qemu-system-i386 \
+    -bios build/firmware_rom.bin \
+    -drive file=path/to/IPO_OS.img,format=raw,if=ide,index=0 \
+    -serial stdio
+```
+Or directly using the project Makefile:
+```bash
+make run OS=path/to/IPO_OS.img
+```
+
+### 2. Booting with High-Performance AHCI SATA
+```bash
+qemu-system-i386 \
+    -bios build/firmware_rom.bin \
+    -device ahci,id=ahci0 \
+    -drive file=path/to/IPO_OS.img,format=raw,if=none,id=disk0 \
+    -device ide-hd,bus=ahci0.0,drive=disk0 \
+    -serial stdio
+```
+
+### 3. Booting with Modern NVMe Storage
+```bash
+qemu-system-i386 \
+    -bios build/firmware_rom.bin \
+    -drive file=path/to/IPO_OS.img,format=raw,if=none,id=nvm0 \
+    -device nvme,serial=IPO_NVME0,drive=nvm0 \
+    -serial stdio
+```
+
+---
+
+## 🔍 Observing Boot Output
+
+Upon starting QEMU, IPO_Firmware emits diagnostic information to serial COM1:
+
+```
+[IPO_Firmware] BIOS-compatible Firmware initialized (Shadow RAM mode)
+[IPO_Firmware] IVT installed (INT 10h, 13h, 15h, 16h registered)
+[IPO_Firmware] ACPI 1.0 tables installed (RSDP in EBDA, RSDT, MADT)
+[IPO_Firmware] Video Mode 03h (80x25 text) configured
+[IPO_Firmware] Fast A20 Gate activated and verified
+[IPO_Firmware] Memory map prepared (E820/E801 ready)
+[IPO_Firmware] PS/2 keyboard controller configured (Set 2 -> Set 1 translation)
+[IPO_Firmware] PCI bus enumeration completed
+[IPO_Firmware] Probing drive 0x80
+[IPO_Firmware] Bootable storage found on drive 0x80... Handing over to OS!
+```

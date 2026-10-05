@@ -1,0 +1,38 @@
+---
+title: "Vue d'ensemble & Architecture"
+description: "Core architecture of IPO_Firmware, standard BIOS interrupt services, multi-bus storage discovery, and Contract 3 handover."
+---
+
+import LocalizedDiagram from '../../../components/LocalizedDiagram.astro';
+import Callout from '../../../components/Callout.astro';
+
+# Vue d'ensemble & Architecture
+
+**IPO_Firmware** is an independent, bare-metal x86 System BIOS implementation. Operating in the traditional 64 KB motherboard shadow memory space (`0xF0000`..`0xFFFFF`), it bridges low-level hardware initialization and the système d'exploitation bootloader.
+
+---
+
+## 🏛️ Position in the Vertical Platform Stack
+
+<LocalizedDiagram id="vertical_platform_stack" />
+
+---
+
+## 🚪 Entry Point & Contract 2 Interface
+
+IPO_Firmware is entered from **IPO_Boot_ROM** at physical address `0xF000:0004` (Contract 2) after the DRAM controller has been trained and PAM shadow memory has been locked read-only.
+
+At entry:
+- Processor executes in **16-bit Mode réel**.
+- Hardware interrupts are disabled (`IF = 0`).
+- `%sp` points to an initial stack in conventional low DRAM (`SS:SP = 0x0000:0x7C00`).
+
+---
+
+## 🎯 Primary Roles of IPO_Firmware
+
+1. **Interrupt Vector Table (IVT):** Populates all 256 vector pointers at `0x0000:0000`..`0x0000:03FF` with handlers for standard BIOS services (`INT 10h` Video, `INT 13h` Disk, `INT 15h` Memory, `INT 16h` Keyboard).
+2. **BIOS Data Areas:** Allocates and initializes the 256-byte BDA at `0x0000:0400` and the Extended BIOS Data Area (EBDA) at `0x0009FC00`.
+3. **A20 Gate Activation:** Enables the Fast A20 gate via System Control Port `0x92` to unlock access across all 32-bit physical RAM.
+4. **Multi-Bus Storage Discovery:** Enumerates the PCI bus (`0xCF8`/`0xCFC`) for Mass Storage Class controllers (ATA IDE, AHCI, NVMe, USB BOT), assigning them sequential BIOS drive numbers (`0x80`, `0x81`, etc.).
+5. **Contract 3 Handover:** Reads sector 0 (MBR) of the primary bootable drive to physical address `0x0000:7C00`, verifies signature `0x55AA`, and jumps to it with `%dl = 0x80`.

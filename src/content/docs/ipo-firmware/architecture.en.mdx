@@ -1,0 +1,70 @@
+---
+title: "IVT & Multi-Bus Storage Discovery"
+description: "Real-mode IVT initialization, BDA and EBDA layouts, and hardware probing of ATA, AHCI, NVMe, and USB mass storage controllers."
+---
+
+import LocalizedDiagram from '../../../components/LocalizedDiagram.astro';
+
+# IVT & Multi-Bus Storage Discovery
+
+**IPO_Firmware** acts as the hardware abstraction layer between physical motherboard buses and the operating system bootloader.
+
+---
+
+## 🔄 Firmware Execution Flow
+
+<LocalizedDiagram id="firmware_flow" />
+
+---
+
+## 📋 Real-Mode Interrupt Vector Table (IVT)
+
+Upon entry, the first 1 KB of physical RAM (`0x0000:0000`..`0x0000:03FF`) is populated with 256 4-byte `FAR` pointers (`Segment:Offset`) mapping essential BIOS interrupt services:
+
+```
+IVT Memory Map (0x00000000 .. 0x000003FF):
+Vector      Address         Target Service
+INT 10h     0x0000:0x0040   Video Display Services (VBIOS & Teletype)
+INT 13h     0x0000:0x004C   Disk Block I/O Services (CHS & LBA)
+INT 15h     0x0000:0x0054   System & Memory Configuration (E820)
+INT 16h     0x0000:0x0058   Keyboard Input Services (PS/2)
+INT 1Ah     0x0000:0x0068   Real-Time Clock & Timer Services
+```
+
+---
+
+## 🗄️ BDA & EBDA Configuration
+
+### 1. BIOS Data Area (BDA) at `0x0000:0400`
+- `0x0400 - 0x0407`: Base I/O addresses of COM1..COM4 serial ports.
+- `0x0410`: Hardware equipment word.
+- `0x0413`: Base conventional memory size in KB (typically `639` or `640`).
+- `0x041E - 0x043D`: Circular keyboard FIFO buffer.
+
+### 2. Extended BIOS Data Area (EBDA) at `0x0009FC00`
+Reserved 1 KB memory segment containing:
+- ACPI Root System Description Pointer (**RSDP**) structure (magic `"RSD PTR "`).
+- Internal driver status structures for active storage controllers.
+
+---
+
+## 🔍 Multi-Bus Storage Discovery (`src/pci_scan.asm`)
+
+Written 100% in NASM assembly, IPO_Firmware scans PCI buses 0..3 via I/O ports `0x0CF8` (Address) and `0x0CFC` (Data):
+
+```asm
+pci_scan_devices:
+    ; Scans PCI buses 0..3 for boot-critical hardware
+    ; Stores discovered hardware flags into Scratch RAM (0x0000:0x0540..0x056F)
+    mov     byte [es:SCRATCH_AHCI_FOUND], 0
+    mov     byte [es:SCRATCH_USB_FOUND], 0
+    mov     byte [es:SCRATCH_VGA_FOUND], 0
+```
+
+### Probed Storage Subsystems:
+1. **ATA IDE:** Legacy parallel ATA controllers at primary ports `0x1F0` and secondary `0x170`.
+2. **AHCI SATA:** Serial ATA controllers (`pci_class == 0x01:0x06`) configured with ABAR registers.
+3. **NVMe Express:** PCIe Non-Volatile Memory controllers (`pci_class == 0x01:0x08`) initialized with Admin Submission/Completion queues.
+4. **USB EHCI:** Host controllers configured with bulk-only transport.
+
+Discovered drives are assigned sequential BIOS drive numbers starting from `0x80` (`0x80`, `0x81`, `0x82`).
