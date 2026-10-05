@@ -1,55 +1,121 @@
 ---
+import { getTranslation } from '../utils/i18n';
+
 interface Props {
   lang: string;
 }
 
 const { lang } = Astro.props;
-const isRu = lang === 'ru';
+
+const memoryRegions = [
+  {
+    id: 'ivt',
+    name: 'IVT',
+    label: '0x00000 — IVT (1 KB)',
+    start: '0x00000',
+    end: '0x003FF',
+    size: '1024 B',
+    descKey: 'widgets.memory_map.regions.ivt'
+  },
+  {
+    id: 'bda',
+    name: 'BDA',
+    label: '0x00400 — BDA (256 B)',
+    start: '0x00400',
+    end: '0x004FF',
+    size: '256 B',
+    descKey: 'widgets.memory_map.regions.bda'
+  },
+  {
+    id: 'mbr',
+    name: 'MBR Buffer',
+    label: '0x07C00 — MBR Load Sector',
+    start: '0x07C00',
+    end: '0x07DFF',
+    size: '512 B',
+    descKey: 'widgets.memory_map.regions.mbr'
+  },
+  {
+    id: 'kernel',
+    name: 'IPO_OS Kernel',
+    label: '0x10000 — Kernel Code (0x10000)',
+    start: '0x10000',
+    end: '0x7FFFF',
+    size: '448 KB',
+    descKey: 'widgets.memory_map.regions.kernel'
+  },
+  {
+    id: 'vga',
+    name: 'VGA Framebuffer',
+    label: '0xA0000 — VGA Text / Video VRAM',
+    start: '0xA0000',
+    end: '0xBFFFF',
+    size: '128 KB',
+    descKey: 'widgets.memory_map.regions.vga'
+  },
+  {
+    id: 'shadow',
+    name: 'Shadow RAM & ROM',
+    label: '0xC0000 — VBIOS & Shadow RAM',
+    start: '0xC0000',
+    end: '0xFFFFF',
+    size: '256 KB',
+    descKey: 'widgets.memory_map.regions.shadow'
+  },
+  {
+    id: 'heap',
+    name: 'Kernel Heap Pool',
+    label: '0x100000 — Kernel Heap Pool',
+    start: '0x100000',
+    end: '0x7FFFFF',
+    size: '7 MB',
+    descKey: 'widgets.memory_map.regions.heap'
+  },
+  {
+    id: 'userspace',
+    name: 'Userspace Apps',
+    label: '0x800000 — Userspace Applications',
+    start: '0x800000',
+    end: '0xFFFFFF',
+    size: '8 MB+',
+    descKey: 'widgets.memory_map.regions.userspace'
+  }
+];
+
+const initialRegion = memoryRegions[0];
 ---
 
 <div class="mem-visualizer-widget">
   <div class="widget-header">
-    <strong>🧮 {isRu ? 'Интерактивный навигатор карты памяти' : 'Interactive Memory Map Navigator'}</strong>
-    <span class="widget-badge">{isRu ? 'Офлайн инструмент' : 'Offline Tool'}</span>
+    <strong>🧮 {getTranslation(lang, 'widgets.memory_map.title')}</strong>
+    <span class="widget-badge">{getTranslation(lang, 'widgets.memory_map.badge')}</span>
   </div>
 
   <div class="mem-layout-grid">
     <div class="mem-sidebar-list" role="tablist">
-      <button class="mem-btn active" data-addr-start="0x00000" data-addr-end="0x003FF" data-size="1024 B" data-name="IVT" data-desc-en="Real Mode Interrupt Vector Table (256 vectors * 4 bytes CS:IP)." data-desc-ru="Таблица векторов прерываний реального режима (256 векторов по 4 байта CS:IP).">
-        0x00000 — IVT (1 KB)
-      </button>
-      <button class="mem-btn" data-addr-start="0x00400" data-addr-end="0x004FF" data-size="256 B" data-name="BDA" data-desc-en="BIOS Data Area: COM/LPT base ports, keyboard buffer, timer ticks at 0x46C." data-desc-ru="Область данных BIOS: базовые порты COM/LPT, буфер клавиатуры, тики таймера в 0x46C.">
-        0x00400 — BDA (256 B)
-      </button>
-      <button class="mem-btn" data-addr-start="0x07C00" data-addr-end="0x07DFF" data-size="512 B" data-name="MBR Buffer" data-desc-en="Conventional DRAM target where BIOS loads LBA 0 (Contract 3 handover)." data-desc-ru="Традиционная область загрузки сектора LBA 0 прошивкой BIOS (Контракт 3).">
-        0x07C00 — MBR Load Sector
-      </button>
-      <button class="mem-btn" data-addr-start="0x10000" data-addr-end="0x7FFFF" data-size="448 KB" data-name="IPO_OS Kernel" data-desc-en="Protected Mode 32-bit Kernel core (.text, .rodata, .data, .bss)." data-desc-ru="Ядро IPO_OS в 32-битном защищенном режиме (.text, .rodata, .data, .bss).">
-        0x10000 — Kernel Code (0x10000)
-      </button>
-      <button class="mem-btn" data-addr-start="0xA0000" data-addr-end="0xBFFFF" data-size="128 KB" data-name="VGA Framebuffer" data-desc-en="VGA Mode 03h text mode screen memory at 0xB8000 (80x25 characters)." data-desc-ru="Видеобуфер VGA Mode 03h по адресу 0xB8000 (текстовый режим 80x25).">
-        0xA0000 — VGA Text / Video VRAM
-      </button>
-      <button class="mem-btn" data-addr-start="0xC0000" data-addr-end="0xFFFFF" data-size="256 KB" data-name="Shadow RAM & ROM" data-desc-en="VBIOS Option ROM at 0xC0000, IPO_Boot_ROM and IPO_Firmware in Shadow RAM." data-desc-ru="VBIOS в 0xC0000, IPO_Boot_ROM и IPO_Firmware в теневой памяти (Shadow RAM).">
-        0xC0000 — VBIOS & Shadow RAM
-      </button>
-      <button class="mem-btn" data-addr-start="0x100000" data-addr-end="0x7FFFFF" data-size="7 MB" data-name="Kernel Heap Pool" data-desc-en="Extended memory used by kmalloc() and page frame allocations." data-desc-ru="Расширенная память для динамической кучи ядра kmalloc() и страниц.">
-        0x100000 — Kernel Heap Pool
-      </button>
-      <button class="mem-btn" data-addr-start="0x800000" data-addr-end="0xFFFFFF" data-size="8 MB+" data-name="Userspace Apps" data-desc-en="Base physical loading address for raw ELF/binary applications (linked with app.ld)." data-desc-ru="Базовый адрес размещения пользовательских приложений (скомпилированных с app.ld).">
-        0x800000 — Userspace Applications
-      </button>
+      {memoryRegions.map((region, idx) => (
+        <button 
+          class={`mem-btn ${idx === 0 ? 'active' : ''}`}
+          data-addr-start={region.start}
+          data-addr-end={region.end}
+          data-size={region.size}
+          data-name={region.name}
+          data-desc={getTranslation(lang, region.descKey)}
+        >
+          {region.label}
+        </button>
+      ))}
     </div>
 
     <div class="mem-details-panel">
-      <h4 id="mem-region-name">0x00000 — IVT</h4>
+      <h4 id="mem-region-name">{initialRegion.start} — {initialRegion.name}</h4>
       <div class="mem-meta-row">
-        <span><strong>{isRu ? 'Начало:' : 'Start:'}</strong> <code id="mem-start">0x00000</code></span>
-        <span><strong>{isRu ? 'Конец:' : 'End:'}</strong> <code id="mem-end">0x003FF</code></span>
-        <span><strong>{isRu ? 'Размер:' : 'Size:'}</strong> <span id="mem-size">1024 B</span></span>
+        <span><strong>{getTranslation(lang, 'widgets.memory_map.start')}</strong> <code id="mem-start">{initialRegion.start}</code></span>
+        <span><strong>{getTranslation(lang, 'widgets.memory_map.end')}</strong> <code id="mem-end">{initialRegion.end}</code></span>
+        <span><strong>{getTranslation(lang, 'widgets.memory_map.size')}</strong> <span id="mem-size">{initialRegion.size}</span></span>
       </div>
       <p id="mem-desc" class="mem-desc">
-        {isRu ? 'Таблица векторов прерываний реального режима (256 векторов по 4 байта CS:IP).' : 'Real Mode Interrupt Vector Table (256 vectors * 4 bytes CS:IP).'}
+        {getTranslation(lang, initialRegion.descKey)}
       </p>
     </div>
   </div>
@@ -150,7 +216,6 @@ const isRu = lang === 'ru';
 </style>
 
 <script>
-  const isRuPage = document.documentElement.lang === 'ru';
   document.querySelectorAll('.mem-visualizer-widget').forEach((widget) => {
     const buttons = widget.querySelectorAll('.mem-btn');
     const nameEl = widget.querySelector('#mem-region-name');
@@ -168,14 +233,13 @@ const isRu = lang === 'ru';
         const start = btn.getAttribute('data-addr-start');
         const end = btn.getAttribute('data-addr-end');
         const size = btn.getAttribute('data-size');
-        const descEn = btn.getAttribute('data-desc-en');
-        const descRu = btn.getAttribute('data-desc-ru');
+        const desc = btn.getAttribute('data-desc');
 
         if (nameEl) nameEl.textContent = `${start} — ${name}`;
         if (startEl) startEl.textContent = start || '';
         if (endEl) endEl.textContent = end || '';
         if (sizeEl) sizeEl.textContent = size || '';
-        if (descEl) descEl.textContent = (isRuPage ? descRu : descEn) || descEn || '';
+        if (descEl) descEl.textContent = desc || '';
       });
     });
   });

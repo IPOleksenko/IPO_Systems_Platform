@@ -1,0 +1,450 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import { siteConfig } from '../../../site.config';
+import { getTranslation } from '../../utils/i18n';
+
+export function getStaticPaths() {
+  return Object.keys(siteConfig.languages).map((lang) => ({
+    params: { lang }
+  }));
+}
+
+const { lang } = Astro.params;
+const currentLang = lang || 'en';
+
+const base = siteConfig.base;
+const cleanBase = base.endsWith('/') ? base : `${base}/`;
+const downloadsBase = `${cleanBase}downloads/`;
+
+interface Artifact {
+  id: string;
+  file: string;
+  name: string;
+  category: string;
+  description: string;
+  size_formatted: string;
+  sha256: string;
+  featured?: boolean;
+}
+
+let artifacts: Artifact[] = [];
+let buildDate = '';
+
+try {
+  const manifestPath = path.resolve('public/downloads/manifest.json');
+  if (fs.existsSync(manifestPath)) {
+    const raw = fs.readFileSync(manifestPath, 'utf-8');
+    const data = JSON.parse(raw);
+    artifacts = data.artifacts || [];
+    buildDate = data.build_date ? new Date(data.build_date).toLocaleDateString() : '';
+  }
+} catch (e) {
+  // Graceful fallback
+}
+
+if (artifacts.length === 0) {
+  artifacts = [
+    {
+      id: 'ipo-system-bundle',
+      file: 'ipo-system-bundle.zip',
+      name: 'Complete IPO Systems Bundle (All 3 Projects & Disk)',
+      category: 'bundle',
+      featured: true,
+      description: 'All compiled binaries across the entire platform: Boot ROM, Firmware BIOS, IPO_OS kernel image, and 128 MB applications disk.',
+      size_formatted: '~8.8 MB',
+      sha256: 'Pre-compiled release'
+    },
+    {
+      id: 'ipo-os-raw',
+      file: 'IPO_OS.img',
+      name: 'IPO_OS Kernel Bootable Image',
+      category: 'os',
+      description: 'Raw 32-bit bootable image containing IPO_OS kernel (LBA 0 bootloader + kernel binary).',
+      size_formatted: '~283 KB',
+      sha256: 'Pre-compiled release'
+    },
+    {
+      id: 'ipo-os-disk',
+      file: 'disk.img',
+      name: 'IPO_OS Applications Disk (128 MB)',
+      category: 'os',
+      description: 'Pre-formatted 128 MB disk image with 39 compiled applications and userland toolchain.',
+      size_formatted: '~8.5 MB',
+      sha256: 'Pre-compiled release'
+    },
+    {
+      id: 'ipo-boot-rom',
+      file: 'ipo-boot-rom.zip',
+      name: 'IPO_Boot_ROM Package',
+      category: 'bootrom',
+      description: 'Compiled hardware reset vector 0xFFFFFFF0 ROM binaries (bootrom_run.bin, bootrom.bin).',
+      size_formatted: '~20 KB',
+      sha256: 'Pre-compiled release'
+    },
+    {
+      id: 'ipo-firmware',
+      file: 'ipo-firmware.zip',
+      name: 'IPO_Firmware Package',
+      category: 'firmware',
+      description: 'Compiled BIOS runtime service layer ROM binaries (firmware_rom.bin, firmware.bin).',
+      size_formatted: '~16 KB',
+      sha256: 'Pre-compiled release'
+    }
+  ];
+}
+
+const featuredArtifact = artifacts.find(a => a.featured) || artifacts[0];
+const otherArtifacts = artifacts.filter(a => a.id !== featuredArtifact.id);
+const pageTitle = getTranslation(currentLang, 'downloads.page_title');
+---
+
+<BaseLayout title={pageTitle} currentLang={currentLang}>
+  <Header currentLang={currentLang} />
+
+  <main class="downloads-page-main">
+    <div class="downloads-hero">
+      <div class="hero-badge">
+        <span>📦 {getTranslation(currentLang, 'downloads.badge')}</span>
+      </div>
+      <h1 class="page-title">{pageTitle}</h1>
+      <p class="page-subtitle">
+        {getTranslation(currentLang, 'downloads.subtitle')}
+      </p>
+    </div>
+
+    <!-- Featured Turnkey Bundle -->
+    {featuredArtifact && (
+      <section class="featured-section">
+        <div class="featured-card">
+          <div class="featured-ribbon">
+            {getTranslation(currentLang, 'downloads.featured_ribbon')}
+          </div>
+          <div class="featured-content">
+            <div class="featured-details">
+              <h2 class="featured-heading">
+                {getTranslation(currentLang, 'downloads.featured_title')}
+              </h2>
+              <p class="featured-description">
+                {getTranslation(currentLang, 'downloads.featured_desc')}
+              </p>
+              <div class="meta-row">
+                <span class="meta-badge size">💾 {featuredArtifact.size_formatted}</span>
+                <span class="meta-badge hash" title={featuredArtifact.sha256}>
+                  SHA256: {featuredArtifact.sha256}
+                </span>
+                {buildDate && <span class="meta-badge date">📅 {buildDate}</span>}
+              </div>
+            </div>
+            <div class="featured-cta">
+              <a 
+                href={`${downloadsBase}${featuredArtifact.file}`} 
+                download={featuredArtifact.file}
+                class="download-btn large primary"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>{getTranslation(currentLang, 'downloads.download_bundle')}</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- Individual Artifacts Grid -->
+    <section class="artifacts-section">
+      <h2 class="section-heading">
+        {getTranslation(currentLang, 'downloads.components_title')}
+      </h2>
+
+      <div class="artifacts-grid">
+        {otherArtifacts.map((art) => (
+          <div class="artifact-card">
+            <div class="card-header">
+              <span class="card-icon">
+                {art.category === 'os' ? '🖥️' : (art.category === 'bootrom' ? '⚡' : '💾')}
+              </span>
+              <div>
+                <h3 class="card-title">{art.name}</h3>
+                <span class="card-file-tag">{art.file}</span>
+              </div>
+            </div>
+            <p class="card-desc">{art.description}</p>
+            <div class="card-meta">
+              <span class="card-size">💾 {art.size_formatted}</span>
+              <span class="card-hash" title={art.sha256}>SHA256: {art.sha256.substring(0, 12)}...</span>
+            </div>
+            <div class="card-footer">
+              <a 
+                href={`${downloadsBase}${art.file}`} 
+                download={art.file}
+                class="download-btn secondary"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>{getTranslation(currentLang, 'downloads.download_btn')}</span>
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .downloads-page-main {
+    max-width: 75rem;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+  }
+
+  .downloads-hero {
+    text-align: center;
+    max-width: 50rem;
+    margin: 0 auto 3.5rem;
+  }
+
+  .hero-badge {
+    display: inline-block;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    background-color: var(--accent-light);
+    color: var(--accent-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--accent-border);
+  }
+
+  .page-title {
+    font-size: 2.75rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  .page-subtitle {
+    font-size: 1.15rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .featured-section {
+    margin-bottom: 3.5rem;
+  }
+
+  .featured-card {
+    border: 2px solid var(--accent-primary);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+    padding: 2rem;
+    position: relative;
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.1);
+  }
+
+  .featured-ribbon {
+    position: absolute;
+    top: -0.85rem;
+    left: 1.5rem;
+    background-color: var(--accent-primary);
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .featured-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    margin-top: 0.5rem;
+  }
+
+  @media (max-width: 850px) {
+    .featured-content {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  .featured-details {
+    flex: 1;
+  }
+
+  .featured-heading {
+    margin: 0 0 0.5rem;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .featured-description {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .meta-badge {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-family: var(--font-mono, monospace);
+  }
+
+  .meta-badge.size {
+    font-weight: 700;
+    color: var(--accent-primary);
+  }
+
+  .meta-badge.hash {
+    max-width: 380px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    justify-content: center;
+    white-space: nowrap;
+  }
+
+  .download-btn.primary {
+    background-color: var(--accent-primary);
+    color: #ffffff;
+    font-size: 1rem;
+    padding: 0.85rem 1.75rem;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+  }
+
+  .download-btn.primary:hover {
+    background-color: var(--accent-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+  }
+
+  .download-btn.secondary {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    width: 100%;
+  }
+
+  .download-btn.secondary:hover {
+    background-color: var(--accent-light);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+  }
+
+  .section-heading {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+  }
+
+  .artifacts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 4rem;
+  }
+
+  .artifact-card {
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+
+  .artifact-card:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .card-icon {
+    font-size: 1.75rem;
+  }
+
+  .card-title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .card-file-tag {
+    font-size: 0.75rem;
+    font-family: var(--font-mono, monospace);
+    color: var(--text-muted);
+  }
+
+  .card-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0 0 1rem;
+    flex: 1;
+  }
+
+  .card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono, monospace);
+    margin-bottom: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .card-size {
+    font-weight: 600;
+    color: var(--accent-primary);
+  }
+</style>

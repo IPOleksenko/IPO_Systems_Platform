@@ -23,7 +23,8 @@
       "app_dev": "Anwendungsentwickler",
       "kernel_dev": "Kernel- & Treiberentwickler",
       "pc_builder": "PC-Monteur"
-    }
+    },
+    "downloads": "Downloads"
   },
   "sections": {
     "ipo_os": {
@@ -142,5 +143,119 @@
       "beginners": "Für Einsteiger",
       "deep_dive": "Detailwissen"
     }
+  },
+  "downloads": {
+    "page_title": "Downloads & System-Builds",
+    "badge": "Offizielle Plattform-Releases",
+    "subtitle": "Vorkompilierte Binär-Images und schlüsselfertige Pakete für physische Hardware oder QEMU-Emulation. Einmal gebaut und statisch über das GitHub Pages CDN bereitgestellt.",
+    "trigger_title": "Projekte & Builds herunterladen",
+    "dialog_title": "IPO Systems Plattform herunterladen",
+    "dialog_subtitle": "Vorkompilierte Binärdateien. Einmal gebaut und statisch über GitHub Pages bereitgestellt.",
+    "featured_badge": "⭐ Vollständiges Plattform-Bundle",
+    "featured_ribbon": "⭐ Vollständiges Plattform-Bundle",
+    "featured_title": "Complete IPO Systems Bundle (Alle 3 Projekte & Disk)",
+    "featured_desc": "Enthält alle kompilierten Binärdateien der Plattform: Boot ROM (bootrom_run.bin), Firmware BIOS (firmware_rom.bin), IPO_OS Kernel-Image (IPO_OS.img) und 128-MB-Anwendungsdiskette (disk.img).",
+    "download_bundle": "Komplettes Bundle herunterladen (.zip)",
+    "components_title": "Einzelne Komponenten & Datenträger-Images",
+    "download_btn": "Herunterladen",
+    "download_zip": ".zip herunterladen",
+    "download_builds": "System-Builds herunterladen",
+    "vm_guide_link": "Leitfaden für virtuelle Maschinen →",
+    "docs_link": "Dokumentation →"
+  },
+  "home": {
+    "hero_badge": "🚀 Bare-Metal x86 Systemarchitektur",
+    "hero_subtitle": "Einheitliche Dokumentation des Low-Level-Computing-Stacks: vom Hardware-Reset-Vektor bis zu Benutzeranwendungen.",
+    "explore_os": "IPO_OS erkunden →",
+    "explore_boot_rom": "Reset-Architektur →",
+    "explore_firmware": "Firmware erkunden →",
+    "stack_title": "Vertikale Stack-Architektur",
+    "stack_desc": "Alle drei Projekte arbeiten nahtlos als einheitliche Bare-Metal-Plattform zusammen.",
+    "projects_title": "Plattformprojekte",
+    "projects_desc": "Jede Komponente ist in sich geschlossen und vollständig dokumentiert.",
+    "os_desc": "Vollwertiges 32-Bit-x86-Betriebssystem: Protected-Mode-Kernel, VFS mit nativem 64-Bit-IPO_FS, GUI-Fenstermanager und TCP/IP-Stack.",
+    "os_docs_link": "IPO_OS Dokumentation →",
+    "boot_rom_desc": "Hardware-Reset-Vektor (0xFFFFFFF0) Initialisierer für physische Hardware und QEMU mit Cache-as-RAM (CAR) und DRAM-Training.",
+    "boot_rom_docs_link": "Boot ROM Dokumentation →",
+    "firmware_desc": "BIOS-kompatible Real-Mode-Firmware-Laufzeitumgebung mit IVT-Interrupt-Diensten, E820-Speicherkarte und Fast A20.",
+    "firmware_docs_link": "Firmware Dokumentation →",
+    "roles_title": "Wo anfangen (Leserprofile)",
+    "roles_desc": "Wählen Sie Ihren Einstiegspunkt für maßgeschneiderte Anleitungen:",
+    "user_role_title": "Endbenutzer",
+    "user_role_desc": "Betrieb in QEMU, Shell-Befehlszeilennutzung, dynamisches Networking und Server.",
+    "user_role_link": "Schnellstart in QEMU →",
+    "app_dev_title": "Anwendungsentwickler",
+    "app_dev_desc": "C/ASM-Code schreiben, int 0x80 Systemaufrufe nutzen und Apps mit disk_editor.py bereitstellen.",
+    "app_dev_link": "Hello, World App schreiben →",
+    "kernel_dev_title": "Kernel-Ingenieur",
+    "kernel_dev_desc": "Speicherlayout, IDT-Traps, Treiberarchitektur und TCP/IP-Zustandsmaschine.",
+    "kernel_dev_link": "Kernel-Architektur & Boot →",
+    "pc_builder_title": "Hardware-Bauer",
+    "pc_builder_desc": "Chipsatz-Kompatibilität, Netzteilauslegung, Frontblenden-Pinbelegung und SPI-Flashing.",
+    "pc_builder_link": "PC-Montage & Flashen →"
+  },
+  "tables": {
+    "struct": {
+      "offset": "Offset",
+      "size": "Size",
+      "type": "Type",
+      "name": "Field Name",
+      "description": "Description"
+    },
+    "syscall": {
+      "hex": "Hex",
+      "call": "System Call",
+      "signature": "C Signature",
+      "description": "Arguments & Description",
+      "details": "Arguments & Return",
+      "returns": "Returns:"
+    }
+  },
+  "widgets": {
+    "psu": {
+      "title": "Power Supply (PSU) Wattage Calculator",
+      "badge": "Interactive Sizing",
+      "cpu_label": "Processor Platform (TDP):",
+      "cpu_opt1": "Intel Pentium II/III / Celeron (65W)",
+      "cpu_opt2": "Intel Core 2 Duo / Quad (95W)",
+      "cpu_opt3": "Embedded x86 SoC / Atom (35W)",
+      "ram_label": "Memory DIMM Modules:",
+      "storage_label": "Storage Drives (HDD / SSD):",
+      "storage_opt1": "1x SATA SSD / CF-IDE (5W)",
+      "storage_opt2": "1x 3.5\" HDD + 1x SSD (25W)",
+      "storage_opt3": "2x 3.5\" HDD + IDE Optical (45W)",
+      "pci_label": "Expansion Cards (PCI / NIC):",
+      "pci_opt1": "RTL8139 NIC + SB16 Audio (15W)",
+      "pci_opt2": "Discrete PCI Video + NIC + Audio (40W)",
+      "peak_label": "Estimated Peak Load:",
+      "rec_label": "Recommended PSU Rating (+30% Headroom):",
+      "note": "For legacy ATX motherboards, adequate amperage on the +5V and +3.3V rails (at least 20–25A) is critical for system stability."
+    },
+    "memory_map": {
+      "title": "Interactive Memory Map Navigator",
+      "badge": "Interactive Tool",
+      "start": "Start:",
+      "end": "End:",
+      "size": "Size:",
+      "initial_desc": "Real Mode Interrupt Vector Table (256 vectors * 4 bytes CS:IP).",
+      "regions": {
+        "ivt": "Interrupt-Vektortabelle im Real Mode (256 Vektoren * 4 Bytes CS:IP).",
+        "bda": "BIOS-Datenbereich: COM/LPT-Basisports, Tastaturpuffer, Timer-Ticks bei 0x46C.",
+        "mbr": "Konventionelles DRAM-Ziel, in das das BIOS LBA 0 lädt (Vertrag 3 Übergabe).",
+        "kernel": "32-Bit-Kernelkern im Protected Mode (.text, .rodata, .data, .bss).",
+        "vga": "VGA-Modus 03h Textmodus-Bildschirmspeicher bei 0xB8000 (80x25 Zeichen).",
+        "shadow": "VBIOS Option ROM bei 0xC0000, IPO_Boot_ROM und IPO_Firmware im Shadow-RAM.",
+        "heap": "Erweiterter Speicher für kmalloc() und Seiten-Frame-Allokationen.",
+        "userspace": "Physikalische Basisadresse für ELF/Binäranwendungen (gelinkt mit app.ld)."
+      }
+    }
+  },
+  "search": {
+    "placeholder": "Dokumentation durchsuchen...",
+    "prompt": "Suchbegriff eingeben (z. B. syscall, PIC, MBR, CAR)...",
+    "loading": "Suchindex wird geladen oder ist nicht verfügbar.",
+    "empty": "Keine passenden Dokumentationsseiten gefunden.",
+    "error": "Beim Suchen ist ein Fehler aufgetreten.",
+    "close": "Suche schließen"
   }
 }

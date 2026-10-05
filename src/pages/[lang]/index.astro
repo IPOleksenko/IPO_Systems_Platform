@@ -13,7 +13,6 @@ export function getStaticPaths() {
 
 const { lang } = Astro.params;
 const currentLang = lang || 'en';
-const isRu = currentLang === 'ru';
 
 const base = siteConfig.base;
 const cleanBase = base.endsWith('/') ? base : `${base}/`;
@@ -26,37 +25,39 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
     <!-- Hero Section -->
     <section class="hero-section">
       <div class="hero-badge">
-        <span>🚀 Bare-Metal x86 Systems Architecture</span>
+        <span>{getTranslation(currentLang, 'home.hero_badge')}</span>
       </div>
       <h1 class="hero-title">{siteConfig.siteTitle}</h1>
       <p class="hero-subtitle">
-        {isRu 
-          ? 'Единая всеобъемлющая документация программно-аппаратного стека: от аппаратного вектора сброса питания процессора до графических и консольных приложений.' 
-          : 'Unified comprehensive documentation of the complete low-level compute stack: from the CPU hardware reset vector to userspace applications.'}
+        {getTranslation(currentLang, 'home.hero_subtitle')}
       </p>
 
       <div class="hero-actions">
         <a href={`${cleanBase}${currentLang}/ipo-os/overview`} class="btn btn-primary">
-          {isRu ? 'Начать изучение IPO_OS →' : 'Explore IPO_OS →'}
+          {getTranslation(currentLang, 'home.explore_os')}
         </a>
         <a href={`${cleanBase}${currentLang}/ipo-boot-rom/overview`} class="btn btn-secondary">
-          {isRu ? 'Стек сброса (Boot ROM) →' : 'Reset Architecture →'}
+          {getTranslation(currentLang, 'home.explore_boot_rom')}
         </a>
         <a href={`${cleanBase}${currentLang}/ipo-firmware/overview`} class="btn btn-secondary">
-          {isRu ? 'Прошивка (IPO_Firmware) →' : 'Explore Firmware →'}
+          {getTranslation(currentLang, 'home.explore_firmware')}
         </a>
+        <button type="button" class="btn btn-download open-download-modal-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>{getTranslation(currentLang, 'downloads.download_builds')}</span>
+        </button>
       </div>
     </section>
 
     <!-- Global Stack Architecture Diagram -->
     <section class="stack-diagram-section">
       <div class="section-header">
-        <h2>{isRu ? 'Вертикальная архитектура стека' : 'Vertical Stack Architecture'}</h2>
-        <p>
-          {isRu 
-            ? 'Все три проекта спроектированы для совместной работы в качестве единой вычислительной платформы с четко специфицированными контрактами взаимодействия.' 
-            : 'All three projects integrate seamlessly as a unified bare-metal computing platform with strictly defined handover contracts.'}
-        </p>
+        <h2>{getTranslation(currentLang, 'home.stack_title')}</h2>
+        <p>{getTranslation(currentLang, 'home.stack_desc')}</p>
       </div>
       <LocalizedDiagram id="global_stack" lang={currentLang} figureNum={1} />
     </section>
@@ -64,8 +65,8 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
     <!-- Project Cards Grid -->
     <section class="projects-grid-section">
       <div class="section-header">
-        <h2>{isRu ? 'Проекты платформы' : 'Platform Projects'}</h2>
-        <p>{isRu ? 'Каждый компонент автономен, строго документирован и не зависит от внешних исходников при изучении.' : 'Each component is self-contained, rigorously documented, and fully independent.'}</p>
+        <h2>{getTranslation(currentLang, 'home.projects_title')}</h2>
+        <p>{getTranslation(currentLang, 'home.projects_desc')}</p>
       </div>
 
       <div class="projects-cards">
@@ -77,13 +78,14 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
           </div>
           <h3 class="card-title">IPO_OS</h3>
           <p class="card-desc">
-            {isRu
-              ? 'Полноценная 32-битная x86 операционная система: монолитное ядро, менеджер памяти, VFS с собственной 64-битной FS (IPO_FS), оконный менеджер (WM), драйверы ATA/PS-2/RTL8139 и встроенный TCP/IP стек с POSIX-сокетами.'
-              : 'Full bare-metal 32-bit x86 operating system: protected-mode kernel, VFS with native 64-bit IPO_FS, GUI Window Manager, RTL8139 NIC driver, and complete TCP/IP stack with POSIX socket API.'}
+            {getTranslation(currentLang, 'home.os_desc')}
           </p>
           <div class="card-footer">
             <a href={`${cleanBase}${currentLang}/ipo-os/overview`} class="card-link">
-              {isRu ? 'Документация IPO_OS →' : 'IPO_OS Documentation →'}
+              {getTranslation(currentLang, 'home.os_docs_link')}
+            </a>
+            <a href={`${cleanBase}downloads/IPO_OS.img`} download="IPO_OS.img" class="card-download-link" title="Download Image">
+              ⬇️ IPO_OS.img
             </a>
           </div>
         </div>
@@ -96,13 +98,14 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
           </div>
           <h3 class="card-title">IPO_Boot_ROM</h3>
           <p class="card-desc">
-            {isRu
-              ? 'Аппаратный инициализатор вектора сброса 0xFFFFFFF0 для физического железа и QEMU. Реализует режим Cache-as-RAM (CAR), тренировку памяти MRC для чипсетов i440FX и Q35, перенос в Shadow RAM и передачу в прошивку по Контракту 2.'
-              : 'Hardware reset vector (0xFFFFFFF0) initializer for physical machines and QEMU. Features Cache-as-RAM (CAR), MRC DRAM training for i440FX and Q35, PAM Shadow RAM mirroring, and Contract 2 handover.'}
+            {getTranslation(currentLang, 'home.boot_rom_desc')}
           </p>
           <div class="card-footer">
             <a href={`${cleanBase}${currentLang}/ipo-boot-rom/overview`} class="card-link">
-              {isRu ? 'Документация Boot ROM →' : 'Boot ROM Documentation →'}
+              {getTranslation(currentLang, 'home.boot_rom_docs_link')}
+            </a>
+            <a href={`${cleanBase}downloads/ipo-boot-rom.zip`} download="ipo-boot-rom.zip" class="card-download-link" title="Download ZIP">
+              ⬇️ {getTranslation(currentLang, 'downloads.download_zip')}
             </a>
           </div>
         </div>
@@ -115,13 +118,14 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
           </div>
           <h3 class="card-title">IPO_Firmware</h3>
           <p class="card-desc">
-            {isRu
-              ? 'BIOS-совместимый сервисный слой реального режима. Устанавливает таблицу IVT (INT 10h–1Ah), строит карту E820, активирует Fast A20, выполняет многошинный автопоиск дисков (IDE/AHCI/NVMe/USB) и загружает MBR по Контракту 3.'
-              : 'BIOS-compatible real-mode firmware runtime. Installs IVT interrupt services (INT 10h–1Ah), builds E820 memory map, opens Fast A20, scans storage buses (IDE, AHCI, NVMe, USB), and performs Contract 3 MBR handover.'}
+            {getTranslation(currentLang, 'home.firmware_desc')}
           </p>
           <div class="card-footer">
             <a href={`${cleanBase}${currentLang}/ipo-firmware/overview`} class="card-link">
-              {isRu ? 'Документация Firmware →' : 'Firmware Documentation →'}
+              {getTranslation(currentLang, 'home.firmware_docs_link')}
+            </a>
+            <a href={`${cleanBase}downloads/ipo-firmware.zip`} download="ipo-firmware.zip" class="card-download-link" title="Download ZIP">
+              ⬇️ {getTranslation(currentLang, 'downloads.download_zip')}
             </a>
           </div>
         </div>
@@ -131,37 +135,45 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
     <!-- Quick Start Profiles -->
     <section class="roles-section">
       <div class="section-header">
-        <h2>{isRu ? 'С чего начать (Руководства по ролям)' : 'Where to Start (Reader Profiles)'}</h2>
-        <p>{isRu ? 'Выберите ваш профиль для перехода к профильному руководству:' : 'Select your pathway for tailored step-by-step guidance:'}</p>
+        <h2>{getTranslation(currentLang, 'home.roles_title')}</h2>
+        <p>{getTranslation(currentLang, 'home.roles_desc')}</p>
       </div>
 
       <div class="roles-grid">
         <div class="role-box">
           <div class="role-icon">🖥️</div>
-          <h4>{isRu ? 'Пользователь системы' : 'End User'}</h4>
-          <p>{isRu ? 'Запуск в QEMU, работа в командной строке shell, управление сетью ifconfig, запуск веб-сервера.' : 'Running in QEMU, shell command-line usage, dynamic networking via ifconfig, and hosting services.'}</p>
-          <a href={`${cleanBase}${currentLang}/ipo-os/hardware/virtual-machines`}>{isRu ? 'Быстрый запуск в эмуляторе →' : 'Quick Start in QEMU →'}</a>
+          <h4>{getTranslation(currentLang, 'home.user_role_title')}</h4>
+          <p>{getTranslation(currentLang, 'home.user_role_desc')}</p>
+          <a href={`${cleanBase}${currentLang}/ipo-os/hardware/virtual-machines`}>
+            {getTranslation(currentLang, 'home.user_role_link')}
+          </a>
         </div>
 
         <div class="role-box">
           <div class="role-icon">💻</div>
-          <h4>{isRu ? 'Разработчик приложений' : 'Application Developer'}</h4>
-          <p>{isRu ? 'Создание программ на C/ASM, вызов системных функций через int 0x80, упаковка на диск с disk_editor.py.' : 'Writing userland C/ASM code, invoking int 0x80 syscalls, linking at 0x800000, and deploying via disk_editor.py.'}</p>
-          <a href={`${cleanBase}${currentLang}/ipo-os/dev/hello-world`}>{isRu ? 'Первая программа «Hello, World» →' : 'Write Hello, World App →'}</a>
+          <h4>{getTranslation(currentLang, 'home.app_dev_title')}</h4>
+          <p>{getTranslation(currentLang, 'home.app_dev_desc')}</p>
+          <a href={`${cleanBase}${currentLang}/ipo-os/dev/hello-world`}>
+            {getTranslation(currentLang, 'home.app_dev_link')}
+          </a>
         </div>
 
         <div class="role-box">
           <div class="role-icon">🛡️</div>
-          <h4>{isRu ? 'Разработчик ядра и драйверов' : 'Kernel Engineer'}</h4>
-          <p>{isRu ? 'Устройство VFS, таблица прерываний IDT, драйверы устройств (ATA, RTL8139, VBE/WM), отладка паник.' : 'Kernel memory layout, IDT traps, device driver models, TCP/IP state machine, and panic analysis.'}</p>
-          <a href={`${cleanBase}${currentLang}/ipo-os/kernel/boot-sequence`}>{isRu ? 'Архитектура ядра и загрузка →' : 'Kernel Architecture & Boot →'}</a>
+          <h4>{getTranslation(currentLang, 'home.kernel_dev_title')}</h4>
+          <p>{getTranslation(currentLang, 'home.kernel_dev_desc')}</p>
+          <a href={`${cleanBase}${currentLang}/ipo-os/kernel/boot-sequence`}>
+            {getTranslation(currentLang, 'home.kernel_dev_link')}
+          </a>
         </div>
 
         <div class="role-box">
           <div class="role-icon">🔧</div>
-          <h4>{isRu ? 'Сборщик физического ПК' : 'Hardware Assembler'}</h4>
-          <p>{isRu ? 'Подбор материнских плат (i440FX/Q35), калькулятор мощности БП, распиновка JFP1, прошивка SPI через CH341A.' : 'Chipset compatibility matrix, PSU sizing, motherboard front panel pinout, and flashing chips via CH341A.'}</p>
-          <a href={`${cleanBase}${currentLang}/ipo-os/hardware/assembly-guide`}>{isRu ? 'Инструкция по сборке ПК →' : 'PC Assembly & Flashing →'}</a>
+          <h4>{getTranslation(currentLang, 'home.pc_builder_title')}</h4>
+          <p>{getTranslation(currentLang, 'home.pc_builder_desc')}</p>
+          <a href={`${cleanBase}${currentLang}/ipo-os/hardware/assembly-guide`}>
+            {getTranslation(currentLang, 'home.pc_builder_link')}
+          </a>
         </div>
       </div>
     </section>
@@ -243,6 +255,40 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
 
   .btn-secondary:hover {
     background-color: var(--bg-tertiary);
+    text-decoration: none;
+  }
+
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--accent-light);
+    color: var(--accent-primary);
+    border: 1px solid var(--accent-border);
+    cursor: pointer;
+  }
+
+  .btn-download:hover {
+    background-color: var(--accent-primary);
+    color: #ffffff;
+    border-color: var(--accent-primary);
+  }
+
+  .card-download-link {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 0.25rem 0.55rem;
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    transition: all 0.15s ease;
+  }
+
+  .card-download-link:hover {
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
     text-decoration: none;
   }
 
@@ -332,6 +378,13 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
     line-height: 1.55;
     flex: 1;
     margin-bottom: 1.5rem;
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .card-link {

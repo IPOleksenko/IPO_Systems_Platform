@@ -31,6 +31,11 @@ jobs:
       - name: Install Dependencies
         run: npm ci || npm install
 
+      - name: Install System Build Tools (nasm, gcc-multilib)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nasm gcc-multilib build-essential
+
       - name: Build Astro Site & Search Index
         run: npm run build
         env:

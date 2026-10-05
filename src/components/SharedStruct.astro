@@ -1,5 +1,6 @@
 ---
-import { sharedStructTables } from '../data/shared-code';
+import { sharedStructTables, getStructTitle, getFieldDescription } from '../data/shared-code';
+import { getTranslation } from '../utils/i18n';
 
 interface Props {
   id: string;
@@ -13,8 +14,7 @@ if (!table) {
   throw new Error(`SharedStruct table not found for ID: ${id}`);
 }
 
-const isRu = lang === 'ru';
-const title = isRu ? table.titleRu : table.titleEn;
+const title = getStructTitle(table, lang);
 ---
 
 <div class="struct-table-wrapper" id={`struct-${id}`}>
@@ -25,11 +25,11 @@ const title = isRu ? table.titleRu : table.titleEn;
   <table>
     <thead>
       <tr>
-        <th style="width: 12%;">{isRu ? 'Смещение' : 'Offset'}</th>
-        <th style="width: 14%;">{isRu ? 'Размер' : 'Size'}</th>
-        <th style="width: 18%;">{isRu ? 'Тип' : 'Type'}</th>
-        <th style="width: 22%;">{isRu ? 'Имя поля' : 'Field Name'}</th>
-        <th>{isRu ? 'Назначение и описание' : 'Description'}</th>
+        <th style="width: 12%;">{getTranslation(lang, 'tables.struct.offset')}</th>
+        <th style="width: 14%;">{getTranslation(lang, 'tables.struct.size')}</th>
+        <th style="width: 18%;">{getTranslation(lang, 'tables.struct.type')}</th>
+        <th style="width: 22%;">{getTranslation(lang, 'tables.struct.name')}</th>
+        <th>{getTranslation(lang, 'tables.struct.description')}</th>
       </tr>
     </thead>
     <tbody>
@@ -39,7 +39,7 @@ const title = isRu ? table.titleRu : table.titleEn;
           <td>{f.size}</td>
           <td><code>{f.type}</code></td>
           <td><strong><code>{f.name}</code></strong></td>
-          <td>{isRu ? f.descriptionRu : f.descriptionEn}</td>
+          <td>{getFieldDescription(f, lang)}</td>
         </tr>
       ))}
     </tbody>

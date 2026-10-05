@@ -23,7 +23,8 @@
       "app_dev": "アプリケーション開発者",
       "kernel_dev": "カーネル・ドライバ開発者",
       "pc_builder": "ハードウェア組立者"
-    }
+    },
+    "downloads": "ダウンロード"
   },
   "sections": {
     "ipo_os": {
@@ -142,5 +143,119 @@
       "beginners": "初心者向け",
       "deep_dive": "詳細解説"
     }
+  },
+  "downloads": {
+    "page_title": "ダウンロードとシステムビルド",
+    "badge": "公式プラットフォームリリース",
+    "subtitle": "実機ハードウェアまたは QEMU エミュレーション用の事前コンパイル済みバイナリ。一度ビルドされ、GitHub Pages CDN 経由で静的配信されます。",
+    "trigger_title": "プロジェクトとビルドをダウンロード",
+    "dialog_title": "IPO Systems プラットフォームのダウンロード",
+    "dialog_subtitle": "事前コンパイル済みバイナリ。GitHub Pages 経由で静的に配信されます。",
+    "featured_badge": "⭐ 完全プラットフォームバンドル",
+    "featured_ribbon": "⭐ 完全プラットフォームバンドル",
+    "featured_title": "Complete IPO Systems Bundle（全3プロジェクト＆ディスク）",
+    "featured_desc": "プラットフォーム全体のコンパイル済みバイナリをすべて収録: Boot ROM (bootrom_run.bin)、Firmware BIOS (firmware_rom.bin)、IPO_OS カーネルイメージ (IPO_OS.img)、128 MB アプリケーションディスク (disk.img)。",
+    "download_bundle": "完全バンドルをダウンロード (.zip)",
+    "components_title": "個別のコンポーネントとディスクイメージ",
+    "download_btn": "ダウンロード",
+    "download_zip": ".zip をダウンロード",
+    "download_builds": "システムビルドをダウンロード",
+    "vm_guide_link": "仮想マシンガイド →",
+    "docs_link": "ドキュメント →"
+  },
+  "home": {
+    "hero_badge": "🚀 ベアメタル x86 システムアーキテクチャ",
+    "hero_subtitle": "ハードウェアリセットベクターからユーザースペースアプリケーションまで、低レベル計算スタックの包括的ドキュメント。",
+    "explore_os": "IPO_OS を探索 →",
+    "explore_boot_rom": "リセットアーキテクチャ →",
+    "explore_firmware": "ファームウェアを探索 →",
+    "stack_title": "垂直スタックアーキテクチャ",
+    "stack_desc": "3 つのプロジェクトすべてが、明確に定義された契約を持つ単一のプラットフォームとして連携します。",
+    "projects_title": "プラットフォームプロジェクト",
+    "projects_desc": "各コンポーネントは自己完結型であり、厳密に文書化されています。",
+    "os_desc": "完全な 32 ビット x86 OS: 保護モードカーネル、64 ビット IPO_FS を備えた VFS、GUI ウィンドウマネージャー、TCP/IP スタック。",
+    "os_docs_link": "IPO_OS ドキュメント →",
+    "boot_rom_desc": "実機および QEMU 用のハードウェアリセットベクター (0xFFFFFFF0) 初期化プログラム。",
+    "boot_rom_docs_link": "Boot ROM ドキュメント →",
+    "firmware_desc": "IVT 割り込み、E820 メモリマップ、Fast A20 を備えた BIOS 互換リアルモードファームウェア層。",
+    "firmware_docs_link": "Firmware ドキュメント →",
+    "roles_title": "どこから始めるか（読者プロフィール）",
+    "roles_desc": "目的に合わせたステップバイステップガイドを選択してください:",
+    "user_role_title": "エンドユーザー",
+    "user_role_desc": "QEMU での実行、シェルコマンドライン操作、ネットワーク設定。",
+    "user_role_link": "QEMU でのクイックスタート →",
+    "app_dev_title": "アプリケーション開発者",
+    "app_dev_desc": "C/ASM でのコード記述、int 0x80 システムコールの呼び出し、ディスクへの展開。",
+    "app_dev_link": "Hello, World アプリの作成 →",
+    "kernel_dev_title": "カーネルエンジニア",
+    "kernel_dev_desc": "メモリレイアウト、IDT トラップ、ドライバモデル、TCP/IP 状態マシン。",
+    "kernel_dev_link": "カーネルアーキテクチャとブート →",
+    "pc_builder_title": "ハードウェアビルダー",
+    "pc_builder_desc": "チップセットの選定、電源容量計算、フロントパネル配線、SPI フラッシュ書き込み。",
+    "pc_builder_link": "PC 組み立てと SPI 書込 →"
+  },
+  "tables": {
+    "struct": {
+      "offset": "Offset",
+      "size": "Size",
+      "type": "Type",
+      "name": "Field Name",
+      "description": "Description"
+    },
+    "syscall": {
+      "hex": "Hex",
+      "call": "System Call",
+      "signature": "C Signature",
+      "description": "Arguments & Description",
+      "details": "Arguments & Return",
+      "returns": "Returns:"
+    }
+  },
+  "widgets": {
+    "psu": {
+      "title": "Power Supply (PSU) Wattage Calculator",
+      "badge": "Interactive Sizing",
+      "cpu_label": "Processor Platform (TDP):",
+      "cpu_opt1": "Intel Pentium II/III / Celeron (65W)",
+      "cpu_opt2": "Intel Core 2 Duo / Quad (95W)",
+      "cpu_opt3": "Embedded x86 SoC / Atom (35W)",
+      "ram_label": "Memory DIMM Modules:",
+      "storage_label": "Storage Drives (HDD / SSD):",
+      "storage_opt1": "1x SATA SSD / CF-IDE (5W)",
+      "storage_opt2": "1x 3.5\" HDD + 1x SSD (25W)",
+      "storage_opt3": "2x 3.5\" HDD + IDE Optical (45W)",
+      "pci_label": "Expansion Cards (PCI / NIC):",
+      "pci_opt1": "RTL8139 NIC + SB16 Audio (15W)",
+      "pci_opt2": "Discrete PCI Video + NIC + Audio (40W)",
+      "peak_label": "Estimated Peak Load:",
+      "rec_label": "Recommended PSU Rating (+30% Headroom):",
+      "note": "For legacy ATX motherboards, adequate amperage on the +5V and +3.3V rails (at least 20–25A) is critical for system stability."
+    },
+    "memory_map": {
+      "title": "Interactive Memory Map Navigator",
+      "badge": "Interactive Tool",
+      "start": "Start:",
+      "end": "End:",
+      "size": "Size:",
+      "initial_desc": "Real Mode Interrupt Vector Table (256 vectors * 4 bytes CS:IP).",
+      "regions": {
+        "ivt": "リアルモード割り込みベクタテーブル（256ベクタ * 4バイト CS:IP）。",
+        "bda": "BIOSデータ領域: COM/LPT基本ポート、キーボードバッファ、0x46Cタイマーカウント。",
+        "mbr": "BIOSがLBA 0をロードする標準DRAM領域（契約3引き渡し）。",
+        "kernel": "32ビット保護モードカーネルコア（.text, .rodata, .data, .bss）。",
+        "vga": "0xB8000のVGAモード03hテキストモード画面メモリ（80x25文字）。",
+        "shadow": "0xC0000のVBIOS Option ROM、Shadow RAM内のIPO_Boot_ROMおよびIPO_Firmware。",
+        "heap": "kmalloc()およびページフレーム割り当て用拡張メモリヒープ。",
+        "userspace": "ELF/バイナリユーザー空間アプリの物理配置ベースアドレス（app.ldでリンク）。"
+      }
+    }
+  },
+  "search": {
+    "placeholder": "ドキュメントを検索...",
+    "prompt": "検索クエリを入力してください（例: syscall, PIC, MBR, CAR）...",
+    "loading": "検索インデックスを読み込み中か、利用できません。",
+    "empty": "一致するドキュメントページが見つかりませんでした。",
+    "error": "検索中にエラーが発生しました。",
+    "close": "検索を閉じる"
   }
 }

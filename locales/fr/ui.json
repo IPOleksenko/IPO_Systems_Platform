@@ -23,7 +23,8 @@
       "app_dev": "Développeur d'applications",
       "kernel_dev": "Développeur noyau & pilotes",
       "pc_builder": "Monteur de PC"
-    }
+    },
+    "downloads": "Téléchargements"
   },
   "sections": {
     "ipo_os": {
@@ -142,5 +143,119 @@
       "beginners": "Pour débutants",
       "deep_dive": "Approfondissement"
     }
+  },
+  "downloads": {
+    "page_title": "Téléchargements & Versions du Système",
+    "badge": "Versions Officielles de la Plateforme",
+    "subtitle": "Images binaires précompilées et packages complets prêts pour le matériel physique ou l'émulation QEMU.",
+    "trigger_title": "Télécharger Projets & Versions",
+    "dialog_title": "Télécharger la Plateforme IPO Systems",
+    "dialog_subtitle": "Binaires de production précompilés. Servis statiquement via GitHub Pages.",
+    "featured_badge": "⭐ Pack complet de la plateforme",
+    "featured_ribbon": "⭐ Pack complet de la plateforme",
+    "featured_title": "Complete IPO Systems Bundle (Les 3 projets et disque)",
+    "featured_desc": "Contient tous les binaires compilés de la plateforme : Boot ROM (bootrom_run.bin), Firmware BIOS (firmware_rom.bin), image noyau IPO_OS (IPO_OS.img) et disque d'applications 128 Mo (disk.img).",
+    "download_bundle": "Télécharger le pack complet (.zip)",
+    "components_title": "Composants Individuels et Images Disque",
+    "download_btn": "Télécharger",
+    "download_zip": "Télécharger .zip",
+    "download_builds": "Télécharger les Versions",
+    "vm_guide_link": "Guide des Machines Virtuelles →",
+    "docs_link": "Documentation →"
+  },
+  "home": {
+    "hero_badge": "🚀 Architecture Système x86 Bare-Metal",
+    "hero_subtitle": "Documentation unifiée de la pile informatique bas niveau : du vecteur de réinitialisation matérielle aux applications utilisateur.",
+    "explore_os": "Explorer IPO_OS →",
+    "explore_boot_rom": "Architecture de Réinitialisation →",
+    "explore_firmware": "Explorer le Firmware →",
+    "stack_title": "Architecture de Pile Verticale",
+    "stack_desc": "Les trois projets s'intègrent parfaitement comme une plateforme informatique unifiée.",
+    "projects_title": "Projets de la Plateforme",
+    "projects_desc": "Chaque composant est autonome et rigoureusement documenté.",
+    "os_desc": "Système d'exploitation x86 32 bits : noyau en mode protégé, VFS avec IPO_FS 64 bits, gestionnaire de fenêtres et pile TCP/IP.",
+    "os_docs_link": "Documentation IPO_OS →",
+    "boot_rom_desc": "Initialisateur du vecteur de réinitialisation (0xFFFFFFF0) avec CAR et entraînement DRAM MRC.",
+    "boot_rom_docs_link": "Documentation Boot ROM →",
+    "firmware_desc": "Couche de services BIOS en mode réel avec table IVT, carte E820 et Fast A20.",
+    "firmware_docs_link": "Documentation Firmware →",
+    "roles_title": "Par Où Commencer (Profils de Lecture)",
+    "roles_desc": "Choisissez votre profil pour un guide adapté étape par étape :",
+    "user_role_title": "Utilisateur Final",
+    "user_role_desc": "Exécution sous QEMU, shell et administration réseau.",
+    "user_role_link": "Démarrage Rapide sous QEMU →",
+    "app_dev_title": "Développeur d'Applications",
+    "app_dev_desc": "Programmation C/ASM, appels système int 0x80 et packaging sur disque.",
+    "app_dev_link": "Créer l'Application Hello, World →",
+    "kernel_dev_title": "Ingénieur Noyau",
+    "kernel_dev_desc": "Agencement mémoire, interruptions IDT, pilotes et pile TCP/IP.",
+    "kernel_dev_link": "Architecture du Noyau & Démarrage →",
+    "pc_builder_title": "Assembleur Matériel",
+    "pc_builder_desc": "Compatibilité cartes mères, calcul d'alimentation et flash SPI.",
+    "pc_builder_link": "Assemblage PC & Flashage →"
+  },
+  "tables": {
+    "struct": {
+      "offset": "Offset",
+      "size": "Size",
+      "type": "Type",
+      "name": "Field Name",
+      "description": "Description"
+    },
+    "syscall": {
+      "hex": "Hex",
+      "call": "System Call",
+      "signature": "C Signature",
+      "description": "Arguments & Description",
+      "details": "Arguments & Return",
+      "returns": "Returns:"
+    }
+  },
+  "widgets": {
+    "psu": {
+      "title": "Power Supply (PSU) Wattage Calculator",
+      "badge": "Interactive Sizing",
+      "cpu_label": "Processor Platform (TDP):",
+      "cpu_opt1": "Intel Pentium II/III / Celeron (65W)",
+      "cpu_opt2": "Intel Core 2 Duo / Quad (95W)",
+      "cpu_opt3": "Embedded x86 SoC / Atom (35W)",
+      "ram_label": "Memory DIMM Modules:",
+      "storage_label": "Storage Drives (HDD / SSD):",
+      "storage_opt1": "1x SATA SSD / CF-IDE (5W)",
+      "storage_opt2": "1x 3.5\" HDD + 1x SSD (25W)",
+      "storage_opt3": "2x 3.5\" HDD + IDE Optical (45W)",
+      "pci_label": "Expansion Cards (PCI / NIC):",
+      "pci_opt1": "RTL8139 NIC + SB16 Audio (15W)",
+      "pci_opt2": "Discrete PCI Video + NIC + Audio (40W)",
+      "peak_label": "Estimated Peak Load:",
+      "rec_label": "Recommended PSU Rating (+30% Headroom):",
+      "note": "For legacy ATX motherboards, adequate amperage on the +5V and +3.3V rails (at least 20–25A) is critical for system stability."
+    },
+    "memory_map": {
+      "title": "Interactive Memory Map Navigator",
+      "badge": "Interactive Tool",
+      "start": "Start:",
+      "end": "End:",
+      "size": "Size:",
+      "initial_desc": "Real Mode Interrupt Vector Table (256 vectors * 4 bytes CS:IP).",
+      "regions": {
+        "ivt": "Table des vecteurs d'interruption en mode réel (256 vecteurs * 4 octets CS:IP).",
+        "bda": "Zone de données BIOS : ports COM/LPT, tampon clavier, tics d'horloge à 0x46C.",
+        "mbr": "Cible DRAM conventionnelle où le BIOS charge le LBA 0 (transfert Contrat 3).",
+        "kernel": "Noyau IPO_OS en mode protégé 32 bits (.text, .rodata, .data, .bss).",
+        "vga": "Mémoire écran mode texte VGA 03h à 0xB8000 (80x25 caractères).",
+        "shadow": "Option ROM VBIOS à 0xC0000, IPO_Boot_ROM et IPO_Firmware en Shadow RAM.",
+        "heap": "Mémoire étendue pour le tas noyau kmalloc() et les trames de pages.",
+        "userspace": "Adresse physique de base pour les applications ELF/binaires (liées avec app.ld)."
+      }
+    }
+  },
+  "search": {
+    "placeholder": "Rechercher dans la documentation...",
+    "prompt": "Tapez une requête de recherche (ex. syscall, PIC, MBR, CAR)...",
+    "loading": "L'index de recherche se charge ou est indisponible.",
+    "empty": "Aucune page de documentation correspondante trouvée.",
+    "error": "Une erreur est survenue lors de la recherche.",
+    "close": "Fermer la recherche"
   }
 }

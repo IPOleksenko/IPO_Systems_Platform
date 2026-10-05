@@ -1,31 +1,32 @@
 ---
+import { getTranslation } from '../utils/i18n';
+
 interface Props {
   lang: string;
 }
 
 const { lang } = Astro.props;
-const isRu = lang === 'ru';
 ---
 
 <div class="psu-calculator-widget">
   <div class="widget-header">
-    <strong>⚡ {isRu ? 'Калькулятор мощности блока питания (БП)' : 'Power Supply (PSU) Wattage Calculator'}</strong>
-    <span class="widget-badge">{isRu ? 'Интерактивный расчёт' : 'Interactive Sizing'}</span>
+    <strong>⚡ {getTranslation(lang, 'widgets.psu.title')}</strong>
+    <span class="widget-badge">{getTranslation(lang, 'widgets.psu.badge')}</span>
   </div>
 
   <div class="calc-body">
     <div class="calc-form">
       <div class="calc-field">
-        <label for="psu-cpu">{isRu ? 'Процессор (TDP):' : 'Processor Platform (TDP):'}</label>
+        <label for="psu-cpu">{getTranslation(lang, 'widgets.psu.cpu_label')}</label>
         <select id="psu-cpu">
-          <option value="65">{isRu ? 'Pentium II / III / Celeron (65W)' : 'Intel Pentium II/III / Celeron (65W)'}</option>
-          <option value="95" selected>{isRu ? 'Core 2 Duo / Quad LGA775 (95W)' : 'Intel Core 2 Duo / Quad (95W)'}</option>
-          <option value="35">{isRu ? 'Встраиваемый x86 SoC / Atom (35W)' : 'Embedded x86 SoC / Atom (35W)'}</option>
+          <option value="65">{getTranslation(lang, 'widgets.psu.cpu_opt1')}</option>
+          <option value="95" selected>{getTranslation(lang, 'widgets.psu.cpu_opt2')}</option>
+          <option value="35">{getTranslation(lang, 'widgets.psu.cpu_opt3')}</option>
         </select>
       </div>
 
       <div class="calc-field">
-        <label for="psu-ram">{isRu ? 'Модули оперативной памяти:' : 'Memory DIMM Modules:'}</label>
+        <label for="psu-ram">{getTranslation(lang, 'widgets.psu.ram_label')}</label>
         <select id="psu-ram">
           <option value="10">2x SDRAM / DDR2 (10W)</option>
           <option value="20" selected>4x DDR2 / DDR3 (20W)</option>
@@ -33,34 +34,32 @@ const isRu = lang === 'ru';
       </div>
 
       <div class="calc-field">
-        <label for="psu-storage">{isRu ? 'Накопители (HDD / SSD / CF-Card):' : 'Storage Drives (HDD / SSD):'}</label>
+        <label for="psu-storage">{getTranslation(lang, 'widgets.psu.storage_label')}</label>
         <select id="psu-storage">
-          <option value="5">{isRu ? '1x SATA SSD / CF-Card IDE (5W)' : '1x SATA SSD / CF-IDE (5W)'}</option>
-          <option value="25" selected>{isRu ? '1x 3.5" HDD 7200 RPM + 1x SSD (25W)' : '1x 3.5" HDD + 1x SSD (25W)'}</option>
-          <option value="45">{isRu ? '2x 3.5" HDD + IDE CD-ROM (45W)' : '2x 3.5" HDD + IDE Optical (45W)'}</option>
+          <option value="5">{getTranslation(lang, 'widgets.psu.storage_opt1')}</option>
+          <option value="25" selected>{getTranslation(lang, 'widgets.psu.storage_opt2')}</option>
+          <option value="45">{getTranslation(lang, 'widgets.psu.storage_opt3')}</option>
         </select>
       </div>
 
       <div class="calc-field">
-        <label for="psu-pci">{isRu ? 'Платы расширения (PCI / NIC):' : 'Expansion Cards (PCI / NIC):'}</label>
+        <label for="psu-pci">{getTranslation(lang, 'widgets.psu.pci_label')}</label>
         <select id="psu-pci">
-          <option value="15" selected>{isRu ? 'RTL8139 NIC + Звуковая карта SB16 (15W)' : 'RTL8139 NIC + SB16 Audio (15W)'}</option>
-          <option value="40">{isRu ? 'PCI VGA видеокарта + NIC + Audio (40W)' : 'Discrete PCI Video + NIC + Audio (40W)'}</option>
+          <option value="15" selected>{getTranslation(lang, 'widgets.psu.pci_opt1')}</option>
+          <option value="40">{getTranslation(lang, 'widgets.psu.pci_opt2')}</option>
         </select>
       </div>
     </div>
 
     <div class="calc-result-box">
-      <div class="res-label">{isRu ? 'Пиковое расчетное потребление:' : 'Estimated Peak Load:'}</div>
+      <div class="res-label">{getTranslation(lang, 'widgets.psu.peak_label')}</div>
       <div class="res-watts" id="psu-base-watts">155 W</div>
       <div class="res-rec">
-        {isRu ? 'Рекомендуемая мощность БП (+30% запас):' : 'Recommended PSU Rating (+30% Headroom):'}
+        {getTranslation(lang, 'widgets.psu.rec_label')}
       </div>
       <div class="res-rec-watts" id="psu-rec-watts">250 W — 300 W</div>
       <p class="res-note">
-        {isRu 
-          ? 'Для стабильной работы со старыми материнскими платами ATX критически важна достаточная сила тока по линии +5V и +3.3V (не менее 20–25A).' 
-          : 'For legacy ATX motherboards, adequate amperage on the +5V and +3.3V rails (at least 20–25A) is critical for system stability.'}
+        {getTranslation(lang, 'widgets.psu.note')}
       </p>
     </div>
   </div>

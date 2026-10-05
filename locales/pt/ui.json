@@ -23,7 +23,8 @@
       "app_dev": "Desenvolvedor de aplicativos",
       "kernel_dev": "Desenvolvedor de kernel e drivers",
       "pc_builder": "Montador de PC"
-    }
+    },
+    "downloads": "Downloads"
   },
   "sections": {
     "ipo_os": {
@@ -142,5 +143,119 @@
       "beginners": "Para iniciantes",
       "deep_dive": "Aprofundamento"
     }
+  },
+  "downloads": {
+    "page_title": "Downloads e Compilações do Sistema",
+    "badge": "Lançamentos Oficiais da Plataforma",
+    "subtitle": "Imagens binárias pré-compiladas e pacotes completos prontos para hardware físico ou emulação QEMU.",
+    "trigger_title": "Baixar Projetos e Compilações",
+    "dialog_title": "Baixar Plataforma IPO Systems",
+    "dialog_subtitle": "Binários pré-compilados. Servidos estaticamente via GitHub Pages.",
+    "featured_badge": "⭐ Pacote completo da plataforma",
+    "featured_ribbon": "⭐ Pacote completo da plataforma",
+    "featured_title": "Complete IPO Systems Bundle (Todos os 3 projetos e disco)",
+    "featured_desc": "Contém todos os binários compilados da plataforma: Boot ROM (bootrom_run.bin), Firmware BIOS (firmware_rom.bin), imagem do kernel IPO_OS (IPO_OS.img) e disco de aplicativos de 128 MB (disk.img).",
+    "download_bundle": "Baixar pacote completo (.zip)",
+    "components_title": "Componentes Individuais e Imagens de Disco",
+    "download_btn": "Baixar",
+    "download_zip": "Baixar .zip",
+    "download_builds": "Baixar Compilações",
+    "vm_guide_link": "Guia de Máquinas Virtuais →",
+    "docs_link": "Documentação →"
+  },
+  "home": {
+    "hero_badge": "🚀 Arquitetura de Sistemas x86 Bare-Metal",
+    "hero_subtitle": "Documentação completa da pilha computacional: do vetor de reinicialização do hardware aos aplicativos de usuário.",
+    "explore_os": "Explorar IPO_OS →",
+    "explore_boot_rom": "Arquitetura de Reinicialização →",
+    "explore_firmware": "Explorar Firmware →",
+    "stack_title": "Arquitetura de Pilha Vertical",
+    "stack_desc": "Os três projetos integram-se como uma plataforma computacional unificada.",
+    "projects_title": "Projetos da Plataforma",
+    "projects_desc": "Cada componente é autônomo e rigorosamente documentado.",
+    "os_desc": "Sistema operacional x86 de 32 bits: kernel em modo protegido, VFS com IPO_FS de 64 bits, gerenciador de janelas e pilha TCP/IP.",
+    "os_docs_link": "Documentação do IPO_OS →",
+    "boot_rom_desc": "Inicializador do vetor de reinicialização (0xFFFFFFF0) para hardware e QEMU com CAR e treinamento MRC.",
+    "boot_rom_docs_link": "Documentação do Boot ROM →",
+    "firmware_desc": "Camada de serviços BIOS em modo real com serviços IVT, mapa E820 e Fast A20.",
+    "firmware_docs_link": "Documentação do Firmware →",
+    "roles_title": "Por Onde Começar (Perfis de Leitor)",
+    "roles_desc": "Escolha seu caminho para um guia sob medida:",
+    "user_role_title": "Usuário Final",
+    "user_role_desc": "Uso no QEMU, linha de comando e serviços de rede.",
+    "user_role_link": "Início Rápido no QEMU →",
+    "app_dev_title": "Desenvolvedor de Aplicativos",
+    "app_dev_desc": "Programação C/ASM, chamadas de sistema int 0x80 e empacotamento no disco.",
+    "app_dev_link": "Criar Aplicativo Hello, World →",
+    "kernel_dev_title": "Engenheiro de Kernel",
+    "kernel_dev_desc": "Layout de memória, armadilhas IDT, drivers e máquina de estados TCP/IP.",
+    "kernel_dev_link": "Arquitetura do Kernel e Boot →",
+    "pc_builder_title": "Montador de Hardware",
+    "pc_builder_desc": "Compatibilidade de placas-mãe, dimensionamento de fonte e gravação SPI.",
+    "pc_builder_link": "Montagem de PC e Gravação SPI →"
+  },
+  "tables": {
+    "struct": {
+      "offset": "Offset",
+      "size": "Size",
+      "type": "Type",
+      "name": "Field Name",
+      "description": "Description"
+    },
+    "syscall": {
+      "hex": "Hex",
+      "call": "System Call",
+      "signature": "C Signature",
+      "description": "Arguments & Description",
+      "details": "Arguments & Return",
+      "returns": "Returns:"
+    }
+  },
+  "widgets": {
+    "psu": {
+      "title": "Power Supply (PSU) Wattage Calculator",
+      "badge": "Interactive Sizing",
+      "cpu_label": "Processor Platform (TDP):",
+      "cpu_opt1": "Intel Pentium II/III / Celeron (65W)",
+      "cpu_opt2": "Intel Core 2 Duo / Quad (95W)",
+      "cpu_opt3": "Embedded x86 SoC / Atom (35W)",
+      "ram_label": "Memory DIMM Modules:",
+      "storage_label": "Storage Drives (HDD / SSD):",
+      "storage_opt1": "1x SATA SSD / CF-IDE (5W)",
+      "storage_opt2": "1x 3.5\" HDD + 1x SSD (25W)",
+      "storage_opt3": "2x 3.5\" HDD + IDE Optical (45W)",
+      "pci_label": "Expansion Cards (PCI / NIC):",
+      "pci_opt1": "RTL8139 NIC + SB16 Audio (15W)",
+      "pci_opt2": "Discrete PCI Video + NIC + Audio (40W)",
+      "peak_label": "Estimated Peak Load:",
+      "rec_label": "Recommended PSU Rating (+30% Headroom):",
+      "note": "For legacy ATX motherboards, adequate amperage on the +5V and +3.3V rails (at least 20–25A) is critical for system stability."
+    },
+    "memory_map": {
+      "title": "Interactive Memory Map Navigator",
+      "badge": "Interactive Tool",
+      "start": "Start:",
+      "end": "End:",
+      "size": "Size:",
+      "initial_desc": "Real Mode Interrupt Vector Table (256 vectors * 4 bytes CS:IP).",
+      "regions": {
+        "ivt": "Tabela de vetores de interrupção em modo real (256 vetores * 4 bytes CS:IP).",
+        "bda": "Área de dados do BIOS: portas base COM/LPT, buffer de teclado, tiques de timer em 0x46C.",
+        "mbr": "Destino DRAM convencional onde o BIOS carrega LBA 0 (transferência Contrato 3).",
+        "kernel": "Núcleo IPO_OS em modo protegido de 32 bits (.text, .rodata, .data, .bss).",
+        "vga": "Memória de tela modo texto VGA 03h em 0xB8000 (80x25 caracteres).",
+        "shadow": "Option ROM do VBIOS em 0xC0000, IPO_Boot_ROM e IPO_Firmware em Shadow RAM.",
+        "heap": "Memória estendida para heap do kernel kmalloc() e alocação de páginas.",
+        "userspace": "Endereço físico base para aplicativos ELF/binários (vinculados com app.ld)."
+      }
+    }
+  },
+  "search": {
+    "placeholder": "Pesquisar documentação...",
+    "prompt": "Digite uma consulta de pesquisa (ex.: syscall, PIC, MBR, CAR)...",
+    "loading": "O índice de pesquisa está carregando ou indisponível.",
+    "empty": "Nenhuma página de documentação correspondente encontrada.",
+    "error": "Ocorreu um erro durante a pesquisa.",
+    "close": "Fechar pesquisa"
   }
 }

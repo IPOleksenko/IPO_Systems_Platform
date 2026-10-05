@@ -11,5 +11,6 @@ dist/
 *.log
 .DS_Store
 
-# Generated search indexes
+# Generated search indexes and downloads
 public/pagefind/
+public/downloads/

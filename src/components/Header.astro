@@ -4,6 +4,7 @@ import { getTranslation } from '../utils/i18n';
 import ThemeToggle from './ThemeToggle.astro';
 import LanguageSwitcher from './LanguageSwitcher.astro';
 import SearchModal from './SearchModal.astro';
+import DownloadModal from './DownloadModal.astro';
 import SiteLogo from './SiteLogo.astro';
 
 interface Props {
@@ -57,6 +58,7 @@ if (currentSlug.startsWith('ipo-os')) {
 
     <div class="header-right">
       <SearchModal lang={currentLang} />
+      <DownloadModal lang={currentLang} />
       <LanguageSwitcher currentLang={currentLang} currentSlug={currentSlug} />
       <ThemeToggle lang={currentLang} />
       <a href={currentUrl} target="_blank" rel="noopener noreferrer" class="github-link" title={`GitHub - ${currentName}`} aria-label={`GitHub - ${currentName}`}>

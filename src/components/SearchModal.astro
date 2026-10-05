@@ -8,6 +8,11 @@ interface Props {
 
 const { lang } = Astro.props;
 const placeholder = getTranslation(lang, 'nav.search');
+const searchPrompt = getTranslation(lang, 'search.prompt');
+const searchLoading = getTranslation(lang, 'search.loading');
+const searchEmpty = getTranslation(lang, 'search.empty');
+const searchError = getTranslation(lang, 'search.error');
+const searchClose = getTranslation(lang, 'search.close');
 ---
 
 <div class="search-wrapper">
@@ -16,7 +21,14 @@ const placeholder = getTranslation(lang, 'nav.search');
     <span class="search-placeholder">{placeholder}</span>
   </button>
 
-  <dialog class="search-dialog" id="search-dialog">
+  <dialog 
+    class="search-dialog" 
+    id="search-dialog"
+    data-prompt={searchPrompt}
+    data-loading={searchLoading}
+    data-empty={searchEmpty}
+    data-error={searchError}
+  >
     <div class="dialog-content">
       <div class="dialog-header">
         <input 
@@ -28,11 +40,11 @@ const placeholder = getTranslation(lang, 'nav.search');
           data-lang={lang}
           data-base={siteConfig.base}
         />
-        <button type="button" class="dialog-close" id="close-search-btn" aria-label="Close search">✕</button>
+        <button type="button" class="dialog-close" id="close-search-btn" aria-label={searchClose}>✕</button>
       </div>
       <div id="search-results" class="search-results-list">
         <div class="search-empty-state">
-          {lang === 'ru' ? 'Введите поисковый запрос (например: syscall, PIC, MBR, CAR)...' : 'Type a query to search documentation (e.g., syscall, PIC, MBR, CAR)...'}
+          {searchPrompt}
         </div>
       </div>
     </div>
@@ -245,6 +257,11 @@ const placeholder = getTranslation(lang, 'nav.search');
     }
   });
 
+  const msgPrompt = dialog?.getAttribute('data-prompt') || 'Type a query to search documentation...';
+  const msgLoading = dialog?.getAttribute('data-loading') || 'Search index is loading or unavailable.';
+  const msgEmpty = dialog?.getAttribute('data-empty') || 'No matching documentation pages found.';
+  const msgError = dialog?.getAttribute('data-error') || 'An error occurred during search.';
+
   let debounceTimer: any;
   input?.addEventListener('input', () => {
     clearTimeout(debounceTimer);
@@ -254,18 +271,14 @@ const placeholder = getTranslation(lang, 'nav.search');
 
       if (!q || !resultsContainer) {
         if (resultsContainer) {
-          resultsContainer.innerHTML = `<div class="search-empty-state">${
-            lang === 'ru' ? 'Введите поисковый запрос (например: syscall, PIC, MBR, CAR)...' : 'Type a query to search documentation (e.g., syscall, PIC, MBR, CAR)...'
-          }</div>`;
+          resultsContainer.innerHTML = `<div class="search-empty-state">${msgPrompt}</div>`;
         }
         return;
       }
 
       const pf = await getPagefind();
       if (!pf) {
-        resultsContainer.innerHTML = `<div class="search-empty-state">${
-          lang === 'ru' ? 'Индекс поиска загружается или недоступен.' : 'Search index is loading or unavailable.'
-        }</div>`;
+        resultsContainer.innerHTML = `<div class="search-empty-state">${msgLoading}</div>`;
         return;
       }
 
@@ -277,9 +290,7 @@ const placeholder = getTranslation(lang, 'nav.search');
         }
 
         if (!searchRes || !searchRes.results || searchRes.results.length === 0) {
-          resultsContainer.innerHTML = `<div class="search-empty-state">${
-            lang === 'ru' ? 'Ничего не найдено по вашему запросу.' : 'No matching documentation pages found.'
-          }</div>`;
+          resultsContainer.innerHTML = `<div class="search-empty-state">${msgEmpty}</div>`;
           return;
         }
 
@@ -309,9 +320,7 @@ const placeholder = getTranslation(lang, 'nav.search');
           .join('');
       } catch (err) {
         console.error('Search error:', err);
-        resultsContainer.innerHTML = `<div class="search-empty-state">${
-          lang === 'ru' ? 'Произошла ошибка при выполнении поиска.' : 'An error occurred during search.'
-        }</div>`;
+        resultsContainer.innerHTML = `<div class="search-empty-state">${msgError}</div>`;
       }
     }, 200);
   });

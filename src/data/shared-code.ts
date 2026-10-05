@@ -1621,3 +1621,23 @@ export const sharedSyscallsList: SyscallDoc[] = [
     descriptionRu: 'Завершает вызывающий процесс, освобождает ресурсы и переключает поток.'
   }
 ];
+
+export function getStructTitle(table: StructTable, lang: string): string {
+  return (lang === 'ru' || lang === 'uk') ? table.titleRu : table.titleEn;
+}
+
+export function getFieldDescription(field: StructTableField, lang: string): string {
+  return (lang === 'ru' || lang === 'uk') ? field.descriptionRu : field.descriptionEn;
+}
+
+export function getSyscallDescription(syscall: SyscallDoc, lang: string): string {
+  return (lang === 'ru' || lang === 'uk') ? syscall.descriptionRu : syscall.descriptionEn;
+}
+
+export function getSyscallArgs(syscall: SyscallDoc, lang: string): string[] {
+  return (lang === 'ru' || lang === 'uk') ? syscall.argsRu : syscall.argsEn;
+}
+
+export function getSyscallReturn(syscall: SyscallDoc, lang: string): string {
+  return (lang === 'ru' || lang === 'uk') ? syscall.returnRu : syscall.returnEn;
+}

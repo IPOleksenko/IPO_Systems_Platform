@@ -23,7 +23,8 @@
       "app_dev": "Application Developer",
       "kernel_dev": "Kernel & Driver Developer",
       "pc_builder": "Hardware Assembler"
-    }
+    },
+    "downloads": "Downloads"
   },
   "sections": {
     "ipo_os": {
@@ -142,5 +143,119 @@
       "beginners": "For Beginners",
       "deep_dive": "Deep Dive"
     }
+  },
+  "downloads": {
+    "page_title": "Downloads & System Builds",
+    "badge": "Official Platform Releases",
+    "subtitle": "Pre-compiled binary images and turnkey packages ready for real physical hardware or QEMU emulation. Built once and served statically via GitHub Pages CDN.",
+    "trigger_title": "Download Projects & System Builds",
+    "dialog_title": "Download IPO Systems Platform",
+    "dialog_subtitle": "Pre-compiled production binaries. Built once and served statically via GitHub Pages CDN.",
+    "featured_badge": "⭐ Full Platform Bundle",
+    "featured_ribbon": "⭐ Full Platform Bundle",
+    "featured_title": "Complete IPO Systems Bundle (All 3 Projects & Disk)",
+    "featured_desc": "Contains all compiled binaries across the entire platform: Boot ROM (bootrom_run.bin), Firmware BIOS (firmware_rom.bin), IPO_OS kernel image (IPO_OS.img), and 128 MB applications disk (disk.img).",
+    "download_bundle": "Download Complete Bundle (.zip)",
+    "components_title": "Individual Components & Disk Images",
+    "download_btn": "Download",
+    "download_zip": "Download .zip",
+    "download_builds": "Download System Builds",
+    "vm_guide_link": "Virtual Machines Guide →",
+    "docs_link": "Documentation →"
+  },
+  "home": {
+    "hero_badge": "🚀 Bare-Metal x86 Systems Architecture",
+    "hero_subtitle": "Unified comprehensive documentation of the complete low-level compute stack: from the CPU hardware reset vector to userspace applications.",
+    "explore_os": "Explore IPO_OS →",
+    "explore_boot_rom": "Reset Architecture →",
+    "explore_firmware": "Explore Firmware →",
+    "stack_title": "Vertical Stack Architecture",
+    "stack_desc": "All three projects integrate seamlessly as a unified bare-metal computing platform with strictly defined handover contracts.",
+    "projects_title": "Platform Projects",
+    "projects_desc": "Each component is self-contained, rigorously documented, and fully independent.",
+    "os_desc": "Full bare-metal 32-bit x86 operating system: protected-mode kernel, VFS with native 64-bit IPO_FS, GUI Window Manager, RTL8139 NIC driver, and complete TCP/IP stack with POSIX socket API.",
+    "os_docs_link": "IPO_OS Documentation →",
+    "boot_rom_desc": "Hardware reset vector (0xFFFFFFF0) initializer for physical machines and QEMU. Features Cache-as-RAM (CAR), MRC DRAM training for i440FX and Q35, PAM Shadow RAM mirroring, and Contract 2 handover.",
+    "boot_rom_docs_link": "Boot ROM Documentation →",
+    "firmware_desc": "BIOS-compatible real-mode firmware runtime. Installs IVT interrupt services (INT 10h–1Ah), builds E820 memory map, opens Fast A20, scans storage buses (IDE, AHCI, NVMe, USB), and performs Contract 3 MBR handover.",
+    "firmware_docs_link": "Firmware Documentation →",
+    "roles_title": "Where to Start (Reader Profiles)",
+    "roles_desc": "Select your pathway for tailored step-by-step guidance:",
+    "user_role_title": "End User",
+    "user_role_desc": "Running in QEMU, shell command-line usage, dynamic networking via ifconfig, and hosting services.",
+    "user_role_link": "Quick Start in QEMU →",
+    "app_dev_title": "Application Developer",
+    "app_dev_desc": "Writing userland C/ASM code, invoking int 0x80 syscalls, linking at 0x800000, and deploying via disk_editor.py.",
+    "app_dev_link": "Write Hello, World App →",
+    "kernel_dev_title": "Kernel Engineer",
+    "kernel_dev_desc": "Kernel memory layout, IDT traps, device driver models, TCP/IP state machine, and panic analysis.",
+    "kernel_dev_link": "Kernel Architecture & Boot →",
+    "pc_builder_title": "Hardware Assembler",
+    "pc_builder_desc": "Chipset compatibility matrix, PSU sizing, motherboard front panel pinout, and flashing chips via CH341A.",
+    "pc_builder_link": "PC Assembly & Flashing →"
+  },
+  "tables": {
+    "struct": {
+      "offset": "Offset",
+      "size": "Size",
+      "type": "Type",
+      "name": "Field Name",
+      "description": "Description"
+    },
+    "syscall": {
+      "hex": "Hex",
+      "call": "System Call",
+      "signature": "C Signature",
+      "description": "Arguments & Description",
+      "details": "Arguments & Return",
+      "returns": "Returns:"
+    }
+  },
+  "widgets": {
+    "psu": {
+      "title": "Power Supply (PSU) Wattage Calculator",
+      "badge": "Interactive Sizing",
+      "cpu_label": "Processor Platform (TDP):",
+      "cpu_opt1": "Intel Pentium II/III / Celeron (65W)",
+      "cpu_opt2": "Intel Core 2 Duo / Quad (95W)",
+      "cpu_opt3": "Embedded x86 SoC / Atom (35W)",
+      "ram_label": "Memory DIMM Modules:",
+      "storage_label": "Storage Drives (HDD / SSD):",
+      "storage_opt1": "1x SATA SSD / CF-IDE (5W)",
+      "storage_opt2": "1x 3.5\" HDD + 1x SSD (25W)",
+      "storage_opt3": "2x 3.5\" HDD + IDE Optical (45W)",
+      "pci_label": "Expansion Cards (PCI / NIC):",
+      "pci_opt1": "RTL8139 NIC + SB16 Audio (15W)",
+      "pci_opt2": "Discrete PCI Video + NIC + Audio (40W)",
+      "peak_label": "Estimated Peak Load:",
+      "rec_label": "Recommended PSU Rating (+30% Headroom):",
+      "note": "For legacy ATX motherboards, adequate amperage on the +5V and +3.3V rails (at least 20–25A) is critical for system stability."
+    },
+    "memory_map": {
+      "title": "Interactive Memory Map Navigator",
+      "badge": "Interactive Tool",
+      "start": "Start:",
+      "end": "End:",
+      "size": "Size:",
+      "initial_desc": "Real Mode Interrupt Vector Table (256 vectors * 4 bytes CS:IP).",
+      "regions": {
+        "ivt": "Real Mode Interrupt Vector Table (256 vectors * 4 bytes CS:IP).",
+        "bda": "BIOS Data Area: COM/LPT base ports, keyboard buffer, timer ticks at 0x46C.",
+        "mbr": "Conventional DRAM target where BIOS loads LBA 0 (Contract 3 handover).",
+        "kernel": "Protected Mode 32-bit Kernel core (.text, .rodata, .data, .bss).",
+        "vga": "VGA Mode 03h text mode screen memory at 0xB8000 (80x25 characters).",
+        "shadow": "VBIOS Option ROM at 0xC0000, IPO_Boot_ROM and IPO_Firmware in Shadow RAM.",
+        "heap": "Extended memory used by kmalloc() and page frame allocations.",
+        "userspace": "Base physical loading address for raw ELF/binary applications (linked with app.ld)."
+      }
+    }
+  },
+  "search": {
+    "placeholder": "Search documentation...",
+    "prompt": "Type a query to search documentation (e.g., syscall, PIC, MBR, CAR)...",
+    "loading": "Search index is loading or unavailable.",
+    "empty": "No matching documentation pages found.",
+    "error": "An error occurred during search.",
+    "close": "Close search"
   }
 }

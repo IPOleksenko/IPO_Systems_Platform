@@ -1,5 +1,12 @@
 ---
-import { sharedSyscallsList } from '../data/shared-code';
+import { 
+  sharedSyscallsList, 
+  getSyscallDescription, 
+  getSyscallArgs, 
+  getSyscallReturn 
+} from '../data/shared-code';
+import { getTranslation } from '../utils/i18n';
+import { siteConfig } from '../../site.config';
 
 interface Props {
   lang?: string;
@@ -8,19 +15,17 @@ interface Props {
 const { lang } = Astro.props;
 const currentPath = Astro.url.pathname;
 const pathSegments = currentPath.split('/').filter(Boolean);
-// Usually /IPO_Systems_Platform/<lang>/... or /<lang>/...
-const detectedLang = lang || (pathSegments.includes('ru') ? 'ru' : (pathSegments.includes('uk') ? 'uk' : 'en'));
-const isRu = detectedLang === 'ru';
+const detectedLang = lang || pathSegments.find((s) => s in siteConfig.languages) || siteConfig.defaultLang;
 ---
 
 <div class="syscalls-table-container">
   <table>
     <thead>
       <tr>
-        <th style="width: 10%;">{isRu ? 'Hex' : 'Hex'}</th>
-        <th style="width: 25%;">{isRu ? 'Системный вызов' : 'System Call'}</th>
-        <th style="width: 30%;">{isRu ? 'Сигнатура' : 'C Signature'}</th>
-        <th>{isRu ? 'Аргументы и описание' : 'Arguments & Description'}</th>
+        <th style="width: 10%;">{getTranslation(detectedLang, 'tables.syscall.hex')}</th>
+        <th style="width: 25%;">{getTranslation(detectedLang, 'tables.syscall.call')}</th>
+        <th style="width: 30%;">{getTranslation(detectedLang, 'tables.syscall.signature')}</th>
+        <th>{getTranslation(detectedLang, 'tables.syscall.description')}</th>
       </tr>
     </thead>
     <tbody>
@@ -31,19 +36,19 @@ const isRu = detectedLang === 'ru';
           <td><code>{sc.signature}</code></td>
           <td>
             <div style="margin-bottom: 0.35rem;">
-              {isRu ? sc.descriptionRu : sc.descriptionEn}
+              {getSyscallDescription(sc, detectedLang)}
             </div>
             <details style="font-size: 0.85rem; color: var(--text-secondary);">
               <summary style="cursor: pointer; font-weight: 500;">
-                {isRu ? 'Параметры и возврат' : 'Arguments & Return'}
+                {getTranslation(detectedLang, 'tables.syscall.details')}
               </summary>
               <ul style="margin: 0.35rem 0 0.35rem 1rem;">
-                {(isRu ? sc.argsRu : sc.argsEn).map((arg) => (
+                {getSyscallArgs(sc, detectedLang).map((arg) => (
                   <li><code>{arg}</code></li>
                 ))}
               </ul>
               <div>
-                <strong>{isRu ? 'Возврат:' : 'Returns:'}</strong> {isRu ? sc.returnRu : sc.returnEn}
+                <strong>{getTranslation(detectedLang, 'tables.syscall.returns')}</strong> {getSyscallReturn(sc, detectedLang)}
               </div>
             </details>
           </td>

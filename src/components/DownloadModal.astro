@@ -1,0 +1,551 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import { siteConfig } from '../../site.config';
+import { getTranslation } from '../utils/i18n';
+
+interface Props {
+  lang: string;
+}
+
+const { lang } = Astro.props;
+
+const base = siteConfig.base;
+const cleanBase = base.endsWith('/') ? base : `${base}/`;
+const downloadsBase = `${cleanBase}downloads/`;
+
+interface Artifact {
+  id: string;
+  file: string;
+  name: string;
+  category: string;
+  description: string;
+  size_formatted: string;
+  sha256: string;
+  featured?: boolean;
+}
+
+let artifacts: Artifact[] = [];
+
+try {
+  const manifestPath = path.resolve('public/downloads/manifest.json');
+  if (fs.existsSync(manifestPath)) {
+    const raw = fs.readFileSync(manifestPath, 'utf-8');
+    const data = JSON.parse(raw);
+    artifacts = data.artifacts || [];
+  }
+} catch (e) {
+  // Graceful fallback if manifest is not yet generated
+}
+
+// Default fallback items if manifest is empty
+if (artifacts.length === 0) {
+  artifacts = [
+    {
+      id: 'ipo-system-bundle',
+      file: 'ipo-system-bundle.zip',
+      name: 'Complete IPO Systems Bundle (All 3 Projects & Disk)',
+      category: 'bundle',
+      featured: true,
+      description: 'All compiled binaries across the entire platform: Boot ROM, Firmware BIOS, IPO_OS kernel image, and 128 MB applications disk.',
+      size_formatted: '~8.8 MB',
+      sha256: 'Pre-compiled release'
+    },
+    {
+      id: 'ipo-os-raw',
+      file: 'IPO_OS.img',
+      name: 'IPO_OS Kernel Bootable Image',
+      category: 'os',
+      description: 'Raw 32-bit bootable image containing IPO_OS kernel (LBA 0 bootloader + kernel binary).',
+      size_formatted: '~283 KB',
+      sha256: 'Pre-compiled release'
+    },
+    {
+      id: 'ipo-os-disk',
+      file: 'disk.img',
+      name: 'IPO_OS Applications Disk (128 MB)',
+      category: 'os',
+      description: 'Pre-formatted 128 MB disk image with 39 compiled applications and userland toolchain.',
+      size_formatted: '~8.5 MB',
+      sha256: 'Pre-compiled release'
+    },
+    {
+      id: 'ipo-boot-rom',
+      file: 'ipo-boot-rom.zip',
+      name: 'IPO_Boot_ROM Package',
+      category: 'bootrom',
+      description: 'Compiled hardware reset vector 0xFFFFFFF0 ROM binaries (bootrom_run.bin, bootrom.bin).',
+      size_formatted: '~20 KB',
+      sha256: 'Pre-compiled release'
+    },
+    {
+      id: 'ipo-firmware',
+      file: 'ipo-firmware.zip',
+      name: 'IPO_Firmware Package',
+      category: 'firmware',
+      description: 'Compiled BIOS runtime service layer ROM binaries (firmware_rom.bin, firmware.bin).',
+      size_formatted: '~16 KB',
+      sha256: 'Pre-compiled release'
+    }
+  ];
+}
+
+const featuredArtifact = artifacts.find(a => a.featured) || artifacts[0];
+const otherArtifacts = artifacts.filter(a => a.id !== featuredArtifact.id);
+---
+
+<div class="downloads-wrapper">
+  <button 
+    type="button" 
+    class="downloads-trigger" 
+    id="open-downloads-btn" 
+    aria-label={getTranslation(lang, 'nav.downloads')}
+    title={getTranslation(lang, 'downloads.trigger_title')}
+  >
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+      <polyline points="7 10 12 15 17 10"></polyline>
+      <line x1="12" y1="15" x2="12" y2="3"></line>
+    </svg>
+    <span class="downloads-btn-text">{getTranslation(lang, 'nav.downloads')}</span>
+  </button>
+
+  <dialog class="downloads-dialog" id="downloads-dialog">
+    <div class="dialog-content">
+      <div class="dialog-header">
+        <div class="dialog-title-group">
+          <span class="dialog-icon">📦</span>
+          <div>
+            <h2 class="dialog-title">
+              {getTranslation(lang, 'downloads.dialog_title')}
+            </h2>
+            <p class="dialog-subtitle">
+              {getTranslation(lang, 'downloads.dialog_subtitle')}
+            </p>
+          </div>
+        </div>
+        <button type="button" class="dialog-close" id="close-downloads-btn" aria-label="Close dialog">✕</button>
+      </div>
+
+      <div class="dialog-body">
+        <!-- Featured Bundle -->
+        {featuredArtifact && (
+          <div class="featured-card">
+            <div class="featured-badge">
+              {getTranslation(lang, 'downloads.featured_badge')}
+            </div>
+            <div class="featured-main">
+              <div class="featured-info">
+                <h3 class="featured-title">
+                  {getTranslation(lang, 'downloads.featured_title')}
+                </h3>
+                <p class="featured-desc">
+                  {getTranslation(lang, 'downloads.featured_desc')}
+                </p>
+                <div class="artifact-meta">
+                  <span class="meta-tag size-tag">💾 {featuredArtifact.size_formatted}</span>
+                  <span class="meta-tag hash-tag" title={featuredArtifact.sha256}>
+                    SHA256: {featuredArtifact.sha256.substring(0, 10)}...
+                  </span>
+                </div>
+              </div>
+              <div class="featured-action">
+                <a 
+                  href={`${downloadsBase}${featuredArtifact.file}`} 
+                  download={featuredArtifact.file}
+                  class="btn-download primary"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span>{getTranslation(lang, 'downloads.download_bundle')}</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <!-- Individual Components Grid -->
+        <h4 class="section-title">
+          {getTranslation(lang, 'downloads.components_title')}
+        </h4>
+
+        <div class="artifacts-grid">
+          {otherArtifacts.map((art) => (
+            <div class="artifact-card">
+              <div class="card-top">
+                <div class="card-icon">
+                  {art.category === 'os' ? '🖥️' : (art.category === 'bootrom' ? '⚡' : '💾')}
+                </div>
+                <div class="card-header-info">
+                  <h5 class="card-name">{art.name}</h5>
+                  <span class="card-size">{art.size_formatted}</span>
+                </div>
+              </div>
+              <p class="card-desc">{art.description}</p>
+              <div class="card-bottom">
+                <span class="card-filename">{art.file}</span>
+                <a 
+                  href={`${downloadsBase}${art.file}`} 
+                  download={art.file}
+                  class="btn-download secondary"
+                  title={`Download ${art.file}`}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span>{getTranslation(lang, 'downloads.download_btn')}</span>
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </div>
+  </dialog>
+</div>
+
+<style>
+  .downloads-wrapper {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .downloads-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.75rem;
+    background-color: var(--accent-light);
+    color: var(--accent-primary);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .downloads-trigger:hover {
+    background-color: var(--accent-primary);
+    color: #ffffff;
+    border-color: var(--accent-primary);
+  }
+
+  @media (max-width: 640px) {
+    .downloads-btn-text {
+      display: none;
+    }
+    .downloads-trigger {
+      padding: 0.35rem 0.5rem;
+    }
+  }
+
+  .downloads-dialog {
+    margin: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    width: min(92vw, 750px);
+    max-height: 85vh;
+    box-shadow: var(--shadow-lg);
+    padding: 0;
+  }
+
+  .downloads-dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+  }
+
+  .dialog-content {
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+  }
+
+  .dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+  }
+
+  .dialog-title-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .dialog-icon {
+    font-size: 1.75rem;
+    line-height: 1;
+  }
+
+  .dialog-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  .dialog-subtitle {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  .dialog-close {
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    transition: color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .dialog-close:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-tertiary);
+  }
+
+  .dialog-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .featured-card {
+    border: 2px solid var(--accent-primary);
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+  }
+
+  .featured-badge {
+    position: absolute;
+    top: -0.65rem;
+    left: 1rem;
+    background-color: var(--accent-primary);
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.15rem 0.6rem;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .featured-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.25rem;
+  }
+
+  @media (max-width: 640px) {
+    .featured-main {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  .featured-title {
+    margin: 0 0 0.4rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .featured-desc {
+    margin: 0 0 0.75rem;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.45;
+  }
+
+  .artifact-meta {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .meta-tag {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-family: var(--font-mono, monospace);
+  }
+
+  .size-tag {
+    font-weight: 600;
+    color: var(--accent-primary);
+  }
+
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    justify-content: center;
+  }
+
+  .btn-download.primary {
+    background-color: var(--accent-primary);
+    color: #ffffff;
+  }
+
+  .btn-download.primary:hover {
+    background-color: var(--accent-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-download.secondary {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .btn-download.secondary:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+  }
+
+  .section-title {
+    margin: 0.5rem 0 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .artifacts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  .artifact-card {
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: border-color 0.15s ease;
+  }
+
+  .artifact-card:hover {
+    border-color: var(--accent-primary);
+  }
+
+  .card-top {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .card-icon {
+    font-size: 1.4rem;
+  }
+
+  .card-name {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .card-size {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .card-desc {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.75rem;
+    line-height: 1.4;
+    flex: 1;
+  }
+
+  .card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .card-filename {
+    font-size: 0.75rem;
+    font-family: var(--font-mono, monospace);
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
+
+<script>
+  function setupDownloadModal() {
+    const dialog = document.getElementById('downloads-dialog') as HTMLDialogElement | null;
+    const openBtns = document.querySelectorAll('.open-downloads-btn, #open-downloads-btn, .open-download-modal-btn');
+    const closeBtn = document.getElementById('close-downloads-btn');
+
+    if (!dialog) return;
+
+    openBtns.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        dialog.showModal();
+      });
+    });
+
+    closeBtn?.addEventListener('click', () => {
+      dialog.close();
+    });
+
+    dialog.addEventListener('click', (e) => {
+      const rect = dialog.getBoundingClientRect();
+      const isInDialog = (
+        rect.top <= e.clientY &&
+        e.clientY <= rect.top + rect.height &&
+        rect.left <= e.clientX &&
+        e.clientX <= rect.left + rect.width
+      );
+      if (!isInDialog) {
+        dialog.close();
+      }
+    });
+  }
+
+  setupDownloadModal();
+  document.addEventListener('astro:page-load', setupDownloadModal);
+</script>

@@ -23,7 +23,8 @@
       "app_dev": "应用程序开发者",
       "kernel_dev": "内核与驱动开发者",
       "pc_builder": "PC 硬件组装者"
-    }
+    },
+    "downloads": "下载"
   },
   "sections": {
     "ipo_os": {
@@ -142,5 +143,119 @@
       "beginners": "初学者指南",
       "deep_dive": "原理解析"
     }
+  },
+  "downloads": {
+    "page_title": "下载与系统构建版本",
+    "badge": "官方平台发布版本",
+    "subtitle": "预编译的二进制镜像和开箱即用套件，适用于物理硬件或 QEMU 仿真。构建一次并通过 GitHub Pages CDN 静态分发。",
+    "trigger_title": "下载项目与系统构建",
+    "dialog_title": "下载 IPO Systems 平台",
+    "dialog_subtitle": "预编译的生产二进制文件。构建一次并通过 GitHub Pages 静态分发。",
+    "featured_badge": "⭐ 完整平台软件包",
+    "featured_ribbon": "⭐ 完整平台软件包",
+    "featured_title": "Complete IPO Systems Bundle（全部 3 个项目与磁盘）",
+    "featured_desc": "包含整个平台的全部已编译二进制文件：Boot ROM（bootrom_run.bin）、Firmware BIOS（firmware_rom.bin）、IPO_OS 内核镜像（IPO_OS.img）以及 128 MB 应用程序磁盘（disk.img）。",
+    "download_bundle": "下载完整软件包 (.zip)",
+    "components_title": "独立组件与磁盘镜像",
+    "download_btn": "下载",
+    "download_zip": "下载 .zip",
+    "download_builds": "下载系统构建",
+    "vm_guide_link": "虚拟机设置指南 →",
+    "docs_link": "查看文档 →"
+  },
+  "home": {
+    "hero_badge": "🚀 裸机 x86 系统架构",
+    "hero_subtitle": "底层计算堆栈的权威统一文档：从硬件复位向量到用户空间应用程序。",
+    "explore_os": "探索 IPO_OS →",
+    "explore_boot_rom": "复位架构 →",
+    "explore_firmware": "探索固件 →",
+    "stack_title": "垂直堆栈架构",
+    "stack_desc": "三个项目无缝协同，构成具有严格交接协议的统一计算平台。",
+    "projects_title": "平台项目",
+    "projects_desc": "每个组件均独立自足、经过严谨论证且完全独立。",
+    "os_desc": "完整的 32 位 x86 操作系统：保护模式内核、原生 64 位 IPO_FS 的 VFS、GUI 窗口管理器及完整 TCP/IP 协议栈。",
+    "os_docs_link": "IPO_OS 文档 →",
+    "boot_rom_desc": "硬件复位向量 (0xFFFFFFF0) 初始化器，支持 CAR 和 DRAM 内存训练。",
+    "boot_rom_docs_link": "Boot ROM 文档 →",
+    "firmware_desc": "实模式 BIOS 兼容固件层，提供 IVT 中断服务、E820 内存映射和 Fast A20。",
+    "firmware_docs_link": "Firmware 文档 →",
+    "roles_title": "从何处开始（读者路径）",
+    "roles_desc": "选择您的专业背景以获取定制化的入门指南：",
+    "user_role_title": "系统用户",
+    "user_role_desc": "在 QEMU 中运行、shell 命令行操作及网络配置。",
+    "user_role_link": "QEMU 快速开始 →",
+    "app_dev_title": "应用开发者",
+    "app_dev_desc": "编写 C/ASM 用户态程序，调用 int 0x80 系统调用并通过 disk_editor.py 部署。",
+    "app_dev_link": "编写 Hello, World 应用 →",
+    "kernel_dev_title": "内核工程师",
+    "kernel_dev_desc": "内存布局、IDT 中断、设备驱动及 TCP/IP 状态机。",
+    "kernel_dev_link": "内核架构与引导 →",
+    "pc_builder_title": "硬件装配者",
+    "pc_builder_desc": "主板芯片组选型、电源功率计算、面板跳线与 SPI 芯片烧录。",
+    "pc_builder_link": "PC 装配与固件烧录 →"
+  },
+  "tables": {
+    "struct": {
+      "offset": "Offset",
+      "size": "Size",
+      "type": "Type",
+      "name": "Field Name",
+      "description": "Description"
+    },
+    "syscall": {
+      "hex": "Hex",
+      "call": "System Call",
+      "signature": "C Signature",
+      "description": "Arguments & Description",
+      "details": "Arguments & Return",
+      "returns": "Returns:"
+    }
+  },
+  "widgets": {
+    "psu": {
+      "title": "Power Supply (PSU) Wattage Calculator",
+      "badge": "Interactive Sizing",
+      "cpu_label": "Processor Platform (TDP):",
+      "cpu_opt1": "Intel Pentium II/III / Celeron (65W)",
+      "cpu_opt2": "Intel Core 2 Duo / Quad (95W)",
+      "cpu_opt3": "Embedded x86 SoC / Atom (35W)",
+      "ram_label": "Memory DIMM Modules:",
+      "storage_label": "Storage Drives (HDD / SSD):",
+      "storage_opt1": "1x SATA SSD / CF-IDE (5W)",
+      "storage_opt2": "1x 3.5\" HDD + 1x SSD (25W)",
+      "storage_opt3": "2x 3.5\" HDD + IDE Optical (45W)",
+      "pci_label": "Expansion Cards (PCI / NIC):",
+      "pci_opt1": "RTL8139 NIC + SB16 Audio (15W)",
+      "pci_opt2": "Discrete PCI Video + NIC + Audio (40W)",
+      "peak_label": "Estimated Peak Load:",
+      "rec_label": "Recommended PSU Rating (+30% Headroom):",
+      "note": "For legacy ATX motherboards, adequate amperage on the +5V and +3.3V rails (at least 20–25A) is critical for system stability."
+    },
+    "memory_map": {
+      "title": "Interactive Memory Map Navigator",
+      "badge": "Interactive Tool",
+      "start": "Start:",
+      "end": "End:",
+      "size": "Size:",
+      "initial_desc": "Real Mode Interrupt Vector Table (256 vectors * 4 bytes CS:IP).",
+      "regions": {
+        "ivt": "实模式中断向量表（256 个向量 * 4 字节 CS:IP）。",
+        "bda": "BIOS 数据区：COM/LPT 基地址端口、键盘缓冲区、0x46C 定时器计数值。",
+        "mbr": "BIOS 加载 LBA 0 的常规 DRAM 目标区（契约 3 交接）。",
+        "kernel": "32 位保护模式内核核心（.text、.rodata、.data、.bss）。",
+        "vga": "0xB8000 处的 VGA 模式 03h 文本模式屏幕内存（80x25 字符）。",
+        "shadow": "0xC0000 处的 VBIOS Option ROM，Shadow RAM 中的 IPO_Boot_ROM 和 IPO_Firmware。",
+        "heap": "kmalloc() 和页帧分配使用的扩展内存堆。",
+        "userspace": "原始 ELF/二进制用户空间应用程序物理加载基地址（使用 app.ld 链接）。"
+      }
+    }
+  },
+  "search": {
+    "placeholder": "搜索文档...",
+    "prompt": "输入搜索查询（例如：syscall、PIC、MBR、CAR）...",
+    "loading": "搜索索引正在加载或不可用。",
+    "empty": "未找到匹配的文档页面。",
+    "error": "搜索时发生错误。",
+    "close": "关闭搜索"
   }
 }

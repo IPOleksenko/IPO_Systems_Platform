@@ -4,6 +4,9 @@
   "description": "Unified comprehensive documentation for IPO Systems Platform (IPO_OS, IPO_Boot_ROM, IPO_Firmware)",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/build-artifacts.mjs",
+    "prebuild": "node scripts/build-artifacts.mjs",
+    "build:artifacts": "node scripts/build-artifacts.mjs",
     "dev": "astro dev",
     "build": "astro build && pagefind --site dist && cp -r dist/pagefind public/",
     "preview": "astro preview"

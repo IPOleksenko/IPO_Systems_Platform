@@ -23,7 +23,8 @@
       "app_dev": "Programista aplikacji",
       "kernel_dev": "Programista jądra i sterowników",
       "pc_builder": "Monter PC"
-    }
+    },
+    "downloads": "Pobierz"
   },
   "sections": {
     "ipo_os": {
@@ -142,5 +143,119 @@
       "beginners": "Dla początkujących",
       "deep_dive": "Szczegółowa analiza"
     }
+  },
+  "downloads": {
+    "page_title": "Pobieranie i Kompilacje Systemu",
+    "badge": "Oficjalne Wydania Platformy",
+    "subtitle": "Skompilowane obrazy binarne i gotowe pakiety dla sprzętu fizycznego lub emulacji QEMU.",
+    "trigger_title": "Pobierz Projekty i Kompilacje",
+    "dialog_title": "Pobierz Platformę IPO Systems",
+    "dialog_subtitle": "Skompilowane pliki binarne. Serwowane statycznie przez GitHub Pages.",
+    "featured_badge": "⭐ Pełny pakiet platformy",
+    "featured_ribbon": "⭐ Pełny pakiet platformy",
+    "featured_title": "Complete IPO Systems Bundle (Wszystkie 3 projekty i dysk)",
+    "featured_desc": "Zawiera wszystkie skompilowane pliki binarne platformy: Boot ROM (bootrom_run.bin), Firmware BIOS (firmware_rom.bin), obraz jądra IPO_OS (IPO_OS.img) oraz dysk aplikacji 128 MB (disk.img).",
+    "download_bundle": "Pobierz pełny pakiet (.zip)",
+    "components_title": "Poszczególne Komponenty i Obrazy Dysków",
+    "download_btn": "Pobierz",
+    "download_zip": "Pobierz .zip",
+    "download_builds": "Pobierz Kompilacje",
+    "vm_guide_link": "Przewodnik po Maszynach Wirtualnych →",
+    "docs_link": "Dokumentacja →"
+  },
+  "home": {
+    "hero_badge": "🚀 Niskopoziomowa Architektura x86 Bare-Metal",
+    "hero_subtitle": "Kompleksowa dokumentacja stosu obliczeniowego: od sprzętowego wektora resetu po aplikacje użytkownika.",
+    "explore_os": "Poznaj IPO_OS →",
+    "explore_boot_rom": "Architektura Resetu →",
+    "explore_firmware": "Poznaj Firmware →",
+    "stack_title": "Pionowa Architektura Stosu",
+    "stack_desc": "Wszystkie trzy projekty tworzą zintegrowaną platformę obliczeniową.",
+    "projects_title": "Projekty Platformy",
+    "projects_desc": "Każdy komponent jest w pełni autonomiczny i dokładnie udokumentowany.",
+    "os_desc": "Pełny 32-bitowy system x86: jądro w trybie chronionym, VFS z 64-bitowym IPO_FS, menedżer okien i stos TCP/IP.",
+    "os_docs_link": "Dokumentacja IPO_OS →",
+    "boot_rom_desc": "Inicjalizator wektora resetu (0xFFFFFFF0) dla sprzętu fizycznego i QEMU z CAR i treningiem DRAM MRC.",
+    "boot_rom_docs_link": "Dokumentacja Boot ROM →",
+    "firmware_desc": "Warstwa BIOS w trybie rzeczywistym z przerwaniami IVT, mapą E820 i Fast A20.",
+    "firmware_docs_link": "Dokumentacja Firmware →",
+    "roles_title": "Od Czego Zacząć (Profile Czytelników)",
+    "roles_desc": "Wybierz swój profil, aby przejść do dedykowanego przewodnika:",
+    "user_role_title": "Użytkownik Końcowy",
+    "user_role_desc": "Praca w QEMU, powłoka shell i konfiguracja sieci.",
+    "user_role_link": "Szybki Start w QEMU →",
+    "app_dev_title": "Programista Aplikacji",
+    "app_dev_desc": "Pisanie w C/ASM, wywołania systemowe int 0x80 i instalacja na dysku.",
+    "app_dev_link": "Napisz Aplikację Hello, World →",
+    "kernel_dev_title": "Inżynier Jądra",
+    "kernel_dev_desc": "Układ pamięci, przerwania IDT, sterowniki i stos TCP/IP.",
+    "kernel_dev_link": "Architektura Jądra i Rozruch →",
+    "pc_builder_title": "Montażysta PC",
+    "pc_builder_desc": "Kompatybilność płyt głównych, dobór zasilacza i programowanie SPI.",
+    "pc_builder_link": "Montaż PC i Programowanie SPI →"
+  },
+  "tables": {
+    "struct": {
+      "offset": "Offset",
+      "size": "Size",
+      "type": "Type",
+      "name": "Field Name",
+      "description": "Description"
+    },
+    "syscall": {
+      "hex": "Hex",
+      "call": "System Call",
+      "signature": "C Signature",
+      "description": "Arguments & Description",
+      "details": "Arguments & Return",
+      "returns": "Returns:"
+    }
+  },
+  "widgets": {
+    "psu": {
+      "title": "Power Supply (PSU) Wattage Calculator",
+      "badge": "Interactive Sizing",
+      "cpu_label": "Processor Platform (TDP):",
+      "cpu_opt1": "Intel Pentium II/III / Celeron (65W)",
+      "cpu_opt2": "Intel Core 2 Duo / Quad (95W)",
+      "cpu_opt3": "Embedded x86 SoC / Atom (35W)",
+      "ram_label": "Memory DIMM Modules:",
+      "storage_label": "Storage Drives (HDD / SSD):",
+      "storage_opt1": "1x SATA SSD / CF-IDE (5W)",
+      "storage_opt2": "1x 3.5\" HDD + 1x SSD (25W)",
+      "storage_opt3": "2x 3.5\" HDD + IDE Optical (45W)",
+      "pci_label": "Expansion Cards (PCI / NIC):",
+      "pci_opt1": "RTL8139 NIC + SB16 Audio (15W)",
+      "pci_opt2": "Discrete PCI Video + NIC + Audio (40W)",
+      "peak_label": "Estimated Peak Load:",
+      "rec_label": "Recommended PSU Rating (+30% Headroom):",
+      "note": "For legacy ATX motherboards, adequate amperage on the +5V and +3.3V rails (at least 20–25A) is critical for system stability."
+    },
+    "memory_map": {
+      "title": "Interactive Memory Map Navigator",
+      "badge": "Interactive Tool",
+      "start": "Start:",
+      "end": "End:",
+      "size": "Size:",
+      "initial_desc": "Real Mode Interrupt Vector Table (256 vectors * 4 bytes CS:IP).",
+      "regions": {
+        "ivt": "Tablica wektorów przerwań trybu rzeczywistego (256 wektorów * 4 bajty CS:IP).",
+        "bda": "Obszar danych BIOS: porty bazowe COM/LPT, bufor klawiatury, tyknięcia timera pod 0x46C.",
+        "mbr": "Konwencjonalny cel DRAM, gdzie BIOS ładuje LBA 0 (przekazanie Kontrakt 3).",
+        "kernel": "Rdzeń jądra IPO_OS w 32-bitowym trybie chronionym (.text, .rodata, .data, .bss).",
+        "vga": "Pamięć ekranu trybu tekstowego VGA 03h pod 0xB8000 (80x25 znaków).",
+        "shadow": "Option ROM VBIOS pod 0xC0000, IPO_Boot_ROM i IPO_Firmware w Shadow RAM.",
+        "heap": "Pamięć rozszerzona dla sterty jądra kmalloc() i alokacji stron.",
+        "userspace": "Bazowy adres fizyczny dla aplikacji ELF/binarnych (linkowanych z app.ld)."
+      }
+    }
+  },
+  "search": {
+    "placeholder": "Szukaj w dokumentacji...",
+    "prompt": "Wpisz zapytanie (np. syscall, PIC, MBR, CAR)...",
+    "loading": "Indeks wyszukiwania ładuje się lub jest niedostępny.",
+    "empty": "Nie znaleziono pasujących stron dokumentacji.",
+    "error": "Wystąpił błąd podczas wyszukiwania.",
+    "close": "Zamknij wyszukiwanie"
   }
 }
