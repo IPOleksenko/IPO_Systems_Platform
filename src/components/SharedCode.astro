@@ -49,11 +49,16 @@ const copiedText = getTranslation(lang, 'ui.copied');
     border-bottom: 1px solid var(--border-color);
     font-size: 0.85rem;
     color: var(--text-secondary);
+    gap: 0.5rem;
   }
 
   .code-title {
     font-family: var(--font-mono);
     font-weight: 500;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .copy-button {
@@ -65,6 +70,7 @@ const copiedText = getTranslation(lang, 'ui.copied');
     font-size: 0.75rem;
     cursor: pointer;
     transition: all 0.15s ease;
+    flex-shrink: 0;
   }
 
   .copy-button:hover {

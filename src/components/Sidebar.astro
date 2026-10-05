@@ -52,10 +52,12 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
     ))}
   </div>
 </aside>
+<div class="sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
 
 <style>
   .sidebar {
     width: var(--sidebar-width);
+    max-width: min(18rem, 85vw);
     flex-shrink: 0;
     height: calc(100vh - var(--header-height));
     position: sticky;
@@ -64,6 +66,11 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
     border-right: 1px solid var(--border-color);
     background-color: var(--bg-sidebar);
     padding: 1.5rem 1rem 3rem 1.25rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sidebar-backdrop {
+    display: none;
   }
 
   .sidebar-quick-links {
@@ -100,15 +107,37 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
       top: var(--header-height);
       left: 0;
       bottom: 0;
+      width: min(18rem, 85vw);
+      max-width: 85vw;
       z-index: 40;
       background-color: var(--bg-primary);
       transform: translateX(-100%);
-      transition: transform 0.25s ease-in-out;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: var(--shadow-lg);
     }
 
     .sidebar.open {
       transform: translateX(0);
+    }
+
+    .sidebar-backdrop {
+      display: block;
+      position: fixed;
+      top: var(--header-height);
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 39;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(2px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .sidebar-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
     }
   }
 

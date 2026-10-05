@@ -63,6 +63,8 @@ const title = getStructTitle(table, lang);
     padding: 0.6rem 1rem;
     background-color: var(--bg-tertiary);
     border-bottom: 1px solid var(--border-color);
+    gap: 0.5rem;
+    flex-wrap: wrap;
   }
 
   .struct-title {
@@ -82,5 +84,7 @@ const title = getStructTitle(table, lang);
 
   .struct-table-wrapper table {
     margin-bottom: 0;
+    min-width: 480px;
+    -webkit-overflow-scrolling: touch;
   }
 </style>

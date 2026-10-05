@@ -51,6 +51,27 @@ const autoLabel = getTranslation(lang, 'ui.theme_auto');
     color: var(--accent-primary);
     box-shadow: var(--shadow-sm);
   }
+
+  @media (max-width: 640px) {
+    .theme-toggle .theme-btn.active {
+      display: none;
+    }
+    .theme-toggle {
+      padding: 0;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+    }
+    .theme-btn {
+      padding: 0.35rem 0.45rem;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .theme-btn {
+      padding: 0.25rem 0.35rem;
+      font-size: 0.8rem;
+    }
+  }
 </style>
 
 <script>

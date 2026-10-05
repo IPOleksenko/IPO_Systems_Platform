@@ -171,12 +171,22 @@ const currentLangMeta = languages[currentLang] || { name: currentLang, flag: 'ðŸ
     margin-left: auto;
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     .lang-current-label {
       display: none;
     }
     .lang-trigger {
       padding: 0.35rem 0.45rem;
+      gap: 0.35rem;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .chevron-icon {
+      display: none;
+    }
+    .lang-trigger {
+      padding: 0.3rem 0.35rem;
     }
   }
 </style>

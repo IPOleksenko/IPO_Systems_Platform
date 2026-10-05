@@ -112,7 +112,7 @@ const { lang } = Astro.props;
     border: 1px solid var(--border-color);
     background-color: var(--bg-secondary);
     color: var(--text-primary);
-    font-size: 0.9rem;
+    font-size: 1rem;
   }
 
   .calc-result-box {
@@ -125,6 +125,22 @@ const { lang } = Astro.props;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     background-color: var(--bg-secondary);
+  }
+
+  @media (max-width: 480px) {
+    .calc-body {
+      padding: 0.85rem;
+      gap: 1rem;
+    }
+    .calc-result-box {
+      padding: 1rem 0.75rem;
+    }
+    .res-watts {
+      font-size: 1.6rem;
+    }
+    .res-rec-watts {
+      font-size: 1.3rem;
+    }
   }
 
   .res-label {

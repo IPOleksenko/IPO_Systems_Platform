@@ -37,12 +37,28 @@ const captionPrefix = getTranslation(lang, 'ui.diagram_caption');
     box-shadow: var(--shadow-sm);
   }
 
+  @media (max-width: 640px) {
+    .diagram-figure {
+      padding: 0.85rem 0.5rem;
+      margin: 1.5rem 0;
+    }
+  }
+
   .diagram-container {
     display: flex;
     justify-content: center;
     align-items: center;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 0.5rem 0;
+    width: 100%;
+  }
+
+  .diagram-container :global(svg) {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    min-width: 280px;
   }
 
   .diagram-caption {
