@@ -10,7 +10,7 @@ import Callout from '../../../../components/Callout.astro';
 
 **IPO_OS** provides a comprehensive user experience:
 1. **Interactive Console Shell:** 27+ builtin commands, multitasking virtual workspaces (`run &`), pipes (`|`), scrollback history, and ANSI colors.
-2. **Menedżer okien (WM):** 2D graphical desktop running in VGA Mode 13h (320x200x256), 60 FPS compositor async task, PS/2 software mouse pointer, and event-driven windows.
+2. **Menedżer okien (WM):** 2D graphical desktop running in VGA Mode 13h (320x200x256); compositor updates run from the active process/console loop without a fixed FPS cap, with a PS/2 software mouse pointer and event-driven windows.
 3. **TinyGL 3D Engine (OpenGL 1.1):** Software 3D rasterizer inside kernel space, featuring Z-buffering, dynamic lighting, texture mapping, and flat/smooth shading.
 4. **Audio Architektura:** Sound Blaster 16 DSP hardware driver (16-bit DMA Ch 5, 22050 Hz stereo mixer) and fallback PC Speaker PWM.
 
@@ -83,7 +83,7 @@ run setfont /fonts/terminus.fnt ; startx
 
 ## 🪟 2. Menedżer okien (WM)
 
-The graphical desktop operates as a persistent 60 FPS kernel async task in VGA Mode 13h (320x200x256):
+The graphical desktop compositor is updated by the active process/console loop in VGA Mode 13h (320x200x256), without a fixed 60 FPS cap:
 - Window decoration styles: `WM_DECOR_DEFAULT`, `WM_DECOR_THIN`, `WM_DECOR_NONE`.
 - Event model: `WM_EVENT_CLICK`, `WM_EVENT_KEY_DOWN`, `WM_EVENT_MOVE`, `WM_EVENT_RESIZE`, `WM_EVENT_CLOSE`.
 - Persistent exit button `[✕]` in bottom-left corner ensures safe return to text mode.

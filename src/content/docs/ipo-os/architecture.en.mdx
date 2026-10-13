@@ -18,7 +18,7 @@ import Callout from '../../../components/Callout.astro';
 
 - **Protected Mode Kernel (Ring 0):** GDT/IDT tables, hardware interrupt dispatching.
 - **TinyGL 3D Engine (OpenGL 1.1):** Kernel-space software 3D rasterizer with Z-buffering and lighting.
-- **Window Manager (WM):** 60 FPS compositor async task, PS/2 software mouse pointer.
+- **Window Manager (WM):** Compositor updates run from the active process/console loop without a fixed FPS cap; PS/2 software mouse pointer.
 - **Audio Core:** Sound Blaster 16 DSP hardware driver (16-bit DMA Ch 5) and PC Speaker PWM.
 - **Network Stack:** Realtek RTL8139 NIC, Ethernet II, ARP, IPv4, ICMP, UDP, TCP state machine, and POSIX Sockets.
 - **IPO_FS Filesystem:** 64-bit extent-based storage engine with ATA PIO disk driver.

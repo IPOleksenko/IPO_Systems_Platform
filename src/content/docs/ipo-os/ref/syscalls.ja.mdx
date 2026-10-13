@@ -1,6 +1,6 @@
 ---
 title: "Complete システムコールs 技術リファレンス"
-description: "Exhaustive reference of all 57 システムコールs in IPO_OS: call numbers, C signatures, x86 int 0x80 ABI registers, parameters, and error codes."
+description: "Exhaustive reference of all 105 システムコールs in IPO_OS: call numbers, C signatures, x86 int 0x80 ABI registers, parameters, and error codes."
 ---
 
 import SharedSyscallTable from '../../../../components/SharedSyscallTable.astro';
@@ -37,7 +37,7 @@ When `int 0x80` is triggered, the CPU transfers execution to IDT gate `0x80` (`s
 
 ## 📋 Comprehensive システムコールs Table
 
-Below is the complete interactive list of all 57 registered システムコールs:
+Below is the complete interactive list of all 105 registered システムコールs:
 
 <SharedSyscallTable lang="en" />
 
@@ -131,8 +131,8 @@ VFS subsystem providing 64-bit storage operations on IPO_FS:
 - **Returns:** `1` if multitasking pipeline operator (`run`) is active, `0` in single task mode.
 
 ### `0x1030` — `IPO_SYSCALL_ASYNC_START`
-- **C Signature:** `int ipo_async_start(void *task_fn, void *arg);`
-- **Purpose:** Registers recurring kernel async task (e.g. 60 FPS WM compositor or network polling).
+- **C Signature:** `int ipo_async_start(const char *task_name, uint32_t interval_ms, void (*task_fn)(void));`
+- **Purpose:** Registers a recurring kernel async task using the interval supplied by the caller.
 - **Returns:** Task ID handle `task_id >= 0`.
 
 ### `0x1031` — `IPO_SYSCALL_ASYNC_STOP`
@@ -247,11 +247,11 @@ Inter-process lightweight state sharing:
 
 ## 🪟 Group 8: ウィンドウマネージャー (WM)
 
-Desktop ウィンドウマネージャー running as 60 FPS persistent kernel async task:
+The WM compositor is updated from the active process/console loop; there is no fixed 60 FPS cap:
 
 - **`0x1070` `IPO_SYSCALL_WM_CREATE_WINDOW`:** Creates managed desktop window with titlebar, borders, framebuffer, and event callbacks.
 - **`0x1071` `IPO_SYSCALL_WM_DESTROY_WINDOW`:** Destroys window and frees framebuffer.
-- **`0x1072` `IPO_SYSCALL_WM_SESSION_START`:** Enters VGA Mode 13h, allocates backbuffer, starts 60 FPS compositor task.
+- **`0x1072` `IPO_SYSCALL_WM_SESSION_START`:** Enters VGA Mode 13h, allocates a backbuffer, and starts the compositor session.
 - **`0x1073` `IPO_SYSCALL_WM_SESSION_STOP`:** Stops compositor, restores 80x25 text mode.
 - **`0x1074` `IPO_SYSCALL_WM_SESSION_ACTIVE`:** Returns true if GUI session active.
 - **`0x1075` `IPO_SYSCALL_WM_GET_COUNT`:** Returns total registered windows count.
@@ -271,7 +271,7 @@ Desktop ウィンドウマネージャー running as 60 FPS persistent kernel as
 
 - **`0x0001` `IPO_SYSCALL_REGISTER`:** Dynamic syscall registration.
 - **`0x0002` `IPO_SYSCALL_CALL`:** Indirect syscall invocation.
-- **`0x1046` `IPO_SYSCALL_TIME`:** Returns system uptime in milliseconds.
+- **`0x1046` `IPO_SYSCALL_TIME`:** Returns system uptime in seconds.
 - **`0x105F` `IPO_SYSCALL_SYSTEM_INTERRUPT`:** Hardware system controls: ACPI shutdown, 8042 reboot, kernel panic dump.
 
 ---
