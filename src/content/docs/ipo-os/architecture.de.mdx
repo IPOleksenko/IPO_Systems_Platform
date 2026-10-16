@@ -8,23 +8,25 @@ import Callout from '../../../components/Callout.astro';
 
 # IPO_OS Architektur
 
-**IPO_OS** is a bare-metal 32-bit x86 monolithic Betriebssystem designed to run on physical hardware and QEMU virtual machines.
+**IPO_OS** is a bare-metal 32-bit x86 monolithic operating system designed to run on physical hardware and QEMU virtual machines.
 
 <LocalizedDiagram id="vertical_platform_stack" />
 
 ---
 
-## 🏛️ Monolithic Kernel Architektur
+## 🏛️ Monolithic Kernel Architecture
 
-- **Protected Mode Kernel (Ring 0):** GDT/IDT tables, hardware interrupt dispatching.
+- **Protected Mode Kernel & SMP (Ring 0):** GDT/IDT tables, Local APIC (`0xFEE00000`), ACPI MADT / Intel MP multi-core discovery, AP boot trampoline at `0x8000`, per-CPU 16 KB stacks, cross-core IPIs (`0xE0`), and hardware `spinlock_t` locks.
+- **E820 Memory Manager & Dynamic Buffers:** BIOS E820 physical memory map parser (`0x8FE0`–`0x8FF4`), `kmalloc` heap with boundary coalescing, `sbrk` user heaps, and kernel-wide self-expanding dynamic buffers (zero arbitrary fixed array size limits).
+- **Multi-Disk Storage Pool, WAL & IPO_FS:** Generic block device layer (`block_device_t`), MBR/GPT partition scanner, persistent multi-disk linear Storage Pool (`storage_pool_t`) with primary/backup superblocks (LBA 2030 & 2039, CRC32) and 8-sector Write-Ahead Logging (WAL) journal (LBA 2031–2038), backing the 64-bit extent-based **IPO_FS** filesystem (LBA 2048+).
+- **Relocatable Kernel Modules (KMOD) & Unified Device Registry:** Dynamic `.kmd` module loader (`IKMD` magic, `ABS32`/`REL32` relocations, ~1,560 exported kernel symbols via `generate_ksyms.py`) and central hardware topology registry (`device.c` for PCI, ISA, IDE, USB, CPU, and RAM).
 - **TinyGL 3D Engine (OpenGL 1.1):** Kernel-space software 3D rasterizer with Z-buffering and lighting.
-- **Fenstermanager (WM):** Compositor updates run from the active process/console loop without a fixed FPS cap; PS/2 software mouse pointer.
+- **Window Manager (WM):** Compositor updates run from the active process/console loop without a fixed FPS cap; PS/2 software mouse pointer.
 - **Audio Core:** Sound Blaster 16 DSP hardware driver (16-bit DMA Ch 5) and PC Speaker PWM.
-- **Network Stack:** Realtek RTL8139 NIC, Ethernet II, ARP, IPv4, ICMP, UDP, TCP state machine, and POSIX Sockets.
-- **IPO_FS Filesystem:** 64-bit extent-based storage engine with ATA PIO disk driver.
+- **Network Stack:** Realtek RTL8139 NIC (with dynamically expanding `rx_packet_buf`), Ethernet II, ARP, IPv4, ICMP, UDP, TCP state machine, and POSIX Sockets.
 
 ---
 
-## 🗺️ Physikalischer Speicher Map
+## 🗺️ Physical Memory Map
 
 <LocalizedDiagram id="memory_map" />

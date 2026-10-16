@@ -64,3 +64,44 @@ import SharedStruct from '../../../../components/SharedStruct.astro';
 Формат 8-байтного дескриптора шлюза прерывания/системного вызова x86 (`src/kernel/syscall/syscall.c`):
 
 <SharedStruct id="ipo_idt_entry" />
+
+---
+
+## 🔗 Суперблок пула хранения (`storage_pool_raw_sb_t`)
+
+Первичный и резервный суперблоки многодискового пула хранения в секторах LBA 2030 и LBA 2039 (`src/include/driver/storage/storage_pool.h`):
+
+<SharedStruct id="storage_pool_raw_sb" />
+
+---
+
+## 📓 Запись журнала транзакций WAL (`storage_raw_disk_tx_entry_t`)
+
+64-байтная запись кольцевого журнала предзаписи транзакций WAL в секторах LBA 2031–2038 (по 8 записей на сектор, всего 64 слота):
+
+<SharedStruct id="storage_raw_disk_tx_entry" />
+
+---
+
+## 📦 Заголовок релоцируемого модуля ядра KMOD (`kmod_raw_header_t` / `kmod_header_t`)
+
+Бинарный заголовок `.kmd` и его динамическое представление в ОЗУ (`src/include/kernel/kmod.h`):
+
+<SharedStruct id="kmod_header" />
+
+---
+
+## 🔥 Дескриптор ядра процессора SMP (`cpu_info_t`)
+
+Структура состояния каждого обнаруженного физического/логического ядра CPU (`src/include/kernel/smp.h`):
+
+<SharedStruct id="cpu_info" />
+
+---
+
+## 🧭 Узел единого реестра аппаратных устройств (`device_node_t`)
+
+Универсальный дескриптор обнаруженного оборудования (PCI, IDE/ATA, USB, CPU, Memory, System) с динамическими строками и массивом BAR (`src/include/kernel/device.h`):
+
+<SharedStruct id="device_node" />
+

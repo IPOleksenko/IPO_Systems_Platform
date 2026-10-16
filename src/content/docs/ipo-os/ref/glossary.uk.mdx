@@ -5,66 +5,79 @@ description: "Подробные визначення низкоуровневы
 
 # Архитектурный глоссарий
 
-В данном глоссарии собраны визначення низкоуровневых технических терминов та понятий архитектуры x86, используемых в проектах **IPO_OS**, **IPO_Boot_ROM** та **IPO_Firmware**.
+This glossary clarifies technical terminology and hardware concepts used throughout the documentation for **IPO_OS**, **IPO_Boot_ROM**, and **IPO_Firmware**.
 
 ---
 
-### A20 Gate (Вентиль A20)
-Аппаратная линия управления 20-м битом шини адресиа (через контролер клавиатуры `0x64` або Fast Port `0x92`). При отключении адреси циклически заворачивается на 1 МБ (эмуляция 8086). Обязательно активируется для доступа до пам'яті выше 1 МБ.
+### A20 Gate
+A hardware gate line (controlled via keyboard controller port `0x64` or Fast Port `0x92`) that enables or disables address bit 20. When disabled, addresses wrap around at 1 MB (emulating 8086 20-bit addressing). It must be enabled to access memory beyond 1 MB in real and protected modes.
 
 ### BDA (BIOS Data Area)
-Область данных BIOS розміром 256 байт за физическому адресиу `0x00000400`..`0x000004FF`, хранящая базовое стан оборудования (адресиа портів COM/LPT, буфер клавиатуры, видеорежим).
+A 256-byte data structure located at physical address `0x00000400`..`0x000004FF` containing low-level hardware state initialized by the BIOS (COM ports, LPT ports, keyboard buffer, video mode).
 
 ### CAR (Cache-as-RAM)
-Технология ініціалізації, при якої внутренний кэш L1/L2 процесора настраивается через MSR-регістры MTRR як временная оперативна пам'ять до того, як фізична пам'ять DRAM будет инициализирована. Позволяет использовать стек та код на языке C.
+A boot technique where the CPU's internal L1/L2 caches are configured as temporary read-write RAM via MTRRs before physical DRAM has been initialized. Enables executing C code and maintaining a stack before DRAM training.
 
-### Contract 1 (Контракт 1)
-Интерфейсный контракт передачі керування від аппаратного вектора сброса CPU (`0xFFFFFFF0`) точке входа Boot ROM.
+### Contract 1
+The inter-layer interface contract defining handover from hardware reset (`0xFFFFFFF0`) to the Boot ROM entry point.
 
-### Contract 2 (Контракт 2)
-Бинарный контракт передачі керування від **IPO_Boot_ROM** в **IPO_Firmware** за физическому адресиу `0xF000:0004` після налаштування DRAM та блокировки тіньової пам'яті PAM. Валидируется сигнатурой `'IPOF'` (`0x464F5049`).
+### Contract 2
+The binary handover contract where **IPO_Boot_ROM** transfers control to **IPO_Firmware** at physical address `0xF000:0004` after DRAM training and PAM shadowing. Validated via the magic signature `'IPOF'` (`0x464F5049`).
 
-### Contract 3 (Контракт 3)
-Классический контракт загрузки BIOS, за якому **IPO_Firmware** передаёт управление завантажувачу операційної системи, считывая сектор MBR за адресиу `0x0000:7C00` с регістром `DL` (номер диска) та проверкой сигнатуры `0x55AA`.
+### Contract 3
+The classic PC BIOS boot contract where **IPO_Firmware** transfers control to the operating system bootloader by loading sector 0 (MBR) to `0x0000:7C00` with register `DL` set to the boot drive ID and verifying magic `0x55AA`.
 
 ### E820 Memory Map
-Стандартный сервис переривання BIOS (`INT 0x15, AX=0xE820`), используемый операційною системою для обнаружения доступных диапазонов фізичної пам'яті RAM, зарезервированных областей та ACPI.
+The standard BIOS system service (`INT 0x15, AX=0xE820`) used by operating systems to discover physical RAM ranges, reserved ACPI regions, and unusable address windows.
 
 ### EBDA (Extended BIOS Data Area)
-Расширенная область данных BIOS (обычно за адресиу `0x9FC00`), резервируемая прошивкою для хранения приватного стану, таблиц ACPI та структур SMP.
+A reserved segment of conventional memory (typically located at `0x9FC00`) allocated by the BIOS for runtime private state, ACPI tables, and multi-processor MPS tables.
 
-### Extent (Экстент)
-Непрерывная цепочка физических секторів диска, выделенная файлу. В файлівій системі `IPO_FS` каждый inode хранит четыре первичных 24-байтовых экстента, что обеспечивает максимальную скорость последовательного читання.
+### Extent
+A contiguous sequence of physical disk blocks allocated to a file. In `IPO_FS`, each inode stores four primary 24-byte extent descriptors, providing high throughput for large file sequential reads.
 
 ### GDT (Global Descriptor Table)
 An x86 processor structure defining flat memory segment base addresses and limits (0x00 Null, 0x08 Code, 0x10 Data) mapping the full 4 GB physical address space in Protected Mode.
 
 ### IDT (Interrupt Descriptor Table)
-Таблиця дескрипторів переривань процесора x86, содержащая 256 шлюзов для связывания аппаратных переривань IRQ, винятків процесора та программных вызовов (`int 0x80`) с обработчиками ядра.
+An x86 table containing 256 gate descriptors mapping hardware IRQs, CPU exceptions, and software interrupts (`int 0x80`) to kernel handler routines.
 
-### Inode (Индексный дескриптор)
-Дисковая структура данных (128 байт в `IPO_FS`), описывающая файл або каталог: метаданные, розмір, права доступа та ссылки на цепочки экстентов.
+### Inode
+An on-disk data structure (128 bytes in `IPO_FS`) that represents a file or directory, containing metadata, file sizes, permissions, and extent block pointers.
 
 ### LBA (Logical Block Addressing)
-Логическая адресиация блоков, при якої сектори диска нумеруются линейно с 0, заменяя устаревшую геометрию цилиндров, головок та секторів (CHS).
+A linear addressing scheme where disk sectors are numbered sequentially starting from block 0, replacing legacy Cylinder-Head-Sector (CHS) geometry.
 
 ### LFB (Linear Framebuffer)
-Линейный кадровый буфер видеокарты, отображаемый в адресиное пространство CPU, позволяющий напрямую отрисовывать 32-битные пиксели ARGB без переключения банков пам'яті.
+A continuous physical memory aperture mapped into CPU address space allowing direct 32-bit ARGB pixel writing without bank switching.
 
 ### MRC (Memory Reference Code)
-Низкоуровневый алгоритм ініціалізації контролера пам'яті, выполняющий тайминг-тренировку та калибровку шини DDR DRAM.
+Low-level silicon initialization code responsible for discovering, configuring, and training DDR DRAM timing registers and memory controllers.
 
 ### MTRR (Memory Type Range Register)
-Специальные моделезависимые регістры CPU (MSR), задающие типы кэширования (Write-Back, Write-Combining, Uncacheable) для конкретных физических диапазонов адресиов.
+Model-specific CPU registers that define cacheability attributes (Write-Back, Write-Combining, Uncacheable) for designated physical address ranges.
 
 ### PAM (Programmable Attribute Map)
-Регістры чипсета, управляющие правами читання та запису в теневую область пам'яті BIOS (`0x000C0000`..`0x000FFFFF`).
+Chipset registers controlling read and write permissions to the shadow BIOS memory region (`0x000C0000`..`0x000FFFFF`).
 
 ### PMM (Physical Memory Manager)
-Memory allocation architecture in IPO_OS: total physical RAM is read from BIOS E820 at 0x8FF0, kernel heap is managed via kmalloc (16 MB at 0x1000000), and dynamic process heaps are partitioned into 64 MB slices.
+Memory allocation architecture in IPO_OS: BIOS E820 descriptors are passed at `0x6000` with an `e820_map_header_t` header at `0x8FE0` (`'E820'`), the kernel heap is managed via `kmalloc` (64 MB at `0x01000000`–`0x04FFFFFF`), page frames (`memory_map_alloc`) start at `0x05000000+`, and dynamic process heaps (`sbrk`) are partitioned into 512 MB slices starting at `0x08000000`.
 
 ### TSS (Task State Segment)
 Legacy x86 hardware task structure. In IPO_OS's flat protected mode model, context switching and system call dispatch are implemented in software routines without hardware TSS stack switching.
 
 ### VMM (Virtual Memory Manager)
-Подсистема ядра, управляющая каталогами та таблицами страниц, обеспечивая изолированное линейное 4-гигабайтное адресиное пространство для каждого процесса.
+The kernel subsystem that manages page directories and page tables, providing isolated linear 4 GB address spaces for each process.
+
+### KMOD (Relocatable Kernel Module)
+IPO_OS's runtime-loadable kernel module and driver binary format (`.kmd`, magic `'IKMD'` `0x444D4B49`, ABI `0x0100`). Supports runtime symbol resolution against ~1,560 exported kernel symbols (`generate_ksyms.py`) and 32-bit `ABS32`/`REL32` code relocations.
+
+### SMP & Local APIC (Symmetric Multiprocessing)
+Multi-core x86 execution architecture where the Bootstrap Processor (BSP) discovers Application Processors (APs) via ACPI MADT / Intel MP tables and wakes them using `INIT-SIPI-SIPI` commands over the Local APIC MMIO controller (`0xFEE00000`) and the physical trampoline at `0x8000`.
+
+### Storage Pool (Multi-Disk Spanned Volume)
+Persistent block virtualization layer (`storage_pool.c`) that combines one or more physical drives (`ata0`, `ata1`, ...) into a unified linear logical volume backed by primary and backup superblocks at LBA 2030 and LBA 2039 (`'POOL'`, CRC32).
+
+### WAL (Write-Ahead Logging)
+An 8-sector (64-entry) on-disk transaction journal at LBA 2031–2038 (`'TXNL'`) that logs block write intents (`PENDING` → `COMMITTED`) prior to modification, guaranteeing automatic crash recovery on boot.
+

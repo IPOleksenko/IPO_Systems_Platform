@@ -8,39 +8,29 @@ import Callout from '../../../../components/Callout.astro';
 
 # Система збирання та утилиты развертывания
 
-Проект **IPO_OS** собирается с помощью модульной системы GNU Make та містить специализированные инструменты для манипуляции образами дисків та налаштування виртуальной сети.
+**IPO_OS** features a modular build system powered by GNU Make, custom Python filesystem tooling, and host TAP networking scripts.
 
 ---
 
-## 🔨 Цели збирання Makefile
-
-Сборочный конвейер розділен на независимые модули:
+## 🔨 Makefile Targets
 
 <SharedCode id="makefile-all-targets" />
 
-### Параметры конфігурації (`mk/config.mk`):
-- `NET_MODE ?= tap` — Режим сети: `tap` (виртуальный сетевой адаптер хоста с прямым доступом ко всім 65535 портум) або `user` (эмуляция QEMU SLIRP с пробросом портів).
-- `TAP_DEV ?= tap0` — Имя виртуального сетевого интерфейса TAP на хосте.
-- `AUDIODEV ?= pa` — Аудиодрайвер QEMU: `pa` (PulseAudio/PipeWire), `alsa` (ALSA), `sdl` (SDL), `none` (отключен).
-- `DRIVE_TYPE ?= ide` — Тип дисківого контролера: `ide` (ATA/PATA), `ahci` (SATA AHCI), `usb` (USB 2.0 Mass Storage).
+### Build Configuration Parameters:
+- `NET_MODE ?= tap` — Network mode: `tap` (direct L2 access to all 65,535 ports) or `user` (QEMU SLIRP NAT).
+- `TAP_DEV ?= tap0` — Name of virtual TAP device on Linux host.
+- `AUDIODEV ?= pa` — QEMU audio backend (`pa`, `alsa`, `sdl`, `none`).
+- `DRIVE_TYPE ?= ide` — Primary storage bus (`ide`, `ahci`, `usb`).
 
 ---
 
-## 💾 Дисковая утилита `disk_editor.py`
-
-Скрипт `disk_editor.py` призначений для прямого читання, запису та форматирования файлівої системи **IPO_FS** внутри файлу образа диска (`build/disk.img`):
+## 💾 Disk Management with `disk_editor.py`
 
 <SharedCode id="disk-editor-cmds" />
 
-### Опции командного рядка:
-- `-i, --image <path>` — Путь до образу диска (по умолчанию: `build/disk.img`).
-- `-s, --start-lba <lba>` — Смещение начала розділа IPO_FS в секторах LBA (по умолчанию: `2048`).
-
 ---
 
-## 📦 Автоматическая загрузка додатків `load_applications.py`
-
-Утилита сканирует скомпилированные бинарники в каталоге `build/applications/` та автоматически импортирует их в образ диска в директорию `/applications`, делая их немедленно доступными для запуска з shell:
+## 📦 Application Ingestion via `load_applications.py`
 
 ```bash
 python3 load_applications.py
@@ -48,8 +38,15 @@ python3 load_applications.py
 
 ---
 
-## 🌐 Налаштування сети TAP (`tools/setup-tap.sh`)
+## 💿 Unified Live USB Builder (`tools/create_live_image.py`) & KMOD Symbol Generator (`tools/generate_ksyms.py`)
 
-Скрипт настраивает сетевой мост на стороне Linux-хоста:
+- **`tools/generate_ksyms.py`:** Invoked automatically during the two-pass kernel link (`mk/kernel.mk`), extracting ~1,560 global kernel symbols from `kernel_pass1.elf` into `build/ksyms_generated.c` for runtime `.kmd` module linking.
+- **`tools/format_disk_via_os.py`:** Formats `build/disk.img` using the IPO_OS kernel itself inside headless QEMU (`make format-disk`).
+- **`tools/create_live_image.py` (`make live-image`):** Combines the bootloader and kernel (`build/disk.iso`, LBA 0..2029), Storage Pool superblocks and WAL journal (`LBA 2030–2039`), MBR partition entry, and the populated `IPO_FS` partition (`LBA 2048+`) into a single 128 MB bootable image **`build/IPO_OS.img`** ready for USB flashing.
+
+---
+
+## 🌐 TAP Network Setup (`tools/setup-tap.sh`)
 
 <SharedCode id="tap-networking-setup" />
+

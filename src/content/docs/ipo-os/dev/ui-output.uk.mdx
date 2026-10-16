@@ -8,147 +8,105 @@ import Callout from '../../../../components/Callout.astro';
 
 # Користувачский интерфейс, Shell, GUI та Мультимедиа
 
-Операційна система **IPO_OS** предоставляет богатый спектр користувачских интерфейсов:
-1. **Консольный терминал Shell:** 27+ встроенных команд, фоновые виртуальные рабочие пространства (`run &`), конвейеры (`|`), история та ANSI-цвета.
-2. **Віконний менеджер (Window Manager):** 2D робочий стіл у VGA Mode 13h (320x200x256); композитор оновлюється з активного циклу процесу/консолі без фіксованого обмеження FPS, програмний курсор миші PS/2, події миші та клавіатури.
-3. **3D Графика TinyGL (OpenGL 1.1):** Программный 3D растеризатор в ядрі, поддержка Z-буфера, освещения, текстурирования та полигональных моделей.
-4. **Звуковая подсистема:** Аппаратный драйвер Sound Blaster 16 (DSP, 16-бит DMA, 22050 Гц стерео микшер) та эмуляция PC Speaker PWM.
+**IPO_OS** provides a comprehensive user experience:
+1. **Interactive Console Shell:** 32 built-in commands, multitasking virtual workspaces (`run &`), pipes (`|`), scrollback history, and ANSI colors.
+2. **Window Manager (WM):** 2D graphical desktop running in VGA Mode 13h (320x200x256); compositor updates run from the active process/console loop without a fixed FPS cap, with a PS/2 software mouse pointer and event-driven windows.
+3. **TinyGL 3D Engine (OpenGL 1.1):** Software 3D rasterizer inside kernel space, featuring Z-buffering, dynamic lighting, texture mapping, and flat/smooth shading.
+4. **Audio Architecture:** Sound Blaster 16 DSP hardware driver (16-bit DMA Ch 5, 22050 Hz stereo mixer) and fallback PC Speaker PWM.
 
 <LocalizedDiagram id="window_manager" />
 
 ---
 
-## 💻 1. Консольный терминал Shell та Встроенные Команды
+## 💻 1. Shell Console and Built-in Commands
 
-Командный интерпретатор ядра (`terminal.c`) поддерживает интерактивное редактирование рядка, историю команд, автодополнение путей та развитый синтаксис операторов.
+The kernel command line interpreter (`src/kernel/core/terminal.c`) provides interactive text navigation, remote serial command execution (`terminal_poll_serial_commands()`), and multitasking execution operators:
 
-### 📋 Полный довідник всіх 27 встроенных команд
+### 📋 Complete 32 Built-in Command Reference (`terminal_is_builtin`)
 
-| Команда | Алиасы | Назначення та синтаксис |
+| Command | Syntax | Description |
 | :--- | :--- | :--- |
-| `help` | `?` | Вывод полной справочной справки за синтаксису та командам. |
-| `clear` | `cls` | Очищення экрана VGA та сброс позиции курсора. |
-| `pwd` | — | Вывод текущего абсолютного пути рабочей директории. |
-| `cd` | — | Переход в каталог: `cd <path>`, `cd ..`, `cd ~` (в корень). |
-| `ls` | `dir` | Список файлів та каталогов с указанием типа та точного розміра. |
-| `cat` | `type` | Вывод содержимого одного або нескольких текстовых файлів: `cat file.txt`. |
-| `touch` | — | Створення пустого файлу: `touch newfile.txt`. |
-| `mkdir` | — | Створення нового каталога: `mkdir /mydir`. |
-| `rm` | `del`, `rmdir` | Видалення файлів або пустых директорий: `rm filename`. |
-| `cp` | `copy` | Копирование файлів: `cp src.txt dst.txt`. |
-| `mv` | `move`, `rename`| Перемещение або переименование файлу/каталога. |
-| `stat` | — | Детальная информация про иноде: розмір, права, экстенты на диску. |
-| `echo` | — | Вывод текста, перезапис в файл (`echo text > file`) або дозапис (`>>`). |
-| `ps` | `tasks`, `procs`| Список активных процессов ядра с PID, статусом та объемом пам'яті. |
-| `kill` | — | Завершение процесса за номеру PID: `kill <pid>`. |
-| `killall`| — | Остановка всіх запущенных фоновых задач та процессов. |
-| `run` | — | Запуск программ с многозадачными пакетными операторами (`&`, `&&`, `|`, `;`). |
-| `startx` | — | Запуск графического віконного менеджера WM (асинхронный режим). |
-| `stopx` | — | Остановка віконного менеджера та возврат в текстовый режим. |
-| `ifconfig`| `ip`, `ipconfig` | Просмотр або налаштування IP-адресиа, маски та шлюза: `ifconfig 192.168.7.2`. |
-| `df` | `diskinfo` | Статистика диска IPO_FS: всього блоков, свободно, занято, число инодов. |
-| `meminfo`| `free` | Статистика кучи ядра: общий объем, выделено, свободно, число блоков. |
-| `driver` | `drivers`, `lsmod` | Список зарегістрированных динамических драйверів пристроїв. |
-| `keymap` | `layout`, `keymaps` | Управление раскладками: `keymap list`, `keymap on <name>`, `keymap off <name>`. |
-| `return` | `ret`, `retval` | Переключение отображения кода возврата: `return on` / `return off`. |
-| `reboot` | `restart` | Аппаратная перезагрузка ПК (контролер 8042, порт 0x92 або тройной сбой). |
-| `shutdown`| `poweroff`, `halt` | Безопасное выключение питания компьютера через ACPI/APM. |
+| `help` | `help` | Displays full system help and syntax reference. |
+| `clear` | `clear` | Clears terminal screen and resets cursor position. |
+| `pwd` | `pwd` | Prints canonical absolute path of current working directory. |
+| `cd` | `cd <path>` | Changes directory (`cd ..`, `cd /`). |
+| `ls` | `ls [path]` | Lists directory contents showing file type and exact byte size. |
+| `cat` | `cat <file>...` | Displays contents of files to the console. |
+| `touch` | `touch <file>...` | Creates a new empty file. |
+| `mkdir` | `mkdir <dir>...` | Creates a new directory. |
+| `rm` | `rm <path>...` | Deletes files or empty directories. |
+| `cp` | `cp <src> <dst>` | Copies files from source to destination. |
+| `mv` | `mv <src> <dst>` | Moves or renames files and directories. |
+| `stat` | `stat <path>` | Displays inode metadata: exact 64-bit size, flags, and extent table. |
+| `echo` | `echo <text> [> / >> file]` | Prints text to stdout or redirects to file (`>` overwrite or `>>` append). |
+| `ps` | `ps` | Lists active processes with PID, state, and stack/heap metrics. |
+| `kill` | `kill <pid>` | Terminates a process by PID. |
+| `killall` | `killall <name>` | Terminates all active processes matching the given name. |
+| `run` | `run <cmd> [&\|&&\|\|\|;]` | Launches executables (ELF32, `.bin`, `#!` scripts) with multitasking operators. |
+| `startx` | `startx` | Launches graphical Window Manager desktop session in VGA Mode 13h (`320x200x256`). |
+| `stopx` | `stopx` | Terminates graphical WM session and restores `80x25` text mode. |
+| `ifconfig` | `ifconfig [ip mask gw]` | Displays or configures IPv4 address, subnet mask, gateway, and RTL8139 MAC. |
+| `df` | `df` | Reports `IPO_FS` storage capacity, used/free 4 KB blocks, and inodes. |
+| `free` | `free` | Reports physical RAM, 64 MB kernel heap (`kmalloc`), and PMM frame statistics. |
+| `drivers` | `drivers [list\|load\|unload]` | Manages dynamic kernel modules (`.kmod`) and lists registered drivers. |
+| `hardware` | `hardware` | Prints the discovered device tree (`device_node_t`) across `platform`, `isa`, `pci`, and `ata` buses. |
+| `symbols` | `symbols` | Displays the kernel exported symbol table (`EXPORT_SYMBOL`). |
+| `ksyms` | `ksyms` | Alias for `symbols` to inspect exported kernel symbols. |
+| `storage` | `storage [status\|create\|destroy\|sync\|recover]` | Manages `IPO_STORAGE_POOL` volume manager (LVM/RAID0, WAL transaction log, CRC32). |
+| `reinstall_fs`| `reinstall_fs` | Formats the disk partition with a clean `IPO_FS` filesystem. |
+| `keymap` | `keymap [list\|on\|off] [name]` | Manages runtime keyboard layouts (`/etc/keymaps/*.kmap`). |
+| `return` | `return [on\|off]` | Toggles display of process exit status codes. |
+| `reboot` | `reboot` | Reboots machine via 8042 controller (`0x64`) or triple fault. |
+| `shutdown` | `shutdown` | Shuts down machine safely via ACPI/QEMU/Bochs/VirtualBox ports. |
 
 ---
 
-### ⚡ Многозадачные операторы команди `run`
-
-Команда `run` дозволяє конструировать сложные конвейеры виконання:
+### ⚡ Multitasking Pipeline Operators in `run`
 
 ```bash
-# 1. Оператор '&' — запуск в ОКРЕМИХ віртуальних робочих столах (workspaces)
-# Перемикання між робочими столами: Ctrl + Page Up / Ctrl + Page Down
+# 1. '&' operator — separate virtual workspaces (Ctrl+PgUp / Ctrl+PgDn to switch):
 run edit & player & hosting_server
 
-# 2. Оператор '&&' — асинхронний паралельний запуск в ЄДИНОМУ робочому столі
-# Дозволяє запустити кілька GUI вікон на одному спільному десктопі
-run wm_demo && wm_demo2 && wm_fullscreen
+# 2. '&&' operator — asynchronous shared workspace (run multiple GUI/3D apps on same desktop):
+run gl_cube && gl_gears && fps_meter
 
-# 3. Оператор '|' — конвеєр (очікує завершення лівої програми та передає код повернення)
-run test_sb16 | player sound.raw
+# 3. '|' operator — stdout-to-file pipelined execution:
+run echo hello | cat
 
-# 4. Оператор ';' — послідовне виконання програм
+# 4. ';' operator — sequential execution:
 run setfont /fonts/terminus.fnt ; startx
 ```
 
-### ⌨️ Горячие клавиши терминала
-- **`Ctrl + Page Up` / `Ctrl + Page Down`:** Переключение між независимыми виртуальными экранами многозадачности.
-- **`Ctrl + Left Shift` / `Ctrl + Right Shift`:** Циклическое переключение активной раскладки клавиатуры.
-- **`Alt + Left/Right Shift`:** Альтернативная комбинация смены языка ввода.
-- **`Ctrl + C`:** Переривання активного foreground-процесса або закрытие рабочего стола.
-- **`Page Up` / `Page Down`:** Прокрутка истории терминала (до 128 рядків scrollback-буфера).
-- **`Стрелки Вверх / Вниз`:** Навигация за истории ранее введенных команд.
+### ⌨️ Terminal Navigation Shortcuts
+- **`Ctrl + Page Up` / `Ctrl + Page Down`:** Cycle between multitasking workspaces.
+- **`Ctrl + Left Shift` / `Ctrl + Right Shift`:** Cycle active keyboard layout.
+- **`Ctrl + C`:** Interrupt active task or close current workspace.
+- **`Page Up` / `Page Down`:** Scroll terminal output buffer (dynamic scrollback).
+- **`Up / Down Arrows`:** Command history recall.
 
 ---
 
-## 🪟 2. Віконний менеджер (Window Manager)
+## 🪟 2. Window Manager (WM)
 
-Віконний менеджер активується командою `startx`; композитор оновлюється з активного циклу процесу/консолі без фіксованого обмеження 60 FPS:
-
-### Структура окна (`wm_window_t`)
-Каждое окно содержит:
-- Собственный пиксельный буфер (`uint8_t *framebuf`) в пам'яті
-- Координаты `(x, y)` та розміры `(w, h)`
-- Заголовок окна та цветовую палитру (рамка, заголовок, фон)
-- Колбэк отрисовки `draw_cb(wm_window_t *win)`
-- Колбэк событий `event_cb(wm_window_t *win, uint32_t event, uint32_t data)`
-
-### События віконного менеджера:
-- `WM_EVENT_CLICK` — клик левой кнопкой мыши внутри окна
-- `WM_EVENT_KEY_DOWN` / `WM_EVENT_KEY_UP` — нажатие та отпускание клавиши
-- `WM_EVENT_FOCUS_IN` / `WM_EVENT_FOCUS_OUT` — получение та потеря фокуса ввода
-- `WM_EVENT_MOVE` / `WM_EVENT_RESIZE` — перемещение або изменение розміров окна
-- `WM_EVENT_CLOSE` — нажатие кнопки закрытия
-
-<Callout type="tip" title="Кнопка аварийного выхода [✕]">
-В левом нижнем углу графического экрана завжди отображается системная кнопка `[✕]`. Клик за ней левой кнопкой мыши або нажатие клавиши `ESC` гарантированно завершает графическую сессию та повертає терминал в текстовый режим 80x25.
-</Callout>
+The graphical desktop compositor is updated by the active process/console loop in VGA Mode 13h (320x200x256), without a fixed 60 FPS cap:
+- Window decoration styles: `WM_DECOR_DEFAULT`, `WM_DECOR_THIN`, `WM_DECOR_NONE`.
+- Event model: `WM_EVENT_CLICK`, `WM_EVENT_KEY_DOWN`, `WM_EVENT_MOVE`, `WM_EVENT_RESIZE`, `WM_EVENT_CLOSE`.
+- Persistent exit button `[✕]` in bottom-left corner ensures safe return to text mode.
 
 ---
 
-## 🧊 3. 3D Графический движок TinyGL (OpenGL 1.1)
+## 🧊 3. TinyGL 3D Graphics (OpenGL 1.1)
 
-IPO_OS містить встроенный в ядро программный 3D растеризатор **TinyGL**, реализующий спецификацию OpenGL 1.1 без необходимости наличия аппаратного GPU:
-
-### Возможности TinyGL:
-- **Матричные преобразования:** `glMatrixMode(GL_PROJECTION)`, `glLoadIdentity()`, `gluPerspective()`, `glTranslatef()`, `glRotatef()`, `glScalef()`.
-- **Геометрические примитивы:** `GL_POINTS`, `GL_LINES`, `GL_TRIANGLES`, `GL_QUADS`, `GL_POLYGON`.
-- **Освещение та материалы:** До 8 источников света (`GL_LIGHT0`), расчет диффузного, фонового та зеркального света, нормали вершин `glNormal3f()`.
-- **Буфер глубины:** 16-битный аппаратный Z-буфер для корректного видалення невидимых граней.
-- **Текстурирование:** Билинейная фильтрация текстур, форматы 2D текстур.
-- **Блендинг та прозрачность:** Поддержка `glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)`.
-
-### Демонстрационные 3D додатки, входящие в состав ОС:
-1. `gl_gears` — Классические вращающиеся шестерни OpenGL с расчетом FPS.
-2. `gl_teapot` — Знаменитый чайник з Юты (Utah Teapot) с расчетом освещения та нормалей.
-3. `gl_cube` — Цветной вращающийся 3D-куб.
-4. `gl_fog` — Демонстрация объемного тумана.
-5. `gl_blend` — Прозрачные пересекающиеся плоскости.
-6. `gl_stencil` — Демонстрация работы с буфером трафарета.
+Integrated bare-metal software 3D rasterizer:
+- **Primitives:** Points, lines, triangles, quads, polygons.
+- **Lighting:** Up to 8 light sources, diffuse/specular/ambient illumination, normal vectors.
+- **Z-Buffer:** 16-bit depth buffer for hidden surface removal.
+- **Applications in `applications/`:** `gl_gears`, `gl_teapot`, `gl_cube`, `fps_meter`, `wm_fullscreen`, `doom`.
 
 ---
 
-## 🔊 4. Звуковая подсистема (Sound Blaster 16 та PC Speaker)
+## 🔊 4. Sound Blaster 16 & PC Speaker Audio
 
-IPO_OS имеет двухуровневую аудиосистему:
-
-### 1. Sound Blaster 16 (Аппаратный DSP)
-- Базовый порт ввода-вывода: `0x220` (сброс, статус, читання, запис).
-- 16-битный DMA-контролер: **Канал 5** (порти `0xD4`, `0xD6`, `0xC4`, `0x8B`, `0xC6`).
-- Двойная аппаратная буферизация (Ping-Pong DMA buffers за адресиам `0x600000` та `0x610000`).
-- Стандартная частота дискретизации: **22050 Гц**, 16-бит, стерео.
-- Программный микшер: Одновременное воспроизведение нескольких потоков с автоматическим ресемплингом та нормализацией громкости. Поддерживаемые форматы: `U8`, `S16`, `S24`, `S32`, `F32`.
-
-### 2. PC Speaker PWM (Аппаратный таймер 2)
-- При отсутствии платы Sound Blaster 16 аудиоядро автоматически переключается на встроенный динамик ПК (порти `0x42`, `0x43`, `0x61`).
-- Реализован алгоритм **Zero-Crossing Rate Tracker**, анализирующий аудиопоток в реальном времени та генерирующий эквивалентные частоты на системном динамике.
-
-### Программы для работы со звуком:
-- `player <file.raw>` — Консольный аудиоплеер для воспроизведения звуковых файлів.
-- `test_sb16` — Программа тестування DSP, DMA та микшера Sound Blaster 16.
-- `sound_test` / `audio_test` — Тестування генератора частот та полифонии.
+- **Sound Blaster 16:** Base port `0x220`, 16-bit DMA Channel 5, double buffering at `0x600000`, 22050 Hz stereo mixer.
+- **PC Speaker:** Dynamic PWM frequency tracking using Zero-Crossing rate analysis.
+- **Audio & Multimedia applications:** `player` (plays media files from `/music/`), `doom`.

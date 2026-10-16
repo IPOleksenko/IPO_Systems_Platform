@@ -48,8 +48,17 @@ python3 load_applications.py
 
 ---
 
+## 💿 Сборка единого образа Live USB (`tools/create_live_image.py`) и KMOD-символов (`tools/generate_ksyms.py`)
+
+- **`tools/generate_ksyms.py`:** Выполняется автоматически при двухпроходной линковке ядра (`mk/kernel.mk`), извлекая ~1560 глобальных символов из `kernel_pass1.elf` в `build/ksyms_generated.c` для динамического загрузчика модулей `.kmd` (KMOD).
+- **`tools/format_disk_via_os.py`:** Форматирует образ `build/disk.img` в headless-режиме QEMU силами самого ядра `IPO_OS` (`make format-disk`).
+- **`tools/create_live_image.py` (`make live-image`):** Объединяет загрузочный образ ядра (`build/disk.iso`, секторы 0..2029), метаданные пула хранения и журнала WAL (`LBA 2030–2039`), таблицу разделов MBR и отформатированный раздел `IPO_FS` (`LBA 2048+`) в единый 128-мегабайтный загрузочный образ **`build/IPO_OS.img`**, готовый для записи на физическую USB-флешку.
+
+---
+
 ## 🌐 Настройка сети TAP (`tools/setup-tap.sh`)
 
 Скрипт настраивает сетевой мост на стороне Linux-хоста:
 
 <SharedCode id="tap-networking-setup" />
+

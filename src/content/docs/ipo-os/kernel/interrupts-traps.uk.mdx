@@ -58,13 +58,13 @@ void cpu_exception_handler(uint32_t *frame) {
 
 ---
 
-## ⚡ Програмний шлюз переривань: `int 0x80`
+## ⚡ Software Interrupt Gate: `int 0x80`
 
-Системні виклики використовують програмний шлюз переривань **`0x80`**:
-- Сконфігурований в IDT з прапорцями `0xEE` (Present, 32-bit Interrupt Gate, DPL=3).
-- Селектор сегмента коду `0x08` (32-бітний плоский код ядра).
-- Перенаправляє керування на асемблерну точку входу `syscall_isr_entry` у `src/kernel/arch/x86/syscall.asm`.
-- **Апаратний захист прапорця переривань:** На відміну від шлюзу-пастки (Trap Gate), процесор x86 під час входу через Interrupt Gate (`0xEE`) автоматично скидає прапорець `IF = 0` у EFLAGS, апаратно забороняючи переривання на час диспетчеризації та запобігаючи реентрантності. Початковий стан `EFLAGS` відновлюється інструкцією `iretd`.
+System calls use software interrupt gate **`0x80`**:
+- Configured in IDT with flags `0xEE` (Present, 32-bit Interrupt Gate, DPL=3).
+- Code Segment selector `0x08` (Kernel 32-bit flat code).
+- Directs execution to `syscall_isr_entry` in `src/kernel/arch/x86/syscall.asm`.
+- **Hardware Interrupt Flag Behavior:** Unlike a trap gate, x86 hardware automatically clears `IF = 0` in EFLAGS upon entering through an interrupt gate (`0xEE`), preventing reentrancy during kernel dispatch. The original caller `EFLAGS` is restored upon `iretd`.
 
 ---
 
@@ -98,3 +98,7 @@ for (;;) {
    #define TSC_PER_MS 2000000ULL
    ```
    - Enables sub-microsecond timing accuracy without hardware timer interrupt jitter.
+3. **Local APIC (`0xFEE00000`) & Cross-Core IPIs:**
+   - On multi-core systems, each core enables its Local APIC via MSR `0x1B` and MMIO registers (`SVR = 0x00F0`, `TPR = 0x0080`, `EOI = 0x00B0`, `ICR_LOW = 0x0300`, `ICR_HIGH = 0x0310`).
+   - Vector **`0xE0` (`SMP_IPI_VECTOR`)** is used for inter-processor interrupts (IPIs) and cross-core task synchronization.
+

@@ -1,20 +1,24 @@
 ---
 import { sharedStructTables, getStructTitle, getFieldDescription } from '../data/shared-code';
 import { getTranslation } from '../utils/i18n';
+import { siteConfig } from '../../site.config';
 
 interface Props {
   id: string;
-  lang: string;
+  lang?: string;
 }
 
 const { id, lang } = Astro.props;
+const currentPath = Astro.url.pathname;
+const pathSegments = currentPath.split('/').filter(Boolean);
+const detectedLang = lang || pathSegments.find((s) => s in siteConfig.languages) || siteConfig.defaultLang;
 const table = sharedStructTables.find((t) => t.id === id);
 
 if (!table) {
   throw new Error(`SharedStruct table not found for ID: ${id}`);
 }
 
-const title = getStructTitle(table, lang);
+const title = getStructTitle(table, detectedLang);
 ---
 
 <div class="struct-table-wrapper" id={`struct-${id}`}>
@@ -25,11 +29,11 @@ const title = getStructTitle(table, lang);
   <table>
     <thead>
       <tr>
-        <th style="width: 12%;">{getTranslation(lang, 'tables.struct.offset')}</th>
-        <th style="width: 14%;">{getTranslation(lang, 'tables.struct.size')}</th>
-        <th style="width: 18%;">{getTranslation(lang, 'tables.struct.type')}</th>
-        <th style="width: 22%;">{getTranslation(lang, 'tables.struct.name')}</th>
-        <th>{getTranslation(lang, 'tables.struct.description')}</th>
+        <th style="width: 12%;">{getTranslation(detectedLang, 'tables.struct.offset')}</th>
+        <th style="width: 14%;">{getTranslation(detectedLang, 'tables.struct.size')}</th>
+        <th style="width: 18%;">{getTranslation(detectedLang, 'tables.struct.type')}</th>
+        <th style="width: 22%;">{getTranslation(detectedLang, 'tables.struct.name')}</th>
+        <th>{getTranslation(detectedLang, 'tables.struct.description')}</th>
       </tr>
     </thead>
     <tbody>
@@ -39,7 +43,7 @@ const title = getStructTitle(table, lang);
           <td>{f.size}</td>
           <td><code>{f.type}</code></td>
           <td><strong><code>{f.name}</code></strong></td>
-          <td>{getFieldDescription(f, lang)}</td>
+          <td>{getFieldDescription(f, detectedLang)}</td>
         </tr>
       ))}
     </tbody>

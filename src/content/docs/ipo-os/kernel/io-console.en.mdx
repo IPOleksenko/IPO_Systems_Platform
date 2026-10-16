@@ -48,3 +48,19 @@ Applications create and manage graphical windows using the WM API:
 - `IPO_SYSCALL_WM_DESTROY_WINDOW` (`0x1071`): Closes window and invalidates its screen region.
 - `IPO_SYSCALL_WM_SET_FOCUS` (`0x1077`): Brings window to top of z-order and sets input focus.
 - `IPO_SYSCALL_WM_INVALIDATE` (`0x107A`): Marks window contents as dirty for the compositor to redraw.
+
+---
+
+## 💻 Interactive Terminal Shell (`terminal.c`, 32 Built-In Commands) & COM1 Serial Console
+
+The built-in kernel shell (`src/kernel/core/terminal.c`) features command history, `Tab` auto-completion, batch execution pipelines (`run`), background interactive command execution over **UART COM1 (`0x3F8`, `terminal_poll_serial_commands()`)** (including while the graphical Window Manager `startx` is active), and **self-expanding dynamic buffers** (`terminal_cwd`, input line, and history buffers grow automatically via `krealloc` without fixed array length caps):
+
+| Category | Built-In Shell Commands (`terminal_is_builtin`) |
+| :--- | :--- |
+| **Filesystem & Navigation (`IPO_FS`)** | `ls`, `cd`, `pwd`, `mkdir`, `touch`, `cat`, `echo`, `rm`, `mv`, `cp`, `stat`, `df`, `reinstall_fs` |
+| **Storage Pool & WAL (`storage_pool`)** | `storage [status \| list \| usage \| check \| create \| add \| recover \| save]` |
+| **Drivers & KMOD Modules (`.kmd`)** | `drivers [list \| info \| load <path.kmd> \| unload \| status \| symbols]`, `symbols [filter]` (`ksyms`) |
+| **Hardware Registry & SMP** | `hardware [overview \| list \| cpu \| memory \| pci \| storage \| network \| usb \| refresh \| info <id> \| status]` |
+| **Memory, Processes & Keymaps** | `free`, `ps`, `kill`, `killall`, `run`, `return`, `keymap` |
+| **Graphics, Networking & System** | `startx`, `stopx`, `ifconfig`, `clear`, `help`, `reboot`, `shutdown` |
+

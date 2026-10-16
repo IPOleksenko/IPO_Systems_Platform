@@ -1,6 +1,6 @@
 ---
 title: "Complete System Calls Reference"
-description: "Exhaustive reference of all 105 system calls in IPO_OS: call numbers, C signatures, x86 int 0x80 ABI registers, parameters, and error codes."
+description: "Exhaustive reference of all 106 system calls in IPO_OS: call numbers, C signatures, x86 int 0x80 ABI registers, parameters, and error codes."
 ---
 
 import SharedSyscallTable from '../../../../components/SharedSyscallTable.astro';
@@ -37,7 +37,7 @@ When `int 0x80` is triggered, the CPU transfers execution to IDT gate `0x80` (`s
 
 ## 📋 Comprehensive System Calls Table
 
-Below is the complete interactive list of all 105 registered system calls:
+Below is the complete interactive list of all 106 registered system calls:
 
 <SharedSyscallTable lang="en" />
 
@@ -96,6 +96,11 @@ VFS subsystem providing 64-bit storage operations on IPO_FS:
 - **C Signature:** `int ipo_seek(int fd, int32_t offset, int whence);`
 - **Arguments:** `args[0]` = `fd`, `args[1]` = offset delta, `args[2]` = whence (`0` = SEEK_SET, `1` = SEEK_CUR, `2` = SEEK_END).
 - **Returns:** New absolute byte position within file.
+
+### `0x1064` — `IPO_SYSCALL_FS_STATVFS`
+- **C Signature:** `int ipo_statvfs(ipo_fs_usage_t *usage_out);`
+- **Arguments:** `args[0]` = pointer to `ipo_fs_usage_t` structure.
+- **Returns:** `0` on success with total, used, and free blocks and inodes across the mounted storage pool.
 
 ---
 

@@ -5,59 +5,66 @@ description: "Створення бинарного образа диска, р�
 
 # Підготовка носителя та разметка
 
-Для створення загрузочного накопителя під IPO_OS формируется бинарный образ диска с таблицей розділов MBR та розділом файлівої системи **IPO_FS**, начинающимся с сектора **LBA 2048** (стандартная граница выравнивания 1 МБ).
+To prepare bootable media for IPO_OS, a raw disk image is created with an MBR partition table and an **IPO_FS** file system partition starting at **LBA 2048** (the standard 1 MB alignment boundary).
 
 ---
 
-## 💾 Структура дисківого пространства
+## 💾 Disk Layout & Geometry (`build/IPO_OS.img`)
 
 ```
-┌─────────────────────┬───────────────────────────┬──────────────────────────────┐
-│ Сектор 0 (LBA 0)    │ Сектори 1–2047            │ Сектор 2048 (LBA 2048) ...   │
-│ Master Boot Record  │ Зарезервована область     │ Розділ файлової системи      │
-│ (Stage 1 / 0x7C00)  │ Код Stage 2 завантажувача │ Суперблок, бітові карти, FS  │
-└─────────────────────┴───────────────────────────┴──────────────────────────────┘
+┌───────────────────┬────────────────────────┬───────────────────────────┬───────────────────────────┐
+│ Sector 0 (LBA 0)  │ Sectors 1–2029         │ Sectors 2030–2039         │ Sector 2048 (LBA 2048)... │
+│ MBR + Partition   │ Stage 2 Bootloader     │ Storage Pool + WAL Journal│ IPO_FS Partition          │
+│ Table (0x55AA)    │ & IPO_OS Kernel Image  │ SB (2030/2039), WAL(31-38)│ Superblock, Bitmaps, Files│
+└───────────────────┴────────────────────────┴───────────────────────────┴───────────────────────────┘
 ```
 
-1. **Сектор 0 (MBR):** Содержит 512 байт первичного завантажувача Stage 1 та таблицу розділов с сигнатурой `0x55AA` за смещению 510.
-2. **Секторы 1–2047:** Зарезервированные сектори для вторичного завантажувача Stage 2 та метаданных.
-3. **Сектор 2048 та далее:** Начало файлівої системи `IPO_FS`. Суперблок розташований строго в секторі 2048.
+1. **Sector 0 (MBR):** Contains the 512-byte Stage 1 bootloader and standard MBR partition table (Partition 1 points to `IPO_FS` with type `0x83` starting at `LBA 2048`) ending with `0x55AA`.
+2. **Sectors 1–2029:** Stage 2 bootloader and kernel binary payload (packaged into the unified `build/IPO_OS.img` via `make live-image` / `tools/create_live_image.py`).
+3. **Sectors 2030–2039 (Storage Pool Superblocks & WAL Journal):**
+   - **LBA 2030:** Primary Storage Pool Superblock (`storage_pool_raw_sb_t`, magic `'POOL'`, CRC32).
+   - **LBA 2031–2038:** 8-sector Write-Ahead Logging (**WAL**) transaction journal (64 entries of 64 bytes, magic `'TXNL'`).
+   - **LBA 2039:** Backup Storage Pool Superblock for automatic failover and recovery.
+4. **Sector 2048+:** Start of the `IPO_FS` partition. The `IPO_FS` Superblock resides at exact LBA offset 2048.
 
 ---
 
-## 🛠️ Работа с образом через `disk_editor.py`
+## 🛠️ Managing the Filesystem via `disk_editor.py`
 
-В состав инструментов входит утилита `disk_editor.py`, позволяющая управлять файлуми внутри образа диска без необходимости root-прав та монтирования loop-пристроїв:
+The project provides an independent Python utility, `disk_editor.py`, to manipulate files inside the raw disk image without needing root loopback mounts:
 
-<SharedCode id="disk-editor-cmds" lang="ru" />
+<SharedCode id="disk-editor-cmds" lang="uk" />
 
-### Доступные команди:
-- `format`: Инициализирует файліву систему, форматируя суперблок та очищая таблицы дескрипторов.
-- `ls [path]`: Выводит содержимое каталога (номер дескриптора, розмір, имя).
-- `cat <path>`: Выводит содержимое текстового файлу в терминал.
-- `mkdir <path>`: Создаёт новый каталог.
-- `put <src> <dest>`: Копирует бинарный файл або скрипт с хост-машини внутрь образа диска.
-- `rm <path>`: Удаляет файл або пустую директорию.
+### Available Subcommands:
+- `format`: Initializes a fresh `IPO_FS` superblock, zeroing bitmap and inode tables.
+- `ls [path]`: Lists directories and file attributes (inode, size, type).
+- `cat <path>`: Prints text file contents to stdout.
+- `mkdir <path>`: Creates a directory node.
+- `put <src> <dest>`: Copies a host binary or file into the target directory inside the image.
+- `rm <path>`: Removes a file or empty directory.
 
 ---
 
-## ⚡ Запис образа на физический диск (`dd`)
+## ⚡ Writing the Image to Physical Media (`dd`)
 
-<Callout type="caution" lang="ru" title="Увага: Проверяйте имя целевого диска!">
-Ошибка в указании буквы диска в утилите `dd` приведёт до **полной та необратимой потере данных** на вашей рабочей станции. Перед записю завжди сверяйте имя пристрої через команду `lsblk`.
+<Callout type="caution" lang="uk" title="Triple-Check Your Target Device!">
+Writing to the wrong block device with `dd` will cause **irreversible data loss** on your host computer. Always verify drive identifiers using `lsblk` before proceeding.
 </Callout>
 
 ```bash
-# 1. Визначте назву підключеної флешки або CF-карти в системі Linux
+# 0. Build the unified 128 MB bootable Live USB image:
+make live-image
+
+# 1. Identify your USB drive or CF card adapter on the Linux host
 lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,MODEL
 
-# 2. Розмонтуйте автоматично підключені розділи пристрою
+# 2. Unmount any automatically mounted partitions
 sudo umount /dev/sdX* 2>/dev/null || true
 
-# 3. Запишіть образ на фізичний диск (замініть sdX на ваш пристрій)
-sudo dd if=build/disk.img of=/dev/sdX bs=4M status=progress conv=fsync
+# 3. Write the unified build/IPO_OS.img to the physical device (replace sdX with your drive)
+sudo dd if=build/IPO_OS.img of=/dev/sdX bs=4M status=progress conv=fsync
 
-# 4. Скиньте системні буфери запису
+# 4. Flush kernel write buffers
 sync
 ```
-После завершения команди `sync` извлеките накопитель та подключите его до целевому компьютеру.
+Once `sync` returns, safely remove the USB stick or CompactFlash card and connect it to your physical IPO_OS target computer.

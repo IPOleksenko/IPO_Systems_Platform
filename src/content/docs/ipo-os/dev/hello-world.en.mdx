@@ -60,10 +60,10 @@ objcopy -O binary --set-section-flags .bss=alloc,load,contents hello.elf hello.b
 
 ## 🚀 4. Deploying to the Storage Disk
 
-Copy `hello.bin` into the `/applications` directory of your IPO_OS disk:
+Copy `hello.bin` into the `/applications` directory of your IPO_OS disk using `tools/disk_editor.py`:
 
 ```bash
-python3 disk_editor.py put hello.bin /applications/hello.bin
+python3 tools/disk_editor.py put hello.bin /applications/hello.bin
 ```
 
 ---

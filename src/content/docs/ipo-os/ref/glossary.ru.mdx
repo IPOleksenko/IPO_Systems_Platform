@@ -61,10 +61,23 @@ An x86 processor structure defining flat memory segment base addresses and limit
 Регистры чипсета, управляющие правами чтения и записи в теневую область памяти BIOS (`0x000C0000`..`0x000FFFFF`).
 
 ### PMM (Physical Memory Manager)
-Memory allocation architecture in IPO_OS: total physical RAM is read from BIOS E820 at 0x8FF0, kernel heap is managed via kmalloc (16 MB at 0x1000000), and dynamic process heaps are partitioned into 64 MB slices.
+Архитектура управления физической памятью в IPO_OS: таблица дескрипторов BIOS E820 передаётся по адресу `0x6000` с заголовком `e820_map_header_t` в `0x8FE0` (`'E820'`), куча ядра `kmalloc` занимает 64 МБ (`0x01000000`–`0x04FFFFFF`), страничный аллокатор фреймов (`memory_map_alloc`) работает с `0x05000000+`, а динамические кучи процессов (`sbrk`) разделены на изолированные срезы по 512 МБ начиная с `0x08000000`.
 
 ### TSS (Task State Segment)
 Legacy x86 hardware task structure. In IPO_OS's flat protected mode model, context switching and system call dispatch are implemented in software routines without hardware TSS stack switching.
 
 ### VMM (Virtual Memory Manager)
 Подсистема ядра, управляющая каталогами и таблицами страниц, обеспечивая изолированное линейное 4-гигабайтное адресное пространство для каждого процесса.
+
+### KMOD (Relocatable Kernel Module)
+Формат динамически загружаемых модулей ядра и драйверов IPO_OS (`.kmd`, сигнатура `'IKMD'` `0x444D4B49`, версия ABI `0x0100`). Поддерживает разрешение ~1560 экспортируемых символов ядра (`generate_ksyms.py`) и 32-битные релокации `ABS32`/`REL32` во время работы системы.
+
+### SMP & Local APIC (Симметричная многопроцессорность)
+Архитектура многоядерного исполнения x86, в которой загрузочное ядро (BSP) обнаруживает вторичные ядра (AP) через таблицы ACPI MADT / Intel MP и запускает их по протоколу `INIT-SIPI-SIPI` через регистры MMIO контроллера Local APIC (`0xFEE00000`) и физический трамплин `0x8000`.
+
+### Storage Pool (Многодисковый пул хранения)
+Персистентный уровень виртуализации блочных накопителей (`storage_pool.c`), объединяющий несколько физических дисков (`ata0`, `ata1`, ...) в единое линейное логическое том-пространство с первичным и резервным суперблоками в секторах LBA 2030 и LBA 2039 (`'POOL'`, CRC32).
+
+### WAL (Write-Ahead Logging / Журнал предзаписи)
+Кольцевой транзакционный журнал из 64 записей по 64 байта в секторах LBA 2031–2038 (`'TXNL'`), фиксирующий операции записи в пул хранения (`PENDING` → `COMMITTED`) для автоматического восстановления целостности после внезапного отключения питания.
+

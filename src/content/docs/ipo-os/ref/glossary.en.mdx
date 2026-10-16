@@ -61,10 +61,23 @@ Model-specific CPU registers that define cacheability attributes (Write-Back, Wr
 Chipset registers controlling read and write permissions to the shadow BIOS memory region (`0x000C0000`..`0x000FFFFF`).
 
 ### PMM (Physical Memory Manager)
-Memory allocation architecture in IPO_OS: total physical RAM is read from BIOS E820 at 0x8FF0, kernel heap is managed via kmalloc (16 MB at 0x1000000), and dynamic process heaps are partitioned into 64 MB slices.
+Memory allocation architecture in IPO_OS: BIOS E820 descriptors are passed at `0x6000` with an `e820_map_header_t` header at `0x8FE0` (`'E820'`), the kernel heap is managed via `kmalloc` (64 MB at `0x01000000`–`0x04FFFFFF`), page frames (`memory_map_alloc`) start at `0x05000000+`, and dynamic process heaps (`sbrk`) are partitioned into 512 MB slices starting at `0x08000000`.
 
 ### TSS (Task State Segment)
 Legacy x86 hardware task structure. In IPO_OS's flat protected mode model, context switching and system call dispatch are implemented in software routines without hardware TSS stack switching.
 
 ### VMM (Virtual Memory Manager)
 The kernel subsystem that manages page directories and page tables, providing isolated linear 4 GB address spaces for each process.
+
+### KMOD (Relocatable Kernel Module)
+IPO_OS's runtime-loadable kernel module and driver binary format (`.kmd`, magic `'IKMD'` `0x444D4B49`, ABI `0x0100`). Supports runtime symbol resolution against ~1,560 exported kernel symbols (`generate_ksyms.py`) and 32-bit `ABS32`/`REL32` code relocations.
+
+### SMP & Local APIC (Symmetric Multiprocessing)
+Multi-core x86 execution architecture where the Bootstrap Processor (BSP) discovers Application Processors (APs) via ACPI MADT / Intel MP tables and wakes them using `INIT-SIPI-SIPI` commands over the Local APIC MMIO controller (`0xFEE00000`) and the physical trampoline at `0x8000`.
+
+### Storage Pool (Multi-Disk Spanned Volume)
+Persistent block virtualization layer (`storage_pool.c`) that combines one or more physical drives (`ata0`, `ata1`, ...) into a unified linear logical volume backed by primary and backup superblocks at LBA 2030 and LBA 2039 (`'POOL'`, CRC32).
+
+### WAL (Write-Ahead Logging)
+An 8-sector (64-entry) on-disk transaction journal at LBA 2031–2038 (`'TXNL'`) that logs block write intents (`PENDING` → `COMMITTED`) prior to modification, guaranteeing automatic crash recovery on boot.
+

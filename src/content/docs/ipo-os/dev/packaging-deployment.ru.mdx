@@ -12,32 +12,32 @@ import Callout from '../../../../components/Callout.astro';
 
 ---
 
-## 🛠️ Управление файлами через `disk_editor.py`
+## 🛠️ Управление файлами через `tools/disk_editor.py`
 
-Автономная утилита на Python `disk_editor.py` позволяет работать с сырыми образами дисков напрямую без необходимости монтирования через loopback-устройства с правами root:
+Автономная утилита на Python `tools/disk_editor.py` позволяет работать с сырыми образами дисков напрямую без необходимости монтирования через loopback-устройства с правами root:
 
 ```bash
 # 1. Поместить скомпилированный бинарный файл в директорию /applications
-python3 disk_editor.py put hello.bin /applications/hello.bin
+python3 tools/disk_editor.py put hello.bin /applications/hello.bin
 
 # 2. Просмотреть список файлов директории
-python3 disk_editor.py ls /applications
+python3 tools/disk_editor.py ls /applications
 
 # 3. Просмотреть содержимое файла
-python3 disk_editor.py cat /applications/hello.bin
+python3 tools/disk_editor.py cat /applications/hello.bin
 ```
 
 ---
 
-## 📦 Пакетная загрузка через `load_applications.py`
+## 📦 Пакетная загрузка через `tools/load_applications.py`
 
-Для автоматической компиляции и загрузки всех встроенных программ и тестов из каталога `applications/` во вторичный образ накопителя `build/disk.img`:
+Для автоматической компиляции и загрузки всех встроенных программ из каталога `applications/`, раскладок `/etc/keymaps`, модулей `/lib/modules` и медиафайлов `/music` в образ накопителя `build/disk.img`:
 
 ```bash
-python3 load_applications.py
+python3 tools/load_applications.py
 ```
 
-Эта утилита автоматически форматирует раздел, создаёт базовые директории (`/applications`, `/etc`, `/fonts`) и заполняет их исполняемыми файлами и растровыми шрифтами.
+Для форматирования диска непосредственно средствами самой IPO_OS (через COM1 и `reinstall_fs`) перед пакетной загрузкой используется `python3 tools/format_disk_via_os.py` (вызывается автоматически при `make disk`).
 
 ---
 

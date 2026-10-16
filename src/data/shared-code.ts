@@ -290,11 +290,11 @@ prog
     code: `# Run programs in separate virtual workspaces (Ctrl+PgUp / Ctrl+PgDn to switch):
 run edit & player & hosting_server
 
-# Run multiple GUI applications concurrently on the same desktop:
-run wm_demo && wm_demo2 && wm_fullscreen
+# Run multiple GUI/3D applications concurrently on the same desktop:
+run gl_cube && gl_gears && fps_meter
 
 # Pipeline: wait for left command and pass return code to right:
-run test_sb16 | player sound.raw
+run hello | echo
 
 # Sequential execution:
 run setfont /fonts/terminus.fnt ; startx
@@ -304,24 +304,24 @@ run setfont /fonts/terminus.fnt ; startx
   'disk-editor-cmds': {
     id: 'disk-editor-cmds',
     lang: 'bash',
-    title: 'disk_editor.py Complete Command Reference',
+    title: 'tools/disk_editor.py Complete Command Reference',
     code: `# Inspect disk image contents (root directory)
-python3 disk_editor.py -i build/disk.img ls /
+python3 tools/disk_editor.py -i build/disk.img ls /
 
 # Copy host compiled executable into IPO_FS /applications folder
-python3 disk_editor.py -i build/disk.img put ./build/applications/doom /applications/doom
+python3 tools/disk_editor.py -i build/disk.img put ./build/applications/doom/doom.bin /applications/doom
 
 # Create directory inside filesystem
-python3 disk_editor.py -i build/disk.img mkdir /home/user
+python3 tools/disk_editor.py -i build/disk.img mkdir /home/user
 
 # Write text file into image
-python3 disk_editor.py -i build/disk.img touch /autorun "startx\nrun wm_demo\n"
+python3 tools/disk_editor.py -i build/disk.img touch /autorun "startx\nrun gl_gears\n"
 
 # View file content
-python3 disk_editor.py -i build/disk.img cat /autorun
+python3 tools/disk_editor.py -i build/disk.img cat /autorun
 
 # Delete file or directory
-python3 disk_editor.py -i build/disk.img rm /old_app
+python3 tools/disk_editor.py -i build/disk.img rm /old_app
 `
   },
 
@@ -329,15 +329,18 @@ python3 disk_editor.py -i build/disk.img rm /old_app
     id: 'makefile-all-targets',
     lang: 'bash',
     title: 'Makefile Target Reference (IPO_OS)',
-    code: `# Full build and run in QEMU:
+    code: `# Full build, disk/live-image generation, and run in QEMU:
 make all
 
 # Incremental module builds:
-make lib          # Builds libc.a, libm.a, libk.a
-make kernel       # Builds kernel.bin (HAL, VFS, Net, Drivers, TinyGL)
-make boot         # Builds boot.bin bootloader
-make image        # Combines bootloader and kernel into IPO_OS.img
+make lib          # Builds libc.a, libm.a, libstdc++.a, libk.a
+make kernel       # Builds kernel.bin + two-pass generate_ksyms.py symbol table
+make boot         # Builds boot.bin bootloader (Stage 1 + Stage 2 + E820)
 make applications # Compiles user applications in applications/
+make toolchain    # Packages in-OS TinyCC (TCC) compiler & headers
+make disks        # Formats 128 MB disk.img via OS and loads applications
+make live-image   # Builds unified bootable 128 MB Live USB image (IPO_OS.img)
+make image        # Builds IPO_OS.img, disks, and unified live-image
 
 # Host TAP networking configuration (exposes all 65535 ports):
 make setup-tap
@@ -350,6 +353,7 @@ make run NET_MODE=user DRIVE_TYPE=ide
 make clean
 make clean-lib
 make clean-applications
+make clean-disks
 `
   },
 
@@ -634,23 +638,97 @@ export const sharedStructTables: StructTable[] = [
     ]
   },
   {
+    id: 'storage_pool_raw_sb',
+    titleEn: 'Storage Pool Superblock (storage_pool_raw_sb_t, LBA 2030 & 2039)',
+    titleRu: 'Суперблок пула хранилища (storage_pool_raw_sb_t, LBA 2030 и 2039)',
+    totalSize: '512 bytes (68 B header + flexible members[] + CRC32)',
+    fields: [
+      { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'magic', descriptionEn: 'Pool magic signature (0x504F4F4C "POOL")', descriptionRu: 'Магическая сигнатура пула (0x504F4F4C "POOL")' },
+      { offset: '0x04', size: '4 bytes', type: 'uint32_t', name: 'version', descriptionEn: 'Superblock format version (2)', descriptionRu: 'Версия формата суперблока (2)' },
+      { offset: '0x08', size: '16 bytes', type: 'uint8_t[16]', name: 'pool_uuid', descriptionEn: '128-bit Storage Pool UUID (e.g. "IPO_STORAGE_POOL")', descriptionRu: '128-битный UUID пула хранилища (например, "IPO_STORAGE_POOL")' },
+      { offset: '0x18', size: '16 bytes', type: 'uint8_t[16]', name: 'local_member_uuid', descriptionEn: '128-bit UUID of the local drive member', descriptionRu: '128-битный UUID локального диска-участника' },
+      { offset: '0x28', size: '4 bytes', type: 'uint32_t', name: 'member_index', descriptionEn: 'Index of this drive in the spanned pool', descriptionRu: 'Индекс данного диска в объединенном пуле' },
+      { offset: '0x2C', size: '4 bytes', type: 'uint32_t', name: 'member_count', descriptionEn: 'Total number of drives in the storage pool', descriptionRu: 'Общее количество дисков в пуле хранилища' },
+      { offset: '0x30', size: '8 bytes', type: 'uint64_t', name: 'total_capacity_sectors', descriptionEn: 'Combined capacity across all member drives in sectors', descriptionRu: 'Суммарная ёмкость всех дисков пула в секторах' },
+      { offset: '0x38', size: '4 bytes', type: 'uint32_t', name: 'chunk_size_sectors', descriptionEn: 'Allocation chunk granularity (64 sectors = 32 KB)', descriptionRu: 'Размер чанка распределения (64 сектора = 32 КБ)' },
+      { offset: '0x3C', size: '4 bytes', type: 'uint32_t', name: 'generation', descriptionEn: 'Monotonic metadata generation counter', descriptionRu: 'Монотонный счетчик поколений метаданных' },
+      { offset: '0x40', size: '4 bytes', type: 'uint32_t', name: 'state', descriptionEn: 'Pool state (0=ONLINE, 1=DEGRADED, 2=CORRUPT)', descriptionRu: 'Состояние пула (0=ONLINE, 1=DEGRADED, 2=CORRUPT)' },
+      { offset: '0x44', size: 'N × 48 B', type: 'storage_pool_raw_member_t[]', name: 'members', descriptionEn: 'Flexible on-disk array of member descriptors (48 B each)', descriptionRu: 'Гибкий массив дескрипторов дисков-участников (по 48 байт)' },
+      { offset: '0x1FC', size: '4 bytes', type: 'uint32_t', name: 'crc32', descriptionEn: 'IEEE 802.3 CRC32 checksum of bytes 0x00..0x1FB', descriptionRu: 'Контрольная сумма CRC32 первых 508 байт сектора' }
+    ]
+  },
+  {
+    id: 'storage_raw_disk_tx_entry',
+    titleEn: 'Storage Pool WAL Journal Entry (storage_raw_disk_tx_entry_t, LBA 2031–2038)',
+    titleRu: 'Запись журнала транзакций WAL (storage_raw_disk_tx_entry_t, LBA 2031–2038)',
+    totalSize: '64 bytes (8 entries per 512-byte sector, 64 entries total)',
+    fields: [
+      { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'magic', descriptionEn: 'Journal entry signature (0x54584E4C "TXNL")', descriptionRu: 'Сигнатура записи журнала (0x54584E4C "TXNL")' },
+      { offset: '0x04', size: '4 bytes', type: 'uint32_t', name: 'tx_id', descriptionEn: 'Monotonic transaction identifier', descriptionRu: 'Монотонный идентификатор транзакции' },
+      { offset: '0x08', size: '2 bytes', type: 'uint16_t', name: 'op', descriptionEn: 'Operation type (0=READ, 1=WRITE, 2=FLUSH, 3=CHECK)', descriptionRu: 'Тип операции (0=READ, 1=WRITE, 2=FLUSH, 3=CHECK)' },
+      { offset: '0x0A', size: '2 bytes', type: 'uint16_t', name: 'state', descriptionEn: 'Transaction state (0=INIT, 1=PENDING, 2=COMMITTED, 3=FAILED)', descriptionRu: 'Статус транзакции (0=INIT, 1=PENDING, 2=COMMITTED, 3=FAILED)' },
+      { offset: '0x0C', size: '8 bytes', type: 'uint64_t', name: 'lba', descriptionEn: 'Target logical block address in storage pool', descriptionRu: 'Целевой логический сектор LBA в пуле хранилища' },
+      { offset: '0x14', size: '4 bytes', type: 'uint32_t', name: 'count', descriptionEn: 'Number of sectors affected by transaction', descriptionRu: 'Количество секторов в транзакции' },
+      { offset: '0x18', size: '4 bytes', type: 'uint32_t', name: 'timestamp', descriptionEn: 'System uptime timestamp in milliseconds', descriptionRu: 'Отметка системного времени в миллисекундах' },
+      { offset: '0x1C', size: '4 bytes', type: 'uint32_t', name: 'data_crc', descriptionEn: 'CRC32 checksum of the written sector payload', descriptionRu: 'Контрольная сумма CRC32 записанных данных' },
+      { offset: '0x20', size: '4 bytes', type: 'uint32_t', name: 'entry_crc', descriptionEn: 'CRC32 checksum of the journal entry header', descriptionRu: 'Контрольная сумма CRC32 заголовка транзакции' },
+      { offset: '0x24', size: '28 bytes', type: 'uint8_t[28]', name: 'reserved', descriptionEn: 'On-disk alignment padding (dynamic in storage_disk_tx_entry_t)', descriptionRu: 'Выравнивание на диске до 64 байт (динамическое в памяти)' }
+    ]
+  },
+  {
+    id: 'kmod_header',
+    titleEn: 'Relocatable Kernel Module Header (kmod_raw_header_t / kmod_header_t)',
+    titleRu: 'Заголовок загружаемого модуля ядра (kmod_raw_header_t / kmod_header_t)',
+    totalSize: '188 bytes (on-disk raw) / Dynamic pointers in RAM',
+    fields: [
+      { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'magic', descriptionEn: 'Module magic signature (0x444D4B49 "IKMD")', descriptionRu: 'Магическая сигнатура модуля (0x444D4B49 "IKMD")' },
+      { offset: '0x04', size: '2 bytes', type: 'uint16_t', name: 'abi_version', descriptionEn: 'Kernel Module ABI version (0x0100 = v1.0)', descriptionRu: 'Версия ABI модулей ядра (0x0100 = v1.0)' },
+      { offset: '0x06', size: '2 bytes', type: 'uint16_t', name: 'flags', descriptionEn: 'Module flags (BUILTIN, LOADED, ACTIVE)', descriptionRu: 'Флаги модуля (BUILTIN, LOADED, ACTIVE)' },
+      { offset: '0x08', size: '32 B / char*', name: 'name', type: 'char[32] / char*', descriptionEn: 'Module identifier (dynamic char* in kmod_header_t)', descriptionRu: 'Имя модуля (динамический char* в памяти)' },
+      { offset: '0x28', size: '32 B / char*', name: 'author', type: 'char[32] / char*', descriptionEn: 'Module author string (dynamic char* in kmod_header_t)', descriptionRu: 'Автор модуля (динамический char* в памяти)' },
+      { offset: '0x48', size: '16 B / char*', name: 'version', type: 'char[16] / char*', descriptionEn: 'Semantic version string (dynamic char* in kmod_header_t)', descriptionRu: 'Версия модуля (динамический char* в памяти)' },
+      { offset: '0x58', size: '64 B / char*', name: 'description', type: 'char[64] / char*', descriptionEn: 'Module description (dynamic char* in kmod_header_t)', descriptionRu: 'Описание модуля (динамический char* в памяти)' },
+      { offset: '0x98', size: '4 bytes', type: 'uint32_t', name: 'init_offset', descriptionEn: 'Byte offset of init() entrypoint from .text start', descriptionRu: 'Смещение точки входа init() от начала секции кода' },
+      { offset: '0x9C', size: '4 bytes', type: 'uint32_t', name: 'cleanup_offset', descriptionEn: 'Byte offset of cleanup() from .text start', descriptionRu: 'Смещение функции выгрузки cleanup() от начала кода' },
+      { offset: '0xA0', size: '12 bytes', type: 'uint32_t[3]', name: 'text/data/bss_size', descriptionEn: 'Sizes of .text, .data, and .bss sections in bytes', descriptionRu: 'Размеры секций .text, .data и .bss в байтах' },
+      { offset: '0xAC', size: '8 bytes', type: 'uint32_t[2]', name: 'sym_tab_offset/count', descriptionEn: 'Offset and count of external symbol table entries', descriptionRu: 'Смещение и число записей таблицы внешних символов' },
+      { offset: '0xB4', size: '8 bytes', type: 'uint32_t[2]', name: 'reloc_offset/count', descriptionEn: 'Offset and count of ABS32/REL32 relocation records', descriptionRu: 'Смещение и число записей релокаций (ABS32 / REL32)' },
+      { offset: '0xBC', size: '4 bytes', type: 'uint32_t', name: 'checksum', descriptionEn: 'CRC32 checksum of the module payload', descriptionRu: 'Контрольная сумма CRC32 полезной нагрузки модуля' }
+    ]
+  },
+  {
+    id: 'cpu_info',
+    titleEn: 'Per-CPU SMP Descriptor (cpu_info_t)',
+    titleRu: 'Дескриптор процессорного ядра SMP (cpu_info_t)',
+    totalSize: '24 bytes',
+    fields: [
+      { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'cpu_id', descriptionEn: 'Logical processor core ID (0 = BSP, 1..N = AP)', descriptionRu: 'Логический номер ядра процессора (0 = BSP, 1..N = AP)' },
+      { offset: '0x04', size: '4 bytes', type: 'uint32_t', name: 'lapic_id', descriptionEn: 'Hardware Local APIC physical ID', descriptionRu: 'Аппаратный идентификатор Local APIC' },
+      { offset: '0x08', size: '1 byte', type: 'bool', name: 'is_bsp', descriptionEn: 'True if Bootstrap Processor (Core 0)', descriptionRu: 'Флаг первичного загрузочного процессора (BSP)' },
+      { offset: '0x09', size: '1 byte', type: 'volatile bool', name: 'is_online', descriptionEn: 'Set to true once AP finishes trampoline boot', descriptionRu: 'Флаг готовности ядра после прохождения трамплина 0x8000' },
+      { offset: '0x0C', size: '4 bytes', type: 'uint32_t', name: 'stack_base', descriptionEn: 'Allocated 16 KB per-CPU kernel stack base', descriptionRu: 'Базовый адрес индивидуального 16 КБ стека ядра' },
+      { offset: '0x10', size: '4 bytes', type: 'uint32_t', name: 'stack_top', descriptionEn: 'Initial ESP top of stack passed to AP trampoline', descriptionRu: 'Вершина стека ESP, передаваемая в трамплин AP' },
+      { offset: '0x14', size: '4 bytes', type: 'volatile uint32_t', name: 'ticks', descriptionEn: 'Per-CPU activity & task execution counter', descriptionRu: 'Счетчик активности и выполненных задач ядра' }
+    ]
+  },
+  {
     id: 'process_pcb',
     titleEn: 'Process Descriptor Structure (process_t)',
     titleRu: 'Структура дескриптора процесса (process_t)',
-    totalSize: '132 bytes (core) / 152 bytes (extended)',
+    totalSize: '136 bytes (0x88)',
     fields: [
       { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'pid', descriptionEn: 'Unique process ID (allocated dynamically starting from 1)', descriptionRu: 'Уникальный номер процесса (выделяется динамически от 1)' },
-      { offset: '0x04', size: '4 bytes', type: 'void*', name: 'binary_base', descriptionEn: 'Base address of loaded executable image', descriptionRu: 'Базовый адрес загруженного исполняемого образа' },
-      { offset: '0x08', size: '4 bytes', type: 'uint32_t', name: 'binary_size', descriptionEn: 'Binary executable size in bytes', descriptionRu: 'Размер исполняемого файла в байтах' },
-      { offset: '0x0C', size: '4 bytes', type: 'uint32_t', name: 'entry_point', descriptionEn: 'Absolute execution entry point', descriptionRu: 'Абсолютный адрес точки входа в программу' },
+      { offset: '0x04', size: '4 bytes', type: 'void*', name: 'binary_base', descriptionEn: 'Base address of loaded executable image (0x800000)', descriptionRu: 'Базовый адрес загруженного исполняемого образа (0x800000)' },
+      { offset: '0x08', size: '4 bytes', type: 'uint32_t', name: 'binary_size', descriptionEn: '4 KB page-aligned binary memory size in bytes', descriptionRu: 'Выровненный по 4 КБ размер образа в памяти (включая .bss)' },
+      { offset: '0x0C', size: '4 bytes', type: 'uint32_t', name: 'entry_point', descriptionEn: 'Absolute execution entry point (ELF e_entry or 0x800000)', descriptionRu: 'Абсолютный адрес точки входа (e_entry из ELF или 0x800000)' },
       { offset: '0x10', size: '4 bytes', type: 'void*', name: 'binary_storage', descriptionEn: 'Dedicated backup storage buffer when swapped out', descriptionRu: 'Выделенный буфер хранения образа при свопе в фон' },
       { offset: '0x14', size: '4 bytes', type: 'uint32_t', name: 'data_offset', descriptionEn: 'Offset where writable data/bss begins in image', descriptionRu: 'Смещение начала сегмента данных/bss в бинарнике' },
       { offset: '0x18', size: '4 bytes', type: 'uint32_t', name: 'data_size', descriptionEn: 'Size of writable data/bss segment in bytes', descriptionRu: 'Размер сегмента данных/bss в байтах' },
       { offset: '0x1C', size: '1 byte', type: 'bool', name: 'code_mapped', descriptionEn: 'True if code segment has been loaded into 0x800000', descriptionRu: 'Флаг загрузки сегмента кода по адресу 0x800000' },
       { offset: '0x20', size: '4 bytes', type: 'void*', name: 'stack_base', descriptionEn: 'Allocated process stack buffer', descriptionRu: 'Выделенный буфер стека процесса' },
       { offset: '0x24', size: '4 bytes', type: 'uint32_t', name: 'stack_ptr', descriptionEn: 'Saved ESP stack pointer during multitasking', descriptionRu: 'Сохранённый указатель стека ESP при многозадачности' },
-      { offset: '0x28', size: '4 bytes', type: 'uint32_t', name: 'stack_start', descriptionEn: 'High memory start address of stack region', descriptionRu: 'Верхний базовый адрес области стека' },
-      { offset: '0x2C', size: '4 bytes', type: 'uint32_t', name: 'stack_size', descriptionEn: 'Stack capacity in bytes', descriptionRu: 'Размер выделенного стека в байтах' },
+      { offset: '0x28', size: '4 bytes', type: 'uint32_t', name: 'stack_start', descriptionEn: 'Start address of stack region', descriptionRu: 'Начальный адрес области стека' },
+      { offset: '0x2C', size: '4 bytes', type: 'uint32_t', name: 'stack_size', descriptionEn: 'Stack capacity in bytes (256 KB initial)', descriptionRu: 'Размер выделенного стека в байтах (256 КБ базово)' },
       { offset: '0x30', size: '4 bytes', type: 'int', name: 'argc', descriptionEn: 'Argument count passed to main()', descriptionRu: 'Количество аргументов командной строки' },
       { offset: '0x34', size: '4 bytes', type: 'uint32_t', name: 'argv_addr', descriptionEn: 'Address of argv pointers array in process space', descriptionRu: 'Адрес массива аргументов argv в пространстве процесса' },
       { offset: '0x38', size: '4 bytes', type: 'char**', name: 'argv_kernel', descriptionEn: 'Copy of argv array in kernel space for debugging', descriptionRu: 'Копия массива argv в пространстве ядра' },
@@ -663,17 +741,39 @@ export const sharedStructTables: StructTable[] = [
       { offset: '0x48', size: '4 bytes', type: 'uint32_t', name: 'user_heap_break', descriptionEn: 'Per-process sbrk break address boundary', descriptionRu: 'Граница динамической кучи процесса (sbrk)' },
       { offset: '0x4C', size: '4 bytes', type: 'uint16_t*', name: 'text_vram_backup', descriptionEn: '80x25 text mode buffer backup for workspace switching', descriptionRu: 'Резервная копия текстового экрана 80x25 при переключении воркспейсов' },
       { offset: '0x50', size: '4 bytes', type: 'uint8_t*', name: 'gfx_vram_backup', descriptionEn: '320x200 graphics VRAM backup when swapped to background', descriptionRu: 'Резервная копия графического экрана Mode 13h' },
-      { offset: '0x54', size: '2 bytes', type: 'uint16_t', name: 'text_cursor_pos', descriptionEn: 'Saved cursor coordinate in text mode', descriptionRu: 'Сохранённая позиция курсора в текстовом режиме' },
-      { offset: '0x56', size: '1 byte', type: 'bool', name: 'text_cursor_visible', descriptionEn: 'Saved cursor visibility flag', descriptionRu: 'Флаг видимости текстового курсора' },
-      { offset: '0x57', size: '1 byte', type: 'bool', name: 'completed_and_acknowledged', descriptionEn: 'Process completed and acknowledged by parent', descriptionRu: 'Флаг завершения и подтверждения родителем' },
-      { offset: '0x58', size: '4 bytes', type: 'uint16_t*', name: 'scroll_top_buffer', descriptionEn: 'Workspace top scrollback line buffer', descriptionRu: 'Буфер верхнего скроллбэка воркспейса' },
-      { offset: '0x5C', size: '4 bytes', type: 'uint16_t*', name: 'scroll_bottom_buffer', descriptionEn: 'Workspace bottom scrollback line buffer', descriptionRu: 'Буфер нижнего скроллбэка воркспейса' },
-      { offset: '0x60', size: '4 bytes', type: 'int', name: 'scroll_top_count', descriptionEn: 'Count of lines in top scrollback buffer', descriptionRu: 'Число строк в верхнем буфере скролла' },
-      { offset: '0x64', size: '4 bytes', type: 'int', name: 'scroll_bottom_count', descriptionEn: 'Count of lines in bottom scrollback buffer', descriptionRu: 'Число строк в нижнем буфере скролла' },
-      { offset: '0x68', size: '4 bytes', type: 'int', name: 'window_id', descriptionEn: 'Workspace window group identifier in batch mode', descriptionRu: 'Идентификатор окна в оконном менеджере' },
-      { offset: '0x6C', size: '1 byte', type: 'bool', name: 'text_screen_shared', descriptionEn: 'True if VRAM buffers are shared with co-process', descriptionRu: 'Флаг совместного использования буфера экрана' },
-      { offset: '0x7C', size: '4 bytes', type: 'char*', name: 'name', descriptionEn: 'Dynamically allocated process name string', descriptionRu: 'Динамически выделенная строка имени процесса' },
-      { offset: '0x80', size: '4 bytes', type: 'struct process*', name: 'next', descriptionEn: 'Pointer to next PCB in active kernel list', descriptionRu: 'Указатель на следующий процесс в списке ядра' }
+      { offset: '0x54', size: '4 bytes', type: 'uint8_t*', name: 'gfx_palette_backup', descriptionEn: '256-color VGA DAC palette backup (768 bytes)', descriptionRu: 'Резервная копия 256-цветной палитры VGA DAC (768 байт)' },
+      { offset: '0x58', size: '2 bytes', type: 'uint16_t', name: 'text_cursor_pos', descriptionEn: 'Saved cursor coordinate in text mode', descriptionRu: 'Сохранённая позиция курсора в текстовом режиме' },
+      { offset: '0x5A', size: '1 byte', type: 'bool', name: 'text_cursor_visible', descriptionEn: 'Saved cursor visibility flag', descriptionRu: 'Флаг видимости текстового курсора' },
+      { offset: '0x5B', size: '1 byte', type: 'bool', name: 'completed_and_acknowledged', descriptionEn: 'Process completed and acknowledged by parent', descriptionRu: 'Флаг завершения и подтверждения родителем' },
+      { offset: '0x5C', size: '4 bytes', type: 'uint16_t*', name: 'scroll_top_buffer', descriptionEn: 'Workspace top scrollback line buffer', descriptionRu: 'Буфер верхнего скроллбэка воркспейса' },
+      { offset: '0x60', size: '4 bytes', type: 'uint16_t*', name: 'scroll_bottom_buffer', descriptionEn: 'Workspace bottom scrollback line buffer', descriptionRu: 'Буфер нижнего скроллбэка воркспейса' },
+      { offset: '0x64', size: '4 bytes', type: 'int', name: 'scroll_top_count', descriptionEn: 'Count of lines in top scrollback buffer', descriptionRu: 'Число строк в верхнем буфере скролла' },
+      { offset: '0x68', size: '4 bytes', type: 'int', name: 'scroll_bottom_count', descriptionEn: 'Count of lines in bottom scrollback buffer', descriptionRu: 'Число строк в нижнем буфере скролла' },
+      { offset: '0x6C', size: '4 bytes', type: 'int', name: 'window_id', descriptionEn: 'Workspace window group identifier in batch mode', descriptionRu: 'Идентификатор окна в оконном менеджере' },
+      { offset: '0x70', size: '1 byte', type: 'bool', name: 'text_screen_shared', descriptionEn: 'True if VRAM buffers are shared with co-process', descriptionRu: 'Флаг совместного использования буфера экрана' },
+      { offset: '0x74', size: '4 bytes', type: 'char*', name: 'text_output_buf', descriptionEn: 'Dynamically expanding captured stdout buffer', descriptionRu: 'Динамический буфер перехваченного текстового вывода' },
+      { offset: '0x78', size: '4 bytes', type: 'uint32_t', name: 'text_output_len', descriptionEn: 'Length of captured stdout text in bytes', descriptionRu: 'Текущая длина перехваченного вывода в байтах' },
+      { offset: '0x7C', size: '4 bytes', type: 'uint32_t', name: 'text_output_cap', descriptionEn: 'Allocated capacity of text_output_buf', descriptionRu: 'Выделенная ёмкость буфера text_output_buf' },
+      { offset: '0x80', size: '4 bytes', type: 'char*', name: 'name', descriptionEn: 'Dynamically allocated process name string', descriptionRu: 'Динамически выделенная строка имени процесса' },
+      { offset: '0x84', size: '4 bytes', type: 'struct process*', name: 'next', descriptionEn: 'Pointer to next PCB in active kernel list', descriptionRu: 'Указатель на следующий процесс в списке ядра' }
+    ]
+  },
+  {
+    id: 'device_node',
+    titleEn: 'Unified Hardware Device Node (device_node_t)',
+    titleRu: 'Узел единого реестра аппаратных устройств (device_node_t)',
+    totalSize: 'Dynamic strings & self-expanding BAR array (src/include/kernel/device.h)',
+    fields: [
+      { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'id', descriptionEn: 'Unique system-wide device ID', descriptionRu: 'Уникальный общесистемный идентификатор устройства' },
+      { offset: '0x04', size: '4 bytes', type: 'uint32_t', name: 'parent_id', descriptionEn: 'Parent bus/controller device ID (0 if root)', descriptionRu: 'ID родительской шины/контроллера (0 если корень)' },
+      { offset: '0x08', size: '4 bytes', type: 'uint32_t', name: 'capabilities', descriptionEn: 'Capability bitmask (READONLY, REMOVABLE, HOTPLUGGABLE, DMA, VIRTUAL)', descriptionRu: 'Битовая маска возможностей (READONLY, REMOVABLE, HOTPLUG, DMA, VIRTUAL)' },
+      { offset: '0x0C', size: '4 bytes', type: 'device_type_t', name: 'type', descriptionEn: 'Category (CPU, MEMORY, PCI, STORAGE, NETWORK, INPUT, AUDIO, VIDEO, SYSTEM, USB)', descriptionRu: 'Категория (CPU, MEMORY, PCI, STORAGE, NETWORK, INPUT, AUDIO, VIDEO, SYSTEM, USB)' },
+      { offset: '0x10', size: '4 bytes', type: 'device_state_t', name: 'state', descriptionEn: 'Operational state (DISCOVERED, DRIVER_ATTACHED, INITIALIZED, ACTIVE, DISABLED, ERROR)', descriptionRu: 'Состояние (DISCOVERED, DRIVER_ATTACHED, INITIALIZED, ACTIVE, DISABLED, ERROR)' },
+      { offset: '0x14', size: '12 bytes', type: 'char* + len/cap', name: 'name', descriptionEn: 'Dynamic canonical identifier (e.g. "cpu0", "pci00:03.0", "ata0")', descriptionRu: 'Динамический канонический идентификатор ("cpu0", "pci00:03.0", "ata0")' },
+      { offset: '0x20', size: '36 bytes', type: 'char* + len/cap', name: 'vendor / model / description', descriptionEn: 'Dynamically allocated vendor, model, and functional description strings', descriptionRu: 'Динамические строки производителя, модели и описания устройства' },
+      { offset: '0x44', size: '56 bytes', type: 'device_resources_t', name: 'res', descriptionEn: 'Bus coordinates, PCI IDs, dynamic uint32_t* bar[], I/O base, MMIO base, IRQ, size_bytes', descriptionRu: 'Ресурсы устройства: шина, PCI ID, динамический массив BAR, порты I/O, MMIO, IRQ, объём' },
+      { offset: '0x7C', size: '16 bytes', type: 'char* + void*', name: 'driver_name / driver_ptr', descriptionEn: 'Attached driver name and pointer to driver_t', descriptionRu: 'Имя привязанного драйвера и указатель на структуру driver_t' },
+      { offset: '0x8C', size: '12 bytes', type: 'device_ops_t* + next', name: 'ops / priv_data / next', descriptionEn: 'Standard VFS-like device I/O operations (open/close/read/write/ioctl) and list link', descriptionRu: 'Таблица операций ввода-вывода (open/close/read/write/ioctl) и ссылка списка' }
     ]
   },
   {
@@ -682,7 +782,7 @@ export const sharedStructTables: StructTable[] = [
     titleRu: 'Статистика кучи ядра (kmalloc_stats_t)',
     totalSize: '28 bytes',
     fields: [
-      { offset: '0x00', size: '4 bytes', type: 'size_t', name: 'heap_total', descriptionEn: 'Total kernel heap capacity in bytes (16 MB)', descriptionRu: 'Полный объём кучи ядра в байтах (16 МБ)' },
+      { offset: '0x00', size: '4 bytes', type: 'size_t', name: 'heap_total', descriptionEn: 'Total kernel heap capacity in bytes (64 MB / 0x04000000)', descriptionRu: 'Полный объём кучи ядра в байтах (64 МБ / 0x04000000)' },
       { offset: '0x04', size: '4 bytes', type: 'size_t', name: 'heap_used', descriptionEn: 'Bytes consumed by high-watermark with headers', descriptionRu: 'Байт занято до текущей границы (включая заголовки)' },
       { offset: '0x08', size: '4 bytes', type: 'size_t', name: 'alloc_bytes', descriptionEn: 'User bytes currently allocated', descriptionRu: 'Полезные байты в активных аллокациях' },
       { offset: '0x0C', size: '4 bytes', type: 'size_t', name: 'free_bytes', descriptionEn: 'Bytes available in free blocks pool', descriptionRu: 'Байты, доступные в освобождённых блоках' },
@@ -695,7 +795,7 @@ export const sharedStructTables: StructTable[] = [
     id: 'ata_device',
     titleEn: 'ATA Storage Device Information (ata_device_t)',
     titleRu: 'Информация об устройстве ATA (ata_device_t)',
-    totalSize: '88 bytes',
+    totalSize: '32 bytes (with dynamic string buffers)',
     fields: [
       { offset: '0x00', size: '1 byte', type: 'uint8_t', name: 'present', descriptionEn: '1 if device detected, 0 if absent', descriptionRu: '1 если устройство обнаружено, 0 если отсутствует' },
       { offset: '0x01', size: '1 byte', type: 'uint8_t', name: 'channel', descriptionEn: 'IDE Channel (0 = Primary, 1 = Secondary)', descriptionRu: 'Канал IDE (0 = Primary, 1 = Secondary)' },
@@ -705,8 +805,8 @@ export const sharedStructTables: StructTable[] = [
       { offset: '0x0A', size: '2 bytes', type: 'uint16_t', name: 'heads', descriptionEn: 'Drive heads count from IDENTIFY', descriptionRu: 'Количество магнитных головок из ответа IDENTIFY' },
       { offset: '0x0C', size: '2 bytes', type: 'uint16_t', name: 'sectors', descriptionEn: 'Sectors per track from IDENTIFY', descriptionRu: 'Количество секторов на дорожку из IDENTIFY' },
       { offset: '0x10', size: '8 bytes', type: 'uint64_t', name: 'capacity_sectors', descriptionEn: 'Total capacity in 512-byte sectors (LBA28/LBA48)', descriptionRu: 'Полная ёмкость в секторах по 512 байт (LBA28/LBA48)' },
-      { offset: '0x18', size: '41 bytes', type: 'char[41]', name: 'model', descriptionEn: 'ATA IDENTIFY ASCII model string (40 chars + NULL)', descriptionRu: 'ASCII строка модели накопителя (40 символов + NULL)' },
-      { offset: '0x41', size: '21 bytes', type: 'char[21]', name: 'serial', descriptionEn: 'ATA serial number string (20 chars + NULL)', descriptionRu: 'Серийный номер устройства (20 символов + NULL)' }
+      { offset: '0x18', size: '4 bytes', type: 'char*', name: 'model', descriptionEn: 'Dynamically allocated NUL-terminated ATA model string', descriptionRu: 'Динамически выделенная ASCII-строка модели накопителя' },
+      { offset: '0x1C', size: '4 bytes', type: 'char*', name: 'serial', descriptionEn: 'Dynamically allocated NUL-terminated ATA serial string', descriptionRu: 'Динамически выделенная строка серийного номера устройства' }
     ]
   },
   {
@@ -1439,6 +1539,18 @@ export const sharedSyscallsList: SyscallDoc[] = [
     returnRu: '0 при успехе, код ошибки при сбое',
     descriptionEn: 'Sets descriptive text metadata for registered driver.',
     descriptionRu: 'Устанавливает текстовое описание для зарегистрированного драйвера.'
+  },
+  {
+    numHex: '0x1064',
+    numDec: 4196,
+    name: 'IPO_SYSCALL_FS_STATVFS',
+    signature: 'int ipo_statvfs(uint32_t out_stats[7])',
+    argsEn: ['args[0]: Output array uint32_t[7] (bsize, frsize, blocks, bfree, bavail, files, ffree)'],
+    argsRu: ['args[0]: Выходной массив uint32_t[7] (bsize, frsize, blocks, bfree, bavail, files, ffree)'],
+    returnEn: '0 on success, non-zero on error',
+    returnRu: '0 при успехе, ненулевой код при ошибке',
+    descriptionEn: 'Queries mounted IPO_FS storage pool block and inode capacity statistics.',
+    descriptionRu: 'Запрашивает статистику свободных/занятых блоков и дескрипторов inode смонтированного пула IPO_FS.'
   },
   {
     numHex: '0x1070',

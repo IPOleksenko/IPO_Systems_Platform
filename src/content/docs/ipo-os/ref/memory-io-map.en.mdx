@@ -15,21 +15,24 @@ This page documents the complete hardware physical memory layout and standard x8
 | :--- | :--- | :--- | :--- |
 | `0x00000000 - 0x000003FF` | 1 KB | Real-Mode Interrupt Vector Table (IVT) | Kernel (Protected) |
 | `0x00000400 - 0x000004FF` | 256 B | BIOS Data Area (BDA) | Read-only |
-| `0x00000500 - 0x00007BFF` | ~30 KB | Conventional Low RAM / Temp buffers | Kernel Scratch |
-| `0x00007C00 - 0x00007DFF` | 512 B | MBR Boot Sector Entrypoint (Stage 1) | Boot Handover |
-| `0x00007E00 - 0x00008FEF` | ~4.5 KB | Bootloader execution buffers | Bootloader |
-| `0x00008FF0 - 0x00008FF3` | 4 B | **Total Physical RAM in Bytes** (written by BIOS E820) | Handover Slot |
+| `0x00000500 - 0x00005FFF` | ~22 KB | Conventional Low RAM / Temp buffers | Kernel Scratch |
+| `0x00006000 - 0x000063FF` | 1 KB | **BIOS E820 Region Entries Table** (`e820_entry_t`, up to 32 entries of 20 bytes) | Handover Slot |
+| `0x00007C00 - 0x00007DFF` | 512 B | MBR Boot Sector (`boot.asm`: 446 B code + 64 B MBR Partition Table + `0xAA55`) | Boot Handover |
+| `0x00008000 - 0x000080FF` | 256 B | **SMP AP Boot Trampoline (`smp_trampoline.asm`)** & Mailbox (`0x80F0`–`0x80FC`) | SMP Boot |
+| `0x00008FE0 - 0x00008FF7` | 24 B | **E820 Memory Map Handover Header** (`'E820'` magic, count, `0x6000` ptr, total RAM at `0x8FF0`) | Handover Slot |
 | `0x00010000 - 0x0007FFFF` | ~448 KB | **IPO_OS Kernel Binary** (`.text`, `.rodata`, `.data`, `.bss`) | Kernel Core |
 | `0x00080000 - 0x0009FBFF` | ~127 KB | Kernel Boot Buffers & Temporary Allocations | Kernel Core |
-| `0x0009FC00 - 0x0009FFFF` | 1 KB | Extended BIOS Data Area (EBDA) / ACPI Tables | Read-only |
-| `0x000A0000 - 0x000BFFFF` | 128 KB | Video RAM (`0xB8000` VGA Color Text Framebuffer) | Console VRAM |
+| `0x0009FC00 - 0x0009FFFF` | 1 KB | Extended BIOS Data Area (EBDA) / ACPI & Intel MP Tables | Read-only |
+| `0x000A0000 - 0x000BFFFF` | 128 KB | Video RAM (`0xA0000` VGA Graphics VRAM, `0xB8000` VGA Color Text Framebuffer) | Console VRAM |
 | `0x000C0000 - 0x000C7FFF` | 32 KB | Video BIOS ROM Expansion Area | Read-only |
 | `0x000F0000 - 0x000FFFFF` | 64 KB | **IPO_Firmware / Boot_ROM Payload** (PAM Shadow RAM) | Read-only |
 | `0x00100000 - 0x004FFFFF` | ~4 MB | Extended Kernel Storage, VFS Buffers, ATA Cache | Kernel Core |
-| `0x00500000 - 0x0050FFFF` | 64 KB | **Kernel Stack** (`0x500000`, set in `entry32.asm`) | Kernel Core |
-| `0x00800000 - 0x00FFFFFF` | 8 MB | **Active Application Image** (`PROCESS_HEAP_START`, code & data/bss) | User Process |
-| `0x01000000 - 0x01FFFFFF` | 16 MB | **Kernel Heap Pool (`kmalloc`)** (dynamic 256 KB process stacks, `argv`, allocations) | Kernel Heap |
-| `0x08000000 - Top of RAM` | Variable | **Partitioned User Dynamic Heaps (`sbrk`)** (`0x08000000 + (pid-1)*64M`) | Process Heaps |
+| `0x00500000 - 0x0050FFFF` | 64 KB | **BSP Kernel Stack** (`0x500000`, set in `entry32.asm`) | Kernel Core |
+| `0x00800000 - 0x00FFFFFF` | 8 MB | **Active Application Image** (`PROCESS_HEAP_START`, ELF32 / `.bin`, stack `0x00A00000`) | User Process |
+| `0x01000000 - 0x04FFFFFF` | 64 MB | **Kernel Heap Pool (`kmalloc`)** (dynamic buffers, `.kmd` modules, 16 KB AP stacks, 256 KB process stacks) | Kernel Heap |
+| `0x05000000 - 0x07FFFFFF` | 48 MB | **Physical Memory Map Region Allocator (`memory_map_alloc`)** | Kernel PMM |
+| `0x08000000 - Top of RAM` | Variable | **Partitioned User Dynamic Heaps (`sbrk`)** (`0x08000000 + (pid-1)*512M`) | Process Heaps |
+| `0xFEE00000 - 0xFEE00FFF` | 4 KB | **Local APIC MMIO Registers** (Core ID, SVR, TPR, EOI, `INIT-SIPI-SIPI` ICR, IPI `0xE0`) | SMP MMIO |
 
 ---
 

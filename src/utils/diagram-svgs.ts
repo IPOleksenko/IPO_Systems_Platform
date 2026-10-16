@@ -184,11 +184,11 @@ export function generateDiagramSvg(id: string, labels: Record<string, string>): 
 
       <path d="M420 415 L420 440" class="arrow" />
       <rect x="70" y="440" width="700" height="45" class="box" />
-      <text x="420" y="467" text-anchor="middle" class="text-title">7️⃣ ${labels.drivers_init || 'Drivers: ATA, Keyboard, RTL8139, WM'}</text>
+      <text x="420" y="467" text-anchor="middle" class="text-title">7️⃣ ${labels.drivers_init || 'SMP, Block/ATA, Storage Pool + WAL, KMOD, Device Registry'}</text>
 
       <path d="M420 485 L420 510" class="arrow" />
       <rect x="70" y="510" width="700" height="50" class="box-success" />
-      <text x="420" y="541" text-anchor="middle" class="text-title">💻 ${labels.launch_shell || 'Interactive Shell (/applications/shell.bin)'}</text>
+      <text x="420" y="541" text-anchor="middle" class="text-title">💻 ${labels.launch_shell || 'Interactive Shell & Serial Console'}</text>
     </svg>`;
   }
 
@@ -201,7 +201,7 @@ export function generateDiagramSvg(id: string, labels: Record<string, string>): 
         <text x="370" y="25" text-anchor="middle" class="text-title">${labels.ivt_bda || '0x00000 - 0x004FF: IVT & BDA'}</text>
 
         <rect x="0" y="48" width="740" height="40" class="box" />
-        <text x="370" y="73" text-anchor="middle" class="text-title">${labels.boot_mbr || '0x07C00 - 0x07DFF: Bootloader MBR'}</text>
+        <text x="370" y="73" text-anchor="middle" class="text-title">${labels.boot_mbr || '0x06000 - 0x08FFF: E820 (0x6000), MBR (0x7C00), SMP Trampoline (0x8000)'}</text>
 
         <rect x="0" y="96" width="740" height="60" class="box-accent" />
         <text x="370" y="131" text-anchor="middle" class="text-title">${labels.kernel_bin || '0x10000 - 0x7FFFF: IPO_OS Kernel Core'}</text>
@@ -212,11 +212,11 @@ export function generateDiagramSvg(id: string, labels: Record<string, string>): 
         <rect x="0" y="217" width="740" height="45" class="box" />
         <text x="370" y="244" text-anchor="middle" class="text-title">${labels.ebda_rom || '0xC0000 - 0xFFFFF: VBIOS & Shadow RAM'}</text>
 
-        <rect x="0" y="270" width="740" height="60" class="box" />
-        <text x="370" y="305" text-anchor="middle" class="text-title">${labels.kernel_heap || '0x100000 - 0x7FFFFF: Kernel Heap (kmalloc)'}</text>
+        <rect x="0" y="270" width="740" height="60" class="box-success" />
+        <text x="370" y="305" text-anchor="middle" class="text-title">${labels.user_apps || '0x00800000 - 0x00FFFFFF: Userspace Applications (ELF32 / .bin)'}</text>
 
-        <rect x="0" y="338" width="740" height="70" class="box-success" />
-        <text x="370" y="378" text-anchor="middle" class="text-title">${labels.user_apps || '0x800000+: Userspace Applications'}</text>
+        <rect x="0" y="338" width="740" height="70" class="box" />
+        <text x="370" y="378" text-anchor="middle" class="text-title">${labels.kernel_heap || '0x01000000 - 0x04FFFFFF+: Kernel Heap (64 MB kmalloc) & PMM / sbrk'}</text>
       </g>
     </svg>`;
   }
@@ -250,8 +250,9 @@ export function generateDiagramSvg(id: string, labels: Record<string, string>): 
       ${style}
       <g transform="translate(50, 40)">
         <rect x="0" y="0" width="140" height="80" class="box" />
-        <text x="70" y="45" text-anchor="middle" class="text-title">MBR / Reserved</text>
-        <text x="70" y="65" text-anchor="middle" class="text-desc">LBA 0..2047</text>
+        <text x="70" y="38" text-anchor="middle" class="text-title">MBR / Pool+WAL</text>
+        <text x="70" y="56" text-anchor="middle" class="text-desc">LBA 0..2047</text>
+        <text x="70" y="70" text-anchor="middle" class="text-desc">(WAL 2030..2039)</text>
 
         <rect x="150" y="0" width="140" height="80" class="box-warn" />
         <text x="220" y="45" text-anchor="middle" class="text-title">Superblock</text>

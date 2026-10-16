@@ -60,10 +60,10 @@ objcopy -O binary --set-section-flags .bss=alloc,load,contents hello.elf hello.b
 
 ## 🚀 4. Размещение на диске операционной системы
 
-Скопируйте полученный файл `hello.bin` в каталог `/applications` виртуального диска IPO_OS с помощью утилиты `disk_editor.py`:
+Скопируйте полученный файл `hello.bin` в каталог `/applications` виртуального диска IPO_OS с помощью утилиты `tools/disk_editor.py`:
 
 ```bash
-python3 disk_editor.py put hello.bin /applications/hello.bin
+python3 tools/disk_editor.py put hello.bin /applications/hello.bin
 ```
 
 ---

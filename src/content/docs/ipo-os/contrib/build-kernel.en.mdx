@@ -29,41 +29,46 @@ The repository tree is organized into isolated modular layers:
 
 ```
 IPO_OS/
-├── Makefile             # Root build orchestrator
+├── Makefile                    # Root build orchestrator
+├── mk/                         # Modular build rules (kernel.mk, image.mk, qemu.mk, apps.mk)
 ├── src/
-│   ├── boot/            # Stage 1 MBR and Stage 2 protected mode loader
-│   ├── kernel/          # Microkernel core (scheduler, memory, syscalls)
-│   ├── drivers/         # Hardware drivers (ATA, RTL8139, PIT, PS/2, Serial)
-│   ├── fs/              # IPO_FS filesystem implementation
-│   ├── net/             # Bare-metal TCP/IP network stack
-│   ├── userland/        # Default shell, utilities, and libc
-│   └── include/         # Public kernel and user headers
+│   ├── boot/                   # Stage 1/2 bootloader, E820 probe (0x8FE0), Protected Mode entry
+│   ├── kernel/                 # Kernel core (SMP, scheduler, E820/kmalloc, KMOD, device registry, syscalls)
+│   ├── driver/                 # Drivers (Storage Pool + WAL, block_dev, partition, ATA, RTL8139, VBE, SB16)
+│   ├── file_system/            # 64-bit extent-based IPO_FS implementation
+│   ├── net/                    # Bare-metal TCP/IP stack with dynamic rx_packet_buf & POSIX sockets
+│   └── include/                # Kernel and public SDK headers
+├── applications/               # Userland apps, TCC, MicroPython, DOOM, and POSIX headers
 └── tools/
-    ├── disk_editor.py   # Filesystem partition editor
-    └── setup-tap.sh     # TAP network interface configurator
+    ├── generate_ksyms.py       # Extracts ~1,560 kernel symbols for runtime KMOD (.kmd) loader
+    ├── create_live_image.py    # Builds unified bootable Live USB image (build/IPO_OS.img)
+    ├── format_disk_via_os.py   # Formats disk image using IPO_OS kernel in headless QEMU
+    ├── disk_editor.py          # IPO_FS partition and file editor
+    └── setup-tap.sh            # TAP network interface configurator
 ```
 
 ---
 
 ## 🔨 Build Commands
 
-### 1. Compile Everything
+### 1. Compile Everything & Build Images
 ```bash
 make all
 ```
-Compiles the stage 1 and stage 2 bootloaders, kernel ELF, drivers, standard utilities, and builds `build/disk.img`.
+Performs a two-pass kernel link (generating the `generate_ksyms.py` symbol table), compiles drivers and userland applications, and builds `build/disk.iso`, `build/disk.img`, and the unified **`build/IPO_OS.img`**.
 
-### 2. Format and Generate Disk Image
+### 2. Format Disks & Build Unified Live USB Image
 ```bash
 make disks
+make live-image
 ```
-Initializes a 128 MB disk image (`build/disk.img`) formatted with `IPO_FS`, creates `build/disk.iso` (5 MB), compiles default fonts, and populates applications using `load_applications.py`.
+Initializes a 128 MB disk image (`build/disk.img`) with Storage Pool superblocks and WAL journal (LBA 2030–2039), formats `IPO_FS` at LBA 2048, populates applications via `load_applications.py`, and packages the unified bootable **`build/IPO_OS.img`**.
 
 ### 3. Clean Build Artifacts
 ```bash
 make clean
 ```
-Removes all compiled `.o`, `.bin`, `.elf`, and `.img` files.
+Removes all compiled `.o`, `.bin`, `.elf`, and generated symbol files.
 
 ---
 

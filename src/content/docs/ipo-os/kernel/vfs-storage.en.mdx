@@ -3,6 +3,9 @@ title: "Virtual File System & IPO_FS"
 description: "VFS abstraction, 64-bit extent allocation engine, and on-disk structures of IPO_FS."
 ---
 
+import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
+import SharedStruct from '../../../../components/SharedStruct.astro';
+
 # Virtual File System & IPO_FS
 
 Storage in IPO_OS is managed through a Virtual File System (VFS) layer backed by **IPO_FS** — an extent-based 64-bit filesystem designed for direct block-level performance.
@@ -58,3 +61,51 @@ struct ipo_dir_entry {
     /* char name[] follows immediately */
 };
 ```
+
+---
+
+## 🧱 Generic Block Device Layer (`block_dev.c`) & Partition Scanner (`partition.c`)
+
+Beneath `IPO_FS` sits a generic block storage stack built with dynamically growing descriptors (free of fixed array length limits):
+- **Block Devices (`block_device_t`):** Every physical or virtual drive (`ata0`, `ata1`, etc.) registers via `block_dev_register()` with a dynamically allocated `char *name`, sector size, total sector count, and `read_sectors()`, `write_sectors()`, and `flush()` hooks.
+- **MBR & GPT Partition Scanner (`partition_scan`):** Automatically parses classic **MBR** partition tables (`0x55AA`, up to 4 primary slots, type `0x83` for `IPO_FS`) as well as **GPT** headers (`"EFI PART"` at LBA 1), populating a self-expanding `partition_table_t`.
+
+---
+
+## 🔗 Persistent Multi-Disk Storage Pool (`storage_pool.c`) & WAL Journal
+
+The **Storage Pool** subsystem (`src/driver/storage/storage_pool.c`, `src/include/driver/storage/storage_pool.h`) aggregates one or more block devices (`ata0`, `ata1`, ...) into a unified linear logical volume (**Spanned JBOD**) protected by redundant superblocks and a Write-Ahead Logging (WAL) transaction journal:
+
+### 1. On-Disk Pool Metadata Layout (LBA 2030–2039)
+Pool metadata is stored in the reserved sectors immediately preceding the `IPO_FS` partition (`LBA 2048`):
+
+| LBA Sectors | Size | Structure | Purpose |
+| :--- | :--- | :--- | :--- |
+| **`LBA 2030`** | 512 B (1 sector) | `storage_pool_raw_sb_t` | **Primary Pool Superblock** (`magic = 0x504F4F4C` `'POOL'`, Version 2, CRC32 checksum, flexible `members[]` array) |
+| **`LBA 2031–2038`** | 4 KB (8 sectors) | `storage_raw_disk_tx_entry_t[64]` | **Write-Ahead Logging (WAL) Journal**: 64 entries of 64 bytes (`magic = 0x54584E4C` `'TXNL'`, states `INIT` → `PENDING` → `COMMITTED`) |
+| **`LBA 2039`** | 512 B (1 sector) | `storage_pool_raw_sb_t` | **Backup Pool Superblock** for automatic failover and recovery if LBA 2030 is corrupted |
+
+<SharedStruct id="storage_pool_raw_sb" lang="en" />
+
+### 2. Write-Ahead Logging (WAL) & Crash Recovery
+Every block write through `storage_pool_write_blocks()` is bracketed by an atomic WAL journal transaction (LBA 2031–2038):
+1. A 64-byte `storage_raw_disk_tx_entry_t` record is written with a monotonic `seq_id`, timestamp, target `start_lba`, `sector_count`, member index, and CRC32 in state `STORAGE_TX_PENDING`.
+2. The payload blocks are written to the underlying member disk.
+3. The WAL entry is updated to `STORAGE_TX_COMMITTED`, the superblock `generation` counter is incremented, and the device is flushed.
+4. During boot or `storage_pool_recover()`, the kernel validates the primary superblock CRC32 (failing over to LBA 2039 if needed) and scans the WAL journal, automatically rolling back any interrupted `PENDING` transactions.
+
+<SharedStruct id="storage_raw_disk_tx_entry" lang="en" />
+
+### 3. Shell Management (`storage`) & `statvfs` Syscall
+System call `IPO_SYSCALL_FS_STATVFS` (`0x1064`) exposes live filesystem capacity metrics to user applications, while the built-in `storage` shell command manages the pool interactively:
+```bash
+storage status                  # Display pool health, UUID, generation, and WAL state
+storage list                    # List all registered block devices and pool members
+storage usage                   # Show detailed IPO_FS used/free block & inode statistics
+storage check                   # Verify CRC32 checksums of primary/backup superblocks & WAL
+storage create [uuid] [ata0]    # Create and persist a new storage pool on disk
+storage add ata1                # Dynamically expand the pool with an additional disk
+storage recover                 # Restore superblock from backup and replay/abort WAL entries
+storage save                    # Force immediate synchronization of pool metadata to disk
+```
+

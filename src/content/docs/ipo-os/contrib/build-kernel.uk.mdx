@@ -7,13 +7,13 @@ import Callout from '../../../../components/Callout.astro';
 
 # Збирання IPO_OS з вихідних кодів
 
-В этом керівництві описывается процесс компиляции микроядра IPO_OS, системных утилит, формирования загрузочных образов дисків та работы с GNU Make.
+This guide explains how to compile the IPO_OS microkernel, build its userland utilities, generate bootable disk images, and run automated targets using GNU Make.
 
 ---
 
-## 🛠️ Необходимые зависимости
+## 🛠️ Build Prerequisites
 
-Убедитесь, что в системе установлены всі требуемые инструменты:
+Verify you have installed the necessary toolchains:
 
 ```bash
 # Ubuntu / Debian
@@ -23,63 +23,68 @@ sudo apt install -y build-essential gcc-multilib nasm make python3 qemu-system-x
 
 ---
 
-## 📁 Структура вихідного коду
+## 📁 Source Code Organization
 
-Дерево каталогов проекта розділено на изолированные слои:
+The repository tree is organized into isolated modular layers:
 
 ```
 IPO_OS/
-├── Makefile             # Головний керуючий сценарій збирання
+├── Makefile                    # Root build orchestrator
+├── mk/                         # Modular build rules (kernel.mk, image.mk, qemu.mk, apps.mk)
 ├── src/
-│   ├── boot/            # Завантажувач Stage 1 (MBR) та Stage 2 (Protected Mode)
-│   ├── kernel/          # Ядро (планувальник, менеджер пам'яті, системні виклики)
-│   ├── drivers/         # Драйвери обладнання (ATA, RTL8139, PIT, PS/2, COM1)
-│   ├── fs/              # Реалізація файлової системи IPO_FS
-│   ├── net/             # Вбудований мережевий стек TCP/IP
-│   ├── userland/        # Оболонка shell, системні утиліти та libc
-│   └── include/         # Заголовні файли ядра та інтерфейсів
+│   ├── boot/                   # Stage 1/2 bootloader, E820 probe (0x8FE0), Protected Mode entry
+│   ├── kernel/                 # Kernel core (SMP, scheduler, E820/kmalloc, KMOD, device registry, syscalls)
+│   ├── driver/                 # Drivers (Storage Pool + WAL, block_dev, partition, ATA, RTL8139, VBE, SB16)
+│   ├── file_system/            # 64-bit extent-based IPO_FS implementation
+│   ├── net/                    # Bare-metal TCP/IP stack with dynamic rx_packet_buf & POSIX sockets
+│   └── include/                # Kernel and public SDK headers
+├── applications/               # Userland apps, TCC, MicroPython, DOOM, and POSIX headers
 └── tools/
-    ├── disk_editor.py   # Редактор розділів та файлів дискового образу
-    └── setup-tap.sh     # Скрипт конфігурації мережевого інтерфейсу TAP
+    ├── generate_ksyms.py       # Extracts ~1,560 kernel symbols for runtime KMOD (.kmd) loader
+    ├── create_live_image.py    # Builds unified bootable Live USB image (build/IPO_OS.img)
+    ├── format_disk_via_os.py   # Formats disk image using IPO_OS kernel in headless QEMU
+    ├── disk_editor.py          # IPO_FS partition and file editor
+    └── setup-tap.sh            # TAP network interface configurator
 ```
 
 ---
 
-## 🔨 Команды збирання
+## 🔨 Build Commands
 
-### 1. Полная компиляция
+### 1. Compile Everything & Build Images
 ```bash
 make all
 ```
-Компилирует завантажувачи, ядро в формате ELF, драйвери, стандартные утилиты та формирует файл образа `build/disk.img`.
+Performs a two-pass kernel link (generating the `generate_ksyms.py` symbol table), compiles drivers and userland applications, and builds `build/disk.iso`, `build/disk.img`, and the unified **`build/IPO_OS.img`**.
 
-### 2. Форматування та запис диска
+### 2. Format Disks & Build Unified Live USB Image
 ```bash
 make disks
+make live-image
 ```
-Створює 128-мегабайтний образ віртуального диска (`build/disk.img`), розмічає файлову систему `IPO_FS`, створює `build/disk.iso` (5 МБ), збирає шрифти та копіює програми через `load_applications.py`.
+Initializes a 128 MB disk image (`build/disk.img`) with Storage Pool superblocks and WAL journal (LBA 2030–2039), formats `IPO_FS` at LBA 2048, populates applications via `load_applications.py`, and packages the unified bootable **`build/IPO_OS.img`**.
 
-### 3. Очищення артефактов
+### 3. Clean Build Artifacts
 ```bash
 make clean
 ```
-Удаляет всі скомпилированные объектные файли `.o`, бинарники `.bin`, `.elf` та образы `.img`.
+Removes all compiled `.o`, `.bin`, `.elf`, and generated symbol files.
 
 ---
 
-## ⚙️ Флаги конфігурації Makefile
+## ⚙️ Makefile Configuration Flags
 
-| Флаг | Значення за умолчанию | Описание |
+| Flag | Default | Description |
 | :--- | :--- | :--- |
-| `DEBUG` | `0` | При `1` собирает код с отладочной информацией (`-g -O0`) |
-| `NET_MODE` | `user` | Режим сети: `user` (NAT через SLIRP) або `tap` (виртуальный сетевой мост) |
-| `SERIAL_LOG` | `1` | Дублирование всіх повідомлень ядра в последовательный порт COM1 (`0x3F8`) |
+| `DEBUG` | `0` | When set to `1`, compiles with `-g -O0` and enables verbose serial debugging |
+| `NET_MODE` | `user` | Network mode: `user` (QEMU SLIRP NAT) or `tap` (bridged host TAP) |
+| `SERIAL_LOG` | `1` | Mirrors all kernel console output to UART COM1 (`0x3F8`) |
 
-### Приклады запуска:
+### Example Invocations:
 ```bash
-# Збирання з налагодженням та запуск під GDB:
+# Build in debug mode and run in QEMU with GDB stub:
 make run DEBUG=1 QEMU_ARGS="-s -S"
 
-# Запуск із мережевим інтерфейсом TAP:
+# Run with bridged TAP networking:
 make run NET_MODE=tap
 ```

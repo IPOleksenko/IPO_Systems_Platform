@@ -9,7 +9,7 @@ import Callout from '../../../../components/Callout.astro';
 # User Interface, Shell, GUI and Multimedia
 
 **IPO_OS** provides a comprehensive user experience:
-1. **Interactive Console Shell:** 27+ builtin commands, multitasking virtual workspaces (`run &`), pipes (`|`), scrollback history, and ANSI colors.
+1. **Interactive Console Shell:** 32 built-in commands, multitasking virtual workspaces (`run &`), pipes (`|`), scrollback history, and ANSI colors.
 2. **Window Manager (WM):** 2D graphical desktop running in VGA Mode 13h (320x200x256); compositor updates run from the active process/console loop without a fixed FPS cap, with a PS/2 software mouse pointer and event-driven windows.
 3. **TinyGL 3D Engine (OpenGL 1.1):** Software 3D rasterizer inside kernel space, featuring Z-buffering, dynamic lighting, texture mapping, and flat/smooth shading.
 4. **Audio Architecture:** Sound Blaster 16 DSP hardware driver (16-bit DMA Ch 5, 22050 Hz stereo mixer) and fallback PC Speaker PWM.
@@ -18,41 +18,46 @@ import Callout from '../../../../components/Callout.astro';
 
 ---
 
-## 💻 1. Shell Console and Builtin Commands
+## 💻 1. Shell Console and Built-in Commands
 
-The kernel command line interpreter (`terminal.c`) provides interactive text navigation and multitasking execution operators:
+The kernel command line interpreter (`src/kernel/core/terminal.c`) provides interactive text navigation, remote serial command execution (`terminal_poll_serial_commands()`), and multitasking execution operators:
 
-### 📋 Complete Builtin Command Reference
+### 📋 Complete 32 Built-in Command Reference (`terminal_is_builtin`)
 
-| Command | Aliases | Description & Syntax |
+| Command | Syntax | Description |
 | :--- | :--- | :--- |
-| `help` | `?` | Displays full system help and syntax reference. |
-| `clear` | `cls` | Clears terminal screen and resets cursor position. |
-| `pwd` | — | Prints canonical absolute path of current working directory. |
-| `cd` | — | Changes directory: `cd <path>`, `cd ..`, `cd ~` (root). |
-| `ls` | `dir` | Lists directory contents showing file type and exact byte size. |
-| `cat` | `type` | Displays contents of text files: `cat file.txt`. |
-| `touch` | — | Creates new empty file: `touch filename.txt`. |
-| `mkdir` | — | Creates new directory: `mkdir /mydir`. |
-| `rm` | `del`, `rmdir` | Deletes files or empty directories: `rm target`. |
-| `cp` | `copy` | Copies files from source to destination: `cp a.txt b.txt`. |
-| `mv` | `move`, `rename`| Moves or renames files and directories. |
-| `stat` | — | Displays inode metadata: exact 64-bit size, flags, extents. |
-| `echo` | — | Prints text to stdout or redirects to file (`>` or `>>`). |
-| `ps` | `tasks`, `procs`| Lists active processes with PID, state, and memory metrics. |
-| `kill` | — | Terminates process by PID: `kill <pid>`. |
-| `killall`| — | Terminates all active background processes. |
-| `run` | — | Launches executables with batch operators (`&`, `&&`, `|`, `;`). |
-| `startx` | — | Launches graphical Window Manager desktop session. |
-| `stopx` | — | Terminates graphical WM session and restores text mode. |
-| `ifconfig`| `ip`, `ipconfig` | Displays or configures IP, subnet mask, gateway, and MAC. |
-| `df` | `diskinfo` | Reports IPO_FS storage capacity, used/free blocks, and inodes. |
-| `meminfo`| `free` | Reports kernel heap memory statistics. |
-| `driver` | `drivers`, `lsmod` | Lists registered dynamic device drivers. |
-| `keymap` | `layout`, `keymaps` | Manages keyboard layouts: `keymap list`, `keymap on <name>`, `keymap off`. |
-| `return` | `ret`, `retval` | Toggles display of process exit status codes. |
-| `reboot` | `restart` | Reboots machine via 8042 controller, port 0x92, or triple fault. |
-| `shutdown`| `poweroff`, `halt` | Shuts down machine safely via ACPI/APM. |
+| `help` | `help` | Displays full system help and syntax reference. |
+| `clear` | `clear` | Clears terminal screen and resets cursor position. |
+| `pwd` | `pwd` | Prints canonical absolute path of current working directory. |
+| `cd` | `cd <path>` | Changes directory (`cd ..`, `cd /`). |
+| `ls` | `ls [path]` | Lists directory contents showing file type and exact byte size. |
+| `cat` | `cat <file>...` | Displays contents of files to the console. |
+| `touch` | `touch <file>...` | Creates a new empty file. |
+| `mkdir` | `mkdir <dir>...` | Creates a new directory. |
+| `rm` | `rm <path>...` | Deletes files or empty directories. |
+| `cp` | `cp <src> <dst>` | Copies files from source to destination. |
+| `mv` | `mv <src> <dst>` | Moves or renames files and directories. |
+| `stat` | `stat <path>` | Displays inode metadata: exact 64-bit size, flags, and extent table. |
+| `echo` | `echo <text> [> / >> file]` | Prints text to stdout or redirects to file (`>` overwrite or `>>` append). |
+| `ps` | `ps` | Lists active processes with PID, state, and stack/heap metrics. |
+| `kill` | `kill <pid>` | Terminates a process by PID. |
+| `killall` | `killall <name>` | Terminates all active processes matching the given name. |
+| `run` | `run <cmd> [&\|&&\|\|\|;]` | Launches executables (ELF32, `.bin`, `#!` scripts) with multitasking operators. |
+| `startx` | `startx` | Launches graphical Window Manager desktop session in VGA Mode 13h (`320x200x256`). |
+| `stopx` | `stopx` | Terminates graphical WM session and restores `80x25` text mode. |
+| `ifconfig` | `ifconfig [ip mask gw]` | Displays or configures IPv4 address, subnet mask, gateway, and RTL8139 MAC. |
+| `df` | `df` | Reports `IPO_FS` storage capacity, used/free 4 KB blocks, and inodes. |
+| `free` | `free` | Reports physical RAM, 64 MB kernel heap (`kmalloc`), and PMM frame statistics. |
+| `drivers` | `drivers [list\|load\|unload]` | Manages dynamic kernel modules (`.kmod`) and lists registered drivers. |
+| `hardware` | `hardware` | Prints the discovered device tree (`device_node_t`) across `platform`, `isa`, `pci`, and `ata` buses. |
+| `symbols` | `symbols` | Displays the kernel exported symbol table (`EXPORT_SYMBOL`). |
+| `ksyms` | `ksyms` | Alias for `symbols` to inspect exported kernel symbols. |
+| `storage` | `storage [status\|create\|destroy\|sync\|recover]` | Manages `IPO_STORAGE_POOL` volume manager (LVM/RAID0, WAL transaction log, CRC32). |
+| `reinstall_fs`| `reinstall_fs` | Formats the disk partition with a clean `IPO_FS` filesystem. |
+| `keymap` | `keymap [list\|on\|off] [name]` | Manages runtime keyboard layouts (`/etc/keymaps/*.kmap`). |
+| `return` | `return [on\|off]` | Toggles display of process exit status codes. |
+| `reboot` | `reboot` | Reboots machine via 8042 controller (`0x64`) or triple fault. |
+| `shutdown` | `shutdown` | Shuts down machine safely via ACPI/QEMU/Bochs/VirtualBox ports. |
 
 ---
 
@@ -62,11 +67,11 @@ The kernel command line interpreter (`terminal.c`) provides interactive text nav
 # 1. '&' operator — separate virtual workspaces (Ctrl+PgUp / Ctrl+PgDn to switch):
 run edit & player & hosting_server
 
-# 2. '&&' operator — asynchronous shared workspace (run multiple GUI apps on same desktop):
-run wm_demo && wm_demo2 && wm_fullscreen
+# 2. '&&' operator — asynchronous shared workspace (run multiple GUI/3D apps on same desktop):
+run gl_cube && gl_gears && fps_meter
 
-# 3. '|' operator — return-code pipelined execution:
-run test_sb16 | player sound.raw
+# 3. '|' operator — stdout-to-file pipelined execution:
+run echo hello | cat
 
 # 4. ';' operator — sequential execution:
 run setfont /fonts/terminus.fnt ; startx
@@ -76,7 +81,7 @@ run setfont /fonts/terminus.fnt ; startx
 - **`Ctrl + Page Up` / `Ctrl + Page Down`:** Cycle between multitasking workspaces.
 - **`Ctrl + Left Shift` / `Ctrl + Right Shift`:** Cycle active keyboard layout.
 - **`Ctrl + C`:** Interrupt active task or close current workspace.
-- **`Page Up` / `Page Down`:** Scroll terminal output buffer (128 lines scrollback).
+- **`Page Up` / `Page Down`:** Scroll terminal output buffer (dynamic scrollback).
 - **`Up / Down Arrows`:** Command history recall.
 
 ---
@@ -96,7 +101,7 @@ Integrated bare-metal software 3D rasterizer:
 - **Primitives:** Points, lines, triangles, quads, polygons.
 - **Lighting:** Up to 8 light sources, diffuse/specular/ambient illumination, normal vectors.
 - **Z-Buffer:** 16-bit depth buffer for hidden surface removal.
-- **Applications:** `gl_gears`, `gl_teapot`, `gl_cube`, `gl_fog`, `gl_blend`, `gl_stencil`.
+- **Applications in `applications/`:** `gl_gears`, `gl_teapot`, `gl_cube`, `fps_meter`, `wm_fullscreen`, `doom`.
 
 ---
 
@@ -104,4 +109,4 @@ Integrated bare-metal software 3D rasterizer:
 
 - **Sound Blaster 16:** Base port `0x220`, 16-bit DMA Channel 5, double buffering at `0x600000`, 22050 Hz stereo mixer.
 - **PC Speaker:** Dynamic PWM frequency tracking using Zero-Crossing rate analysis.
-- **Audio utilities:** `player`, `test_sb16`, `sound_test`, `audio_test`.
+- **Audio & Multimedia applications:** `player` (plays media files from `/music/`), `doom`.

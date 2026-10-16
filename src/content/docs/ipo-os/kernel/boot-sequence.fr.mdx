@@ -3,6 +3,8 @@ title: "Cold Boot Sequence & Timeline"
 description: "Step-by-step cold boot pipeline from power-on hardware reset to mode protégé kernel and userspace shell."
 ---
 
+import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
+
 # Cold Boot Sequence & Timeline
 
 The transition of the system from cold hardware power-on to an interactive userspace shell occurs across several coordinated phases.
@@ -11,45 +13,47 @@ The transition of the system from cold hardware power-on to an interactive users
 
 ## ⏱️ Boot Sequence Pipeline
 
-<LocalizedDiagram id="kernel_boot" lang="en" figureNum={4} />
+<LocalizedDiagram id="kernel_boot" lang="fr" figureNum={4} />
 
 ---
 
 ## 🔍 Detailed Boot Stages Breakdown
 
-### 1. Power Supply Good & Hardware Vecteur de réinitialisation
+### 1. Power Supply Good & Hardware Reset Vector
 1. Upon pressing the power button, the power supply asserts the active-high **Power Good (PWR_OK)** signal after internal voltages stabilize (+12V, +5V, +3.3V).
 2. The processor de-asserts its internal `RESET` pin.
-3. In hardware mode réel, the instruction pointer starts at the x86 vecteur de réinitialisation:
+3. In hardware real mode, the instruction pointer starts at the x86 reset vector:
    `CS:IP = 0xF000:0xFFF0` (Physical Address: `0xFFFFFFF0`)
 
 ### 2. Boot ROM & Firmware Initialization (Contracts 2 & 3)
-1. **IPO_Boot_ROM** configures Cache-as-RAM (CAR), detects the host chipset (i440FX or Q35), runs Memory Référence Code (MRC) to train the DRAM controller, locks PAM Shadow RAM, and hands over control to the firmware at `0xF000:0004` (**Contract 2**).
+1. **IPO_Boot_ROM** configures Cache-as-RAM (CAR), detects the host chipset (i440FX or Q35), runs Memory Reference Code (MRC) to train the DRAM controller, locks PAM Shadow RAM, and hands over control to the firmware at `0xF000:0004` (**Contract 2**).
 2. **IPO_Firmware** installs the real-mode Interrupt Vector Table (IVT: INT 10h–1Ah), enables the Fast A20 gate via port `0x92`, queries memory via E820, scans storage buses, and reads LBA 0 (MBR) into DRAM at `0x0000:7C00` (**Contract 3**).
 
-### 3. Stage 1 Bootloader Execution (`0x7C00`)
+### 3. MBR Bootloader Execution (`src/boot/boot.asm` at `0x7C00`)
 1. The firmware issues a far jump to `0x0000:7C00` with `DL` set to the boot drive ID (`0x80`).
-2. The 512-byte MBR bootloader sets up a temporary real-mode stack, reads Stage 2 sectors from the reserved disk area into memory, and jumps to Stage 2.
+2. The `boot.asm` loader (446 bytes of code + 64-byte MBR Partition Table containing partition `0x83` at LBA 2048) sets up a real-mode stack (`0x7C00`), verifies `INT 13h, AH=41h` extensions, and reads the kernel binary (`KERNEL_TOTAL_SECTORS` starting at LBA 1) in 64-sector (32 KB) DAP chunks (`INT 13h, AH=42h`) into physical memory starting at `0x10000`.
+3. Next, `boot.asm` queries the BIOS memory map (`INT 15h, EAX=0xE820`, with fallback to `AX=0xE801`), writing 20-byte descriptors at `0x6000` and the `e820_map_header_t` header at `0x8FE0`–`0x8FF7`.
 
-### 4. Transition to 32-bit Mode protégé
-1. The Stage 2 loader constructs a 32-bit **Table globale des descripteurs (GDT)** containing flat 4 GB code and data segments:
-   - Code Segment: Base `0x00000000`, Limit `0xFFFFFFFF`, Ring 0, Execute/Read.
-   - Data Segment: Base `0x00000000`, Limit `0xFFFFFFFF`, Ring 0, Read/Write.
-2. The loader activates Mode protégé by setting Bit 0 (Protection Enable, `PE`) in control register `CR0`:
+### 4. Transition to 32-bit Protected Mode
+1. The loader enables the Fast A20 line via port `0x92`, hides the BIOS text cursor, and loads a 32-bit **Global Descriptor Table (GDT)** containing flat 4 GB code and data segments:
+   - Code Segment (`0x08`): Base `0x00000000`, Limit `0xFFFFFFFF`, Ring 0, Execute/Read.
+   - Data Segment (`0x10`): Base `0x00000000`, Limit `0xFFFFFFFF`, Ring 0, Read/Write.
+2. The loader activates Protected Mode by setting Bit 0 (`PE`) in control register `CR0` and jumps directly to `0x08:0x10000`:
    ```asm
    mov eax, cr0
    or eax, 1
    mov cr0, eax
-   jmp 0x08:.protected_entry   ; Far jump flushes 16-bit prefetch queue
+   jmp dword 0x08:0x10000   ; 32-bit far jump to kernel entrypoint _start
    ```
 
-### 5. Kernel Loading & Execution (`0x10000`)
-1. In 32-bit mode, the loader reads the kernel binary into mémoire physique starting at `0x10000` (64 KB).
-2. Control transfers to `_start` in `src/kernel/arch/x86/entry32.asm`.
-3. The kernel executes initialization routines in strict dependency order:
-   - Sets up the kernel GDT and stack.
-   - Installs the Interrupt Descriptor Table (IDT) with CPU exception handlers (`0x00`–`0x1F`) and system call vector `0x80` (hardware peripherals use polling in `kmain()`).
-   - Initializes the Mémoire physique Manager (PMM) and kernel heap allocator (`kmalloc`).
-   - Mounts the root `IPO_FS` partition from LBA 2048.
-   - Initializes pilote de périphériques: ATA storage, PS/2 keyboard/mouse, RTL8139 NIC, and Gestionnaire de fenêtres.
-   - Initializes the built-in interactive shell and terminal console (`terminal_initialize()`, `terminal_console()`).
+### 5. Kernel Entry & Subsystems Initialization (`0x10000`)
+1. Control transfers to `_start` in `src/kernel/entry32.asm`, which sets up the `0x500000` kernel stack, writes `'K'` to `0xB8000`, and calls `kmain()` (`src/kernel/kernel32.c`).
+2. The kernel executes initialization routines in strict dependency order:
+   - Initializes the VGA console (`terminal_initialize()`) and UART COM1 debug serial port (`serial_init()`).
+   - Initializes the 64 MB kernel heap (`kmalloc_init()`, `0x01000000`–`0x04FFFFFF`) and the BIOS E820 Physical Memory Map Manager (`memory_map_init()`, parsing the header at `0x8FE0` and entries at `0x6000`).
+   - Initializes keyboard layouts, the runtime driver subsystem (`driver_init()`), shared system variables (`sysvar_init()`), process table (`process_init()`), and asynchronous worker scheduler (`async_init()`).
+   - Installs the 256-gate Interrupt Descriptor Table (`syscall_init()`) with CPU exception handlers (`0x00`–`0x1F`) and system call vector `0x80`.
+   - Initializes **Symmetric Multiprocessing (`smp_init()`)**: enables the Local APIC (`0xFEE00000`), parses ACPI MADT / Intel MP tables, installs the AP trampoline at `0x8000`, and wakes Application Processors (APs) via `INIT-SIPI-SIPI`.
+   - Initializes the generic block device layer (`block_dev_init()`), ATA PIO driver (`ata_init()`), MBR/GPT partition scanner (`partition_scan()`), and **persistent Multi-Disk Storage Pool (`storage_pool_init()`)** with primary/backup superblock verification (LBA 2030/2039) and Write-Ahead Logging (WAL) recovery (LBA 2031–2038).
+   - Initializes the **Dynamic Kernel Module Loader (`kmod_init()`)** with ~1,560 exported kernel symbols and the **Unified Hardware Device Registry (`device_init()`)** (enumerating PCI, ISA, IDE, USB, CPU, and Memory nodes).
+   - Mounts the root `IPO_FS` filesystem (`ipo_fs_init()`, `ensure_fs_mounted()`), loads fonts and keymaps, initializes the TCP/IP stack (`net_init()`), and enters the main polling loop (`timer_tick()`, `async_scheduler_tick()`, `net_poll()`, `terminal_console()`, and background COM1 serial command execution via `terminal_poll_serial_commands()`).

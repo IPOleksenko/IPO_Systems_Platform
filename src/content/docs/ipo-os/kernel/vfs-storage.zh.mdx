@@ -4,28 +4,108 @@ description: "系统体系架构 of 64-bit extent-based IPO_FS, superblock, inod
 ---
 
 import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
-import Callout from '../../../../components/Callout.astro';
+import SharedStruct from '../../../../components/SharedStruct.astro';
 
 # Virtual 文件系统 (VFS) and IPO_FS
 
-The storage architecture of **IPO_OS** comprises the abstract VFS interface, the custom 64-bit extent-based **IPO_FS**, and the hardware **ATA PIO** disk driver.
-
-<LocalizedDiagram id="fs_layout" />
+Storage in IPO_OS is managed through a Virtual File System (VFS) layer backed by **IPO_FS** — an extent-based 64-bit filesystem designed for direct block-level performance.
 
 ---
 
-## 💾 IPO_FS Disk Layout
+## 🗄️ IPO_FS Partition Layout
 
-Located at LBA 2048 with 512-byte blocks:
-- **Superblock (64 bytes header):** Signature `'IPO_FS\0\0'`, 64-bit total block count, 64-bit inode count.
-- **Bitmaps:** Inode allocation bitmap and Data block bitmap.
-- **Inodes (128 bytes, 4 per sector):** 64-bit size, 4 embedded contiguous extent descriptors (24 bytes each), chained extent node pointer.
-- **Extents (24 bytes):** Physical start block, block count, logical file offset.
+<LocalizedDiagram id="fs_layout" lang="zh" figureNum={7} />
 
 ---
 
-## 🔌 ATA PIO Driver
+## 📑 Superblock Specification (LBA 2048)
 
-Communicates over legacy IDE I/O ports (`0x1F0`–`0x1F7`, `0x3F6`):
-- Data port: `0x1F0` (16-bit word transfer via `insw` / `outsw`).
-- Commands: `0x20` Read Sectors, `0x30` Write Sectors, `0x24`/`0x34` for 48-bit LBA.
+The filesystem begins with a 64-byte superblock header located at LBA 2048:
+
+<SharedStruct id="ipo_superblock" lang="zh" />
+
+---
+
+## 📄 Inode Structure & 64-bit Extents
+
+Each file or directory is represented by a compact **128-byte inode** (packed 4 inodes per 512-byte block):
+
+<SharedStruct id="ipo_inode" lang="zh" />
+
+### Extent-Based Allocation Mechanism
+Unlike traditional filesystems that use multi-level pointer blocks (indirect blocks) which require multiple seeks per read, `IPO_FS` uses contiguous **extents**:
+```c
+struct ipo_extent {
+    uint64_t logical_block;   /* Logical offset inside the file */
+    uint64_t physical_block;  /* Starting physical block in partition */
+    uint32_t block_count;     /* Number of contiguous 512-byte blocks */
+    uint32_t flags;
+};
+```
+- The first **4 extents** are embedded directly inside the 128-byte inode.
+- For files requiring more than 4 non-contiguous extents, `next_extent_node` references an `ipo_extent_node` block containing **20 chained extents** (480 bytes + 32-byte header/pad).
+
+---
+
+## 📂 Directory Entries (`ipo_dir_entry`)
+
+Directories in `IPO_FS` are regular files whose payload consists of linear arrays of variable-length directory records:
+
+```c
+struct ipo_dir_entry {
+    uint32_t inode;       /* Target inode index */
+    uint32_t rec_len;     /* Total record byte length (including padding) */
+    uint32_t name_len;    /* Filename length in bytes (up to 64 bytes) */
+    uint8_t  type;        /* 0x1 = Directory, 0x2 = Regular File */
+    uint8_t  reserved[3];
+    /* char name[] follows immediately */
+};
+```
+
+---
+
+## 🧱 Generic Block Device Layer (`block_dev.c`) & Partition Scanner (`partition.c`)
+
+Beneath `IPO_FS` sits a generic block storage stack built with dynamically growing descriptors (free of fixed array length limits):
+- **Block Devices (`block_device_t`):** Every physical or virtual drive (`ata0`, `ata1`, etc.) registers via `block_dev_register()` with a dynamically allocated `char *name`, sector size, total sector count, and `read_sectors()`, `write_sectors()`, and `flush()` hooks.
+- **MBR & GPT Partition Scanner (`partition_scan`):** Automatically parses classic **MBR** partition tables (`0x55AA`, up to 4 primary slots, type `0x83` for `IPO_FS`) as well as **GPT** headers (`"EFI PART"` at LBA 1), populating a self-expanding `partition_table_t`.
+
+---
+
+## 🔗 Persistent Multi-Disk Storage Pool (`storage_pool.c`) & WAL Journal
+
+The **Storage Pool** subsystem (`src/driver/storage/storage_pool.c`, `src/include/driver/storage/storage_pool.h`) aggregates one or more block devices (`ata0`, `ata1`, ...) into a unified linear logical volume (**Spanned JBOD**) protected by redundant superblocks and a Write-Ahead Logging (WAL) transaction journal:
+
+### 1. On-Disk Pool Metadata Layout (LBA 2030–2039)
+Pool metadata is stored in the reserved sectors immediately preceding the `IPO_FS` partition (`LBA 2048`):
+
+| LBA Sectors | Size | Structure | Purpose |
+| :--- | :--- | :--- | :--- |
+| **`LBA 2030`** | 512 B (1 sector) | `storage_pool_raw_sb_t` | **Primary Pool Superblock** (`magic = 0x504F4F4C` `'POOL'`, Version 2, CRC32 checksum, flexible `members[]` array) |
+| **`LBA 2031–2038`** | 4 KB (8 sectors) | `storage_raw_disk_tx_entry_t[64]` | **Write-Ahead Logging (WAL) Journal**: 64 entries of 64 bytes (`magic = 0x54584E4C` `'TXNL'`, states `INIT` → `PENDING` → `COMMITTED`) |
+| **`LBA 2039`** | 512 B (1 sector) | `storage_pool_raw_sb_t` | **Backup Pool Superblock** for automatic failover and recovery if LBA 2030 is corrupted |
+
+<SharedStruct id="storage_pool_raw_sb" lang="zh" />
+
+### 2. Write-Ahead Logging (WAL) & Crash Recovery
+Every block write through `storage_pool_write_blocks()` is bracketed by an atomic WAL journal transaction (LBA 2031–2038):
+1. A 64-byte `storage_raw_disk_tx_entry_t` record is written with a monotonic `seq_id`, timestamp, target `start_lba`, `sector_count`, member index, and CRC32 in state `STORAGE_TX_PENDING`.
+2. The payload blocks are written to the underlying member disk.
+3. The WAL entry is updated to `STORAGE_TX_COMMITTED`, the superblock `generation` counter is incremented, and the device is flushed.
+4. During boot or `storage_pool_recover()`, the kernel validates the primary superblock CRC32 (failing over to LBA 2039 if needed) and scans the WAL journal, automatically rolling back any interrupted `PENDING` transactions.
+
+<SharedStruct id="storage_raw_disk_tx_entry" lang="zh" />
+
+### 3. Shell Management (`storage`) & `statvfs` Syscall
+System call `IPO_SYSCALL_FS_STATVFS` (`0x1064`) exposes live filesystem capacity metrics to user applications, while the built-in `storage` shell command manages the pool interactively:
+```bash
+storage status                  # Display pool health, UUID, generation, and WAL state
+storage list                    # List all registered block devices and pool members
+storage usage                   # Show detailed IPO_FS used/free block & inode statistics
+storage check                   # Verify CRC32 checksums of primary/backup superblocks & WAL
+storage create [uuid] [ata0]    # Create and persist a new storage pool on disk
+storage add ata1                # Dynamically expand the pool with an additional disk
+storage recover                 # Restore superblock from backup and replay/abort WAL entries
+storage save                    # Force immediate synchronization of pool metadata to disk
+```
+

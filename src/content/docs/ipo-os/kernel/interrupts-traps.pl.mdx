@@ -98,3 +98,7 @@ for (;;) {
    #define TSC_PER_MS 2000000ULL
    ```
    - Enables sub-microsecond timing accuracy without hardware timer interrupt jitter.
+3. **Local APIC (`0xFEE00000`) & Cross-Core IPIs:**
+   - On multi-core systems, each core enables its Local APIC via MSR `0x1B` and MMIO registers (`SVR = 0x00F0`, `TPR = 0x0080`, `EOI = 0x00B0`, `ICR_LOW = 0x0300`, `ICR_HIGH = 0x0310`).
+   - Vector **`0xE0` (`SMP_IPI_VECTOR`)** is used for inter-processor interrupts (IPIs) and cross-core task synchronization.
+

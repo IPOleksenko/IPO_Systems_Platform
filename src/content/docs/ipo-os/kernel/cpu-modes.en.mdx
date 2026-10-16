@@ -16,7 +16,7 @@ IPO_OS transitions the CPU from 16-bit Real Mode into 32-bit Protected Mode, est
 │             16-bit Real Mode                 │
 │  • 1 MB physical addressing (Segment:Offset) │
 │  • BIOS interrupt services (IVT INT 10h-1Ah) │
-│  • Memory detection (E820 stored at 0x8FF0)  │
+│  • Memory detection (E820 at 0x6000 / 0x8FE0)│
 └──────────────────────┬───────────────────────┘
                        │ lgdt [gdt_desc], CR0.PE = 1, Far jmp 0x08:pmode_entry
 ┌──────────────────────▼───────────────────────┐
@@ -78,3 +78,36 @@ ipo_idt_ptr_t idt_ptr = {
 };
 __asm__ volatile("lidt %0" : : "m"(idt_ptr));
 ```
+
+---
+
+## 🔥 Symmetric Multiprocessing (SMP) & Local APIC
+
+The SMP subsystem (`src/kernel/arch/x86/smp.c`, `smp_trampoline.asm`, `src/include/kernel/smp.h`) discovers all physical and logical processor cores, initializes the Local APIC controller, and boots secondary **Application Processors (APs)**.
+
+### 1. CPU Topology Discovery & Dynamic ACPI / MP Descriptors
+During `smp_init()`, the **Bootstrap Processor (BSP)** discovers processor cores through a three-stage fallback pipeline:
+1. **ACPI Tables (RSDP → RSDT → MADT / `APIC`):** Scans the EBDA and `0xE0000`–`0xFFFFF` for `"RSD PTR "`, validates table checksums, and parses MADT Local APIC entries (Type 0).
+2. **Intel MP Floating Pointer (`_MP_`):** Fallback parser for Intel Multiprocessor Specification 1.1/1.4 configuration tables.
+3. **`CPUID` Enumeration:** Fallback core detection and dynamic string extraction for vendor (`smp_get_cpu_vendor`), brand (`smp_get_cpu_brand`), and instruction set extensions (`smp_get_cpu_features_str`: `FPU`, `TSC`, `MSR`, `PAE`, `APIC`, `MMX`, `SSE`, `SSE2`, `SSE3`, `SSSE3`, `SSE4.1`, `SSE4.2`, `AVX`, `LM(x64)`).
+
+> **Zero Fixed Array Limits:** All in-memory ACPI/MP table structures (`acpi_rsdp_t`, `acpi_sdt_header_t`, `acpi_madt_t`, `mp_floating_pointer_t`) and the CPU registry (`s_cpus`) use dynamically self-expanding heap buffers (`char *` / `uint8_t *` + `_len` + `_cap` via `krealloc`) without arbitrary fixed array size limits.
+
+### 2. Local APIC Initialization (`0xFEE00000`)
+- Enables the Local APIC globally via bit 11 (`APIC_BASE_ENABLE_BIT`) of `IA32_APIC_BASE_MSR` (`0x1B`).
+- Sets the Spurious Interrupt Vector Register (**SVR**, offset `0x00F0`) to `0x1FF` (Bit 8 APIC Software Enable + vector `0xFF`) and clears the Task Priority Register (**TPR**, offset `0x0080`) to `0`.
+
+### 3. Application Processor (AP) Boot Trampoline (`0x8000`) & `INIT-SIPI-SIPI`
+For each discovered AP core, the kernel allocates a 16 KB stack via `kmalloc` and copies the 16-to-32-bit trampoline (`smp_trampoline.asm`) to physical address **`0x00008000`**:
+- **Trampoline Mailbox (`0x80F0`–`0x80FC`):**
+  - `0x80F0` (`SMP_BOOT_STACK_ADDR`) — Top of the 16 KB stack allocated for the target AP.
+  - `0x80F4` (`SMP_BOOT_CPUID_ADDR`) — Logical `cpu_id` assigned to the AP.
+  - `0x80F8` (`SMP_BOOT_FN_ADDR`) — Physical address of C entrypoint `smp_ap_entry()`.
+  - `0x80FC` (`SMP_BOOT_DONE_ADDR`) — Handshake flag set to `1` once the AP enters 32-bit Protected Mode.
+- **`INIT-SIPI-SIPI` Sequence:** The BSP writes the target AP's LAPIC ID into `LAPIC_ICR_HIGH` (`0x0310`) and issues an `INIT` IPI (`0x00004500`) via `LAPIC_ICR_LOW` (`0x0300`), waits 10 ms, and sends two Startup IPIs (`SIPI`, `0x00004608`, vector page `0x08` = `0x8000 >> 12`).
+- The waking AP starts in 16-bit Real Mode at `0x8000`, loads a temporary GDT, sets `CR0.PE = 1`, jumps to 32-bit mode, loads its `ESP` from `0x80F0`, signals `0x80FC = 1`, loads the kernel IDT, enables its own Local APIC, and enters the `smp_ap_entry()` work loop.
+
+### 4. Hardware Spinlocks (`spinlock_t`) & Cross-Core Task Broadcast
+- `src/include/kernel/smp.h` provides atomic hardware spinlocks (`spinlock_acquire`, `spinlock_release`, `spinlock_irqsave`, `spinlock_irqrestore`) built on `__atomic_test_and_set` and the x86 `pause` hint.
+- `smp_broadcast_task(fn, arg)` dispatches a callback across all online CPU cores simultaneously and synchronizes completion with cross-core IPIs (`SMP_IPI_VECTOR = 0xE0`).
+

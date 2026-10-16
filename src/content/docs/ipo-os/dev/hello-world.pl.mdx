@@ -41,15 +41,18 @@ To compile `main.c`, we need the startup stub `entry.s` and linker script `app.l
 
 ```bash
 # 1. Compile C source code with freestanding flags
-gcc -m32 -O2 -ffreestanding -fno-pie -fno-pic -nostdlib -c main.c -o main.o
+gcc -m32 -O2 -ffreestanding -fno-pie -fno-pic -nostdlib -Isrc/include -c main.c -o main.o
 
 # 2. Assemble entry stub
-gcc -m32 -c entry.s -o entry.o
+gcc -m32 -c applications/entry.s -o entry.o
 
-# 3. Link into temporary ELF binary mapped at 0x800000
-gcc -m32 -Wl,-T,app.ld -nostdlib entry.o main.o -o hello.elf
+# 3. Compile kernel printf runtime for user applications
+gcc -m32 -c src/kernel/stdio/printf.c -o app_printf.o -DIPO_APP -Isrc/include
 
-# 4. Extract raw flat binary with initialized .bss
+# 4. Link into temporary ELF binary mapped at 0x800000
+gcc -m32 -Wl,-T,applications/app.ld -nostdlib entry.o main.o app_printf.o -o hello.elf
+
+# 5. Extract raw flat binary with initialized .bss
 objcopy -O binary --set-section-flags .bss=alloc,load,contents hello.elf hello.bin
 ```
 
@@ -57,10 +60,10 @@ objcopy -O binary --set-section-flags .bss=alloc,load,contents hello.elf hello.b
 
 ## 🚀 4. Deploying to the Storage Disk
 
-Copy `hello.bin` into the `/applications` directory of your IPO_OS disk:
+Copy `hello.bin` into the `/applications` directory of your IPO_OS disk using `tools/disk_editor.py`:
 
 ```bash
-python3 disk_editor.py put hello.bin /applications/hello.bin
+python3 tools/disk_editor.py put hello.bin /applications/hello.bin
 ```
 
 ---
@@ -74,13 +77,10 @@ make run
 
 At the interactive prompt (`> `), invoke your binary:
 ```
+> /applications/hello.bin
+Hello, World!
 > /applications/hello.bin test_arg1 test_arg2
-========================================
-  Hello, World from IPO_OS userspace!  
-========================================
-Arguments count: 3
-  argv[0] = /applications/hello.bin
-  argv[1] = test_arg1
-  argv[2] = test_arg2
+Hello, test_arg1
+Hello, test_arg2
 > 
 ```

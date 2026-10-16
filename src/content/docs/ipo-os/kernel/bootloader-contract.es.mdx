@@ -29,27 +29,21 @@ The bootloader establishes a flat 32-bit Protected Mode environment (Ring 0) wit
 
 ---
 
-## 🧠 Memory Handover Protocol (Address 0x8FF0)
+## 🧠 Memory Handover Protocol (`0x6000` & `0x8FE0`–`0x8FF7`) and MBR Partition Table
 
 **IPO_OS** deliberately does not use Multiboot 1/2 structures or pointer registers (`EBX`).
 
-Instead, the real-mode bootloader probes physical memory using BIOS `INT 15h, AX=E820` (with fallback to `AX=E801`) and computes the total usable RAM. The total memory size in bytes is written directly into physical memory location **`0x8FF0`**:
+Instead, the real-mode bootloader (`src/boot/boot.asm`) probes physical memory using BIOS `INT 15h, EAX=0xE820` (`EDX='SMAP'`, `ECX=20`, up to 32 entries; with fallback to `AX=0xE801`), stores the array of **20-byte** `e820_entry_t` region descriptors starting at physical address **`0x6000`** (`0x0600:0x0000`), and populates the `e820_map_header_t` handover block at `0x8FE0`–`0x8FF7`:
+- **`0x8FE0`**: E820 table magic signature `'E820'` (`0x45383230`).
+- **`0x8FE4`**: Number of 20-byte `e820_entry_t` records written (`count`).
+- **`0x8FE8`**: Physical address of the E820 entry array (`0x00006000`).
+- **`0x8FF0`**: Total usable RAM in bytes (low 32 bits) and **`0x8FF4`** (high 32 bits).
 
-```asm
-; From src/boot/boot.asm:
-; detect RAM size using BIOS E820 and store total bytes at 0x8FF0
-call detect_memory
-```
+During kernel initialization, `memory_map_init()` (`src/kernel/memory/memory_map.c`) parses the E820 memory map from `0x8FE0` / `0x6000` (or synthesizes a layout if the `'E820'` signature is absent), reserves the first **64 MB** of `0x01000000`–`0x04FFFFFF` for the `kmalloc()` kernel heap, and the process manager queries usable RAM capacity to size user `sbrk` heaps (starting at `0x08000000`).
 
-During process manager initialization, the kernel reads this address directly in `src/kernel/core/process.c`:
-
-```c
-static uint64_t get_process_heap_capacity(void) {
-    volatile uint32_t *ram_size_ptr = (volatile uint32_t *)0x8FF0;
-    uint32_t detected = *ram_size_ptr;
-    return (uint64_t)detected;
-}
-```
+Furthermore, `src/boot/boot.asm` pads its executable code to **446 bytes** (`times 446-($-$$) db 0`) and embeds a **standard 64-byte MBR Partition Table** at offsets `0x1BE`–`0x1FD` before the `0xAA55` boot signature:
+- **Partition 1 (`0x1BE`)**: Bootable (`0x80`), Type `0x83` (`Linux / IPO_FS`), Start **LBA 2048** (`0x00000800`), Count **260,096 sectors** (`0x0003F800`, ~127 MB).
+- **Partitions 2–4 (`0x1CE`–`0x1FD`)**: Zeroed (`times 48 db 0`), available for partitioning and inspected via `partition_scan()`.
 
 ---
 

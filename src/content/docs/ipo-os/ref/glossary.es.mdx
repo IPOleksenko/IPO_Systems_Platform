@@ -10,7 +10,7 @@ This glossary clarifies technical terminology and hardware concepts used through
 ---
 
 ### A20 Gate
-A hardware gate line (controlled via keyboard controller port `0x64` or Fast Port `0x92`) that enables or disables address bit 20. When disabled, addresses wrap around at 1 MB (emulating 8086 20-bit addressing). It must be enabled to access memory beyond 1 MB in real and modo protegidos.
+A hardware gate line (controlled via keyboard controller port `0x64` or Fast Port `0x92`) that enables or disables address bit 20. When disabled, addresses wrap around at 1 MB (emulating 8086 20-bit addressing). It must be enabled to access memory beyond 1 MB in real and protected modes.
 
 ### BDA (BIOS Data Area)
 A 256-byte data structure located at physical address `0x00000400`..`0x000004FF` containing low-level hardware state initialized by the BIOS (COM ports, LPT ports, keyboard buffer, video mode).
@@ -25,10 +25,10 @@ The inter-layer interface contract defining handover from hardware reset (`0xFFF
 The binary handover contract where **IPO_Boot_ROM** transfers control to **IPO_Firmware** at physical address `0xF000:0004` after DRAM training and PAM shadowing. Validated via the magic signature `'IPOF'` (`0x464F5049`).
 
 ### Contract 3
-The classic PC BIOS boot contract where **IPO_Firmware** transfers control to the sistema operativo bootloader by loading sector 0 (MBR) to `0x0000:7C00` with register `DL` set to the boot drive ID and verifying magic `0x55AA`.
+The classic PC BIOS boot contract where **IPO_Firmware** transfers control to the operating system bootloader by loading sector 0 (MBR) to `0x0000:7C00` with register `DL` set to the boot drive ID and verifying magic `0x55AA`.
 
 ### E820 Memory Map
-The standard BIOS system service (`INT 0x15, AX=0xE820`) used by sistema operativos to discover physical RAM ranges, reserved ACPI regions, and unusable address windows.
+The standard BIOS system service (`INT 0x15, AX=0xE820`) used by operating systems to discover physical RAM ranges, reserved ACPI regions, and unusable address windows.
 
 ### EBDA (Extended BIOS Data Area)
 A reserved segment of conventional memory (typically located at `0x9FC00`) allocated by the BIOS for runtime private state, ACPI tables, and multi-processor MPS tables.
@@ -36,10 +36,10 @@ A reserved segment of conventional memory (typically located at `0x9FC00`) alloc
 ### Extent
 A contiguous sequence of physical disk blocks allocated to a file. In `IPO_FS`, each inode stores four primary 24-byte extent descriptors, providing high throughput for large file sequential reads.
 
-### GDT (Tabla global de descriptores)
+### GDT (Global Descriptor Table)
 An x86 processor structure defining flat memory segment base addresses and limits (0x00 Null, 0x08 Code, 0x10 Data) mapping the full 4 GB physical address space in Protected Mode.
 
-### IDT (Tabla de descriptores de interrupción)
+### IDT (Interrupt Descriptor Table)
 An x86 table containing 256 gate descriptors mapping hardware IRQs, CPU exceptions, and software interrupts (`int 0x80`) to kernel handler routines.
 
 ### Inode
@@ -49,9 +49,9 @@ An on-disk data structure (128 bytes in `IPO_FS`) that represents a file or dire
 A linear addressing scheme where disk sectors are numbered sequentially starting from block 0, replacing legacy Cylinder-Head-Sector (CHS) geometry.
 
 ### LFB (Linear Framebuffer)
-A continuous memoria física aperture mapped into CPU address space allowing direct 32-bit ARGB pixel writing without bank switching.
+A continuous physical memory aperture mapped into CPU address space allowing direct 32-bit ARGB pixel writing without bank switching.
 
-### MRC (Memory Referencia Code)
+### MRC (Memory Reference Code)
 Low-level silicon initialization code responsible for discovering, configuring, and training DDR DRAM timing registers and memory controllers.
 
 ### MTRR (Memory Type Range Register)
@@ -60,11 +60,24 @@ Model-specific CPU registers that define cacheability attributes (Write-Back, Wr
 ### PAM (Programmable Attribute Map)
 Chipset registers controlling read and write permissions to the shadow BIOS memory region (`0x000C0000`..`0x000FFFFF`).
 
-### PMM (Memoria física Manager)
-The kernel subsystem responsible for allocating and freeing 4 KB memoria física frames using a high-speed bitmask allocator.
+### PMM (Physical Memory Manager)
+Memory allocation architecture in IPO_OS: BIOS E820 descriptors are passed at `0x6000` with an `e820_map_header_t` header at `0x8FE0` (`'E820'`), the kernel heap is managed via `kmalloc` (64 MB at `0x01000000`–`0x04FFFFFF`), page frames (`memory_map_alloc`) start at `0x05000000+`, and dynamic process heaps (`sbrk`) are partitioned into 512 MB slices starting at `0x08000000`.
 
 ### TSS (Task State Segment)
 Legacy x86 hardware task structure. In IPO_OS's flat protected mode model, context switching and system call dispatch are implemented in software routines without hardware TSS stack switching.
 
-### VMM (Memoria virtual Manager)
+### VMM (Virtual Memory Manager)
 The kernel subsystem that manages page directories and page tables, providing isolated linear 4 GB address spaces for each process.
+
+### KMOD (Relocatable Kernel Module)
+IPO_OS's runtime-loadable kernel module and driver binary format (`.kmd`, magic `'IKMD'` `0x444D4B49`, ABI `0x0100`). Supports runtime symbol resolution against ~1,560 exported kernel symbols (`generate_ksyms.py`) and 32-bit `ABS32`/`REL32` code relocations.
+
+### SMP & Local APIC (Symmetric Multiprocessing)
+Multi-core x86 execution architecture where the Bootstrap Processor (BSP) discovers Application Processors (APs) via ACPI MADT / Intel MP tables and wakes them using `INIT-SIPI-SIPI` commands over the Local APIC MMIO controller (`0xFEE00000`) and the physical trampoline at `0x8000`.
+
+### Storage Pool (Multi-Disk Spanned Volume)
+Persistent block virtualization layer (`storage_pool.c`) that combines one or more physical drives (`ata0`, `ata1`, ...) into a unified linear logical volume backed by primary and backup superblocks at LBA 2030 and LBA 2039 (`'POOL'`, CRC32).
+
+### WAL (Write-Ahead Logging)
+An 8-sector (64-entry) on-disk transaction journal at LBA 2031–2038 (`'TXNL'`) that logs block write intents (`PENDING` → `COMMITTED`) prior to modification, guaranteeing automatic crash recovery on boot.
+

@@ -5,46 +5,62 @@ description: "Текстовая консоль VGA Mode 03h, загрузка �
 
 # Ввод/вывод, видео та текстовая консоль
 
-IPO_OS имеет двухрежимную архитектуру вывода изображения: аппаратную текстовую консоль VGA 80x25 с поддержкой загружаемых шрифтов та графический віконний менеджер (Window Manager) с поддержкой Bochs VBE/BGA.
+IPO_OS provides a dual-mode video architecture: a hardware VGA 80x25 text console with custom glyph rendering, and a managed graphical Window Manager (WM) with hardware acceleration under Bochs VBE/BGA.
 
 ---
 
-## 📺 Текстовая консоль VGA (`0xB8000`)
+## 📺 VGA Text Mode Console (`0xB8000`)
 
-Основной терминал работает в стандартном текстовом режиме VGA Mode 03h:
-- **Базовый адреси:** Физический адреси `0x000B8000` (выделено 32 КБ, активное окно 4000 байт).
-- **Сетка экрана:** 80 колонок на 25 рядків = 2000 знакомест.
-- **Формат знакоместа:** Каждая ячейка состоит з двух байт:
-  - Байт 0: Индекс символа (ASCII / знакогенератор).
-  - Байт 1: Байт атрибутов (Биты 0–3: цвет символа 0–15; Биты 4–6: цвет фона 0–7; Бит 7: мерцание/яркость).
+The primary teletype console operates in standard IBM VGA Mode 03h:
+- **Base Memory:** Physical linear address `0x000B8000` (reserves 32 KB, active window 4000 bytes).
+- **Character Grid:** 80 columns by 25 rows = 2,000 character cells.
+- **Cell Structure:** Each screen position consists of two bytes:
+  - Byte 0: ASCII / Unicode font glyph index.
+  - Byte 1: Attribute byte (Bits 0–3: Foreground color 0–15; Bits 4–6: Background color 0–7; Bit 7: Blink/Bright).
 
-### Аппаратный курсор:
-Позиционирование мерцающего курсора виконується через контролер CRTC:
+### Hardware Cursor Positioning:
+The blinking hardware cursor is programmed via VGA CRTC registers:
 ```c
 void vga_set_cursor(uint16_t x, uint16_t y) {
     uint16_t pos = y * 80 + x;
-    outb(0x3D4, 0x0E);          /* Регістр CRTC 0x0E: Старший байт позиції */
+    outb(0x3D4, 0x0E);          /* CRTC Register 0x0E: Cursor Location High */
     outb(0x3D5, (pos >> 8) & 0xFF);
-    outb(0x3D4, 0x0F);          /* Регістр CRTC 0x0F: Молодший байт позиції */
+    outb(0x3D4, 0x0F);          /* CRTC Register 0x0F: Cursor Location Low */
     outb(0x3D5, pos & 0xFF);
 }
 ```
 
-### Загрузка шрифтов та поддержка кириллицы:
-Системний виклик `IPO_SYSCALL_FONT_LOAD` (`0x1052`) дозволяє загружать матричные шрифты 8x16 напрямую в пам'ять знакогенератора VGA (Plane 2), обеспечивая корректное отображение русских букв без переключения в графический режим.
+### Font Loading & Cyrillic Support:
+The system call `IPO_SYSCALL_FONT_LOAD` (`0x1052`) allows loading custom 8x16 bitmap fonts into VGA character generator memory (Plane 2), enabling full native rendering of Latin and Cyrillic character sets without leaving text mode.
 
 ---
 
-## 🖼️ Віконний менеджер (Window Manager)
+## 🖼️ Graphical Window Manager (WM)
 
-При переходе в графический режим ядро взаимодействует с адаптером **Bochs VBE / BGA (Bochs Graphic Adapter)**:
-- **Порты ввода-вывода:** Индекс `0x01CE`, Данные `0x01CF`.
-- **Разрешения:** 1024x768 (32 bpp), 800x600 (32 bpp).
-- **Линейный фреймбуфер:** Пам'ять MMIO, сопоставленная видеокарте через регістр PCI BAR 0.
+When switched to graphical mode, the kernel interfaces with the **Bochs VBE / BGA (Bochs Graphic Adapter)** registers:
+- **I/O Ports:** Index Register `0x01CE`, Data Register `0x01CF`.
+- **Supported Modes:** 1024x768 (32 bpp), 800x600 (32 bpp).
+- **Framebuffer Base:** Memory-mapped linear frame buffer assigned via PCI BAR 0.
 
-### Системні виклики віконного менеджера:
-Приложения создают окна та управляют ими через системні виклики:
-- `IPO_SYSCALL_WM_CREATE_WINDOW` (`0x1070`): Створення окна с заданными координатами, розмірами та заголовком.
-- `IPO_SYSCALL_WM_DESTROY_WINDOW` (`0x1071`): Закрытие окна та освобождение буфера.
-- `IPO_SYSCALL_WM_SET_FOCUS` (`0x1077`): Перевод окна на передний план та передача фокуса ввода.
-- `IPO_SYSCALL_WM_INVALIDATE` (`0x107A`): Пометка области окна для перерисовки композитором.
+### Window Management Syscalls:
+Applications create and manage graphical windows using the WM API:
+- `IPO_SYSCALL_WM_CREATE_WINDOW` (`0x1070`): Allocates a window buffer with specified coordinates, width, height, and title.
+- `IPO_SYSCALL_WM_DESTROY_WINDOW` (`0x1071`): Closes window and invalidates its screen region.
+- `IPO_SYSCALL_WM_SET_FOCUS` (`0x1077`): Brings window to top of z-order and sets input focus.
+- `IPO_SYSCALL_WM_INVALIDATE` (`0x107A`): Marks window contents as dirty for the compositor to redraw.
+
+---
+
+## 💻 Interactive Terminal Shell (`terminal.c`, 32 Built-In Commands) & COM1 Serial Console
+
+The built-in kernel shell (`src/kernel/core/terminal.c`) features command history, `Tab` auto-completion, batch execution pipelines (`run`), background interactive command execution over **UART COM1 (`0x3F8`, `terminal_poll_serial_commands()`)** (including while the graphical Window Manager `startx` is active), and **self-expanding dynamic buffers** (`terminal_cwd`, input line, and history buffers grow automatically via `krealloc` without fixed array length caps):
+
+| Category | Built-In Shell Commands (`terminal_is_builtin`) |
+| :--- | :--- |
+| **Filesystem & Navigation (`IPO_FS`)** | `ls`, `cd`, `pwd`, `mkdir`, `touch`, `cat`, `echo`, `rm`, `mv`, `cp`, `stat`, `df`, `reinstall_fs` |
+| **Storage Pool & WAL (`storage_pool`)** | `storage [status \| list \| usage \| check \| create \| add \| recover \| save]` |
+| **Drivers & KMOD Modules (`.kmd`)** | `drivers [list \| info \| load <path.kmd> \| unload \| status \| symbols]`, `symbols [filter]` (`ksyms`) |
+| **Hardware Registry & SMP** | `hardware [overview \| list \| cpu \| memory \| pci \| storage \| network \| usb \| refresh \| info <id> \| status]` |
+| **Memory, Processes & Keymaps** | `free`, `ps`, `kill`, `killall`, `run`, `return`, `keymap` |
+| **Graphics, Networking & System** | `startx`, `stopx`, `ifconfig`, `clear`, `help`, `reboot`, `shutdown` |
+

@@ -57,25 +57,25 @@
       "prot_mode": "Enter 32-bit Protected Mode (GDT loaded, CR0 PE=1)",
       "kernel_load": "Load Kernel ELF32 to Physical Address 0x10000",
       "kernel_entry": "Kernel Entry (_start in linker.ld)",
-      "mm_init": "Physical Memory Manager & Kernel Heap (kmalloc)",
-      "idt_init": "Interrupt Descriptor Table (IDT) & Syscall Gate (0x80)",
+      "mm_init": "E820 Memory Map & 64 MB Kernel Heap (kmalloc: 0x01000000–0x04FFFFFF)",
+      "idt_init": "IDT, PIC/APIC, SMP Discovery & Syscall Gate (0x80)",
       "fs_mount": "Mount Root File System (IPO_FS Partition at LBA 2048)",
-      "drivers_init": "Init Drivers (ATA, Keyboard, Mouse, RTL8139, VBE/WM)",
-      "launch_shell": "Spawn Initial Process (/applications/shell.bin)"
+      "drivers_init": "Block Layer, ATA, Storage Pool + WAL, KMOD, Device Registry",
+      "launch_shell": "Launch Interactive Terminal & Serial Console"
     }
   },
   "memory_map": {
     "title": "IPO_OS Physical & Virtual Memory Layout",
-    "caption": "Map of memory zones: Real-mode legacy tables, kernel space at 64 KB, and userspace applications at 8 MB.",
+    "caption": "Map of memory zones: Real-mode legacy tables, kernel space at 64 KB, userspace applications at 8 MB (0x00800000), and 64 MB kernel heap at 16 MB (0x01000000).",
     "labels": {
       "ivt_bda": "0x00000 - 0x004FF: IVT (1 KB) & BDA (256 B)",
-      "free_conv": "0x00500 - 0x07BFF: Scratch RAM & Stacks",
-      "boot_mbr": "0x07C00 - 0x07DFF: Bootloader MBR Buffer (512 B)",
+      "free_conv": "0x00500 - 0x05FFF: Scratch RAM & Stacks",
+      "boot_mbr": "0x06000 - 0x08FFF: E820 Entries (0x6000), MBR (0x7C00), SMP Trampoline (0x8000)",
       "kernel_bin": "0x10000 - 0x7FFFF: IPO_OS Kernel Core (.text, .data, .bss)",
-      "video_ram": "0xA0000 - 0xBFFFF: Video Framebuffer (VGA Text 0xB8000)",
+      "video_ram": "0xA0000 - 0xBFFFF: Video Framebuffer (VGA 0xA0000 & Text 0xB8000)",
       "ebda_rom": "0xC0000 - 0xFFFFF: VBIOS, Shadow RAM & ROM Firmware",
-      "kernel_heap": "0x100000 - 0x7FFFFF: Extended Memory & Kernel kmalloc Pool",
-      "user_apps": "0x800000+: Userspace Applications (Entry at 0x800000)"
+      "user_apps": "0x00800000 - 0x00FFFFFF: Userspace Applications (ELF32 / .bin)",
+      "kernel_heap": "0x01000000 - 0x04FFFFFF+: Kernel kmalloc Pool (64 MB) & PMM / sbrk"
     }
   },
   "syscall_pipeline": {

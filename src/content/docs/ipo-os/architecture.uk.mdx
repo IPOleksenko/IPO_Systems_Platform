@@ -8,64 +8,25 @@ import Callout from '../../../components/Callout.astro';
 
 # Архитектура операційної системи IPO_OS
 
-**IPO_OS** — це независимая 32-битная монолитная операційна система для архитектуры x86, разработанная для работы на физическом компьютерном оборудовании та в виртуальных машинах (QEMU).
+**IPO_OS** is a bare-metal 32-bit x86 monolithic operating system designed to run on physical hardware and QEMU virtual machines.
 
 <LocalizedDiagram id="vertical_platform_stack" />
 
 ---
 
-## 🏛️ Ключевые архитектурные компоненты ядра
+## 🏛️ Monolithic Kernel Architecture
 
-```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                           ПРОСТІР КОРИСТУВАЧА                           │
-│  Shell (27 команд) │ DOOM │ MicroPython │ TCC │ Lua │ Edit │ WebServer│
-│  Вікна GUI (WM Demo)│ 3D TinyGL Demos (Gears, Teapot, Cube) │ Player   │
-├────────────────────────────────────────────────────────────────────────┤
-│                    СИСТЕМНІ ВИКЛИКИ: int 0x80 (105 викликів)            │
-├────────────────────────────────────────────────────────────────────────┤
-│                          МОНОЛІТНЕ ЯДРО (Ring 0)                        │
-│                                                                        │
-│ ┌──────────────────────┐ ┌──────────────────────┐ ┌──────────────────┐ │
-│ │ Менеджер пам'яті     │ │ Планувальник Round-  │ │ Віконний менеджер│ │
-│ │ kmalloc / sbrk       │ │ Robin (PIT IRQ 0)    │ │ Цикл ОС без FPS │ │
-│ └──────────────────────┘ └──────────────────────┘ └──────────────────┘ │
-│ ┌──────────────────────┐ ┌──────────────────────┐ ┌──────────────────┐ │
-│ │ 3D Рушій TinyGL      │ │ Звукова підсистема   │ │ Мережевий стек   │ │
-│ │ OpenGL 1.1 растериз. │ │ Sound Blaster 16/PWM │ │ TCP/IP + сокети  │ │
-│ └──────────────────────┘ └──────────────────────┘ └──────────────────┘ │
-│ ┌──────────────────────┐ ┌──────────────────────┐ ┌──────────────────┐ │
-│ │ VFS та IPO_FS        │ │ Динамічні драйвери   │ │ Інтернаціонализ. │ │
-│ │ 64-бітні екстенти    │ │ ipo_driver_register  │ │ Розкладки/Шрифти │ │
-│ └──────────────────────┘ └──────────────────────┘ └──────────────────┘ │
-├────────────────────────────────────────────────────────────────────────┤
-│                            АПАРАТНИЙ РІВЕНЬ                             │
-│  ATA PIO │ Realtek RTL8139 │ 8042 PS/2 │ VGA 13h/VBE │ SB16 DSP (0x220)│
-└────────────────────────────────────────────────────────────────────────┘
-```
+- **Protected Mode Kernel & SMP (Ring 0):** GDT/IDT tables, Local APIC (`0xFEE00000`), ACPI MADT / Intel MP multi-core discovery, AP boot trampoline at `0x8000`, per-CPU 16 KB stacks, cross-core IPIs (`0xE0`), and hardware `spinlock_t` locks.
+- **E820 Memory Manager & Dynamic Buffers:** BIOS E820 physical memory map parser (`0x8FE0`–`0x8FF4`), `kmalloc` heap with boundary coalescing, `sbrk` user heaps, and kernel-wide self-expanding dynamic buffers (zero arbitrary fixed array size limits).
+- **Multi-Disk Storage Pool, WAL & IPO_FS:** Generic block device layer (`block_device_t`), MBR/GPT partition scanner, persistent multi-disk linear Storage Pool (`storage_pool_t`) with primary/backup superblocks (LBA 2030 & 2039, CRC32) and 8-sector Write-Ahead Logging (WAL) journal (LBA 2031–2038), backing the 64-bit extent-based **IPO_FS** filesystem (LBA 2048+).
+- **Relocatable Kernel Modules (KMOD) & Unified Device Registry:** Dynamic `.kmd` module loader (`IKMD` magic, `ABS32`/`REL32` relocations, ~1,560 exported kernel symbols via `generate_ksyms.py`) and central hardware topology registry (`device.c` for PCI, ISA, IDE, USB, CPU, and RAM).
+- **TinyGL 3D Engine (OpenGL 1.1):** Kernel-space software 3D rasterizer with Z-buffering and lighting.
+- **Window Manager (WM):** Compositor updates run from the active process/console loop without a fixed FPS cap; PS/2 software mouse pointer.
+- **Audio Core:** Sound Blaster 16 DSP hardware driver (16-bit DMA Ch 5) and PC Speaker PWM.
+- **Network Stack:** Realtek RTL8139 NIC (with dynamically expanding `rx_packet_buf`), Ethernet II, ARP, IPv4, ICMP, UDP, TCP state machine, and POSIX Sockets.
 
 ---
 
-## 🗺️ Карта фізичної пам'яті x86
+## 🗺️ Physical Memory Map
 
 <LocalizedDiagram id="memory_map" />
-
-- `0x00000000`–`0x000003FF` (1 КБ): Таблица векторов переривань (IVT реального режиму).
-- `0x00000400`–`0x000004FF` (256 Б): Область данных BIOS (BDA).
-- `0x00000500`–`0x00007BFF`: Scratch RAM, очереди дескрипторов пристроїв, стек Boot ROM.
-- `0x00007C00`–`0x00007DFF`: Область загрузки сектора MBR (Контракт 3).
-- `0x0009FC00`–`0x0009FFFF`: Расширенная область данных BIOS (EBDA) та таблицы ACPI 1.0.
-- `0x000A0000`–`0x000BFFFF`: Видеопам'ять графики VGA (A0000) та текстового режима (B8000).
-- `0x000C0000`–`0x000FFFFF`: Shadow RAM (BIOS ROM, Pamela PAM0..PAM6 write-protected).
-- `0x00100000`–`0x007FFFFF`: Ядро операційної системи (`kernel.bin`), таблицы IDT/GDT, буфери Sound Blaster 16 DMA (`0x600000`).
-- `0x00800000`+: Простір завантаження активного користувацького застосунку (плоский бінарний формат, динамічний стек 256 КБ у `kmalloc`, купа `sbrk` від `0x08000000`).
-
----
-
-## 🗄️ Файлова система IPO_FS (64-битная архитектура)
-
-<LocalizedDiagram id="fs_layout" />
-
-- **Суперблок:** Расположен в LBA 2048 с сигнатурой `'IPO_FS\0\0'`. Содержит 64-битные счетчики блоков та инодов.
-- **Битовые карты:** Независимые битовые карты блоков данных та инодов.
-- **Иноды (128 байт):** 4 встроенных экстента за 24 байта для непрерывного размещения данных на диску. Поддержка цепочек блоков экстентов для файлів произвольного розміра.

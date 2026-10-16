@@ -35,6 +35,12 @@ description: "Собственная freestanding libc в IPO_OS: аллокац
 - `int atoi(const char *nptr)`: преобразует строку ASCII в целое число.
 - `void exit(int status)`: сбрасывает буферы и завершает процесс через `IPO_SYSCALL_EXIT`.
 
+### 4. Заголовки совместимости POSIX, Сети и Терминала (`applications/include/`)
+Для кросс-компиляции и сборки нативных программ с помощью встроенного компилятора **TCC (`tcc.bin`)** и прослойки `libc_shim.c` предоставляется расширенный набор POSIX-заголовков:
+- **Сетевые сокеты и протоколы:** `<sys/socket.h>`, `<netinet/in.h>`, `<arpa/inet.h>`, `<netdb.h>` (`socket`, `bind`, `listen`, `accept`, `connect`, `send`, `recv`, `inet_aton`, `inet_ntoa`, `htons`, `htonl`, `gethostbyname`).
+- **Мультиплексирование и управление устройствами:** `<sys/select.h>` (`select`, `FD_SET`, `FD_ZERO`), `<sys/ioctl.h>` (`ioctl`, `TIOCGWINSZ`), `<termios.h>` (`tcgetattr`, `tcsetattr`, `cfmakeraw`).
+- **Системная информация и ресурсы:** `<sys/utsname.h>` (`uname` — возвращает `"IPO_OS"`, архитектуру `"i686"`), `<sys/resource.h>` (`getrlimit`, `setrlimit`, `getrusage`).
+
 ---
 
 ## 🧱 Диспетчер динамической памяти

@@ -35,6 +35,12 @@ Because standard POSIX GNU C Library (`glibc`) assumes a full Linux kernel envir
 - `int atoi(const char *nptr)`: Converts ASCII string to integer.
 - `void exit(int status)`: Flushes buffers and terminates process via `IPO_SYSCALL_EXIT`.
 
+### 4. POSIX, Networking & Terminal Compatibility Headers (`applications/include/`)
+To support complex POSIX software and self-hosted compilation inside IPO_OS using **TinyCC (`tcc.bin`)** and `libc_shim.c`, the SDK includes a comprehensive set of compatibility headers:
+- **BSD Sockets & Networking:** `<sys/socket.h>`, `<netinet/in.h>`, `<arpa/inet.h>`, `<netdb.h>` (`socket`, `bind`, `listen`, `accept`, `connect`, `send`, `recv`, `inet_aton`, `inet_ntoa`, `htons`, `htonl`, `gethostbyname`).
+- **I/O Multiplexing & Terminal Control:** `<sys/select.h>` (`select`, `FD_SET`, `FD_ZERO`), `<sys/ioctl.h>` (`ioctl`, `TIOCGWINSZ`), `<termios.h>` (`tcgetattr`, `tcsetattr`, `cfmakeraw`).
+- **System Identification & Resource Limits:** `<sys/utsname.h>` (`uname` reporting `"IPO_OS"` / `"i686"`), `<sys/resource.h>` (`getrlimit`, `setrlimit`, `getrusage`).
+
 ---
 
 ## 🧱 The Dynamic Memory Allocator

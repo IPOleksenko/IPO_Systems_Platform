@@ -64,3 +64,44 @@ Populated by the ATA driver during IDENTIFY command polling in `src/include/driv
 The 8-byte x86 interrupt and syscall gate descriptor defined in `src/kernel/syscall/syscall.c`:
 
 <SharedStruct id="ipo_idt_entry" />
+
+---
+
+## 🔗 Storage Pool On-Disk Superblock (`storage_pool_raw_sb_t`)
+
+Primary and backup multi-disk storage pool superblocks located at LBA 2030 and LBA 2039 (`src/include/driver/storage/storage_pool.h`):
+
+<SharedStruct id="storage_pool_raw_sb" />
+
+---
+
+## 📓 WAL Transaction Journal Entry (`storage_raw_disk_tx_entry_t`)
+
+64-byte Write-Ahead Logging (WAL) transaction record stored across LBA 2031–2038 (8 entries per sector, 64 entries total):
+
+<SharedStruct id="storage_raw_disk_tx_entry" />
+
+---
+
+## 📦 Relocatable Kernel Module Header (`kmod_raw_header_t` / `kmod_header_t`)
+
+On-disk `.kmd` binary header and its dynamic in-memory representation (`src/include/kernel/kmod.h`):
+
+<SharedStruct id="kmod_header" />
+
+---
+
+## 🔥 SMP Per-CPU Core Descriptor (`cpu_info_t`)
+
+Tracks state, Local APIC ID, and 16 KB stack pointers for each discovered processor core (`src/include/kernel/smp.h`):
+
+<SharedStruct id="cpu_info" />
+
+---
+
+## 🧭 Unified Hardware Device Registry Node (`device_node_t`)
+
+Universal hardware node descriptor (PCI, IDE/ATA, USB, CPU, Memory, System) with dynamically allocated strings and PCI `bar` arrays (`src/include/kernel/device.h`):
+
+<SharedStruct id="device_node" />
+

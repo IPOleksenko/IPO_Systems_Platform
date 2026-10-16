@@ -28,11 +28,11 @@ const memoryRegions = [
   },
   {
     id: 'mbr',
-    name: 'MBR Buffer',
-    label: '0x07C00 — MBR Load Sector',
-    start: '0x07C00',
-    end: '0x07DFF',
-    size: '512 B',
+    name: 'E820, MBR & SMP Trampoline',
+    label: '0x06000 — E820 (0x6000), MBR (0x7C00), SMP (0x8000) & E820 Hdr (0x8FE0)',
+    start: '0x06000',
+    end: '0x08FFF',
+    size: '12 KB',
     descKey: 'widgets.memory_map.regions.mbr'
   },
   {
@@ -63,22 +63,22 @@ const memoryRegions = [
     descKey: 'widgets.memory_map.regions.shadow'
   },
   {
-    id: 'heap',
-    name: 'Kernel Heap Pool',
-    label: '0x100000 — Kernel Heap Pool',
-    start: '0x100000',
-    end: '0x7FFFFF',
-    size: '7 MB',
-    descKey: 'widgets.memory_map.regions.heap'
-  },
-  {
     id: 'userspace',
     name: 'Userspace Apps',
-    label: '0x800000 — Userspace Applications',
-    start: '0x800000',
-    end: '0xFFFFFF',
-    size: '8 MB+',
+    label: '0x00800000 — Userspace Applications & Stack',
+    start: '0x00800000',
+    end: '0x00FFFFFF',
+    size: '8 MB',
     descKey: 'widgets.memory_map.regions.userspace'
+  },
+  {
+    id: 'heap',
+    name: 'Kernel Heap & Extended RAM',
+    label: '0x01000000 — Kernel Heap (64 MB kmalloc) & PMM / sbrk',
+    start: '0x01000000',
+    end: '0x04FFFFFF+',
+    size: '64 MB+',
+    descKey: 'widgets.memory_map.regions.heap'
   }
 ];
 

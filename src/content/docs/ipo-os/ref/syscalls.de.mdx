@@ -21,7 +21,7 @@ When `int 0x80` is triggered, the CPU transfers execution to IDT gate `0x80` (`s
 
 | Register | Role | Description |
 | :--- | :--- | :--- |
-| **`EAX`** | **Syscall Number** | Unique 32-bit Systemaufruf identifier (e.g., `0x1011` for `open`) |
+| **`EAX`** | **Syscall Number** | Unique 32-bit system call identifier (e.g., `0x1011` for `open`) |
 | **`EBX`** | **Argument Count** | Number of arguments passed (`argc`, from 0 to 5) |
 | **`ECX`** | **Arguments Pointer** | Pointer to stack array of 32-bit values (`const uint32_t *argv`) |
 | **`EDX`** | *Kernel Preserved* | Preserved by interrupt frame across context switch |
@@ -35,11 +35,11 @@ When `int 0x80` is triggered, the CPU transfers execution to IDT gate `0x80` (`s
 
 ---
 
-## 📋 Comprehensive Systemaufrufs Table
+## 📋 Comprehensive System Calls Table
 
-Below is the complete interactive list of all 105 registered Systemaufrufs:
+Below is the complete interactive list of all 106 registered system calls:
 
-<SharedSyscallTable lang="en" />
+<SharedSyscallTable lang="de" />
 
 ---
 
@@ -96,6 +96,11 @@ VFS subsystem providing 64-bit storage operations on IPO_FS:
 - **C Signature:** `int ipo_seek(int fd, int32_t offset, int whence);`
 - **Arguments:** `args[0]` = `fd`, `args[1]` = offset delta, `args[2]` = whence (`0` = SEEK_SET, `1` = SEEK_CUR, `2` = SEEK_END).
 - **Returns:** New absolute byte position within file.
+
+### `0x1064` — `IPO_SYSCALL_FS_STATVFS`
+- **C Signature:** `int ipo_statvfs(ipo_fs_usage_t *usage_out);`
+- **Arguments:** `args[0]` = pointer to `ipo_fs_usage_t` structure.
+- **Returns:** `0` on success with total, used, and free blocks and inodes across the mounted storage pool.
 
 ---
 
@@ -154,7 +159,7 @@ VFS subsystem providing 64-bit storage operations on IPO_FS:
 
 ---
 
-## 🧠 Group 3: Speicherverwaltung & Heap
+## 🧠 Group 3: Memory Management & Heap
 
 ### `0x1045` — `IPO_SYSCALL_SBRK`
 - **C Signature:** `void *ipo_sbrk(int32_t increment);`
@@ -245,7 +250,7 @@ Inter-process lightweight state sharing:
 
 ---
 
-## 🪟 Group 8: Fenstermanager (WM)
+## 🪟 Group 8: Window Manager (WM)
 
 The WM compositor is updated from the active process/console loop; there is no fixed 60 FPS cap:
 

@@ -3,41 +3,108 @@ title: "デバイスドライバ Model and HAL"
 description: "Hardware drivers in IPO_OS: Realtek RTL8139 NIC, ATA PIO, 8042 PS/2 mouse/keyboard, Sound Blaster 16, VGA/VBE, and dynamic runtime driver subsystem."
 ---
 
-import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
-import Callout from '../../../../components/Callout.astro';
+import SharedStruct from '../../../../components/SharedStruct.astro';
 
 # デバイスドライバ Model and HAL
 
-The driver subsystem in **IPO_OS** integrates core low-level drivers with a runtime loadable driver framework accessible via `ipo_driver_register()`.
-
-<LocalizedDiagram id="driver_architecture" />
+Drivers in IPO_OS operate in Ring 0, interfacing directly with hardware I/O ports, PCI configuration space, and physical interrupt lines.
 
 ---
 
-## 🔌 Builtin Hardware Drivers
+## 🔌 Driver Registration API
 
-- **Realtek RTL8139 PCI NIC:** Vendor `0x10EC`, Device `0x8139`. Hardware ring buffers for packet RX/TX.
-- **ATA PIO Storage:** Primary/Secondary IDE channels (`0x1F0`, `0x170`).
-- **8042 PS/2 Input:** Polled port 0x60/0x64 scancodes, 3-byte mouse packets.
-- **Sound Blaster 16 DSP:** Port `0x220`, 16-bit DMA Channel 5, 22050 Hz stereo audio.
-- **Video Adaptors:** Text Mode 03h, VGA Mode 13h, and Bochs VBE Linear Framebuffer.
-
----
-
-## 🧩 Dynamic Driver Registration
+The driver management subsystem (`src/include/kernel/driver.h`) allows modules to register unified driver interfaces:
 
 ```c
-#include <kernel/driver.h>
-#include <syscall.h>
+typedef struct driver {
+    char *name;
+    char *description;
+    uint32_t flags;
 
-static driver_t my_drv = {
-    .name = "custom_dev",
-    .description = "Custom driver extension",
-    .init = NULL
-};
+    /* Lifecycle callbacks */
+    int (*init)(void);
+    int (*cleanup)(void);
 
-int main(void) {
-    ipo_driver_register(&my_drv);
-    return 0;
-}
+    /* Event hooks */
+    void (*on_tick)(void);                                       /* called every timer tick */
+    bool (*on_key)(uint8_t scancode, bool is_break);            /* called on key event; return true to consume */
+    int  (*on_command)(const char *cmd, int argc, char **argv); /* custom shell command; return 0 if handled */
+    char (*on_char_output)(char c);                             /* intercept / transform stdout chars */
+
+    /* Custom device I/O */
+    int (*read)(void *buffer, size_t size, uint32_t offset);
+    int (*write)(const void *buffer, size_t size, uint32_t offset);
+    int (*ioctl)(uint32_t cmd, void *arg);
+
+    void *owner;                                                /* owner process_t pointer (for user-space drivers) */
+    struct driver *next;
+} driver_t;
+
+int driver_register(driver_t *drv);
+int driver_unregister(const char *name);
 ```
+
+Userland applications can inspect or manage drivers via dedicated system calls:
+- `IPO_SYSCALL_DRIVER_REGISTER` (`0x1060`)
+- `IPO_SYSCALL_DRIVER_UNREGISTER` (`0x1061`)
+- `IPO_SYSCALL_DRIVER_LIST` (`0x1062`)
+
+---
+
+## 🛠️ Built-In Hardware Drivers
+
+### 1. ATA / IDE Hard Disk Driver (`src/drivers/ata/ata.c`)
+- **Base Ports:** Primary IDE Channel `0x1F0`–`0x1F7` (`0x3F6` control); Secondary IDE Channel `0x170`–`0x177` (`0x376` control).
+- **Addressing & Dynamic Strings:** LBA28 and LBA48 addressing via PIO. In `ata_device_t`, drive `char *model` and `char *serial` strings are dynamically allocated on the heap without fixed-size array limits.
+- **Block Layer Integration:** Every detected drive is registered as a generic block device (`ata0`, `ata1`, ...) and scanned for MBR/GPT partitions (`partition_scan()`).
+
+### 2. Realtek RTL8139 PCI Fast Ethernet Driver & Dynamic `rx_packet_buf`
+- **PCI Discovery:** Scans PCI configuration space (Vendor `0x10EC`, Device `0x8139`).
+- **Buffers:** Configures four physical 2 KB TX buffers (`TSD0`–`TSD3`) and a continuous 8 KB + 16 B circular RX ring buffer. In the network core (`net.c`), the packet reception buffer `rx_packet_buf` dynamically expands via `krealloc` to fit frames of any size without a 1536-byte cap.
+- **Polling & Handling:** Handles RX OK (`ROK`) and TX OK (`TOK`) events, streaming packets directly into the TCP/IP stack.
+
+### 3. PS/2 Input Subsystem & Dynamic Keymaps
+- **8042 Controller:** Ports `0x60` (Data) and `0x64` (Status/Command).
+- **Dynamic Unlimited Buffers:** The scancode event queue, keymap tables, and `key_state` pressed-key bitmap in `keyboard.c` grow dynamically on the heap (removing the fixed `NUM_KEYS = 128` limit). Supports runtime layout switching via `IPO_SYSCALL_KEYMAP_CYCLE_NEXT` (`0x1058`).
+
+### 4. Audio: Sound Blaster 16 & PC Speaker
+- **Sound Blaster 16:** DSP base port `0x220`. Communicates via DSP Read/Write buffer ports `0x22C`/`0x22A`.
+- **PC Speaker:** Programmable Interval Timer Channel 2 connected to speaker gate port `0x61` (Bits 0 & 1).
+
+---
+
+## 📦 Relocatable Kernel Module Loader (`KMOD`, `.kmd`)
+
+The **KMOD** subsystem (`src/kernel/core/kmod.c`, `src/include/kernel/kmod.h`) enables runtime loading and unloading of compiled relocatable kernel modules and drivers (`.kmd`) directly from the `IPO_FS` filesystem:
+- **`.kmd` Binary Format (`kmod_raw_header_t` / `kmod_header_t`):** Header identified by magic **`0x444D4B49` (`"IKMD"`)** and ABI version **`0x0100`**, specifying `init_offset`, `exit_offset`, symbol tables, and relocation entries. In RAM, module metadata strings (`name`, `description`, `author`, `version`) are stored in dynamically sized heap buffers.
+- **Two-Pass Kernel Symbol Table (`tools/generate_ksyms.py`):** During the kernel build, `generate_ksyms.py` extracts all global symbols from `nm` and generates `s_kernel_syms` (**~1,560 exported kernel symbols**), which `kmod_resolve_symbol()` uses for runtime linking.
+- **Relocations:** `kmod_load()` allocates aligned memory for `.text/.data` and `.bss`, resolves external kernel symbols, and applies 32-bit absolute (`KMOD_RELOC_ABS32`) and PC-relative (`KMOD_RELOC_REL32`) relocations before invoking the module's `init()` entry point.
+
+<SharedStruct id="kmod_header" />
+
+---
+
+## 🧭 Unified Hardware Device Registry (`device.c`)
+
+The **Device Registry** (`src/kernel/core/device.c`, `src/include/kernel/device.h`) tracks all discovered hardware components in a thread-safe `device_node_t` tree protected by an SMP `spinlock_t`:
+- **Enumerated Buses & Classes:** Platform ISA devices (`PIC 8259`, `PIT 8254`, `PS/2 8042`, `RTC`, `COM1`), CPU cores (`DEV_BUS_CPU`), E820 RAM regions (`DEV_BUS_MEMORY`), **PCI** functions (with dynamically expanding `bar` arrays), **IDE/ATA** drives, and **USB** host controllers (UHCI / OHCI / EHCI / xHCI).
+- **Live Hotplug Rescan:** Calling `device_rescan()` re-probes PCI, ATA, and USB buses at runtime, updating device states and attaching newly discovered hardware.
+
+<SharedStruct id="device_node" />
+
+### Shell Commands for Drivers, Symbols & Hardware Inspection:
+```bash
+drivers list                    # List all built-in drivers and loaded .kmd kernel modules
+drivers load /path/module.kmd   # Dynamically load, relocate, and initialize a .kmd module
+drivers unload <id|name>        # Invoke exit() and unload a kernel module from memory
+drivers info <id|name>          # Inspect detailed driver/module metadata and hooks
+drivers status                  # Display driver, module, and kernel symbol counts
+drivers symbols                 # Print the kernel symbol table (also: symbols / ksyms)
+symbols [filter]                # Search the ~1,560 exported kernel symbols (alias: ksyms)
+hardware overview               # Display summary of CPUs, RAM, buses, and active devices
+hardware cpu | memory           # Detailed SMP per-core status / E820 & heap statistics
+hardware pci | storage | usb    # List hardware devices filtered by subsystem class
+hardware info <id>              # Detailed hardware passport for a specific device node
+hardware refresh                # Trigger a live rescan across all hardware buses
+```
+
