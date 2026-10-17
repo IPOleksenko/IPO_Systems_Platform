@@ -58,7 +58,7 @@ The built-in kernel shell (`src/kernel/core/terminal.c`) features command histor
 | Category | Built-In Shell Commands (`terminal_is_builtin`) |
 | :--- | :--- |
 | **Filesystem & Navigation (`IPO_FS`)** | `ls`, `cd`, `pwd`, `mkdir`, `touch`, `cat`, `echo`, `rm`, `mv`, `cp`, `stat`, `df`, `reinstall_fs` |
-| **Storage Pool & WAL (`storage_pool`)** | `storage [status \| list \| usage \| check \| create \| add \| recover \| save]` |
+| **Storage Pool & WAL (`storage_pool`)** | `storage [list \| status \| usage \| check \| create [uuid] [dev] \| add &lt;dev&gt; \| recover \| save]` |
 | **Drivers & KMOD Modules (`.kmd`)** | `drivers [list \| info \| load <path.kmd> \| unload \| status \| symbols]`, `symbols [filter]` (`ksyms`) |
 | **Hardware Registry & SMP** | `hardware [overview \| list \| cpu \| memory \| pci \| storage \| network \| usb \| refresh \| info <id> \| status]` |
 | **Memory, Processes & Keymaps** | `free`, `ps`, `kill`, `killall`, `run`, `return`, `keymap` |

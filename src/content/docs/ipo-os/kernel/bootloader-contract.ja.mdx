@@ -39,7 +39,7 @@ Instead, the real-mode bootloader (`src/boot/boot.asm`) probes physical memory u
 - **`0x8FE8`**: Physical address of the E820 entry array (`0x00006000`).
 - **`0x8FF0`**: Total usable RAM in bytes (low 32 bits) and **`0x8FF4`** (high 32 bits).
 
-During kernel initialization, `memory_map_init()` (`src/kernel/memory/memory_map.c`) parses the E820 memory map from `0x8FE0` / `0x6000` (or synthesizes a layout if the `'E820'` signature is absent), reserves the first **64 MB** of `0x01000000`–`0x04FFFFFF` for the `kmalloc()` kernel heap, and the process manager queries usable RAM capacity to size user `sbrk` heaps (starting at `0x08000000`).
+During kernel initialization, `memory_map_init()` (`src/kernel/mm/memory_map.c`) parses the E820 memory map from `0x8FE0` / `0x6000` (or synthesizes a layout if the `'E820'` signature is absent), reserves the first **64 MB** of `0x01000000`–`0x04FFFFFF` for the `kmalloc()` kernel heap, and the process manager queries usable RAM capacity to size user `sbrk` heaps (starting at `0x08000000`).
 
 Furthermore, `src/boot/boot.asm` pads its executable code to **446 bytes** (`times 446-($-$$) db 0`) and embeds a **standard 64-byte MBR Partition Table** at offsets `0x1BE`–`0x1FD` before the `0xAA55` boot signature:
 - **Partition 1 (`0x1BE`)**: Bootable (`0x80`), Type `0x83` (`Linux / IPO_FS`), Start **LBA 2048** (`0x00000800`), Count **260,096 sectors** (`0x0003F800`, ~127 MB).

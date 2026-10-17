@@ -74,7 +74,7 @@ Beneath `IPO_FS` sits a generic block storage stack built with dynamically growi
 
 ## 🔗 Persistent Multi-Disk Storage Pool (`storage_pool.c`) & WAL Journal
 
-The **Storage Pool** subsystem (`src/driver/storage/storage_pool.c`, `src/include/driver/storage/storage_pool.h`) aggregates one or more block devices (`ata0`, `ata1`, ...) into a unified linear logical volume (**Spanned JBOD**) protected by redundant superblocks and a Write-Ahead Logging (WAL) transaction journal:
+The **Storage Pool** subsystem (`src/kernel/storage/storage_pool.c`, `src/include/storage/storage_pool.h`) aggregates one or more block devices (`ata0`, `ata1`, ...) into a unified linear logical volume (**Spanned JBOD**) protected by redundant superblocks and a Write-Ahead Logging (WAL) transaction journal:
 
 ### 1. On-Disk Pool Metadata Layout (LBA 2030–2039)
 Pool metadata is stored in the reserved sectors immediately preceding the `IPO_FS` partition (`LBA 2048`):
@@ -103,8 +103,8 @@ storage status                  # Display pool health, UUID, generation, and WAL
 storage list                    # List all registered block devices and pool members
 storage usage                   # Show detailed IPO_FS used/free block & inode statistics
 storage check                   # Verify CRC32 checksums of primary/backup superblocks & WAL
-storage create [uuid] [ata0]    # Create and persist a new storage pool on disk
-storage add ata1                # Dynamically expand the pool with an additional disk
+storage create [uuid] [dev]    # Create and persist a new storage pool on disk
+storage add <dev>                # Dynamically expand the pool with an additional disk
 storage recover                 # Restore superblock from backup and replay/abort WAL entries
 storage save                    # Force immediate synchronization of pool metadata to disk
 ```

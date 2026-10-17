@@ -44,6 +44,7 @@ Every user application in IPO_OS executes in a 32-bit flat address space:
 When `universal_exec_load()` detects the `0x7F 'E' 'L' 'F'` magic header, it parses the `Elf32_Phdr` program header table:
 - Every `PT_LOAD` segment is loaded at its target `p_vaddr`.
 - Any region where `p_memsz > p_filesz` (`.bss`) is automatically zero-initialized.
+- **DWARF Return Reflection:** The loader parses `.debug_info`, `.debug_abbrev`, and `.debug_str` sections to automatically extract `main()`'s return type signature (`int`, `char*`, structs, arrays) for seamless typed data passing in multitasking pipelines (`run`).
 - Segment permission flags (`PF_R`, `PF_W`, `PF_X`) are tracked, and the highest segment end sets the initial `program_break` for `sbrk()`.
 - Execution jumps directly to `ehdr->e_entry`.
 
@@ -64,7 +65,7 @@ Offset in .bin      Section          Description
 ## ⚙️ Linker Scripts & Startup Stubs (`crt0.s` / `entry.s`)
 
 Two linker and startup profiles are provided:
-1. **Full `libipo_c.a` Userland Runtime (`src/userland/linker.ld` + `src/userland/crt/crt0.s`):**
+1. **Full `libipo_c.a` Userland Runtime (`applications/lib/linker.ld` + `applications/lib/crt/crt0.s`):**
    - Zeroes `.bss` (`__bss_start` .. `__bss_end`), initializes `environ`, invokes `.preinit_array` and `.init_array` constructors, calls `main(argc, argv, environ)`, runs `.fini_array` destructors, and invokes `_exit(ret)`.
 2. **Minimal Profile (`applications/app.ld` + `applications/entry.s`):**
 

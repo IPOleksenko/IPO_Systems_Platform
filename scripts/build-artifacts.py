@@ -194,7 +194,7 @@ def package_artifacts(fw: dict, br: dict, os_art: dict) -> list:
         "file": "disk.img",
         "name": "IPO_OS Applications Disk (128 MB)",
         "category": "os",
-        "description": "Pre-formatted 128 MB disk image with 39 compiled applications and userland toolchain.",
+        "description": "Pre-formatted 128 MB disk image with compiled applications, Doom, TinyGL demos, and userland toolchain.",
         "size_bytes": disk_os_dest.stat().st_size,
         "size_formatted": format_size(disk_os_dest.stat().st_size),
         "sha256": sha256_file(disk_os_dest),

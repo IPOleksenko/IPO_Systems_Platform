@@ -41,20 +41,20 @@ The kernel command line interpreter (`src/kernel/core/terminal.c`) provides inte
 | `echo` | `echo <text> [> / >> file]` | Prints text to stdout or redirects to file (`>` overwrite or `>>` append). |
 | `ps` | `ps` | Lists active processes with PID, state, and stack/heap metrics. |
 | `kill` | `kill <pid>` | Terminates a process by PID. |
-| `killall` | `killall <name>` | Terminates all active processes matching the given name. |
+| `killall` | `killall` | Terminates all active processes and stops background async tasks. |
 | `run` | `run <cmd> [&\|&&\|\|\|;]` | Launches executables (ELF32, `.bin`, `#!` scripts) with multitasking operators. |
 | `startx` | `startx` | Launches graphical Window Manager desktop session in VGA Mode 13h (`320x200x256`). |
 | `stopx` | `stopx` | Terminates graphical WM session and restores `80x25` text mode. |
-| `ifconfig` | `ifconfig [ip mask gw]` | Displays or configures IPv4 address, subnet mask, gateway, and RTL8139 MAC. |
+| `ifconfig` | `ifconfig [<ip> [netmask] [gateway] [dns]]` | Displays or configures IPv4 address, subnet mask, gateway, DNS, and RTL8139 MAC. |
 | `df` | `df` | Reports `IPO_FS` storage capacity, used/free 4 KB blocks, and inodes. |
 | `free` | `free` | Reports physical RAM, 64 MB kernel heap (`kmalloc`), and PMM frame statistics. |
-| `drivers` | `drivers [list\|load\|unload]` | Manages dynamic kernel modules (`.kmod`) and lists registered drivers. |
-| `hardware` | `hardware` | Prints the discovered device tree (`device_node_t`) across `platform`, `isa`, `pci`, and `ata` buses. |
-| `symbols` | `symbols` | Displays the kernel exported symbol table (`EXPORT_SYMBOL`). |
-| `ksyms` | `ksyms` | Alias for `symbols` to inspect exported kernel symbols. |
-| `storage` | `storage [status\|create\|destroy\|sync\|recover]` | Manages `IPO_STORAGE_POOL` volume manager (LVM/RAID0, WAL transaction log, CRC32). |
+| `drivers` | `drivers [list\|info\|load\|unload\|status\|symbols]` | Manages dynamic kernel modules (`.kmod`, ABI 0x0100) and lists registered drivers. |
+| `hardware` | `hardware [overview\|list\|cpu\|memory\|pci\|storage\|network\|usb\|refresh\|info\|status]` | Inspects live hardware resources probed from buses, ACPI, SMBIOS, and Option ROMs. |
+| `symbols` | `symbols [filter]` | Displays the kernel exported symbol table (`EXPORT_SYMBOL`). |
+| `ksyms` | `ksyms [filter]` | Alias for `symbols` to inspect exported kernel symbols with optional prefix filter. |
+| `storage` | `storage [list\|status\|usage\|check\|create\|add\|recover\|save]` | Manages multi-disk storage pool (`IPO_STORAGE_POOL`), block devices, superblocks, and WAL. |
 | `reinstall_fs`| `reinstall_fs` | Formats the disk partition with a clean `IPO_FS` filesystem. |
-| `keymap` | `keymap [list\|on\|off] [name]` | Manages runtime keyboard layouts (`/etc/keymaps/*.kmap`). |
+| `keymap` | `keymap [list\|on\|off\|rm] [name]` | Manages runtime keyboard layouts (`/etc/keymaps/*.kmap`). |
 | `return` | `return [on\|off]` | Toggles display of process exit status codes. |
 | `reboot` | `reboot` | Reboots machine via 8042 controller (`0x64`) or triple fault. |
 | `shutdown` | `shutdown` | Shuts down machine safely via ACPI/QEMU/Bochs/VirtualBox ports. |
@@ -101,7 +101,7 @@ Integrated bare-metal software 3D rasterizer:
 - **Primitives:** Points, lines, triangles, quads, polygons.
 - **Lighting:** Up to 8 light sources, diffuse/specular/ambient illumination, normal vectors.
 - **Z-Buffer:** 16-bit depth buffer for hidden surface removal.
-- **Applications in `applications/`:** `gl_gears`, `gl_teapot`, `gl_cube`, `fps_meter`, `wm_fullscreen`, `doom`.
+- **Applications in `applications/`:** `gl_gears`, `gl_teapot`, `gl_cube`, `fps_meter`, `doom`.
 
 ---
 

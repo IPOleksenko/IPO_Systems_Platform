@@ -1,6 +1,6 @@
 ---
 title: "Полный справочник системных вызовов"
-description: "Исчерпывающий справочник всех 106 системных вызовов IPO_OS: номера, сигнатуры, регистры ABI int 0x80, параметры и коды возврата."
+description: "Исчерпывающий справочник всех 134 системных вызовов IPO_OS: номера, сигнатуры, регистры ABI int 0x80, параметры и коды возврата."
 ---
 
 import SharedSyscallTable from '../../../../components/SharedSyscallTable.astro';
@@ -37,7 +37,7 @@ import Callout from '../../../../components/Callout.astro';
 
 ## 📋 Интерактивная таблица всех системных вызовов
 
-Ниже представлена полная сводка всех 106 зарегистрированных системных вызовов ядра IPO_OS:
+Ниже представлена полная сводка всех 134 зарегистрированных системных вызовов ядра IPO_OS:
 
 <SharedSyscallTable lang="ru" />
 
@@ -136,6 +136,18 @@ import Callout from '../../../../components/Callout.astro';
 ### `0x1028` — `IPO_SYSCALL_PROCESS_IS_BATCH_ACTIVE`
 - **C-сигнатура:** `int ipo_is_batch_active(void);`
 - **Возврат:** `1` если система выполняет составную команду пакетного режима (`run`), `0` в интерактивном режиме.
+
+### `0x1029` — `IPO_SYSCALL_SET_RETURN_VALUE`
+- **C-сигнатура:** `int ipo_set_return_value(int type, ...);`
+- **Аргументы:** `args[0]` = тип возврата (`PROC_RET_INT`, `PROC_RET_STRING`, `PROC_RET_STRUCT`, `PROC_RET_POINTER`), `args[1]` = значение или указатель, `args[2]` = размер или имя типа, `args[3]` = имя типа.
+- **Возвращает:** `0` при успехе или отрицательный код ошибки.
+- **Назначение:** Явная установка типизированного возвращаемого значения для передачи структурированных данных через конвейер (`run`).
+
+### `0x102A` — `IPO_SYSCALL_GET_RETURN_VALUE`
+- **C-сигнатура:** `int ipo_get_return_value(char *buf, uint32_t max_len);`
+- **Аргументы:** `args[0]` = указатель на буфер, `args[1]` = максимальная длина.
+- **Возвращает:** Длину скопированной строки или отрицательный код ошибки.
+- **Назначение:** Получение отформатированной строки возвращаемого значения последнего завершённого дочернего процесса.
 
 ### `0x1030` — `IPO_SYSCALL_ASYNC_START`
 - **C-сигнатура:** `int ipo_async_start(const char *task_name, uint32_t interval_ms, void (*task_fn)(void));`
@@ -319,3 +331,56 @@ int close(int sockfd);
 // Подключение к хосту по доменному имени или строковому IP
 int connect_endpoint(int sockfd, const char *host_or_ip, uint16_t port);
 ```
+
+---
+
+## ⌨️ Группа 11: Системные вызовы клавиатуры и аппаратного ввода
+
+Низкоуровневый доступ к контроллеру клавиатуры PS/2 8042 для интерактивных игр и приложений:
+
+- **`0x10A0` `IPO_SYSCALL_KBD_GET_SCANCODE`:** `uint8_t ipo_kbd_get_scancode(void);` Неблокирующее чтение очередного аппаратного скан-кода клавиши.
+- **`0x10A1` `IPO_SYSCALL_KBD_WAIT_SCANCODE`:** `uint8_t ipo_kbd_wait_scancode(void);` Блокировка вызывающего процесса до момента нажатия клавиши.
+- **`0x10A2` `IPO_SYSCALL_KBD_SET_APP_MODE`:** `void ipo_kbd_set_app_mode(bool enabled);` Перенаправление потока событий клавиатуры напрямую в очередь процесса.
+- **`0x10A3` `IPO_SYSCALL_KBD_FLUSH`:** `void ipo_kbd_flush(void);` Очистка очередей клавиатуры ядра и аппаратных буферов 8042.
+- **`0x10A4` `IPO_SYSCALL_KBD_GET_MODIFIERS`:** `uint32_t ipo_kbd_get_modifiers(void);` Получение битовой маски активных модификаторов (Shift, Ctrl, Alt, CapsLock, NumLock).
+- **`0x10A5` `IPO_SYSCALL_KBD_POLL`:** `void ipo_kbd_poll(void);` Опрос портов контроллера 8042 и диспетчеризация ожидающих событий.
+- **`0x10A6` `IPO_SYSCALL_KBD_GET_KEY_STRING`:** `int ipo_kbd_get_key_string(uint8_t scancode, char *buf, uint32_t max_len);` Преобразование скан-кода в текстовое название клавиши.
+
+---
+
+## 🖱️ Группа 12: Системные вызовы мыши
+
+- **`0x10B0` `IPO_SYSCALL_MOUSE_GET_STATE`:** `void ipo_mouse_get_state(mouse_state_t *state);` Опрос текущих экранных координат мыши PS/2 (X, Y), статуса нажатия кнопок и прокрутки колеса.
+
+---
+
+## 🎨 Группа 13: Системные вызовы аппаратного VGA и курсора
+
+Прямое управление регистрами текстового и графического контроллера VGA:
+
+- **`0x10C0` `IPO_SYSCALL_VGA_SET_CURSOR`:** `void ipo_vga_set_cursor(uint16_t pos);` Установка позиции текстового курсора через порты CRTC `0x3D4`/`0x3D5`.
+- **`0x10C1` `IPO_SYSCALL_VGA_GET_CURSOR`:** `uint16_t ipo_vga_get_cursor(void);` Чтение текущей позиции курсора из регистров CRTC.
+- **`0x10C2` `IPO_SYSCALL_VGA_SHOW_CURSOR`:** `void ipo_vga_show_cursor(void);` Включение аппаратного мигающего текстового курсора.
+- **`0x10C3` `IPO_SYSCALL_VGA_HIDE_CURSOR`:** `void ipo_vga_hide_cursor(void);` Скрытие аппаратного текстового курсора.
+- **`0x10C4` `IPO_SYSCALL_VGA_SET_PALETTE`:** `void ipo_vga_set_palette(uint8_t index, uint8_t r, uint8_t g, uint8_t b);` Запись 6-битных компонент цвета RGB в регистры палитры VGA DAC (`0x3C8`/`0x3C9`).
+
+---
+
+## 🎵 Группа 14: Аудиоядро и потоковое воспроизведение
+
+Управление аппаратным DSP Sound Blaster 16 и кольцевыми буферами воспроизведения звука:
+
+- **`0x10D0` `IPO_SYSCALL_AUDIO_INIT`:** `bool ipo_audio_init(void);` Инициализация DSP Sound Blaster 16, DMA канала 5 и системного аудиомикшера.
+- **`0x10D1` `IPO_SYSCALL_AUDIO_TICK`:** `void ipo_audio_tick(void);` Шаг микширования аудиопотоков и пополнение буферов DMA.
+- **`0x10D2` `IPO_SYSCALL_AUDIO_STOP_ALL`:** `void ipo_audio_stop_all(void);` Остановка всех играющих аудиопотоков и отключение DMA Sound Blaster 16.
+- **`0x10D3` `IPO_SYSCALL_AUDIO_STREAM_CREATE`:** `audio_stream_t *ipo_audio_stream_create(int format, int channels, uint32_t sample_rate, const void *data, size_t size);` Создание статического аудиопотока в памяти.
+- **`0x10D4` `IPO_SYSCALL_AUDIO_STREAM_CREATE_RING`:** `audio_stream_t *ipo_audio_stream_create_ring(int format, int channels, uint32_t sample_rate, const void *data, size_t size, size_t ring_size);` Создание непрерывного кольцевого буферизованного аудиопотока.
+- **`0x10D5` `IPO_SYSCALL_AUDIO_STREAM_DESTROY`:** `void ipo_audio_stream_destroy(audio_stream_t *stream);` Остановка и освобождение ресурсов аудиопотока.
+- **`0x10D6` `IPO_SYSCALL_AUDIO_STREAM_PLAY`:** `void ipo_audio_stream_play(audio_stream_t *stream);` Запуск или возобновление воспроизведения аудиопотока.
+- **`0x10D7` `IPO_SYSCALL_AUDIO_STREAM_PAUSE`:** `void ipo_audio_stream_pause(audio_stream_t *stream);` Приостановка воспроизведения аудиопотока с сохранением позиции.
+- **`0x10D8` `IPO_SYSCALL_AUDIO_STREAM_STOP`:** `void ipo_audio_stream_stop(audio_stream_t *stream);` Остановка воспроизведения и сброс указателя на начало.
+- **`0x10D9` `IPO_SYSCALL_AUDIO_STREAM_SEEK`:** `void ipo_audio_stream_seek(audio_stream_t *stream, double fraction);` Перемотка аудиопотока в относительную позицию (`0.0`..`1.0`).
+- **`0x10DA` `IPO_SYSCALL_AUDIO_STREAM_SET_VOL`:** `void ipo_audio_stream_set_volume(audio_stream_t *stream, float volume);` Установка громкости аудиопотока (`0.0`..`1.0`).
+- **`0x10DB` `IPO_SYSCALL_AUDIO_STREAM_PROGRESS`:** `void ipo_audio_stream_progress(audio_stream_t *stream, double *out_progress);` Запрос прогресса воспроизведения аудиопотока.
+- **`0x10DC` `IPO_SYSCALL_AUDIO_STREAM_UPDATE`:** `void ipo_audio_stream_update_buffered(audio_stream_t *stream, size_t new_size, bool loop);` Запись новой порции сэмплов в кольцевой аудиопоток.
+

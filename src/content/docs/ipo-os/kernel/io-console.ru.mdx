@@ -58,7 +58,7 @@ void vga_set_cursor(uint16_t x, uint16_t y) {
 | Категория | Встроенные команды оболочки (`terminal_is_builtin`) |
 | :--- | :--- |
 | **Навигация и файлы (`IPO_FS`)** | `ls`, `cd`, `pwd`, `mkdir`, `touch`, `cat`, `echo`, `rm`, `mv`, `cp`, `stat`, `df`, `reinstall_fs` |
-| **Пул хранения и WAL (`storage_pool`)** | `storage [status \| list \| usage \| check \| create \| add \| recover \| save]` |
+| **Пул хранения и WAL (`storage_pool`)** | `storage [list \| status \| usage \| check \| create [uuid] [dev] \| add &lt;dev&gt; \| recover \| save]` |
 | **Драйверы и модули KMOD (`.kmd`)** | `drivers [list \| info \| load <path.kmd> \| unload \| status \| symbols]`, `symbols [фильтр]` (`ksyms`) |
 | **Реестр оборудования и SMP** | `hardware [overview \| list \| cpu \| memory \| pci \| storage \| network \| usb \| refresh \| info <id> \| status]` |
 | **Память, процессы и раскладки** | `free`, `ps`, `kill`, `killall`, `run`, `return`, `keymap` |

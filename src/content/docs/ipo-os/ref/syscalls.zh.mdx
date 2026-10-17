@@ -37,7 +37,7 @@ When `int 0x80` is triggered, the CPU transfers execution to IDT gate `0x80` (`s
 
 ## 📋 Comprehensive System Calls Table
 
-Below is the complete interactive list of all 106 registered system calls:
+Below is the complete interactive list of all 134 registered system calls:
 
 <SharedSyscallTable lang="zh" />
 
@@ -134,6 +134,18 @@ VFS subsystem providing 64-bit storage operations on IPO_FS:
 ### `0x1028` — `IPO_SYSCALL_PROCESS_IS_BATCH_ACTIVE`
 - **C Signature:** `int ipo_is_batch_active(void);`
 - **Returns:** `1` if multitasking pipeline operator (`run`) is active, `0` in single task mode.
+
+### `0x1029` — `IPO_SYSCALL_SET_RETURN_VALUE`
+- **C Signature:** `int ipo_set_return_value(int type, ...);`
+- **Arguments:** `args[0]` = return type (`PROC_RET_INT`, `PROC_RET_STRING`, `PROC_RET_STRUCT`, `PROC_RET_POINTER`), `args[1]` = value or pointer, `args[2]` = optional size or type name, `args[3]` = optional type name.
+- **Returns:** `0` on success, or negative error code.
+- **Purpose:** Explicitly records a typed return value for the calling process to pass structured data through multitasking execution pipelines.
+
+### `0x102A` — `IPO_SYSCALL_GET_RETURN_VALUE`
+- **C Signature:** `int ipo_get_return_value(char *buf, uint32_t max_len);`
+- **Arguments:** `args[0]` = destination buffer pointer, `args[1]` = maximum length.
+- **Returns:** Copied string length on success, or negative error code.
+- **Purpose:** Retrieves the formatted return value string of the most recently finished child process.
 
 ### `0x1030` — `IPO_SYSCALL_ASYNC_START`
 - **C Signature:** `int ipo_async_start(const char *task_name, uint32_t interval_ms, void (*task_fn)(void));`
@@ -296,3 +308,56 @@ ssize_t recv(int sockfd, void *buf, size_t len, int flags);
 int close(int sockfd);
 int connect_endpoint(int sockfd, const char *host_or_ip, uint16_t port);
 ```
+
+---
+
+## ⌨️ Group 11: Keyboard & Hardware Input Syscalls
+
+Low-level PS/2 8042 keyboard access for raw keystroke processing and interactive games:
+
+- **`0x10A0` `IPO_SYSCALL_KBD_GET_SCANCODE`:** `uint8_t ipo_kbd_get_scancode(void);` Non-blocking pop of the next hardware scancode from the kernel input queue.
+- **`0x10A1` `IPO_SYSCALL_KBD_WAIT_SCANCODE`:** `uint8_t ipo_kbd_wait_scancode(void);` Blocks calling process until a hardware scancode arrives.
+- **`0x10A2` `IPO_SYSCALL_KBD_SET_APP_MODE`:** `void ipo_kbd_set_app_mode(bool enabled);` Routes keyboard events directly to the process input queue instead of shell console.
+- **`0x10A3` `IPO_SYSCALL_KBD_FLUSH`:** `void ipo_kbd_flush(void);` Flushes kernel input queues and 8042 hardware buffers.
+- **`0x10A4` `IPO_SYSCALL_KBD_GET_MODIFIERS`:** `uint32_t ipo_kbd_get_modifiers(void);` Returns bitmask of active modifiers (Shift, Ctrl, Alt, CapsLock, NumLock).
+- **`0x10A5` `IPO_SYSCALL_KBD_POLL`:** `void ipo_kbd_poll(void);` Polls PS/2 keyboard controller ports and processes pending interrupts.
+- **`0x10A6` `IPO_SYSCALL_KBD_GET_KEY_STRING`:** `int ipo_kbd_get_key_string(uint8_t scancode, char *buf, uint32_t max_len);` Resolves human-readable key name for a scancode.
+
+---
+
+## 🖱️ Group 12: Mouse Subsystem Syscalls
+
+- **`0x10B0` `IPO_SYSCALL_MOUSE_GET_STATE`:** `void ipo_mouse_get_state(mouse_state_t *state);` Queries current PS/2 mouse cursor coordinates (X, Y), button clicks (Left, Right, Middle), and scroll wheel delta.
+
+---
+
+## 🎨 Group 13: Hardware VGA & Cursor Syscalls
+
+Direct hardware text and graphics registers manipulation:
+
+- **`0x10C0` `IPO_SYSCALL_VGA_SET_CURSOR`:** `void ipo_vga_set_cursor(uint16_t pos);` Sets hardware text cursor linear position via CRTC ports `0x3D4`/`0x3D5`.
+- **`0x10C1` `IPO_SYSCALL_VGA_GET_CURSOR`:** `uint16_t ipo_vga_get_cursor(void);` Reads current cursor position from CRTC registers.
+- **`0x10C2` `IPO_SYSCALL_VGA_SHOW_CURSOR`:** `void ipo_vga_show_cursor(void);` Enables and unhides hardware blinking text cursor.
+- **`0x10C3` `IPO_SYSCALL_VGA_HIDE_CURSOR`:** `void ipo_vga_hide_cursor(void);` Hides hardware text cursor.
+- **`0x10C4` `IPO_SYSCALL_VGA_SET_PALETTE`:** `void ipo_vga_set_palette(uint8_t index, uint8_t r, uint8_t g, uint8_t b);` Programs 6-bit RGB values directly into VGA DAC palette registers (`0x3C8`/`0x3C9`).
+
+---
+
+## 🎵 Group 14: Audio Core & Streaming Syscalls
+
+Sound Blaster 16 DSP hardware control and double-buffered audio streaming:
+
+- **`0x10D0` `IPO_SYSCALL_AUDIO_INIT`:** `bool ipo_audio_init(void);` Initializes Sound Blaster 16 DSP, 16-bit DMA Channel 5, and kernel mixer.
+- **`0x10D1` `IPO_SYSCALL_AUDIO_TICK`:** `void ipo_audio_tick(void);` Advances audio playback stream mixer and refills DMA buffers.
+- **`0x10D2` `IPO_SYSCALL_AUDIO_STOP_ALL`:** `void ipo_audio_stop_all(void);` Halts all playing audio streams and stops Sound Blaster 16 DMA.
+- **`0x10D3` `IPO_SYSCALL_AUDIO_STREAM_CREATE`:** `audio_stream_t *ipo_audio_stream_create(int format, int channels, uint32_t sample_rate, const void *data, size_t size);` Creates static memory audio stream.
+- **`0x10D4` `IPO_SYSCALL_AUDIO_STREAM_CREATE_RING`:** `audio_stream_t *ipo_audio_stream_create_ring(int format, int channels, uint32_t sample_rate, const void *data, size_t size, size_t ring_size);` Creates continuous ring-buffered audio stream.
+- **`0x10D5` `IPO_SYSCALL_AUDIO_STREAM_DESTROY`:** `void ipo_audio_stream_destroy(audio_stream_t *stream);` Destroys audio stream and reclaims memory.
+- **`0x10D6` `IPO_SYSCALL_AUDIO_STREAM_PLAY`:** `void ipo_audio_stream_play(audio_stream_t *stream);` Starts or resumes audio stream playback.
+- **`0x10D7` `IPO_SYSCALL_AUDIO_STREAM_PAUSE`:** `void ipo_audio_stream_pause(audio_stream_t *stream);` Pauses audio stream playback.
+- **`0x10D8` `IPO_SYSCALL_AUDIO_STREAM_STOP`:** `void ipo_audio_stream_stop(audio_stream_t *stream);` Stops playback and rewinds audio stream.
+- **`0x10D9` `IPO_SYSCALL_AUDIO_STREAM_SEEK`:** `void ipo_audio_stream_seek(audio_stream_t *stream, double fraction);` Seeks to normalized fractional offset (`0.0`..`1.0`).
+- **`0x10DA` `IPO_SYSCALL_AUDIO_STREAM_SET_VOL`:** `void ipo_audio_stream_set_volume(audio_stream_t *stream, float volume);` Adjusts stream volume (`0.0`..`1.0`).
+- **`0x10DB` `IPO_SYSCALL_AUDIO_STREAM_PROGRESS`:** `void ipo_audio_stream_progress(audio_stream_t *stream, double *out_progress);` Queries current playback progress.
+- **`0x10DC` `IPO_SYSCALL_AUDIO_STREAM_UPDATE`:** `void ipo_audio_stream_update_buffered(audio_stream_t *stream, size_t new_size, bool loop);` Appends new audio data into ring buffer.
+

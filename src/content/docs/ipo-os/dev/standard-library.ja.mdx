@@ -45,7 +45,7 @@ To support complex POSIX software and self-hosted compilation inside IPO_OS usin
 
 ## 🧱 The Dynamic Memory Allocator
 
-In `src/userland/libc/stdlib.c`, dynamic memory is managed by an 8-byte aligned doubly-linked list allocator operating on top of the `sbrk` system call (`IPO_SYSCALL_SBRK` `0x1045`):
+In `applications/lib/libc/stdlib.c`, dynamic memory is managed by an 8-byte aligned doubly-linked list allocator operating on top of the `sbrk` system call (`IPO_SYSCALL_SBRK` `0x1045`):
 
 ```c
 #define BLOCK_MAGIC 0x4D414C43 /* "MALC" */

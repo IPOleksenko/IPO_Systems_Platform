@@ -26,12 +26,12 @@ Memory management in **IPO_OS** is organized into hardware RAM detection during 
 
 ## 📦 Memory Management Subsystems
 
-### 1. BIOS E820 Physical Memory Map Manager (`src/kernel/memory/memory_map.c`)
+### 1. BIOS E820 Physical Memory Map Manager (`src/kernel/mm/memory_map.c`)
 The physical memory map and total usable RAM are detected by the MBR bootloader in real mode using BIOS `INT 15h, EAX=0xE820` (with fallback to `AX=0xE801`):
 - The bootloader stores an array of **20-byte** `e820_entry_t` region descriptors starting at physical address **`0x6000`** and writes the `e820_map_header_t` metadata into `0x8FE0`–`0x8FF7` (`'E820'` magic `0x45383230` at `0x8FE0`, entry count at `0x8FE4`, array pointer `0x00006000` at `0x8FE8`, total usable RAM bytes at `0x8FF0`/`0x8FF4`).
 - `memory_map_init()` parses all E820 regions (`E820_RAM`, `E820_RESERVED`, `E820_ACPI`, `E820_NVS`, `E820_BADMEM`) into a dynamically growing array, reserves the first 64 MB of the `0x01000000` region for `kmalloc`, allocates contiguous physical blocks above `0x05000000` via `memory_map_alloc()`, and exposes system-wide telemetry via `free` and `hardware memory`.
 
-### 2. Kernel Heap Allocator (`src/kernel/memory/kmalloc.c`)
+### 2. Kernel Heap Allocator (`src/kernel/mm/kmalloc.c`)
 The kernel heap spans physical addresses `0x01000000` (16 MB) to `0x05000000` (80 MB) with a capacity of **64 MB** (`KMALLOC_HEAP_SIZE = 0x04000000`), protected by the SMP spinlock `s_kmalloc_lock`:
 - Each allocated block has a 16-byte boundary-tag header `kmalloc_block_t` containing validation magic `0xDEADBEEF` (allocated) or `0xDEADC0DE` (freed).
 - Provides `kmalloc()`, `kcalloc()`, `krealloc()`, and `kfree()`, automatically running `kmalloc_coalesce_and_shrink()` to merge contiguous free blocks and lower the heap watermark.
@@ -41,7 +41,7 @@ User executables (both ELF32 and flat `.bin`) are loaded by `universal_exec_load
 - Dynamic memory expansion is handled via `IPO_SYSCALL_SBRK` (`0x1045`), adjusting `proc->user_heap_break`.
 - Process heap allocations are isolated per PID into **512 MB** (`0x20000000`) slices:
   `proc_base = 0x08000000 + (pid - 1) * 0x20000000`.
-- Userspace `malloc()` / `calloc()` / `realloc()` / `free()` (`src/userland/libc/stdlib.c`) requests memory from `sbrk()` in 64 KB multiples and tracks blocks using `block_hdr_t` with magic `0x4D414C43` (`"MALC"`).
+- Userspace `malloc()` / `calloc()` / `realloc()` / `free()` (`applications/lib/libc/stdlib.c`) requests memory from `sbrk()` in 64 KB multiples and tracks blocks using `block_hdr_t` with magic `0x4D414C43` (`"MALC"`).
 
 ### 4. Kernel-Wide Self-Expanding Dynamic Buffers (Zero Fixed Array Limits)
 Arbitrary fixed-size array limits have been eliminated across IPO_OS kernel subsystems in favor of dynamically growing heap allocations (`krealloc`):

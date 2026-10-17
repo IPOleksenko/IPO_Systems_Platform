@@ -53,7 +53,7 @@ Userland applications can inspect or manage drivers via dedicated system calls:
 
 ## 🛠️ Built-In Hardware Drivers
 
-### 1. ATA / IDE Hard Disk Driver (`src/drivers/ata/ata.c`)
+### 1. ATA / IDE Hard Disk Driver (`src/drivers/storage/ata.c`)
 - **Base Ports:** Primary IDE Channel `0x1F0`–`0x1F7` (`0x3F6` control); Secondary IDE Channel `0x170`–`0x177` (`0x376` control).
 - **Addressing & Dynamic Strings:** LBA28 and LBA48 addressing via PIO. In `ata_device_t`, drive `char *model` and `char *serial` strings are dynamically allocated on the heap without fixed-size array limits.
 - **Block Layer Integration:** Every detected drive is registered as a generic block device (`ata0`, `ata1`, ...) and scanned for MBR/GPT partitions (`partition_scan()`).
@@ -62,6 +62,7 @@ Userland applications can inspect or manage drivers via dedicated system calls:
 - **PCI Discovery:** Scans PCI configuration space (Vendor `0x10EC`, Device `0x8139`).
 - **Buffers:** Configures four physical 2 KB TX buffers (`TSD0`–`TSD3`) and a continuous 8 KB + 16 B circular RX ring buffer. In the network core (`net.c`), the packet reception buffer `rx_packet_buf` dynamically expands via `krealloc` to fit frames of any size without a 1536-byte cap.
 - **Polling & Handling:** Handles RX OK (`ROK`) and TX OK (`TOK`) events, streaming packets directly into the TCP/IP stack.
+- **DHCP Client (`src/net/dhcp.c`):** Automatic IP lease negotiation via DHCP DORA (Discover, Offer, Request, Ack) over UDP ports 67/68.
 
 ### 3. PS/2 Input Subsystem & Dynamic Keymaps
 - **8042 Controller:** Ports `0x60` (Data) and `0x64` (Status/Command).
@@ -87,7 +88,7 @@ The **KMOD** subsystem (`src/kernel/core/kmod.c`, `src/include/kernel/kmod.h`) e
 ## 🧭 Unified Hardware Device Registry (`device.c`)
 
 The **Device Registry** (`src/kernel/core/device.c`, `src/include/kernel/device.h`) tracks all discovered hardware components in a thread-safe `device_node_t` tree protected by an SMP `spinlock_t`:
-- **Enumerated Buses & Classes:** Platform ISA devices (`PIC 8259`, `PIT 8254`, `PS/2 8042`, `RTC`, `COM1`), CPU cores (`DEV_BUS_CPU`), E820 RAM regions (`DEV_BUS_MEMORY`), **PCI** functions (with dynamically expanding `bar` arrays), **IDE/ATA** drives, and **USB** host controllers (UHCI / OHCI / EHCI / xHCI).
+- **Enumerated Buses & Classes (Zero Hardcoding):** Live hardware discovery by scanning PCI Option ROMs, Expansion ROMs, VPD (0x03), SMBIOS Type 9/41, ACPI DSDT AML, CPUID, E820, and ATA IDENTIFY drive serials/models (e.g. `QM00001`).
 - **Live Hotplug Rescan:** Calling `device_rescan()` re-probes PCI, ATA, and USB buses at runtime, updating device states and attaching newly discovered hardware.
 
 <SharedStruct id="device_node" />
@@ -102,9 +103,11 @@ drivers status                  # Display driver, module, and kernel symbol coun
 drivers symbols                 # Print the kernel symbol table (also: symbols / ksyms)
 symbols [filter]                # Search the ~1,560 exported kernel symbols (alias: ksyms)
 hardware overview               # Display summary of CPUs, RAM, buses, and active devices
+hardware list                   # List all registered hardware devices across all buses
 hardware cpu | memory           # Detailed SMP per-core status / E820 & heap statistics
-hardware pci | storage | usb    # List hardware devices filtered by subsystem class
+hardware pci | storage | network | usb # List hardware devices filtered by subsystem class
 hardware info <id>              # Detailed hardware passport for a specific device node
+hardware status                 # Show device counts by operational state and category
 hardware refresh                # Trigger a live rescan across all hardware buses
 ```
 

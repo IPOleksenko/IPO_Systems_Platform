@@ -416,7 +416,7 @@ flashrom -p ch341a_spi -w build/spi_flash.bin
   'syscall-c-wrapper': {
     id: 'syscall-c-wrapper',
     lang: 'c',
-    title: 'src/userland/libc/sys.c (Syscall Invoker)',
+    title: 'applications/lib/libc/sys.c (Syscall Invoker)',
     code: `#include <stdint.h>
 #include <syscall.h>
 
@@ -467,7 +467,39 @@ SECTIONS
         *(.rdata*)
     } :text
 
+    .eh_frame_hdr : ALIGN(4)
+    {
+        *(.eh_frame_hdr)
+    } :text
+
+    .eh_frame : ALIGN(4)
+    {
+        KEEP(*(.eh_frame))
+        *(.eh_frame.*)
+    } :text
+
+    .gcc_except_table : ALIGN(4)
+    {
+        *(.gcc_except_table*)
+    } :text
+
     . = ALIGN(4);
+
+    .init_array : ALIGN(4)
+    {
+        PROVIDE_HIDDEN (__init_array_start = .);
+        KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
+        KEEP (*(.init_array EXCLUDE_FILE (*crtbegin.o *crtbegin?.o *crtend.o *crtend?.o ) .ctors))
+        PROVIDE_HIDDEN (__init_array_end = .);
+    } :data
+
+    .fini_array : ALIGN(4)
+    {
+        PROVIDE_HIDDEN (__fini_array_start = .);
+        KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*) SORT_BY_INIT_PRIORITY(.dtors.*)))
+        KEEP (*(.fini_array EXCLUDE_FILE (*crtbegin.o *crtbegin?.o *crtend.o *crtend?.o ) .dtors))
+        PROVIDE_HIDDEN (__fini_array_end = .);
+    } :data
 
     .data : ALIGN(4)
     {
@@ -531,6 +563,12 @@ SECTIONS
         *(COMMON)
         *(.bss*)
     }
+
+    /DISCARD/ :
+    {
+        *(.eh_frame*)
+        *(.comment*)
+    }
 }
 `
   },
@@ -549,7 +587,7 @@ CFLAGS  := -m32 -O2 \
            -fno-builtin \
            -nostdlib -nostartfiles \
            -DIPO_APP \
-           -I/path/to/IPO_OS/src/include
+           -I/path/to/IPO_OS/applications/include
 
 LDFLAGS := -Wl,-T,app.ld -nostdlib -nostartfiles
 
@@ -679,7 +717,7 @@ export const sharedStructTables: StructTable[] = [
     id: 'kmod_header',
     titleEn: 'Relocatable Kernel Module Header (kmod_raw_header_t / kmod_header_t)',
     titleRu: 'Заголовок загружаемого модуля ядра (kmod_raw_header_t / kmod_header_t)',
-    totalSize: '188 bytes (on-disk raw) / Dynamic pointers in RAM',
+    totalSize: '192 bytes (0xC0 on-disk raw) / Dynamic pointers in RAM',
     fields: [
       { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'magic', descriptionEn: 'Module magic signature (0x444D4B49 "IKMD")', descriptionRu: 'Магическая сигнатура модуля (0x444D4B49 "IKMD")' },
       { offset: '0x04', size: '2 bytes', type: 'uint16_t', name: 'abi_version', descriptionEn: 'Kernel Module ABI version (0x0100 = v1.0)', descriptionRu: 'Версия ABI модулей ядра (0x0100 = v1.0)' },
@@ -715,7 +753,7 @@ export const sharedStructTables: StructTable[] = [
     id: 'process_pcb',
     titleEn: 'Process Descriptor Structure (process_t)',
     titleRu: 'Структура дескриптора процесса (process_t)',
-    totalSize: '136 bytes (0x88)',
+    totalSize: '208 bytes (0xD0)',
     fields: [
       { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'pid', descriptionEn: 'Unique process ID (allocated dynamically starting from 1)', descriptionRu: 'Уникальный номер процесса (выделяется динамически от 1)' },
       { offset: '0x04', size: '4 bytes', type: 'void*', name: 'binary_base', descriptionEn: 'Base address of loaded executable image (0x800000)', descriptionRu: 'Базовый адрес загруженного исполняемого образа (0x800000)' },
@@ -733,36 +771,39 @@ export const sharedStructTables: StructTable[] = [
       { offset: '0x34', size: '4 bytes', type: 'uint32_t', name: 'argv_addr', descriptionEn: 'Address of argv pointers array in process space', descriptionRu: 'Адрес массива аргументов argv в пространстве процесса' },
       { offset: '0x38', size: '4 bytes', type: 'char**', name: 'argv_kernel', descriptionEn: 'Copy of argv array in kernel space for debugging', descriptionRu: 'Копия массива argv в пространстве ядра' },
       { offset: '0x3C', size: '4 bytes', type: 'int', name: 'exit_code', descriptionEn: 'Termination return code', descriptionRu: 'Код возврата завершившегося процесса' },
-      { offset: '0x40', size: '1 byte', type: 'uint8_t', name: 'is_running', descriptionEn: 'Active execution state flag', descriptionRu: 'Флаг активности процесса (1=выполняется)' },
-      { offset: '0x41', size: '1 byte', type: 'bool', name: 'waiting_for_input', descriptionEn: 'Blocked waiting for keyboard / terminal input', descriptionRu: 'Флаг ожидания пользовательского ввода с клавиатуры' },
-      { offset: '0x42', size: '1 byte', type: 'bool', name: 'wants_graphics', descriptionEn: 'Requested VGA Mode 13h (320x200x256)', descriptionRu: 'Флаг запроса графического режима VGA (Mode 13h)' },
-      { offset: '0x43', size: '1 byte', type: 'bool', name: 'is_wm_app', descriptionEn: 'Created a Window Manager desktop window', descriptionRu: 'Процесс зарегистрировал окно в оконном менеджере' },
-      { offset: '0x44', size: '4 bytes', type: 'uint32_t', name: 'async_task_count', descriptionEn: 'Count of active background async tasks', descriptionRu: 'Количество активных асинхронных фоновых задач' },
-      { offset: '0x48', size: '4 bytes', type: 'uint32_t', name: 'user_heap_break', descriptionEn: 'Per-process sbrk break address boundary', descriptionRu: 'Граница динамической кучи процесса (sbrk)' },
-      { offset: '0x4C', size: '4 bytes', type: 'uint16_t*', name: 'text_vram_backup', descriptionEn: '80x25 text mode buffer backup for workspace switching', descriptionRu: 'Резервная копия текстового экрана 80x25 при переключении воркспейсов' },
-      { offset: '0x50', size: '4 bytes', type: 'uint8_t*', name: 'gfx_vram_backup', descriptionEn: '320x200 graphics VRAM backup when swapped to background', descriptionRu: 'Резервная копия графического экрана Mode 13h' },
-      { offset: '0x54', size: '4 bytes', type: 'uint8_t*', name: 'gfx_palette_backup', descriptionEn: '256-color VGA DAC palette backup (768 bytes)', descriptionRu: 'Резервная копия 256-цветной палитры VGA DAC (768 байт)' },
-      { offset: '0x58', size: '2 bytes', type: 'uint16_t', name: 'text_cursor_pos', descriptionEn: 'Saved cursor coordinate in text mode', descriptionRu: 'Сохранённая позиция курсора в текстовом режиме' },
-      { offset: '0x5A', size: '1 byte', type: 'bool', name: 'text_cursor_visible', descriptionEn: 'Saved cursor visibility flag', descriptionRu: 'Флаг видимости текстового курсора' },
-      { offset: '0x5B', size: '1 byte', type: 'bool', name: 'completed_and_acknowledged', descriptionEn: 'Process completed and acknowledged by parent', descriptionRu: 'Флаг завершения и подтверждения родителем' },
-      { offset: '0x5C', size: '4 bytes', type: 'uint16_t*', name: 'scroll_top_buffer', descriptionEn: 'Workspace top scrollback line buffer', descriptionRu: 'Буфер верхнего скроллбэка воркспейса' },
-      { offset: '0x60', size: '4 bytes', type: 'uint16_t*', name: 'scroll_bottom_buffer', descriptionEn: 'Workspace bottom scrollback line buffer', descriptionRu: 'Буфер нижнего скроллбэка воркспейса' },
-      { offset: '0x64', size: '4 bytes', type: 'int', name: 'scroll_top_count', descriptionEn: 'Count of lines in top scrollback buffer', descriptionRu: 'Число строк в верхнем буфере скролла' },
-      { offset: '0x68', size: '4 bytes', type: 'int', name: 'scroll_bottom_count', descriptionEn: 'Count of lines in bottom scrollback buffer', descriptionRu: 'Число строк в нижнем буфере скролла' },
-      { offset: '0x6C', size: '4 bytes', type: 'int', name: 'window_id', descriptionEn: 'Workspace window group identifier in batch mode', descriptionRu: 'Идентификатор окна в оконном менеджере' },
-      { offset: '0x70', size: '1 byte', type: 'bool', name: 'text_screen_shared', descriptionEn: 'True if VRAM buffers are shared with co-process', descriptionRu: 'Флаг совместного использования буфера экрана' },
-      { offset: '0x74', size: '4 bytes', type: 'char*', name: 'text_output_buf', descriptionEn: 'Dynamically expanding captured stdout buffer', descriptionRu: 'Динамический буфер перехваченного текстового вывода' },
-      { offset: '0x78', size: '4 bytes', type: 'uint32_t', name: 'text_output_len', descriptionEn: 'Length of captured stdout text in bytes', descriptionRu: 'Текущая длина перехваченного вывода в байтах' },
-      { offset: '0x7C', size: '4 bytes', type: 'uint32_t', name: 'text_output_cap', descriptionEn: 'Allocated capacity of text_output_buf', descriptionRu: 'Выделенная ёмкость буфера text_output_buf' },
-      { offset: '0x80', size: '4 bytes', type: 'char*', name: 'name', descriptionEn: 'Dynamically allocated process name string', descriptionRu: 'Динамически выделенная строка имени процесса' },
-      { offset: '0x84', size: '4 bytes', type: 'struct process*', name: 'next', descriptionEn: 'Pointer to next PCB in active kernel list', descriptionRu: 'Указатель на следующий процесс в списке ядра' }
+      { offset: '0x40', size: '64 bytes', type: 'process_return_value_t', name: 'return_val', descriptionEn: 'Full typed return value (type, int, raw_eax/edx, dynamic strings, struct buffer)', descriptionRu: 'Типизированное возвращаемое значение (тип, int, raw_eax/edx, динамические строки, буфер)' },
+      { offset: '0x80', size: '1 byte', type: 'bool', name: 'return_val_explicit', descriptionEn: 'True if process explicitly set custom return value via syscall', descriptionRu: 'Флаг явной установки возвращаемого значения системным вызовом' },
+      { offset: '0x81', size: '1 byte', type: 'uint8_t', name: 'is_running', descriptionEn: 'Active execution state flag', descriptionRu: 'Флаг активности процесса (1=выполняется)' },
+      { offset: '0x82', size: '1 byte', type: 'bool', name: 'waiting_for_input', descriptionEn: 'Blocked waiting for keyboard / terminal input', descriptionRu: 'Флаг ожидания пользовательского ввода с клавиатуры' },
+      { offset: '0x83', size: '1 byte', type: 'bool', name: 'wants_graphics', descriptionEn: 'Requested VGA Mode 13h (320x200x256)', descriptionRu: 'Флаг запроса графического режима VGA (Mode 13h)' },
+      { offset: '0x84', size: '1 byte', type: 'bool', name: 'is_wm_app', descriptionEn: 'Created a Window Manager desktop window', descriptionRu: 'Процесс зарегистрировал окно в оконном менеджере' },
+      { offset: '0x88', size: '4 bytes', type: 'uint32_t', name: 'async_task_count', descriptionEn: 'Count of active background async tasks', descriptionRu: 'Количество активных асинхронных фоновых задач' },
+      { offset: '0x8C', size: '4 bytes', type: 'uint32_t', name: 'user_heap_break', descriptionEn: 'Per-process sbrk break address boundary', descriptionRu: 'Граница динамической кучи процесса (sbrk)' },
+      { offset: '0x90', size: '4 bytes', type: 'uint16_t*', name: 'text_vram_backup', descriptionEn: '80x25 text mode buffer backup for workspace switching', descriptionRu: 'Резервная копия текстового экрана 80x25 при переключении воркспейсов' },
+      { offset: '0x94', size: '4 bytes', type: 'uint8_t*', name: 'gfx_vram_backup', descriptionEn: '320x200 graphics VRAM backup when swapped to background', descriptionRu: 'Резервная копия графического экрана Mode 13h' },
+      { offset: '0x98', size: '4 bytes', type: 'uint8_t*', name: 'gfx_palette_backup', descriptionEn: '256-color VGA DAC palette backup (768 bytes)', descriptionRu: 'Резервная копия 256-цветной палитры VGA DAC (768 байт)' },
+      { offset: '0x9C', size: '2 bytes', type: 'uint16_t', name: 'text_cursor_pos', descriptionEn: 'Saved cursor coordinate in text mode', descriptionRu: 'Сохранённая позиция курсора в текстовом режиме' },
+      { offset: '0x9E', size: '1 byte', type: 'bool', name: 'text_cursor_visible', descriptionEn: 'Saved cursor visibility flag', descriptionRu: 'Флаг видимости текстового курсора' },
+      { offset: '0x9F', size: '1 byte', type: 'bool', name: 'completed_and_acknowledged', descriptionEn: 'Process completed and acknowledged by parent', descriptionRu: 'Флаг завершения и подтверждения родителем' },
+      { offset: '0xA0', size: '4 bytes', type: 'uint16_t*', name: 'scroll_top_buffer', descriptionEn: 'Workspace top scrollback line buffer', descriptionRu: 'Буфер верхнего скроллбэка воркспейса' },
+      { offset: '0xA4', size: '4 bytes', type: 'uint16_t*', name: 'scroll_bottom_buffer', descriptionEn: 'Workspace bottom scrollback line buffer', descriptionRu: 'Буфер нижнего скроллбэка воркспейса' },
+      { offset: '0xA8', size: '4 bytes', type: 'int', name: 'scroll_top_count', descriptionEn: 'Count of lines in top scrollback buffer', descriptionRu: 'Число строк в верхнем буфере скролла' },
+      { offset: '0xAC', size: '4 bytes', type: 'int', name: 'scroll_bottom_count', descriptionEn: 'Count of lines in bottom scrollback buffer', descriptionRu: 'Число строк в нижнем буфере скролла' },
+      { offset: '0xB0', size: '4 bytes', type: 'int', name: 'window_id', descriptionEn: 'Workspace window group identifier in batch mode', descriptionRu: 'Идентификатор окна в оконном менеджере' },
+      { offset: '0xB4', size: '1 byte', type: 'bool', name: 'text_screen_shared', descriptionEn: 'True if VRAM buffers are shared with co-process', descriptionRu: 'Флаг совместного использования буфера экрана' },
+      { offset: '0xB8', size: '4 bytes', type: 'char*', name: 'text_output_buf', descriptionEn: 'Dynamically expanding captured stdout buffer', descriptionRu: 'Динамический буфер перехваченного текстового вывода' },
+      { offset: '0xBC', size: '4 bytes', type: 'uint32_t', name: 'text_output_len', descriptionEn: 'Length of captured stdout text in bytes', descriptionRu: 'Текущая длина перехваченного вывода в байтах' },
+      { offset: '0xC0', size: '4 bytes', type: 'uint32_t', name: 'text_output_cap', descriptionEn: 'Allocated capacity of text_output_buf', descriptionRu: 'Выделенная ёмкость буфера text_output_buf' },
+      { offset: '0xC4', size: '4 bytes', type: 'char*', name: 'name', descriptionEn: 'Dynamically allocated process name string', descriptionRu: 'Динамически выделенная строка имени процесса' },
+      { offset: '0xC8', size: '4 bytes', type: 'char*', name: 'return_format', descriptionEn: 'Auto-detected format descriptor from DWARF debug symbols', descriptionRu: 'Автоматически распознанный дескриптор формата из символов DWARF' },
+      { offset: '0xCC', size: '4 bytes', type: 'struct process*', name: 'next', descriptionEn: 'Pointer to next PCB in active kernel list', descriptionRu: 'Указатель на следующий процесс в списке ядра' }
     ]
   },
   {
     id: 'device_node',
     titleEn: 'Unified Hardware Device Node (device_node_t)',
     titleRu: 'Узел единого реестра аппаратных устройств (device_node_t)',
-    totalSize: 'Dynamic strings & self-expanding BAR array (src/include/kernel/device.h)',
+    totalSize: '148 bytes (0x94) with dynamic strings & self-expanding BAR array (src/include/kernel/device.h)',
     fields: [
       { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'id', descriptionEn: 'Unique system-wide device ID', descriptionRu: 'Уникальный общесистемный идентификатор устройства' },
       { offset: '0x04', size: '4 bytes', type: 'uint32_t', name: 'parent_id', descriptionEn: 'Parent bus/controller device ID (0 if root)', descriptionRu: 'ID родительской шины/контроллера (0 если корень)' },
@@ -771,9 +812,9 @@ export const sharedStructTables: StructTable[] = [
       { offset: '0x10', size: '4 bytes', type: 'device_state_t', name: 'state', descriptionEn: 'Operational state (DISCOVERED, DRIVER_ATTACHED, INITIALIZED, ACTIVE, DISABLED, ERROR)', descriptionRu: 'Состояние (DISCOVERED, DRIVER_ATTACHED, INITIALIZED, ACTIVE, DISABLED, ERROR)' },
       { offset: '0x14', size: '12 bytes', type: 'char* + len/cap', name: 'name', descriptionEn: 'Dynamic canonical identifier (e.g. "cpu0", "pci00:03.0", "ata0")', descriptionRu: 'Динамический канонический идентификатор ("cpu0", "pci00:03.0", "ata0")' },
       { offset: '0x20', size: '36 bytes', type: 'char* + len/cap', name: 'vendor / model / description', descriptionEn: 'Dynamically allocated vendor, model, and functional description strings', descriptionRu: 'Динамические строки производителя, модели и описания устройства' },
-      { offset: '0x44', size: '56 bytes', type: 'device_resources_t', name: 'res', descriptionEn: 'Bus coordinates, PCI IDs, dynamic uint32_t* bar[], I/O base, MMIO base, IRQ, size_bytes', descriptionRu: 'Ресурсы устройства: шина, PCI ID, динамический массив BAR, порты I/O, MMIO, IRQ, объём' },
-      { offset: '0x7C', size: '16 bytes', type: 'char* + void*', name: 'driver_name / driver_ptr', descriptionEn: 'Attached driver name and pointer to driver_t', descriptionRu: 'Имя привязанного драйвера и указатель на структуру driver_t' },
-      { offset: '0x8C', size: '12 bytes', type: 'device_ops_t* + next', name: 'ops / priv_data / next', descriptionEn: 'Standard VFS-like device I/O operations (open/close/read/write/ioctl) and list link', descriptionRu: 'Таблица операций ввода-вывода (open/close/read/write/ioctl) и ссылка списка' }
+      { offset: '0x44', size: '52 bytes', type: 'device_resources_t', name: 'res', descriptionEn: 'Bus coordinates, PCI IDs, dynamic uint32_t* bar[], I/O base, MMIO base, IRQ, size_bytes', descriptionRu: 'Ресурсы устройства: шина, PCI ID, динамический массив BAR, порты I/O, MMIO, IRQ, объём' },
+      { offset: '0x78', size: '16 bytes', type: 'char* + void*', name: 'driver_name / driver_ptr', descriptionEn: 'Attached driver name and pointer to driver_t', descriptionRu: 'Имя привязанного драйвера и указатель на структуру driver_t' },
+      { offset: '0x88', size: '12 bytes', type: 'device_ops_t* + next', name: 'ops / priv_data / next', descriptionEn: 'Standard VFS-like device I/O operations (open/close/read/write/ioctl) and list link', descriptionRu: 'Таблица операций ввода-вывода (open/close/read/write/ioctl) и ссылка списка' }
     ]
   },
   {
@@ -795,7 +836,7 @@ export const sharedStructTables: StructTable[] = [
     id: 'ata_device',
     titleEn: 'ATA Storage Device Information (ata_device_t)',
     titleRu: 'Информация об устройстве ATA (ata_device_t)',
-    totalSize: '32 bytes (with dynamic string buffers)',
+    totalSize: '44 bytes (0x2C)',
     fields: [
       { offset: '0x00', size: '1 byte', type: 'uint8_t', name: 'present', descriptionEn: '1 if device detected, 0 if absent', descriptionRu: '1 если устройство обнаружено, 0 если отсутствует' },
       { offset: '0x01', size: '1 byte', type: 'uint8_t', name: 'channel', descriptionEn: 'IDE Channel (0 = Primary, 1 = Secondary)', descriptionRu: 'Канал IDE (0 = Primary, 1 = Secondary)' },
@@ -804,9 +845,14 @@ export const sharedStructTables: StructTable[] = [
       { offset: '0x08', size: '2 bytes', type: 'uint16_t', name: 'cylinders', descriptionEn: 'Drive cylinders count from IDENTIFY', descriptionRu: 'Количество цилиндров накопителя из ответа IDENTIFY' },
       { offset: '0x0A', size: '2 bytes', type: 'uint16_t', name: 'heads', descriptionEn: 'Drive heads count from IDENTIFY', descriptionRu: 'Количество магнитных головок из ответа IDENTIFY' },
       { offset: '0x0C', size: '2 bytes', type: 'uint16_t', name: 'sectors', descriptionEn: 'Sectors per track from IDENTIFY', descriptionRu: 'Количество секторов на дорожку из IDENTIFY' },
-      { offset: '0x10', size: '8 bytes', type: 'uint64_t', name: 'capacity_sectors', descriptionEn: 'Total capacity in 512-byte sectors (LBA28/LBA48)', descriptionRu: 'Полная ёмкость в секторах по 512 байт (LBA28/LBA48)' },
-      { offset: '0x18', size: '4 bytes', type: 'char*', name: 'model', descriptionEn: 'Dynamically allocated NUL-terminated ATA model string', descriptionRu: 'Динамически выделенная ASCII-строка модели накопителя' },
-      { offset: '0x1C', size: '4 bytes', type: 'char*', name: 'serial', descriptionEn: 'Dynamically allocated NUL-terminated ATA serial string', descriptionRu: 'Динамически выделенная строка серийного номера устройства' }
+      { offset: '0x0E', size: '2 bytes', type: 'uint16_t', name: 'io_base', descriptionEn: 'Primary I/O base port (e.g. 0x1F0, 0x170)', descriptionRu: 'Базовый порт ввода-вывода (например, 0x1F0, 0x170)' },
+      { offset: '0x10', size: '2 bytes', type: 'uint16_t', name: 'ctrl_base', descriptionEn: 'Control port base (e.g. 0x3F6, 0x376)', descriptionRu: 'Базовый порт управления (например, 0x3F6, 0x376)' },
+      { offset: '0x12', size: '1 byte', type: 'uint8_t', name: 'irq', descriptionEn: 'Hardware IRQ line (14 for Primary, 15 for Secondary)', descriptionRu: 'Линия аппаратного прерывания IRQ (14 для Primary, 15 для Secondary)' },
+      { offset: '0x14', size: '4 bytes', type: 'uint32_t', name: 'sector_size', descriptionEn: 'Sector size in bytes (typically 512)', descriptionRu: 'Размер сектора в байтах (обычно 512)' },
+      { offset: '0x18', size: '8 bytes', type: 'uint64_t', name: 'capacity_sectors', descriptionEn: 'Total capacity in 512-byte sectors (LBA28/LBA48)', descriptionRu: 'Полная ёмкость в секторах по 512 байт (LBA28/LBA48)' },
+      { offset: '0x20', size: '4 bytes', type: 'char*', name: 'model', descriptionEn: 'Dynamically allocated NUL-terminated ATA model string', descriptionRu: 'Динамически выделенная ASCII-строка модели накопителя' },
+      { offset: '0x24', size: '4 bytes', type: 'char*', name: 'serial', descriptionEn: 'Dynamically allocated NUL-terminated ATA serial string', descriptionRu: 'Динамически выделенная строка серийного номера устройства' },
+      { offset: '0x28', size: '4 bytes', type: 'char*', name: 'firmware', descriptionEn: 'Dynamically allocated NUL-terminated ATA firmware revision string', descriptionRu: 'Динамически выделенная строка ревизии прошивки ATA' }
     ]
   },
   {
@@ -1143,6 +1189,30 @@ export const sharedSyscallsList: SyscallDoc[] = [
     returnRu: '1 если активен batch-конвейер, иначе 0',
     descriptionEn: 'Queries whether multitasking batch mode (run & / &&) is running.',
     descriptionRu: 'Проверяет активность режима пакетного запуска (run & / &&).'
+  },
+  {
+    numHex: '0x1029',
+    numDec: 4137,
+    name: 'IPO_SYSCALL_SET_RETURN_VALUE',
+    signature: 'int ipo_set_return_value(int type, ...)',
+    argsEn: ['args[0]: Return type (PROC_RET_INT, PROC_RET_STRING, PROC_RET_STRUCT, PROC_RET_POINTER)', 'args[1]: Value or pointer', 'args[2]: Size or type name (optional)', 'args[3]: Type name (optional)'],
+    argsRu: ['args[0]: Тип возврата (PROC_RET_INT, PROC_RET_STRING, PROC_RET_STRUCT, PROC_RET_POINTER)', 'args[1]: Значение или указатель', 'args[2]: Размер или имя типа (опционально)', 'args[3]: Имя типа (опционально)'],
+    returnEn: '0 on success, negative error code on failure',
+    returnRu: '0 при успехе, отрицательный код ошибки при сбое',
+    descriptionEn: 'Sets explicit typed return value for the current process to pass through pipelines.',
+    descriptionRu: 'Явно устанавливает типизированное возвращаемое значение текущего процесса для конвейеров.'
+  },
+  {
+    numHex: '0x102A',
+    numDec: 4138,
+    name: 'IPO_SYSCALL_GET_RETURN_VALUE',
+    signature: 'int ipo_get_return_value(char *buf, uint32_t max_len)',
+    argsEn: ['args[0]: Output buffer for formatted return string', 'args[1]: Maximum buffer capacity'],
+    argsRu: ['args[0]: Буфер для отформатированной строки возврата', 'args[1]: Максимальная ёмкость буфера'],
+    returnEn: 'Length of return string on success, negative error code on failure',
+    returnRu: 'Длина строки возврата при успехе, отрицательный код ошибки при сбое',
+    descriptionEn: 'Retrieves formatted return string of the last finished child process.',
+    descriptionRu: 'Получает отформатированную строку возвращаемого значения последнего завершённого процесса.'
   },
   {
     numHex: '0x1030',
@@ -2127,6 +2197,318 @@ export const sharedSyscallsList: SyscallDoc[] = [
     returnRu: '0',
     descriptionEn: 'Updates the network interface IPv4 configuration.',
     descriptionRu: 'Обновляет конфигурацию IPv4 сетевого интерфейса.'
+  },
+  {
+    numHex: '0x10A0',
+    numDec: 4256,
+    name: 'IPO_SYSCALL_KBD_GET_SCANCODE',
+    signature: 'uint8_t ipo_kbd_get_scancode(void)',
+    argsEn: ['None'],
+    argsRu: ['Нет аргументов'],
+    returnEn: 'Next scancode from queue or 0 if queue empty',
+    returnRu: 'Следующий скан-код из очереди или 0 если очередь пуста',
+    descriptionEn: 'Pulls next available raw hardware scancode non-blocking.',
+    descriptionRu: 'Неблокирующее чтение очередного скан-кода клавиши из очереди.'
+  },
+  {
+    numHex: '0x10A1',
+    numDec: 4257,
+    name: 'IPO_SYSCALL_KBD_WAIT_SCANCODE',
+    signature: 'uint8_t ipo_kbd_wait_scancode(void)',
+    argsEn: ['None'],
+    argsRu: ['Нет аргументов'],
+    returnEn: 'Scancode of pressed key',
+    returnRu: 'Скан-код нажатой клавиши',
+    descriptionEn: 'Blocks calling process until a keyboard scancode is received.',
+    descriptionRu: 'Блокирует вызывающий процесс до момента нажатия клавиши на клавиатуре.'
+  },
+  {
+    numHex: '0x10A2',
+    numDec: 4258,
+    name: 'IPO_SYSCALL_KBD_SET_APP_MODE',
+    signature: 'void ipo_kbd_set_app_mode(bool enabled)',
+    argsEn: ['args[0]: 1 to route input to application queue, 0 for shell'],
+    argsRu: ['args[0]: 1 для перенаправления ввода в очередь приложения, 0 для терминала'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Switches keyboard focus between terminal shell and raw application mode.',
+    descriptionRu: 'Переключает ввод клавиатуры между терминалом и сырым режимом приложения.'
+  },
+  {
+    numHex: '0x10A3',
+    numDec: 4259,
+    name: 'IPO_SYSCALL_KBD_FLUSH',
+    signature: 'void ipo_kbd_flush(void)',
+    argsEn: ['None'],
+    argsRu: ['Нет аргументов'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Flushes all kernel keyboard queues, 8042 hardware buffers, and modifier states.',
+    descriptionRu: 'Очищает очереди клавиатуры ядра, аппаратный буфер 8042 и состояния модификаторов.'
+  },
+  {
+    numHex: '0x10A4',
+    numDec: 4260,
+    name: 'IPO_SYSCALL_KBD_GET_MODIFIERS',
+    signature: 'uint32_t ipo_kbd_get_modifiers(void)',
+    argsEn: ['None'],
+    argsRu: ['Нет аргументов'],
+    returnEn: 'Bitmask of active modifier keys (Shift, Ctrl, Alt, CapsLock, NumLock, ScrollLock)',
+    returnRu: 'Битовая маска модификаторов (Shift, Ctrl, Alt, CapsLock, NumLock, ScrollLock)',
+    descriptionEn: 'Returns current state bitmask of keyboard modifier keys.',
+    descriptionRu: 'Возвращает текущую битовую маску модификаторов клавиатуры.'
+  },
+  {
+    numHex: '0x10A5',
+    numDec: 4261,
+    name: 'IPO_SYSCALL_KBD_POLL',
+    signature: 'void ipo_kbd_poll(void)',
+    argsEn: ['None'],
+    argsRu: ['Нет аргументов'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Polls 8042 keyboard controller ports and dispatches pending events.',
+    descriptionRu: 'Опрашивает порты контроллера 8042 и диспетчеризирует ожидающие события.'
+  },
+  {
+    numHex: '0x10A6',
+    numDec: 4262,
+    name: 'IPO_SYSCALL_KBD_GET_KEY_STRING',
+    signature: 'int ipo_kbd_get_key_string(uint8_t scancode, char *buf, uint32_t max_len)',
+    argsEn: ['args[0]: Scancode', 'args[1]: Output buffer pointer', 'args[2]: Output buffer capacity'],
+    argsRu: ['args[0]: Скан-код', 'args[1]: Указатель на буфер вывода', 'args[2]: Ёмкость буфера вывода'],
+    returnEn: '1 on copy to buffer, or kernel string pointer if no buffer provided',
+    returnRu: '1 при копировании в буфер, либо указатель на строку ядра если буфер не задан',
+    descriptionEn: 'Resolves human-readable name string for a hardware scancode (e.g. "Enter", "Space").',
+    descriptionRu: 'Возвращает текстовое название клавиши по её скан-коду (например, "Enter", "Space").'
+  },
+  {
+    numHex: '0x10B0',
+    numDec: 4272,
+    name: 'IPO_SYSCALL_MOUSE_GET_STATE',
+    signature: 'void ipo_mouse_get_state(mouse_state_t *state)',
+    argsEn: ['args[0]: Pointer to mouse_state_t structure (x, y, buttons, wheel)'],
+    argsRu: ['args[0]: Указатель на структуру mouse_state_t (x, y, кнопки, колесо)'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Retrieves current PS/2 mouse coordinates, button click states, and wheel delta.',
+    descriptionRu: 'Считывает текущие координаты мыши PS/2, состояние кнопок и дельту колеса.'
+  },
+  {
+    numHex: '0x10C0',
+    numDec: 4288,
+    name: 'IPO_SYSCALL_VGA_SET_CURSOR',
+    signature: 'void ipo_vga_set_cursor(uint16_t pos)',
+    argsEn: ['args[0]: Linear text mode cursor offset (row * 80 + col)'],
+    argsRu: ['args[0]: Линейное смещение курсора в текстовом режиме (row * 80 + col)'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Sets hardware CRTC text mode cursor position via ports 0x3D4/0x3D5.',
+    descriptionRu: 'Устанавливает аппаратную позицию текстового курсора CRTC через порты 0x3D4/0x3D5.'
+  },
+  {
+    numHex: '0x10C1',
+    numDec: 4289,
+    name: 'IPO_SYSCALL_VGA_GET_CURSOR',
+    signature: 'uint16_t ipo_vga_get_cursor(void)',
+    argsEn: ['None'],
+    argsRu: ['Нет аргументов'],
+    returnEn: 'Current cursor linear offset (row * 80 + col)',
+    returnRu: 'Текущее линейное смещение курсора (row * 80 + col)',
+    descriptionEn: 'Reads hardware text mode cursor position from CRTC registers.',
+    descriptionRu: 'Считывает аппаратную позицию текстового курсора из регистров CRTC.'
+  },
+  {
+    numHex: '0x10C2',
+    numDec: 4290,
+    name: 'IPO_SYSCALL_VGA_SHOW_CURSOR',
+    signature: 'void ipo_vga_show_cursor(void)',
+    argsEn: ['None'],
+    argsRu: ['Нет аргументов'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Enables and shows the hardware text mode blinking cursor.',
+    descriptionRu: 'Включает и делает видимым аппаратный мигающий текстовый курсор.'
+  },
+  {
+    numHex: '0x10C3',
+    numDec: 4291,
+    name: 'IPO_SYSCALL_VGA_HIDE_CURSOR',
+    signature: 'void ipo_vga_hide_cursor(void)',
+    argsEn: ['None'],
+    argsRu: ['Нет аргументов'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Disables and hides the hardware text mode cursor.',
+    descriptionRu: 'Отключает и скрывает аппаратный текстовый курсор.'
+  },
+  {
+    numHex: '0x10C4',
+    numDec: 4292,
+    name: 'IPO_SYSCALL_VGA_SET_PALETTE',
+    signature: 'void ipo_vga_set_palette(uint8_t index, uint8_t r, uint8_t g, uint8_t b)',
+    argsEn: ['args[0]: Palette index (0..255)', 'args[1]: Red (0..63)', 'args[2]: Green (0..63)', 'args[3]: Blue (0..63)'],
+    argsRu: ['args[0]: Индекс палитры (0..255)', 'args[1]: Красный (0..63)', 'args[2]: Зеленый (0..63)', 'args[3]: Синий (0..63)'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Programs 6-bit RGB values into the VGA DAC palette registers (ports 0x3C8/0x3C9).',
+    descriptionRu: 'Записывает 6-битные значения RGB в регистры палитры VGA DAC (порты 0x3C8/0x3C9).'
+  },
+  {
+    numHex: '0x10D0',
+    numDec: 4304,
+    name: 'IPO_SYSCALL_AUDIO_INIT',
+    signature: 'bool ipo_audio_init(void)',
+    argsEn: ['None'],
+    argsRu: ['Нет аргументов'],
+    returnEn: '1 if audio hardware initialized, 0 otherwise',
+    returnRu: '1 если аудиокарта инициализирована, иначе 0',
+    descriptionEn: 'Initializes the Sound Blaster 16 DSP, DMA Channel 5, and software mixer.',
+    descriptionRu: 'Инициализирует DSP Sound Blaster 16, DMA канал 5 и программный аудиомикшер.'
+  },
+  {
+    numHex: '0x10D1',
+    numDec: 4305,
+    name: 'IPO_SYSCALL_AUDIO_TICK',
+    signature: 'void ipo_audio_tick(void)',
+    argsEn: ['None'],
+    argsRu: ['Нет аргументов'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Advances audio playback stream mixer and refills DMA buffers.',
+    descriptionRu: 'Выполняет шаг микширования аудиопотоков и обновляет буферы DMA.'
+  },
+  {
+    numHex: '0x10D2',
+    numDec: 4306,
+    name: 'IPO_SYSCALL_AUDIO_STOP_ALL',
+    signature: 'void ipo_audio_stop_all(void)',
+    argsEn: ['None'],
+    argsRu: ['Нет аргументов'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Stops all active audio playback streams and halts Sound Blaster 16 DMA.',
+    descriptionRu: 'Останавливает все активные аудиопотоки и выключает DMA Sound Blaster 16.'
+  },
+  {
+    numHex: '0x10D3',
+    numDec: 4307,
+    name: 'IPO_SYSCALL_AUDIO_STREAM_CREATE',
+    signature: 'audio_stream_t *ipo_audio_stream_create(int format, int channels, uint32_t sample_rate, const void *data, size_t size)',
+    argsEn: ['args[0]: Format (U8, S16, S24, S32, F32)', 'args[1]: Channels (1=mono, 2=stereo)', 'args[2]: Sample rate (e.g. 22050, 44100)', 'args[3]: Audio sample data pointer', 'args[4]: Size in bytes'],
+    argsRu: ['args[0]: Формат (U8, S16, S24, S32, F32)', 'args[1]: Каналы (1=моно, 2=стерео)', 'args[2]: Частота дискретизации (22050, 44100)', 'args[3]: Указатель на аудиоданные', 'args[4]: Размер в байтах'],
+    returnEn: 'Pointer to audio_stream_t handle, or NULL on error',
+    returnRu: 'Указатель на дескриптор audio_stream_t или NULL при ошибке',
+    descriptionEn: 'Creates a static in-memory audio playback stream.',
+    descriptionRu: 'Создает статический поток воспроизведения аудио из буфера памяти.'
+  },
+  {
+    numHex: '0x10D4',
+    numDec: 4308,
+    name: 'IPO_SYSCALL_AUDIO_STREAM_CREATE_RING',
+    signature: 'audio_stream_t *ipo_audio_stream_create_ring(int format, int channels, uint32_t sample_rate, const void *data, size_t size, size_t ring_size)',
+    argsEn: ['args[0]: Format', 'args[1]: Channels', 'args[2]: Sample rate', 'args[3]: Initial data pointer', 'args[4]: Initial size', 'args[5]: Total ring buffer capacity'],
+    argsRu: ['args[0]: Формат', 'args[1]: Каналы', 'args[2]: Частота дискретизации', 'args[3]: Указатель на данные', 'args[4]: Начальный размер', 'args[5]: Ёмкость кольцевого буфера'],
+    returnEn: 'Pointer to audio_stream_t handle, or NULL on error',
+    returnRu: 'Указатель на дескриптор audio_stream_t или NULL при ошибке',
+    descriptionEn: 'Creates a continuous ring-buffered audio stream for dynamic real-time playback.',
+    descriptionRu: 'Создает кольцевой буферизованный аудиопоток для динамического онлайн-воспроизведения.'
+  },
+  {
+    numHex: '0x10D5',
+    numDec: 4309,
+    name: 'IPO_SYSCALL_AUDIO_STREAM_DESTROY',
+    signature: 'void ipo_audio_stream_destroy(audio_stream_t *stream)',
+    argsEn: ['args[0]: Audio stream handle pointer'],
+    argsRu: ['args[0]: Указатель на дескриптор аудиопотока'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Stops playback, unlinks, and frees an audio stream handle.',
+    descriptionRu: 'Останавливает воспроизведение, удаляет и освобождает дескриптор аудиопотока.'
+  },
+  {
+    numHex: '0x10D6',
+    numDec: 4310,
+    name: 'IPO_SYSCALL_AUDIO_STREAM_PLAY',
+    signature: 'void ipo_audio_stream_play(audio_stream_t *stream)',
+    argsEn: ['args[0]: Audio stream handle pointer'],
+    argsRu: ['args[0]: Указатель на дескриптор аудиопотока'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Starts or resumes playback of an audio stream.',
+    descriptionRu: 'Запускает или возобновляет воспроизведение аудиопотока.'
+  },
+  {
+    numHex: '0x10D7',
+    numDec: 4311,
+    name: 'IPO_SYSCALL_AUDIO_STREAM_PAUSE',
+    signature: 'void ipo_audio_stream_pause(audio_stream_t *stream)',
+    argsEn: ['args[0]: Audio stream handle pointer'],
+    argsRu: ['args[0]: Указатель на дескриптор аудиопотока'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Pauses playback of an audio stream preserving current position.',
+    descriptionRu: 'Приостанавливает воспроизведение аудиопотока с сохранением позиции.'
+  },
+  {
+    numHex: '0x10D8',
+    numDec: 4312,
+    name: 'IPO_SYSCALL_AUDIO_STREAM_STOP',
+    signature: 'void ipo_audio_stream_stop(audio_stream_t *stream)',
+    argsEn: ['args[0]: Audio stream handle pointer'],
+    argsRu: ['args[0]: Указатель на дескриптор аудиопотока'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Stops playback and rewinds audio stream position to beginning.',
+    descriptionRu: 'Останавливает воспроизведение и сбрасывает позицию на начало.'
+  },
+  {
+    numHex: '0x10D9',
+    numDec: 4313,
+    name: 'IPO_SYSCALL_AUDIO_STREAM_SEEK',
+    signature: 'void ipo_audio_stream_seek(audio_stream_t *stream, double fraction)',
+    argsEn: ['args[0]: Audio stream handle pointer', 'args[1]: Pointer to double normalized fraction (0.0 .. 1.0)'],
+    argsRu: ['args[0]: Указатель на дескриптор аудиопотока', 'args[1]: Указатель на double относительную позицию (0.0 .. 1.0)'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Seeks playback position within an audio stream.',
+    descriptionRu: 'Перемещает позицию воспроизведения внутри аудиопотока.'
+  },
+  {
+    numHex: '0x10DA',
+    numDec: 4314,
+    name: 'IPO_SYSCALL_AUDIO_STREAM_SET_VOL',
+    signature: 'void ipo_audio_stream_set_volume(audio_stream_t *stream, float volume)',
+    argsEn: ['args[0]: Audio stream handle pointer', 'args[1]: Pointer to float volume level (0.0 .. 1.0)'],
+    argsRu: ['args[0]: Указатель на дескриптор аудиопотока', 'args[1]: Указатель на float уровень громкости (0.0 .. 1.0)'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Adjusts individual playback volume of an audio stream.',
+    descriptionRu: 'Регулирует индивидуальную громкость воспроизведения аудиопотока.'
+  },
+  {
+    numHex: '0x10DB',
+    numDec: 4315,
+    name: 'IPO_SYSCALL_AUDIO_STREAM_PROGRESS',
+    signature: 'void ipo_audio_stream_progress(audio_stream_t *stream, double *out_progress)',
+    argsEn: ['args[0]: Audio stream handle pointer', 'args[1]: Pointer to double destination for progress (0.0 .. 1.0)'],
+    argsRu: ['args[0]: Указатель на дескриптор аудиопотока', 'args[1]: Указатель на double для записи прогресса (0.0 .. 1.0)'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Queries current playback progress of an audio stream.',
+    descriptionRu: 'Запрашивает текущий прогресс воспроизведения аудиопотока.'
+  },
+  {
+    numHex: '0x10DC',
+    numDec: 4316,
+    name: 'IPO_SYSCALL_AUDIO_STREAM_UPDATE',
+    signature: 'void ipo_audio_stream_update_buffered(audio_stream_t *stream, size_t new_size, bool loop)',
+    argsEn: ['args[0]: Audio stream handle pointer', 'args[1]: New data size in bytes', 'args[2]: Loop flag (1=loop, 0=once)'],
+    argsRu: ['args[0]: Указатель на дескриптор аудиопотока', 'args[1]: Новый размер данных в байтах', 'args[2]: Флаг зацикливания (1=зациклить, 0=однократно)'],
+    returnEn: '0',
+    returnRu: '0',
+    descriptionEn: 'Appends or updates buffer data in a streaming ring-buffer.',
+    descriptionRu: 'Добавляет или обновляет буферные данные в потоковом кольцевом буфере.'
   },
   {
     numHex: '0xFFFF',

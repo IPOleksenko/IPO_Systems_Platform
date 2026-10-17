@@ -7,7 +7,7 @@ description: "Tabla de referencia de códigos de error POSIX estándar (errno), 
 
 In **IPO_OS**, kernel system calls at the hardware interrupt level (`int 0x80`) return `0` (or a positive integer count: bytes transferred, file descriptor index, or process ID) on success, and `-1` on error (`IPO_SYSCALL_ENOSYS = 0xFFFFFFFFu` or `-1`).
 
-The userland C runtime library (`libc.a`, `src/userland/libc/sys.c`) catches syscall errors, sets the global `errno` variable to a standard positive code defined in `<errno.h>` (`applications/include/errno.h`), and returns `-1` (or `NULL` for memory allocators).
+The userland C runtime library (`libc.a`, `applications/lib/libc/sys.c`) catches syscall errors, sets the global `errno` variable to a standard positive code defined in `<errno.h>` (`applications/include/errno.h`), and returns `-1` (or `NULL` for memory allocators).
 
 ---
 

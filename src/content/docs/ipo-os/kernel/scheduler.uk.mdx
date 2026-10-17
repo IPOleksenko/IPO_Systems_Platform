@@ -34,9 +34,9 @@ The IPO_OS task scheduling subsystem manages application execution through a **h
 
 ---
 
-## 📋 Process Control Block (`process_t`, 136 Bytes) & Universal Loader (`universal_exec_load`)
+## 📋 Process Control Block (`process_t`, 208 Bytes) & Universal Loader (`universal_exec_load`)
 
-Each process in IPO_OS is tracked in kernel memory by a 136-byte `process_t` structure (`src/include/kernel/process.h`) and spawned via `process_spawn()`:
+Each process in IPO_OS is tracked in kernel memory by a 208-byte `process_t` structure (`src/include/kernel/process.h`) and spawned via `process_spawn()`:
 - **Universal Executable Loader (`universal_exec_load`):** Loads both **32-bit ELF executables** (`0x7F 'E' 'L' 'F'`, parsing `PT_LOAD` segments, zero-filling `.bss`, and tracking writable `PF_W` segments) and **flat binary images (`.bin`)**, while rejecting plain text files (`is_text_file()`).
 - **Shebang (`#!`) Script Support:** `process_spawn()` detects `#!` interpreter headers and resolves them recursively (up to 4 nesting levels).
 
