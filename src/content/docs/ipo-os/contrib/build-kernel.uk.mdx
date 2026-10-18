@@ -77,7 +77,7 @@ Removes all compiled `.o`, `.bin`, `.elf`, and generated symbol files.
 | Flag | Default | Description |
 | :--- | :--- | :--- |
 | `DEBUG` | `0` | When set to `1`, compiles with `-g -O0` and enables verbose serial debugging |
-| `NET_MODE` | `user` | Network mode: `user` (QEMU SLIRP NAT) or `tap` (bridged host TAP) |
+| `NET_MODE` | `tap` | Режим мережі: `tap` (віртуальний мережевий міст, за замовчуванням) або `user` (NAT через SLIRP) |
 | `SERIAL_LOG` | `1` | Mirrors all kernel console output to UART COM1 (`0x3F8`) |
 
 ### Example Invocations:
@@ -85,6 +85,6 @@ Removes all compiled `.o`, `.bin`, `.elf`, and generated symbol files.
 # Build in debug mode and run in QEMU with GDB stub:
 make run DEBUG=1 QEMU_ARGS="-s -S"
 
-# Run with bridged TAP networking:
-make run NET_MODE=tap
+# Run with user SLIRP NAT networking:
+make run NET_MODE=user
 ```

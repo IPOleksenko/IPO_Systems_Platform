@@ -14,14 +14,14 @@ import Callout from '../../../components/Callout.astro';
 ## 🛠️ Необходимые утилиты
 
 Для сборки IPO_Firmware требуются:
-- **GCC** (с поддержкой генерации 16-битного кода `-m16`)
-- **NASM 2.14+**
+- **NASM 2.14+** (ассемблер Netwide Assembler)
+- **Python 3.8+** (для упаковки ROM через `tools/build_rom.py`)
 - **GNU Make 4.0+**
 - **QEMU** (`qemu-system-i386`)
 
 ```bash
 # Ubuntu / Debian
-sudo apt update && sudo apt install -y build-essential nasm make qemu-system-x86
+sudo apt update && sudo apt install -y build-essential nasm make python3 qemu-system-x86
 ```
 
 ---
@@ -41,18 +41,18 @@ make all
 - `src/pci_scan.asm, src/ahci.asm, src/nvme.asm (Multi-bus storage discovery)
 - `src/chainload.asm (Sector 0 reading and Contract 3 handover)
 
-Результат: бинарный файл `build/firmware.bin` (ровно 128 КБ или 64 КБ).
+Результат сборки: `build/firmware.bin` (полезная нагрузка прошивки до 32 КБ) и `build/firmware.rom` (загрузочный ROM-образ, по умолчанию 256 КБ).
 
 ---
 
 ## 🖥️ Запуск IPO_Firmware в QEMU
 
-Для запуска IPO_Firmware автономно или с образом операционной системы передайте загрузочный образ `build/firmware_rom.bin` в параметр `-bios` (или используйте `make run`):
+Для запуска IPO_Firmware автономно или с образом операционной системы передайте загрузочный образ `build/firmware.rom` в параметр `-bios` (или используйте `make run`):
 
 ### 1. Загрузка с классическим накопителем ATA IDE
 ```bash
 qemu-system-i386 \
-    -bios build/firmware_rom.bin \
+    -bios build/firmware.rom \
     -drive file=path/to/IPO_OS.img,format=raw,if=ide,index=0 \
     -serial stdio
 ```
@@ -64,7 +64,7 @@ make run OS=path/to/IPO_OS.img
 ### 2. Загрузка через контроллер AHCI SATA
 ```bash
 qemu-system-i386 \
-    -bios build/firmware_rom.bin \
+    -bios build/firmware.rom \
     -device ahci,id=ahci0 \
     -drive file=path/to/IPO_OS.img,format=raw,if=none,id=disk0 \
     -device ide-hd,bus=ahci0.0,drive=disk0 \
@@ -74,7 +74,7 @@ qemu-system-i386 \
 ### 3. Загрузка с современного накопителя NVMe
 ```bash
 qemu-system-i386 \
-    -bios build/firmware_rom.bin \
+    -bios build/firmware.rom \
     -drive file=path/to/IPO_OS.img,format=raw,if=none,id=nvm0 \
     -device nvme,serial=IPO_NVME0,drive=nvm0 \
     -serial stdio

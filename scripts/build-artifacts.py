@@ -66,8 +66,15 @@ def ensure_repo(name: str, url: str, force_update: bool = False) -> Path:
     target_dir = CACHE_REPOS_DIR / name
     local_source = BASE_DIR.parent / name
 
-    if target_dir.exists() and not force_update:
-        print(f"[{name}] Using cached repository at {target_dir}")
+    if local_source.exists():
+        if force_update or not target_dir.exists():
+            print(f"[{name}] Syncing from local source directory {local_source}...")
+            if target_dir.exists():
+                shutil.rmtree(target_dir)
+            shutil.copytree(local_source, target_dir, symlinks=True, ignore=shutil.ignore_patterns(".git", "build", "__pycache__"))
+            print(f"[{name}] Copied successfully.")
+        else:
+            print(f"[{name}] Using cached repository at {target_dir}")
         return target_dir
 
     CACHE_REPOS_DIR.mkdir(parents=True, exist_ok=True)
@@ -90,14 +97,7 @@ def ensure_repo(name: str, url: str, force_update: bool = False) -> Path:
         except Exception as e:
             print(f"[{name}] Network clone failed ({e}).")
 
-        # Fallback to local source in parent directory if available
-        if local_source.exists():
-            print(f"[{name}] Copying from local source directory {local_source}...")
-            shutil.copytree(local_source, target_dir, symlinks=True, ignore=shutil.ignore_patterns(".git", "build", "__pycache__"))
-            print(f"[{name}] Copied successfully.")
-            return target_dir
-        else:
-            raise RuntimeError(f"Cannot obtain repository {name}: clone failed and local {local_source} not found.")
+        raise RuntimeError(f"Cannot obtain repository {name}: clone failed and local {local_source} not found.")
 
     if force_update:
         print(f"[{name}] Updating repository...")
@@ -113,11 +113,12 @@ def build_firmware(repo_dir: Path) -> dict:
     print("\n--- Building IPO_Firmware ---")
     subprocess.run(["make", "clean"], cwd=repo_dir, check=True)
     subprocess.run(["make"], cwd=repo_dir, check=True)
+    subprocess.run(["make", "build/firmware.rom"], cwd=repo_dir, check=True)
 
     fw_bin = repo_dir / "build" / "firmware.bin"
-    fw_rom = repo_dir / "build" / "firmware_rom.bin"
+    fw_rom = repo_dir / "build" / "firmware.rom"
     if not fw_bin.exists() or not fw_rom.exists():
-        raise RuntimeError("IPO_Firmware build did not produce firmware.bin / firmware_rom.bin")
+        raise RuntimeError("IPO_Firmware build did not produce firmware.bin / firmware.rom")
 
     print(f"✓ IPO_Firmware built: {fw_bin.name} ({fw_bin.stat().st_size} bytes), {fw_rom.name} ({fw_rom.stat().st_size} bytes)")
     return {"bin": fw_bin, "rom": fw_rom}
@@ -125,28 +126,16 @@ def build_firmware(repo_dir: Path) -> dict:
 
 def build_bootrom(repo_dir: Path, firmware_bin: Path, firmware_repo_dir: Path) -> dict:
     print("\n--- Building IPO_Boot_ROM ---")
-    # Ensure test stub files exist if needed
-    tests_dir = repo_dir / "tests"
-    tests_dir.mkdir(exist_ok=True)
-    for asset in ["font8x16.bin", "vga_dac.bin"]:
-        src_asset = firmware_repo_dir / "src" / asset
-        dest_asset = tests_dir / asset
-        if src_asset.exists() and not dest_asset.exists():
-            shutil.copy2(src_asset, dest_asset)
-
     subprocess.run(["make", "clean"], cwd=repo_dir, check=True)
-    cmd = ["make", f"FW_BIN={firmware_bin}", "bootrom", "build/bootrom_run.bin"]
+    cmd = ["make", f"FIRMWARE={firmware_bin}"]
     subprocess.run(cmd, cwd=repo_dir, check=True)
 
     bootrom_bin = repo_dir / "build" / "bootrom.bin"
-    bootrom_run = repo_dir / "build" / "bootrom_run.bin"
-    bootrom_tmpl = repo_dir / "build" / "bootrom_template.bin"
+    if not bootrom_bin.exists():
+        raise RuntimeError("IPO_Boot_ROM build did not produce bootrom.bin")
 
-    if not bootrom_bin.exists() or not bootrom_run.exists():
-        raise RuntimeError("IPO_Boot_ROM build did not produce bootrom.bin / bootrom_run.bin")
-
-    print(f"✓ IPO_Boot_ROM built: {bootrom_run.name} ({bootrom_run.stat().st_size} bytes)")
-    return {"bin": bootrom_bin, "run": bootrom_run, "tmpl": bootrom_tmpl}
+    print(f"✓ IPO_Boot_ROM built: {bootrom_bin.name} ({bootrom_bin.stat().st_size} bytes)")
+    return {"bin": bootrom_bin}
 
 
 def build_os(repo_dir: Path) -> dict:
@@ -203,14 +192,14 @@ def package_artifacts(fw: dict, br: dict, os_art: dict) -> list:
     # 3. IPO_Firmware zip (Compiled ROM binaries ONLY)
     fw_zip_path = DOWNLOADS_DIR / "ipo-firmware.zip"
     with zipfile.ZipFile(fw_zip_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
-        z.write(fw["rom"], "firmware_rom.bin")
+        z.write(fw["rom"], "firmware.rom")
         z.write(fw["bin"], "firmware.bin")
     manifest_entries.append({
         "id": "ipo-firmware",
         "file": "ipo-firmware.zip",
         "name": "IPO_Firmware Package",
         "category": "firmware",
-        "description": "Compiled BIOS runtime service layer ROM binaries (firmware_rom.bin, firmware.bin).",
+        "description": "Compiled BIOS runtime service layer ROM binaries (firmware.rom, firmware.bin).",
         "size_bytes": fw_zip_path.stat().st_size,
         "size_formatted": format_size(fw_zip_path.stat().st_size),
         "sha256": sha256_file(fw_zip_path),
@@ -219,16 +208,13 @@ def package_artifacts(fw: dict, br: dict, os_art: dict) -> list:
     # 4. IPO_Boot_ROM zip (Compiled ROM binaries ONLY)
     br_zip_path = DOWNLOADS_DIR / "ipo-boot-rom.zip"
     with zipfile.ZipFile(br_zip_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
-        z.write(br["run"], "bootrom_run.bin")
         z.write(br["bin"], "bootrom.bin")
-        if br["tmpl"].exists():
-            z.write(br["tmpl"], "bootrom_template.bin")
     manifest_entries.append({
         "id": "ipo-boot-rom",
         "file": "ipo-boot-rom.zip",
         "name": "IPO_Boot_ROM Package",
         "category": "bootrom",
-        "description": "Compiled hardware reset vector 0xFFFFFFF0 ROM binaries (bootrom_run.bin, bootrom.bin).",
+        "description": "Compiled unified hardware reset vector 0xFFFFFFF0 ROM binary (bootrom.bin).",
         "size_bytes": br_zip_path.stat().st_size,
         "size_formatted": format_size(br_zip_path.stat().st_size),
         "sha256": sha256_file(br_zip_path),
@@ -237,8 +223,8 @@ def package_artifacts(fw: dict, br: dict, os_art: dict) -> list:
     # 5. Full System Turnkey Bundle (Compiled binaries of all 3 projects ONLY)
     full_bundle_path = DOWNLOADS_DIR / "ipo-system-bundle.zip"
     with zipfile.ZipFile(full_bundle_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
-        z.write(br["run"], "bootrom_run.bin")
-        z.write(fw["rom"], "firmware_rom.bin")
+        z.write(br["bin"], "bootrom.bin")
+        z.write(fw["rom"], "firmware.rom")
         z.write(os_art["os_img"], "IPO_OS.img")
         z.write(os_art["disk_img"], "disk.img")
     manifest_entries.append({
@@ -247,7 +233,7 @@ def package_artifacts(fw: dict, br: dict, os_art: dict) -> list:
         "name": "Complete IPO Systems Bundle (All 3 Projects & Disk)",
         "category": "bundle",
         "featured": True,
-        "description": "All compiled binaries across the entire platform: Boot ROM, Firmware BIOS, IPO_OS kernel image, and 128 MB applications disk.",
+        "description": "All compiled binaries across the entire platform: Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), IPO_OS kernel image (IPO_OS.img), and 128 MB applications disk (disk.img).",
         "size_bytes": full_bundle_path.stat().st_size,
         "size_formatted": format_size(full_bundle_path.stat().st_size),
         "sha256": sha256_file(full_bundle_path),
@@ -295,10 +281,10 @@ def main():
     print("IPO Systems Platform — Artifact Pipeline")
     print("==================================================")
 
-    # 1. Ensure all 3 repositories are present in cache
-    fw_repo = ensure_repo("IPO_Firmware", REPOSITORIES["IPO_Firmware"], force_update=args.update)
-    br_repo = ensure_repo("IPO_Boot_ROM", REPOSITORIES["IPO_Boot_ROM"], force_update=args.update)
-    os_repo = ensure_repo("IPO_OS", REPOSITORIES["IPO_OS"], force_update=args.update)
+    force_sync = args.force or args.update
+    fw_repo = ensure_repo("IPO_Firmware", REPOSITORIES["IPO_Firmware"], force_update=force_sync)
+    br_repo = ensure_repo("IPO_Boot_ROM", REPOSITORIES["IPO_Boot_ROM"], force_update=force_sync)
+    os_repo = ensure_repo("IPO_OS", REPOSITORIES["IPO_OS"], force_update=force_sync)
 
     # 2. Build in dependency order: Firmware -> Boot ROM -> OS
     fw_art = build_firmware(fw_repo)

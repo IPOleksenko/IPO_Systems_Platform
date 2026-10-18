@@ -14,14 +14,14 @@ This guide details building the **IPO_Firmware** BIOS payload and executing it i
 ## 🛠️ Build Prerequisites
 
 Compiling IPO_Firmware requires:
-- **GCC** (with 16-bit code generation support `-m16`)
-- **NASM 2.14+**
+- **NASM 2.14+** (Netwide Assembler)
+- **Python 3.8+** (for ROM packaging via `tools/build_rom.py`)
 - **GNU Make 4.0+**
 - **QEMU** (`qemu-system-i386`)
 
 ```bash
 # Ubuntu / Debian
-sudo apt update && sudo apt install -y build-essential nasm make qemu-system-x86
+sudo apt update && sudo apt install -y build-essential nasm make python3 qemu-system-x86
 ```
 
 ---
@@ -41,18 +41,18 @@ This compiles:
 - `src/pci_scan.asm, src/ahci.asm, src/nvme.asm (Multi-bus storage discovery)
 - `src/chainload.asm (Sector 0 reading and Contract 3 handover)
 
-The build creates: `build/firmware.bin` (padded to exactly under 32 KB (firmware.bin) / 256 KB ROM image (firmware_rom.bin)).
+The build creates: `build/firmware.bin` (pure firmware payload under 32 KB) and `build/firmware.rom` (bootable ROM image, default 256 KB).
 
 ---
 
 ## 🖥️ Running IPO_Firmware in QEMU
 
-To run IPO_Firmware standalone or with an operating system image, pass the bootable ROM `build/firmware_rom.bin` (or run via `make run`):
+To run IPO_Firmware standalone or with an operating system image, pass the bootable ROM `build/firmware.rom` (or run via `make run`):
 
 ### 1. Booting with Legacy ATA IDE Storage
 ```bash
 qemu-system-i386 \
-    -bios build/firmware_rom.bin \
+    -bios build/firmware.rom \
     -drive file=path/to/IPO_OS.img,format=raw,if=ide,index=0 \
     -serial stdio
 ```
@@ -64,7 +64,7 @@ make run OS=path/to/IPO_OS.img
 ### 2. Booting with High-Performance AHCI SATA
 ```bash
 qemu-system-i386 \
-    -bios build/firmware_rom.bin \
+    -bios build/firmware.rom \
     -device ahci,id=ahci0 \
     -drive file=path/to/IPO_OS.img,format=raw,if=none,id=disk0 \
     -device ide-hd,bus=ahci0.0,drive=disk0 \
@@ -74,7 +74,7 @@ qemu-system-i386 \
 ### 3. Booting with Modern NVMe Storage
 ```bash
 qemu-system-i386 \
-    -bios build/firmware_rom.bin \
+    -bios build/firmware.rom \
     -drive file=path/to/IPO_OS.img,format=raw,if=none,id=nvm0 \
     -device nvme,serial=IPO_NVME0,drive=nvm0 \
     -serial stdio

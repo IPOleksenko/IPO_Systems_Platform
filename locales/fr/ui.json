@@ -154,7 +154,7 @@
     "featured_badge": "⭐ Pack complet de la plateforme",
     "featured_ribbon": "⭐ Pack complet de la plateforme",
     "featured_title": "Complete IPO Systems Bundle (Les 3 projets et disque)",
-    "featured_desc": "Contient tous les binaires compilés de la plateforme : Boot ROM (bootrom_run.bin), Firmware BIOS (firmware_rom.bin), image noyau IPO_OS (IPO_OS.img) et disque d'applications 128 Mo (disk.img).",
+    "featured_desc": "Contient tous les binaires compilés de la plateforme : Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), image noyau IPO_OS (IPO_OS.img) et disque d'applications 128 Mo (disk.img).",
     "download_bundle": "Télécharger le pack complet (.zip)",
     "components_title": "Composants Individuels et Images Disque",
     "download_btn": "Télécharger",

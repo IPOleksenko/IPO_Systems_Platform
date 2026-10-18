@@ -154,7 +154,7 @@
     "featured_badge": "⭐ 完全プラットフォームバンドル",
     "featured_ribbon": "⭐ 完全プラットフォームバンドル",
     "featured_title": "Complete IPO Systems Bundle（全3プロジェクト＆ディスク）",
-    "featured_desc": "プラットフォーム全体のコンパイル済みバイナリをすべて収録: Boot ROM (bootrom_run.bin)、Firmware BIOS (firmware_rom.bin)、IPO_OS カーネルイメージ (IPO_OS.img)、128 MB アプリケーションディスク (disk.img)。",
+    "featured_desc": "プラットフォーム全体のコンパイル済みバイナリをすべて収録: Boot ROM (bootrom.bin)、Firmware BIOS (firmware.rom)、IPO_OS カーネルイメージ (IPO_OS.img)、128 MB アプリケーションディスク (disk.img)。",
     "download_bundle": "完全バンドルをダウンロード (.zip)",
     "components_title": "個別のコンポーネントとディスクイメージ",
     "download_btn": "ダウンロード",

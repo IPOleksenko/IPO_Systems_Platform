@@ -41,30 +41,28 @@ This compiles:
 - `src/mrc_440fx.asm, src/mrc_q35.asm` (DRAM training code)
 - `src/chipset.asm, src/payload_call.asm` (PAM chipset shadowing and Contract 2 handover)
 
-Outputs: `build/bootrom.bin` (padded to exactly 256 KB).
+Outputs: `build/bootrom.bin` (configurable via `FLASH_SIZE`, default 4 MB / 4,194,304 bytes).
 
 ---
 
-## 🧩 Creating a Composite SPI Flash Image
+## 🧩 Criação de uma imagem unificada de SPI Flash
 
-To flash onto a real physical SPI Flash chip (or test in QEMU), the 256 KB `bootrom.bin` (which embeds the firmware payload in its 32 KB slot at offset `0x30000`) can be packaged into a standard 4 MB or 8 MB SPI ROM image:
+Por padrão, o `make` cria uma única imagem unificada `build/bootrom.bin` (padrão de 4 MB, pronta para chips SPI Flash físicos como W25Q32 ou QEMU). Tamanhos padrão e não padrão são suportados (`FLASH_SIZE=256K`, `FLASH_SIZE=4M`, `FLASH_SIZE=8M`). Para incorporar uma carga útil de firmware externa, passe `FIRMWARE=path/to/firmware.bin`:
 
 ```bash
-# Generate 4 MB SPI ROM image with bootrom at top of memory
-make spi-flash FLASH_SIZE=4M
+# Compilar Boot ROM de 4 MB com carga útil de firmware incorporada
+make FIRMWARE=../IPO_Firmware/build/firmware.bin FLASH_SIZE=4M
 ```
 
 ```
-4 MB SPI Flash Memory Layout (spi_flash.bin):
+4 MB SPI Flash Memory Layout (bootrom.bin):
 0x00000000 +---------------------------------------------------+
-           | Free / Reserved Flash Storage (3840 KB)           |
-0x003C0000 +---------------------------------------------------+
-           | ROM Padding (192 KB)                              |
+           | Free / Reserved Flash Storage (3968 KB)           |
 0x003F0000 +---------------------------------------------------+
-           | IPO_Firmware Payload Slot (32 KB, offset 0x30000)  |
+           | IPO_Firmware Payload Slot (32 KB, offset -64 KB)  |
 0x003F8000 +---------------------------------------------------+
-           | IPO_Boot_ROM Init Code (32 KB, offset 0x38000)    |
-0x003FFFF0 | Reset Vector JMP (16 bytes)                       |
+           | IPO_Boot_ROM Init Code (32 KB, offset -32 KB)     |
+0x003FFFF0 | Reset Vector JMP (16 bytes, offset -16 B)         |
 0x00400000 +---------------------------------------------------+
 ```
 

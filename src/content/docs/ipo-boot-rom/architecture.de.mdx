@@ -60,7 +60,7 @@ Once physical DRAM is verified:
 
 1. **Unlock PAM Registers:** Programmable Attribute Map registers (e.g. PAM0 on i440FX register `0x59`) control the BIOS segment `0xF0000`..`0xFFFFF`:
    - Set `WE = 1` (Write Enable) and `RE = 1` (Read Enable).
-2. **Payload Relocation:** Copy the decompressed `IPO_Firmware` payload from the SPI ROM memory window (`0xFFFE0000`) into physical RAM at `0x000F0000`.
+2. **Payload Relocation:** Copy the full 64 KB ROM segment (including the `IPO_Firmware` payload at `0xF000:0000`) from the ROM memory window (`0xFFFF0000`) into DRAM Shadow RAM at `0xF000:0000` (`0x000F0000`).
 3. **Migrate Stack:** Repoint `%esp` from Cache-as-RAM into physical conventional DRAM (e.g. `0x00007C00`).
 4. **Teardown CAR:** Disable variable MTRR 0 and execute `wbinvd` (Write-Back and Invalidate Cache).
 5. **Lock PAM to Read-Only:** Configure PAM0 with `WE = 0` (Write Protect) and `RE = 1` (Read from Shadow-RAM).

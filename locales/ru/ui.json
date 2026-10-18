@@ -154,7 +154,7 @@
     "featured_badge": "⭐ Полный комплект платформы",
     "featured_ribbon": "⭐ Полный комплект платформы",
     "featured_title": "Complete IPO Systems Bundle (все 3 проекта и диск)",
-    "featured_desc": "Содержит все скомпилированные бинарники платформы: Boot ROM (bootrom_run.bin), Firmware BIOS (firmware_rom.bin), образ ядра IPO_OS (IPO_OS.img) и диск приложений 128 МБ (disk.img).",
+    "featured_desc": "Содержит все скомпилированные бинарники платформы: Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), образ ядра IPO_OS (IPO_OS.img) и диск приложений 128 МБ (disk.img).",
     "download_bundle": "Скачать полный комплект (.zip)",
     "components_title": "Отдельные компоненты и образы дисков",
     "download_btn": "Скачать",

@@ -380,14 +380,15 @@ curl http://192.168.7.2:8000/
     id: 'qemu-full-stack-run',
     lang: 'bash',
     title: 'Running Complete Vertical Stack in QEMU',
-    code: `# Execute standalone Boot ROM with external firmware and IPO_OS disk:
-qemu-system-i386 \
-    -m 2048 \
-    -drive format=raw,file=build/IPO_OS.img,if=ide,index=0 \
-    -drive format=raw,file=build/disk.img,if=ide,index=1 \
-    -device rtl8139,netdev=net0 \
-    -netdev user,id=net0,net=192.168.7.0/24,host=192.168.7.1,dhcpstart=192.168.7.2 \
-    -device sb16 \
+    code: `# Execute standalone Boot ROM with embedded firmware and IPO_OS disk:
+qemu-system-i386 \\
+    -bios build/bootrom.bin \\
+    -m 2048 \\
+    -drive format=raw,file=build/IPO_OS.img,if=ide,index=0 \\
+    -drive format=raw,file=build/disk.img,if=ide,index=1 \\
+    -device rtl8139,netdev=net0 \\
+    -netdev user,id=net0,net=192.168.7.0/24,host=192.168.7.1,dhcpstart=192.168.7.2 \\
+    -device sb16 \\
     -serial stdio
 `
   },
@@ -405,11 +406,11 @@ flashrom -p ch341a_spi -r backup2.bin
 # 3. Verify identical checksums before proceeding
 cmp backup1.bin backup2.bin || echo "CRITICAL: Clamp contact unstable! Re-attach clip!"
 
-# 4. Build padded 4MB/8MB SPI image
-make spi-flash BIOS=path/to/firmware.bin FLASH_SIZE=4M
+# 4. Build unified ROM image (default 4MB, or specify FLASH_SIZE)
+make FIRMWARE=path/to/firmware.bin FLASH_SIZE=4M
 
 # 5. Flash physical chip with verification
-flashrom -p ch341a_spi -w build/spi_flash.bin
+flashrom -p ch341a_spi -w build/bootrom.bin
 `
   },
 

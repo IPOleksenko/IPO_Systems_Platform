@@ -154,7 +154,7 @@
     "featured_badge": "⭐ 完整平台软件包",
     "featured_ribbon": "⭐ 完整平台软件包",
     "featured_title": "Complete IPO Systems Bundle（全部 3 个项目与磁盘）",
-    "featured_desc": "包含整个平台的全部已编译二进制文件：Boot ROM（bootrom_run.bin）、Firmware BIOS（firmware_rom.bin）、IPO_OS 内核镜像（IPO_OS.img）以及 128 MB 应用程序磁盘（disk.img）。",
+    "featured_desc": "包含整个平台的全部已编译二进制文件：Boot ROM（bootrom.bin）、Firmware BIOS（firmware.rom）、IPO_OS 内核镜像（IPO_OS.img）以及 128 MB 应用程序磁盘（disk.img）。",
     "download_bundle": "下载完整软件包 (.zip)",
     "components_title": "独立组件与磁盘镜像",
     "download_btn": "下载",

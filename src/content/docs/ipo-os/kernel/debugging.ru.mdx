@@ -61,10 +61,10 @@ void cpu_exception_handler(uint32_t *frame) {
 ### Запуск QEMU с выводом логов:
 ```bash
 # Вывод телеметрии ядра прямо в окно терминала хоста
-qemu-system-i386 -hda ipo-os.img -serial stdio
+qemu-system-i386 -hda build/IPO_OS.img -serial stdio
 
 # Запись логов в отдельный файл
-qemu-system-i386 -hda ipo-os.img -serial file:kernel.log
+qemu-system-i386 -hda build/IPO_OS.img -serial file:kernel.log
 ```
 
 ---
@@ -75,10 +75,10 @@ qemu-system-i386 -hda ipo-os.img -serial file:kernel.log
 
 ```bash
 # 1. Запуск QEMU в режиме ожидания отладчика (порт :1234)
-qemu-system-i386 -hda ipo-os.img -serial stdio -s -S
+qemu-system-i386 -hda build/IPO_OS.img -serial stdio -s -S
 
 # 2. В соседней консоли подключаем GDB с ELF-символами ядра
-gdb build/kernel.elf
+gdb build/kernel/kernel.elf
 ```
 
 В консоли GDB:

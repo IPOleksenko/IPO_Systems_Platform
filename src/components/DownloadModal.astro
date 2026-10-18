@@ -1,8 +1,7 @@
 ---
-import fs from 'node:fs';
-import path from 'node:path';
 import { siteConfig } from '../../site.config';
 import { getTranslation } from '../utils/i18n';
+import { getRealArtifacts, type Artifact } from '../utils/artifacts';
 
 interface Props {
   lang: string;
@@ -14,81 +13,7 @@ const base = siteConfig.base;
 const cleanBase = base.endsWith('/') ? base : `${base}/`;
 const downloadsBase = `${cleanBase}downloads/`;
 
-interface Artifact {
-  id: string;
-  file: string;
-  name: string;
-  category: string;
-  description: string;
-  size_formatted: string;
-  sha256: string;
-  featured?: boolean;
-}
-
-let artifacts: Artifact[] = [];
-
-try {
-  const manifestPath = path.resolve('public/downloads/manifest.json');
-  if (fs.existsSync(manifestPath)) {
-    const raw = fs.readFileSync(manifestPath, 'utf-8');
-    const data = JSON.parse(raw);
-    artifacts = data.artifacts || [];
-  }
-} catch (e) {
-  // Graceful fallback if manifest is not yet generated
-}
-
-// Default fallback items if manifest is empty
-if (artifacts.length === 0) {
-  artifacts = [
-    {
-      id: 'ipo-system-bundle',
-      file: 'ipo-system-bundle.zip',
-      name: 'Complete IPO Systems Bundle (All 3 Projects & Disk)',
-      category: 'bundle',
-      featured: true,
-      description: 'All compiled binaries across the entire platform: Boot ROM, Firmware BIOS, IPO_OS kernel image, and 128 MB applications disk.',
-      size_formatted: '~8.8 MB',
-      sha256: 'Pre-compiled release'
-    },
-    {
-      id: 'ipo-os-raw',
-      file: 'IPO_OS.img',
-      name: 'IPO_OS Kernel Bootable Image',
-      category: 'os',
-      description: 'Raw 32-bit bootable image containing IPO_OS kernel (LBA 0 bootloader + kernel binary).',
-      size_formatted: '~283 KB',
-      sha256: 'Pre-compiled release'
-    },
-    {
-      id: 'ipo-os-disk',
-      file: 'disk.img',
-      name: 'IPO_OS Applications Disk (128 MB)',
-      category: 'os',
-      description: 'Pre-formatted 128 MB disk image with compiled applications, Doom, TinyGL demos, and userland toolchain.',
-      size_formatted: '~8.5 MB',
-      sha256: 'Pre-compiled release'
-    },
-    {
-      id: 'ipo-boot-rom',
-      file: 'ipo-boot-rom.zip',
-      name: 'IPO_Boot_ROM Package',
-      category: 'bootrom',
-      description: 'Compiled hardware reset vector 0xFFFFFFF0 ROM binaries (bootrom_run.bin, bootrom.bin).',
-      size_formatted: '~20 KB',
-      sha256: 'Pre-compiled release'
-    },
-    {
-      id: 'ipo-firmware',
-      file: 'ipo-firmware.zip',
-      name: 'IPO_Firmware Package',
-      category: 'firmware',
-      description: 'Compiled BIOS runtime service layer ROM binaries (firmware_rom.bin, firmware.bin).',
-      size_formatted: '~16 KB',
-      sha256: 'Pre-compiled release'
-    }
-  ];
-}
+const { artifacts } = getRealArtifacts();
 
 const featuredArtifact = artifacts.find(a => a.featured) || artifacts[0];
 const otherArtifacts = artifacts.filter(a => a.id !== featuredArtifact.id);

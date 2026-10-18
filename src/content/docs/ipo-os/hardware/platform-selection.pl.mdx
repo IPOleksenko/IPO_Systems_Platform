@@ -30,7 +30,7 @@ Modern Intel and AMD processors do not begin execution directly at `0xFFFFFFF0` 
 When running on physical hardware, two deployment models exist:
 
 ### Model 1: Full Bare-Metal Stack (IPO_Boot_ROM + IPO_Firmware + IPO_OS)
-- Flash chip on the motherboard is rewritten with `build/bootrom.bin` or `build/spi_flash.bin`.
+- Flash chip on the motherboard is rewritten with `build/bootrom.bin`.
 - CPU starts at wektor resetu `0xFFFFFFF0`.
 - Requires i440FX or Q35 motherboard with socketed or clip-accessible SPI/DIP flash.
 
