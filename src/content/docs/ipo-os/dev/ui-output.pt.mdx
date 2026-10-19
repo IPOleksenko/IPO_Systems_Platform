@@ -43,8 +43,8 @@ The kernel command line interpreter (`src/kernel/core/terminal.c`) provides inte
 | `kill` | `kill <pid>` | Terminates a process by PID. |
 | `killall` | `killall` | Terminates all active processes and stops background async tasks. |
 | `run` | `run <cmd> [&\|&&\|\|\|;]` | Launches executables (ELF32, `.bin`, `#!` scripts) with multitasking operators. |
-| `startx` | `startx` | Launches graphical Window Manager desktop session in VGA Mode 13h (`320x200x256`). |
-| `stopx` | `stopx` | Terminates graphical WM session and restores `80x25` text mode. |
+| `startwm` | `startwm` | Launches graphical Window Manager desktop session in VGA Mode 13h (`320x200x256`). |
+| `stopwm` | `stopwm` | Terminates graphical WM session and restores `80x25` text mode. |
 | `ifconfig` | `ifconfig [<ip> [netmask] [gateway] [dns]]` | Displays or configures IPv4 address, subnet mask, gateway, DNS, and RTL8139 MAC. |
 | `df` | `df` | Reports `IPO_FS` storage capacity, used/free 4 KB blocks, and inodes. |
 | `free` | `free` | Reports physical RAM, 64 MB kernel heap (`kmalloc`), and PMM frame statistics. |
@@ -74,7 +74,7 @@ run gl_cube && gl_gears && fps_meter
 run echo hello | cat
 
 # 4. ';' operator — sequential execution:
-run setfont /fonts/terminus.fnt ; startx
+run setfont /fonts/terminus.fnt ; startwm
 ```
 
 ### ⌨️ Terminal Navigation Shortcuts

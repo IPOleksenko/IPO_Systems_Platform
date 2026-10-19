@@ -53,7 +53,7 @@ void vga_set_cursor(uint16_t x, uint16_t y) {
 
 ## 💻 Интерактивная оболочка терминала (`terminal.c`, 32 встроенные команды) и консоль COM1
 
-Терминал ядра (`src/kernel/core/terminal.c`) поддерживает историю команд, автодополнение по `Tab`, пакетные конвейеры (`run`), фоновый приём и исполнение команд через последовательный порт **COM1 (`0x3F8`, `terminal_poll_serial_commands()`)** (в том числе во время работы графического менеджера окон `startx`), и использует **саморасширяющиеся динамические буферы** (текущий путь `terminal_cwd`, буфер ввода и история команд расширяются через `krealloc` без фиксированных лимитов длины):
+Терминал ядра (`src/kernel/core/terminal.c`) поддерживает историю команд, автодополнение по `Tab`, пакетные конвейеры (`run`), фоновый приём и исполнение команд через последовательный порт **COM1 (`0x3F8`, `terminal_poll_serial_commands()`)** (в том числе во время работы графического менеджера окон `startwm`), и использует **саморасширяющиеся динамические буферы** (текущий путь `terminal_cwd`, буфер ввода и история команд расширяются через `krealloc` без фиксированных лимитов длины):
 
 | Категория | Встроенные команды оболочки (`terminal_is_builtin`) |
 | :--- | :--- |
@@ -62,5 +62,5 @@ void vga_set_cursor(uint16_t x, uint16_t y) {
 | **Драйверы и модули KMOD (`.kmd`)** | `drivers [list \| info \| load <path.kmd> \| unload \| status \| symbols]`, `symbols [фильтр]` (`ksyms`) |
 | **Реестр оборудования и SMP** | `hardware [overview \| list \| cpu \| memory \| pci \| storage \| network \| usb \| refresh \| info <id> \| status]` |
 | **Память, процессы и раскладки** | `free`, `ps`, `kill`, `killall`, `run`, `return`, `keymap` |
-| **Графика, сеть и система** | `startx`, `stopx`, `ifconfig`, `clear`, `help`, `reboot`, `shutdown` |
+| **Графика, сеть и система** | `startwm`, `stopwm`, `ifconfig`, `clear`, `help`, `reboot`, `shutdown` |
 

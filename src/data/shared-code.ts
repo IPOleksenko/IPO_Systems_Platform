@@ -297,7 +297,7 @@ run gl_cube && gl_gears && fps_meter
 run hello | echo
 
 # Sequential execution:
-run setfont /fonts/terminus.fnt ; startx
+run setfont /fonts/terminus.fnt ; startwm
 `
   },
 
@@ -315,7 +315,7 @@ python3 tools/disk_editor.py -i build/disk.img put ./build/applications/doom/doo
 python3 tools/disk_editor.py -i build/disk.img mkdir /home/user
 
 # Write text file into image
-python3 tools/disk_editor.py -i build/disk.img touch /autorun "startx\nrun gl_gears\n"
+python3 tools/disk_editor.py -i build/disk.img touch /autorun "startwm\nrun gl_gears\n"
 
 # View file content
 python3 tools/disk_editor.py -i build/disk.img cat /autorun
