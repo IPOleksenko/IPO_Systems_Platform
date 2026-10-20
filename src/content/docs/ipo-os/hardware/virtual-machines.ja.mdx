@@ -21,7 +21,7 @@ QEMU (`qemu-system-i386`) is the reference emulator used during active developme
 
 ### Storage Architecture in QEMU:
 - **Drive 0 (`build/IPO_OS.img`):** Contains the MBR bootloader and concatenated kernel binary.
-- **Drive 1 (`build/disk.img`):** 128 MB raw storage disk containing the `IPO_FS` partition and `/applications`.
+- **Drive 1 (`build/disk.img`):** 512 MB raw storage disk containing the `IPO_FS` partition and `/applications`.
 
 ### Networking Options: TAP vs. User Mode
 - **TAP Mode (`NET_MODE=tap`):** Direct Layer 2 host interface (`tap0`). All 65,535 ports are routable between host (`192.168.7.1`) and guest (`192.168.7.2`).

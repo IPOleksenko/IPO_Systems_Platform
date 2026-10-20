@@ -62,7 +62,7 @@ make all
 make disks
 make live-image
 ```
-Создаёт 128-мегабайтный образ `build/disk.img` с метаданными Storage Pool и журналом WAL (LBA 2030–2039), размечает `IPO_FS` с сектора LBA 2048, копирует приложения через `load_applications.py` и формирует единый загрузочный образ **`build/IPO_OS.img`**.
+Создаёт образ `build/disk.img` объёмом 512 МБ с метаданными Storage Pool и журналом WAL (LBA 2030–2039), размечает `IPO_FS` с сектора LBA 2048, генерирует базы шрифтов, копирует приложения через `load_applications.py` и формирует единый загрузочный образ **`build/IPO_OS.img`**.
 
 ### 3. Очистка артефактов
 ```bash

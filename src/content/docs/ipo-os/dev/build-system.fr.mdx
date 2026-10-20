@@ -16,6 +16,9 @@ import Callout from '../../../../components/Callout.astro';
 
 <SharedCode id="makefile-all-targets" />
 
+### Font database generation
+`make font-databases` runs `tools/build_font_db.py` and creates the `.fnt` databases in `build/fonts/`. The `disks` target runs this before `tools/load_applications.py`, which installs the generated fonts under `/fonts/` in the IPO_FS image.
+
 ### Build Configuration Parameters:
 - `NET_MODE ?= tap` — Network mode: `tap` (direct L2 access to all 65,535 ports) or `user` (QEMU SLIRP NAT).
 - `TAP_DEV ?= tap0` — Name of virtual TAP device on Linux host.
@@ -42,11 +45,10 @@ python3 load_applications.py
 
 - **`tools/generate_ksyms.py`:** Invoked automatically during the two-pass kernel link (`mk/kernel.mk`), extracting ~1,560 global kernel symbols from `kernel_pass1.elf` into `build/ksyms_generated.c` for runtime `.kmd` module linking.
 - **`tools/format_disk_via_os.py`:** Formats `build/disk.img` using the IPO_OS kernel itself inside headless QEMU (`make format-disk`).
-- **`tools/create_live_image.py` (`make live-image`):** Combines the bootloader and kernel (`build/disk.iso`, LBA 0..2029), Storage Pool superblocks and WAL journal (`LBA 2030–2039`), MBR partition entry, and the populated `IPO_FS` partition (`LBA 2048+`) into a single 128 MB bootable image **`build/IPO_OS.img`** ready for USB flashing.
+- **`tools/create_live_image.py` (`make live-image`):** Combines the bootloader and kernel (`build/disk.iso`, LBA 0..2029), Storage Pool superblocks and WAL journal (`LBA 2030–2039`), MBR partition entry, and the populated `IPO_FS` partition (`LBA 2048+`) into a single 512 MB bootable image **`build/IPO_OS.img`** ready for USB flashing.
 
 ---
 
 ## 🌐 TAP Network Setup (`tools/setup-tap.sh`)
 
 <SharedCode id="tap-networking-setup" />
-

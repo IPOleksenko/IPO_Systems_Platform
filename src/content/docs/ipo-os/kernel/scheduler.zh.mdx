@@ -34,9 +34,9 @@ The IPO_OS task scheduling subsystem manages application execution through a **h
 
 ---
 
-## 📋 Process Control Block (`process_t`, 208 Bytes) & Universal Loader (`universal_exec_load`)
+## 📋 Process Control Block (`process_t`) & Universal Loader (`universal_exec_load`)
 
-Each process in IPO_OS is tracked in kernel memory by a 208-byte `process_t` structure (`src/include/kernel/process.h`) and spawned via `process_spawn()`:
+Each process in IPO_OS is tracked by a kernel-managed `process_t` structure (`src/include/kernel/process.h`) and spawned via `process_spawn()`. The structure includes dynamically managed process, return-value, workspace, and demand-loading state, so its total size is not a fixed ABI:
 - **Universal Executable Loader (`universal_exec_load`):** Loads both **32-bit ELF executables** (`0x7F 'E' 'L' 'F'`, parsing `PT_LOAD` segments, zero-filling `.bss`, and tracking writable `PF_W` segments) and **flat binary images (`.bin`)**, while rejecting plain text files (`is_text_file()`).
 - **Shebang (`#!`) Script Support:** `process_spawn()` detects `#!` interpreter headers and resolves them recursively (up to 4 nesting levels).
 
@@ -114,4 +114,3 @@ On multi-core systems, the SMP subsystem (`src/kernel/arch/x86/smp.c`) extends s
 - Each secondary **Application Processor (AP)** runs on its own dedicated 16 KB stack (`cpu_info_t`) inside the `smp_ap_entry()` work loop.
 - The kernel can dispatch parallel workloads across all online cores simultaneously via `smp_broadcast_task(smp_task_fn_t fn, void *arg)`, waking idle cores immediately with cross-core interrupt **IPI `0xE0`** (`lapic_send_ipi`).
 - Shared kernel structures and the hardware device registry are protected across cores using atomic hardware spinlocks (`spinlock_acquire` / `spinlock_release` and `spinlock_irqsave` / `spinlock_irqrestore`).
-

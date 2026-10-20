@@ -43,6 +43,18 @@ To support complex POSIX software and self-hosted compilation inside IPO_OS usin
 
 ---
 
+## 🔗 Runtime Module Loading (`<dlfcn.h>`)
+
+IPO_OS includes a user-space dynamic loader in `libc.a`. It is separate from the kernel's `.kmd` driver loader:
+- `dlopen()` loads 32-bit ELF relocatable objects (`ET_REL`) or shared objects (`ET_DYN`); modules may be addressed by path or found in `/applications/` and `/lib/`.
+- `dlsym()` resolves exported symbols from a module or with `RTLD_DEFAULT`; unresolved strong symbols cause `dlopen()` to fail.
+- `dlclose()` releases a module reference, and `dlerror()` returns the latest loader error.
+- `dlregister_symbol()` registers application callbacks for dynamically loaded code. `RTLD_GLOBAL` makes a loaded module's symbols visible to subsequent loads. The API is not a complete Linux/glibc dynamic linker.
+
+The English and Russian versions of this page include a `dlopen()`/`dlsym()` usage example.
+
+---
+
 ## 🧱 The Dynamic Memory Allocator
 
 In `applications/lib/libc/stdlib.c`, dynamic memory is managed by an 8-byte aligned doubly-linked list allocator operating on top of the `sbrk` system call (`IPO_SYSCALL_SBRK` `0x1045`):
@@ -75,6 +87,6 @@ typedef struct block_hdr {
 | :--- | :--- | :--- |
 | **Threads** | Full POSIX pthreads | Cooperative async tasks (`IPO_SYSCALL_ASYNC_START`) |
 | **Locale / Wide Chars** | Complex locale tables | UTF-8 passthrough and ASCII |
-| **Dynamic Linking** | `dlopen()`, `dlsym()` | Raw flat static binaries linked at `0x800000` |
+| **Dynamic Linking** | Full ELF runtime linker | User-space `dlopen()`/`dlsym()` for ELF32 `ET_REL` and `ET_DYN`; executables can also be raw flat binaries at `0x800000` |
 | **File Descriptors** | `read(fd, buf, count)` | `ipo_read(fd, buf, count, offset)` with explicit 64-bit offsets |
 | **Signals** | 32+ POSIX signals | CPU exception interceptor & `process_crash_exit` |

@@ -18,6 +18,9 @@ import Callout from '../../../../components/Callout.astro';
 
 <SharedCode id="makefile-all-targets" />
 
+### Генерация баз шрифтов
+`make font-databases` запускает `tools/build_font_db.py` и создаёт базы `.fnt` в `build/fonts/`. Цель `disks` выполняет эту генерацию до запуска `tools/load_applications.py`, который устанавливает шрифты в `/fonts/` внутри образа IPO_FS.
+
 ### Параметры конфигурации (`mk/config.mk`):
 - `NET_MODE ?= tap` — Режим сети: `tap` (виртуальный сетевой адаптер хоста с прямым доступом ко всем 65535 портам) или `user` (эмуляция QEMU SLIRP с пробросом портов).
 - `TAP_DEV ?= tap0` — Имя виртуального сетевого интерфейса TAP на хосте.
@@ -52,7 +55,7 @@ python3 load_applications.py
 
 - **`tools/generate_ksyms.py`:** Выполняется автоматически при двухпроходной линковке ядра (`mk/kernel.mk`), извлекая ~1560 глобальных символов из `kernel_pass1.elf` в `build/ksyms_generated.c` для динамического загрузчика модулей `.kmd` (KMOD).
 - **`tools/format_disk_via_os.py`:** Форматирует образ `build/disk.img` в headless-режиме QEMU силами самого ядра `IPO_OS` (`make format-disk`).
-- **`tools/create_live_image.py` (`make live-image`):** Объединяет загрузочный образ ядра (`build/disk.iso`, секторы 0..2029), метаданные пула хранения и журнала WAL (`LBA 2030–2039`), таблицу разделов MBR и отформатированный раздел `IPO_FS` (`LBA 2048+`) в единый 128-мегабайтный загрузочный образ **`build/IPO_OS.img`**, готовый для записи на физическую USB-флешку.
+- **`tools/create_live_image.py` (`make live-image`):** Объединяет загрузчик и ядро (`build/disk.iso`, LBA 0..2029), метаданные пула хранения и журнала WAL (`LBA 2030–2039`), таблицу разделов MBR и заполненный раздел `IPO_FS` (`LBA 2048+`) в единый загрузочный образ объёмом 512 МБ **`build/IPO_OS.img`**, готовый для записи на USB-накопитель.
 
 ---
 
@@ -61,4 +64,3 @@ python3 load_applications.py
 Скрипт настраивает сетевой мост на стороне Linux-хоста:
 
 <SharedCode id="tap-networking-setup" />
-

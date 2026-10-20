@@ -31,13 +31,13 @@ python3 tools/disk_editor.py cat /applications/hello.bin
 
 ## 📦 Batch Loading via `tools/load_applications.py`
 
-To compile and load all built-in applications in `applications/`, keyboard layouts in `/etc/keymaps`, kernel modules in `/lib/modules`, and media files in `/music` into the storage disk `build/disk.img`:
+To load the built application binaries, available toolchain executables, generated font databases, headers, and runtime libraries into `build/disk.img`:
 
 ```bash
 python3 tools/load_applications.py
 ```
 
-To format the disk directly using the IPO_OS kernel itself (over COM1 serial via `reinstall_fs`) prior to batch loading, `python3 tools/format_disk_via_os.py` is executed automatically by `make disk`.
+Before loading, `make disks` formats the image using the IPO_OS kernel and generates the font databases. To generate the font files manually, run `make font-databases`; they are copied into `/fonts/` in IPO_FS.
 
 ---
 

@@ -62,7 +62,7 @@ Performs a two-pass kernel link (generating the `generate_ksyms.py` symbol table
 make disks
 make live-image
 ```
-Initializes a 128 MB disk image (`build/disk.img`) with Storage Pool superblocks and WAL journal (LBA 2030–2039), formats `IPO_FS` at LBA 2048, populates applications via `load_applications.py`, and packages the unified bootable **`build/IPO_OS.img`**.
+Initializes a 512 MB disk image (`build/disk.img`) with Storage Pool superblocks and WAL journal (LBA 2030–2039), formats `IPO_FS` at LBA 2048, generates font databases and populates applications via `load_applications.py`, and packages the unified bootable **`build/IPO_OS.img`**.
 
 ### 3. Clean Build Artifacts
 ```bash
