@@ -29,40 +29,53 @@ The repository tree is organized into isolated modular layers:
 
 ```
 IPO_OS/
-├── Makefile                    # Root build orchestrator
-├── mk/                         # Modular build rules (kernel.mk, image.mk, qemu.mk, apps.mk)
+├── Makefile                    # Root kernel build orchestrator
+├── mk/                         # Modular build rules (config.mk, boot.mk, kernel.mk, image.mk, run.mk, clean.mk)
 ├── src/
 │   ├── boot/                   # Stage 1/2 bootloader, E820 probe (0x8FE0), Protected Mode entry
 │   ├── kernel/                 # Kernel core (SMP, scheduler, E820/kmalloc, KMOD, device registry, syscalls)
-│   ├── driver/                 # Drivers (Storage Pool + WAL, block_dev, partition, ATA, RTL8139, VBE, SB16)
-│   ├── file_system/            # 64-bit extent-based IPO_FS implementation
+│   ├── drivers/                # Drivers (Storage Pool + WAL, block_dev, partition, ATA, RTL8139, VBE, SB16)
+│   ├── fs/                     # 64-bit extent-based IPO_FS kernel implementation
 │   ├── net/                    # Bare-metal TCP/IP stack with dynamic rx_packet_buf & POSIX sockets
-│   └── include/                # Kernel and public SDK headers
-├── applications/               # Userland apps, TCC, MicroPython, DOOM, and POSIX headers
+│   ├── graphics/               # Window manager and TinyGL rendering core
+│   └── include/                # Kernel and public system headers
 └── tools/
-    ├── generate_ksyms.py       # Extracts ~1,560 kernel symbols for runtime KMOD (.kmd) loader
-    ├── create_live_image.py    # Builds unified bootable Live USB image (build/IPO_OS.img)
-    ├── format_disk_via_os.py   # Formats disk image using IPO_OS kernel in headless QEMU
-    ├── disk_editor.py          # IPO_FS partition and file editor
-    └── setup-tap.sh            # TAP network interface configurator
+    ├── generate_ksyms.py       # Extracts exported kernel symbols for runtime KMOD (.kmd) loader
+    └── setup-tap.sh            # Virtual TAP network interface configurator
+
+IPO_OS_Software/                # Standalone userland applications & runtime ecosystem
+├── Makefile                    # Master userland build orchestrator
+├── mk/                         # Modular rules (applications.mk, lib.mk, toolchain.mk, disk.mk)
+├── applications/               # Userland apps: DOOM, TCC, MicroPython, NASM, text editor, 3D demos
+├── lib/                        # Userspace libraries: libc, libm, libstdc++, libapp, TinyGL, CRT stubs
+├── include/                    # Complete C99/POSIX/GL standard library headers
+├── assets/fonts/               # Console font assets and IFNT builders
+├── load_to_disk.sh             # Ready-to-use disk image loader script
+└── tools/
+    ├── load_applications.py    # Automatic disk population & filesystem formatting utility
+    ├── disk_editor.py          # Direct IPO_FS disk partition reader and editor
+    ├── build_font_db.py        # Console font database (.fnt) compiler
+    └── create_live_image.py    # Hybrid Live ISO/USB builder
 ```
 
 ---
 
 ## 🔨 Build Commands
 
-### 1. Compile Everything & Build Images
+### 1. Compile Kernel & Bootloader (`IPO_OS`)
 ```bash
+cd IPO_OS
 make all
 ```
-Performs a two-pass kernel link (generating the `generate_ksyms.py` symbol table), compiles drivers and userland applications, and builds `build/disk.iso`, `build/disk.img`, and the unified **`build/IPO_OS.img`**.
+Performs a two-pass kernel link (generating the `generate_ksyms.py` symbol table), compiles kernel HAL, drivers, and bootloader, and builds the bootable **`build/IPO_OS.img`**.
 
-### 2. Format Disks & Build Unified Live USB Image
+### 2. Compile Applications & Populate Virtual Disk (`IPO_OS_Software`)
 ```bash
-make disks
-make live-image
+cd ../IPO_OS_Software
+make all
+./load_to_disk.sh ../IPO_OS/build/disks/disk.img --format
 ```
-Initializes a 512 MB disk image (`build/disk.img`) with Storage Pool superblocks and WAL journal (LBA 2030–2039), formats `IPO_FS` at LBA 2048, generates font databases, populates applications via `load_applications.py`, and packages the unified bootable **`build/IPO_OS.img`**.
+Compiles userland libraries (`libc.a`, `libm.a`, `libstdc++.a`, `libapp.a`), applications (DOOM, editor, 3D demos), in-OS toolchains (TinyCC, Lua, MicroPython, NASM, GNU binutils), font databases, and formats/populates the 512 MB `disk.img` partition with IPO_FS.
 
 ### 3. Clean Build Artifacts
 ```bash

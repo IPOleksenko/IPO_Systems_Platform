@@ -17,7 +17,7 @@ IPO_OS can be executed in headless mode with COM1 serial output directed to stdo
 # Headless test run with both boot and storage images
 qemu-system-i386 -m 2048 \
     -drive format=raw,file=build/IPO_OS.img,if=ide,index=0 \
-    -drive format=raw,file=build/disk.img,if=ide,index=1 \
+    -drive format=raw,file=build/disks/disk.img,if=ide,index=1 \
     -display none -serial stdio
 ```
 

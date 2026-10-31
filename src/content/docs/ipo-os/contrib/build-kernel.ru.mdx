@@ -29,40 +29,53 @@ sudo apt install -y build-essential gcc-multilib nasm make python3 qemu-system-x
 
 ```
 IPO_OS/
-├── Makefile                    # Главный управляющий сценарий сборки
-├── mk/                         # Модульные правила (kernel.mk, image.mk, qemu.mk, apps.mk)
+├── Makefile                    # Главный управляющий сценарий сборки ядра
+├── mk/                         # Модульные правила (config.mk, boot.mk, kernel.mk, image.mk, run.mk, clean.mk)
 ├── src/
 │   ├── boot/                   # Загрузчик Stage 1/2, E820 (0x8FE0) и переход в Protected Mode
 │   ├── kernel/                 # Ядро (SMP, планировщик, E820/kmalloc, KMOD, реестр устройств, syscalls)
-│   ├── driver/                 # Драйверы (Storage Pool + WAL, block_dev, partition, ATA, RTL8139, VBE, SB16)
-│   ├── file_system/            # 64-битная экстентная файловая система IPO_FS
+│   ├── drivers/                # Драйверы (Storage Pool + WAL, block_dev, partition, ATA, RTL8139, VBE, SB16)
+│   ├── fs/                     # 64-битная экстентная файловая система IPO_FS
 │   ├── net/                    # Сетевой стек TCP/IP с динамическим rx_packet_buf и POSIX-сокетами
-│   └── include/                # Заголовочные файлы ядра и публичного SDK
-├── applications/               # Пользовательские приложения, TCC, MicroPython, DOOM и заголовки POSIX
+│   ├── graphics/               # Оконный менеджер и графическая подсистема TinyGL
+│   └── include/                # Заголовочные файлы ядра и системы
 └── tools/
-    ├── generate_ksyms.py       # Генератор таблицы ~1560 символов ядра для загрузчика KMOD (.kmd)
-    ├── create_live_image.py    # Сборщик единого загрузочного образа Live USB (build/IPO_OS.img)
-    ├── format_disk_via_os.py   # Форматирование образа диска силами ядра IPO_OS в QEMU
+    ├── generate_ksyms.py       # Генератор таблицы символов ядра для загрузчика KMOD (.kmd)
+    └── setup-tap.sh            # Скрипт конфигурации виртуального сетевого интерфейса TAP
+
+IPO_OS_Software/                # Отдельный репозиторий пользовательского окружения и приложений
+├── Makefile                    # Главный сценарий сборки пользовательских компонентов
+├── mk/                         # Модульные правила (applications.mk, lib.mk, toolchain.mk, disk.mk)
+├── applications/               # Приложения: DOOM, TCC, MicroPython, NASM, редактор, 3D-демо
+├── lib/                        # Пользовательские библиотеки: libc, libm, libstdc++, libapp, TinyGL, CRT
+├── include/                    # Полные стандартные заголовки C99/POSIX/GL
+├── assets/fonts/               # Исходные файлы шрифтов и генераторы IFNT
+├── load_to_disk.sh             # Скрипт быстрой загрузки приложений на диск
+└── tools/
+    ├── load_applications.py    # Автоматическое форматирование и наполнение диска IPO_FS
     ├── disk_editor.py          # Редактор разделов и файлов дискового образа IPO_FS
-    └── setup-tap.sh            # Скрипт конфигурации сетевого интерфейса TAP
+    ├── build_font_db.py        # Компилятор баз консольных шрифтов (.fnt)
+    └── create_live_image.py    # Сборщик гибридного Live ISO/USB
 ```
 
 ---
 
 ## 🔨 Команды сборки
 
-### 1. Полная компиляция и сборка образов
+### 1. Компиляция ядра и загрузчика (`IPO_OS`)
 ```bash
+cd IPO_OS
 make all
 ```
-Выполняет двухпроходную сборку ядра (с генерацией таблицы символов `generate_ksyms.py`), компилирует драйверы и пользовательские приложения, создаёт образы `build/disk.iso`, `build/disk.img` и единый загрузочный образ **`build/IPO_OS.img`**.
+Выполняет двухпроходную сборку ядра (с генерацией таблицы символов `generate_ksyms.py`), компилирует драйверы, загрузчик, библиотеку ядра `libk.a` и формирует загрузочный образ **`build/IPO_OS.img`**.
 
-### 2. Форматирование дисков и сборка Live USB образа
+### 2. Сборка приложений и наполнение диска (`IPO_OS_Software`)
 ```bash
-make disks
-make live-image
+cd ../IPO_OS_Software
+make all
+./load_to_disk.sh ../IPO_OS/build/disks/disk.img --format
 ```
-Создаёт образ `build/disk.img` объёмом 512 МБ с метаданными Storage Pool и журналом WAL (LBA 2030–2039), размечает `IPO_FS` с сектора LBA 2048, генерирует базы шрифтов, копирует приложения через `load_applications.py` и формирует единый загрузочный образ **`build/IPO_OS.img`**.
+Компилирует пользовательские библиотеки (`libc.a`, `libm.a`, `libstdc++.a`, `libapp.a`), прикладные программы (DOOM, редактор, 3D-демо), внутрисистемные компиляторы (TinyCC, Lua, MicroPython, NASM, GNU binutils), генерирует шрифтовые базы и форматирует/наполняет образ диска `disk.img` объёмом 512 МБ файловой системой IPO_FS.
 
 ### 3. Очистка артефактов
 ```bash

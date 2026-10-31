@@ -1,0 +1,73 @@
+---
+title: "IPO_OS_Software 生态系统概述"
+description: "IPO_OS 的用户空间架构、标准库、工具链和应用程序生态系统。"
+---
+
+import Callout from '../../../components/Callout.astro';
+
+# IPO_OS_Software 生态系统概述
+
+**IPO_OS_Software** 是 **[IPO_OS](https://github.com/IPOleksenko/IPO_OS)** 操作系统的专用用户空间运行时生态系统、应用程序套件和开发者工具包。它提供标准的 C/C++ 运行时、3D 图形库、窗口界面、系统内置编译器、解释器、移植应用和磁盘部署工具。
+
+<Callout type="tip" lang="zh" title="模块化分离设计">
+IPO_OS 纯粹专注于内核架构、裸机硬件驱动、内存管理和进程调度。所有用户空间程序、标准库、编译器和虚拟磁盘构建工具均位于 **IPO_OS_Software**。
+</Callout>
+
+---
+
+## 🏛️ 生态系统架构
+
+`IPO_OS_Software` 仓库分为四个核心功能层：
+
+1. **用户空间运行时库 (`lib/`):**
+   - **`libc.a`:** C99 标准库实现（通过 `sbrk` 进行内存分配、格式化 stdio、POSIX 文件、套接字、信号以及 `dlopen`/`dlsym` 动态加载）。
+   - **`libm.a`:** 包含三角函数和浮点运算的数学库。
+   - **`libstdc++.a`:** 轻量级 C++ 运行时支持（`new`/`delete`、RTTI）。
+   - **`libapp.a`:** 窗口管理器 (WM)、VGA 字体切换、输入和音频系统集成 API。
+   - **TinyGL:** 兼容 OpenGL 1.1 的 3D 软件光栅化渲染器。
+   - **C 运行时启动模块 (`crt0.o`, `crti.o`, `crtn.o`):** 可执行二进制文件入口。
+
+2. **标准头文件 (`include/`):**
+   - 统一头文件集合 (`stdio.h`, `stdlib.h`, `unistd.h`, `GL/gl.h`, `wm.h`, `syscall.h`)。
+
+3. **系统内开发者工具链 (`build/toolchain/`):**
+   - **TinyCC (`tcc`):** 直接在 IPO_OS 内运行的高速 C99 编译器。
+   - **Lua 5.3 (`lua`, `luac`):** 嵌入式脚本解释器与字节码编译器。
+   - **MicroPython (`python.elf`):** 适用于快速脚本与自动化的 Python 3 运行时。
+   - **NASM:** 在操作系统内直接运行的 32 位 x86 汇编器。
+   - **GNU Binutils (`gcc`, `g++`, `as`, `ld`, `ar`, `ranlib`, `objcopy`, `objdump`, `readelf`, `nm`, `strip`)。**
+
+4. **应用程序与实用工具 (`applications/`):**
+   - **DOOM (`doom.bin`):** 官方 `linuxdoom-1.10` 的完整移植版本，以 320x200 分辨率、60 FPS 和 Sound Blaster 16 音效裸机运行。
+   - **文本编辑器 (`edit.bin`):** 交互式文本编辑器。
+   - **3D 演示程序 (`gl_gears.bin`, `gl_cube.bin`, `gl_teapot.bin`):** TinyGL 图形演示。
+   - **网络工具 (`hosting_server.bin`, `hosting_client.bin`, `ping.bin`):** HTTP 服务器、客户端与 ICMP 诊断工具。
+   - **终端工具 (`echo.bin`, `hello.bin`, `player.bin`, `setfont.bin`, `term_ctl.bin`)。**
+
+---
+
+## 💾 软件分发模式
+
+为方便开发者和用户，提供两种官方分发模式：
+
+### 方案 1: 独立干净磁盘 + 独立预编译应用程序包
+- **`disk-clean.img`:** 使用 `IPO_FS` 文件系统格式化的干净 512 MB 磁盘镜像，不包含预装应用，为自定义开发提供纯净环境。
+- **`applications.zip`:** **仅包含预编译成品二进制文件** 的轻量压缩包（不包含源代码或构建脚本）：
+  - 已编译应用程序二进制文件 (`applications/*.bin` + `doom1.wad`)
+  - 已编译工具链可执行文件 (`toolchain/*.elf`)
+  - 预构建运行时库与链接脚本 (`lib/*.a`, `lib/*.o`, `lib/linker.ld`)
+  - SDK C/POSIX/GL 头文件 (`include/`)
+  - 控制台字体数据库 (`fonts/*.fnt`)
+
+### 方案 2: 预安装系统磁盘镜像
+- **`disk-installed.img`:** 开箱即用的 512 MB 虚拟磁盘镜像，所有应用程序、DOOM、编译器、运行时库和字体均已预装到 `/applications`、`/lib`、`/include` 和 `/fonts` 中。直接挂载到 QEMU 或烧录到实体盘即可启动进入完整环境。
+
+---
+
+## 🛠️ 磁盘管理工具
+
+`IPO_OS_Software` 提供独立的 Python 工具来创建、检查和部署虚拟磁盘：
+
+- **`tools/load_applications.py`:** 自动化将编译好的二进制文件加载到 IPO_FS 分区。
+- **`tools/disk_editor.py`:** 功能完备的命令行文件管理器，用于检查、提取、上传和删除 `IPO_FS` 镜像内的文件。
+- **`load_to_disk.sh`:** 一键完成磁盘格式化与应用部署的快捷 Shell 脚本。

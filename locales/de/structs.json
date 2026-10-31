@@ -1,0 +1,249 @@
+{
+  "ipo_superblock": {
+    "title": "IPO_FS Superblock Structure (LBA 2048)",
+    "fields": {
+      "magic": "Magic signature (\"IPO_FS\\0\\0\")",
+      "fs_size_blocks": "Total 512-byte blocks in storage pool",
+      "block_size": "Block size in bytes (always 512)",
+      "flags": "Feature flags (Bit 0: Linked Extents)",
+      "inode_count": "Total allocated/available inodes",
+      "inode_bitmap_start": "Starting block of inode allocation bitmap",
+      "block_bitmap_start": "Starting block of data block bitmap",
+      "inode_table_start": "Starting block of Inode Table",
+      "data_blocks_start": "Starting block of data blocks pool"
+    }
+  },
+  "ipo_inode": {
+    "title": "IPO_FS Inode Structure (128 bytes, 4 per block)",
+    "fields": {
+      "mode": "File type (0x1=Dir, 0x2=File, 0x80000000=Protected)",
+      "links_count": "Number of active hard links",
+      "size": "Exact 64-bit file size in bytes",
+      "extents": "4 primary contiguous extent descriptors (24 B each)",
+      "next_extent_node": "Physical block of chained extent node (0 if none)",
+      "_pad": "Padding to exactly 128 bytes alignment"
+    }
+  },
+  "ipo_extent": {
+    "title": "IPO_FS Extent Descriptor (24 bytes)",
+    "fields": {
+      "logical_block": "Starting logical block inside file",
+      "physical_block": "Starting physical LBA block in storage pool",
+      "block_count": "Number of contiguous 512-byte blocks",
+      "flags": "Extent feature flags"
+    }
+  },
+  "storage_pool_raw_sb": {
+    "title": "Storage Pool Superblock (storage_pool_raw_sb_t, LBA 2030 & 2039)",
+    "fields": {
+      "magic": "Pool magic signature (0x504F4F4C \"POOL\")",
+      "version": "Superblock format version (2)",
+      "pool_uuid": "128-bit Storage Pool UUID (e.g. \"IPO_STORAGE_POOL\")",
+      "local_member_uuid": "128-bit UUID of the local drive member",
+      "member_index": "Index of this drive in the spanned pool",
+      "member_count": "Total number of drives in the storage pool",
+      "total_capacity_sectors": "Combined capacity across all member drives in sectors",
+      "chunk_size_sectors": "Allocation chunk granularity (64 sectors = 32 KB)",
+      "generation": "Monotonic metadata generation counter",
+      "state": "Pool state (0=ONLINE, 1=DEGRADED, 2=CORRUPT)",
+      "members": "Flexible on-disk array of member descriptors (48 B each)",
+      "crc32": "IEEE 802.3 CRC32 checksum of bytes 0x00..0x1FB"
+    }
+  },
+  "storage_raw_disk_tx_entry": {
+    "title": "Storage Pool WAL Journal Entry (storage_raw_disk_tx_entry_t, LBA 2031–2038)",
+    "fields": {
+      "magic": "Journal entry signature (0x54584E4C \"TXNL\")",
+      "tx_id": "Monotonic transaction identifier",
+      "op": "Operation type (0=READ, 1=WRITE, 2=FLUSH, 3=CHECK)",
+      "state": "Transaction state (0=INIT, 1=PENDING, 2=COMMITTED, 3=FAILED)",
+      "lba": "Target logical block address in storage pool",
+      "count": "Number of sectors affected by transaction",
+      "timestamp": "System uptime timestamp in milliseconds",
+      "data_crc": "CRC32 checksum of the written sector payload",
+      "entry_crc": "CRC32 checksum of the journal entry header",
+      "reserved": "On-disk alignment padding (dynamic in storage_disk_tx_entry_t)"
+    }
+  },
+  "kmod_header": {
+    "title": "Relocatable Kernel Module Header (kmod_raw_header_t / kmod_header_t)",
+    "fields": {
+      "magic": "Module magic signature (0x444D4B49 \"IKMD\")",
+      "abi_version": "Kernel Module ABI version (0x0100 = v1.0)",
+      "flags": "Module flags (BUILTIN, LOADED, ACTIVE)",
+      "name": "Module identifier (dynamic char* in kmod_header_t)",
+      "author": "Module author string (dynamic char* in kmod_header_t)",
+      "version": "Semantic version string (dynamic char* in kmod_header_t)",
+      "description": "Module description (dynamic char* in kmod_header_t)",
+      "init_offset": "Byte offset of init() entrypoint from .text start",
+      "cleanup_offset": "Byte offset of cleanup() from .text start",
+      "text/data/bss_size": "Sizes of .text, .data, and .bss sections in bytes",
+      "sym_tab_offset/count": "Offset and count of external symbol table entries",
+      "reloc_offset/count": "Offset and count of ABS32/REL32 relocation records",
+      "checksum": "CRC32 checksum of the module payload"
+    }
+  },
+  "cpu_info": {
+    "title": "Per-CPU SMP Descriptor (cpu_info_t)",
+    "fields": {
+      "cpu_id": "Logical processor core ID (0 = BSP, 1..N = AP)",
+      "lapic_id": "Hardware Local APIC physical ID",
+      "is_bsp": "True if Bootstrap Processor (Core 0)",
+      "is_online": "Set to true once AP finishes trampoline boot",
+      "stack_base": "Allocated 16 KB per-CPU kernel stack base",
+      "stack_top": "Initial ESP top of stack passed to AP trampoline",
+      "ticks": "Per-CPU activity & task execution counter"
+    }
+  },
+  "process_pcb": {
+    "title": "Process Descriptor Structure (process_t)",
+    "fields": {
+      "pid": "Unique process ID (allocated dynamically starting from 1)",
+      "binary_base": "Base address of loaded executable image in allocated memory block (mem)",
+      "binary_size": "4 KB page-aligned binary memory size in bytes",
+      "entry_point": "Absolute execution entry point (allocated free block mem address)",
+      "binary_storage": "Reserved backup buffer pointer (NULL in in-place execution)",
+      "data_offset": "Offset where writable data/bss begins in image",
+      "data_size": "Size of writable data/bss segment in bytes",
+      "code_mapped": "True if code segment has been loaded into memory",
+      "stack_base": "Allocated process stack buffer",
+      "stack_ptr": "Saved ESP stack pointer during multitasking",
+      "stack_start": "Start address of stack region",
+      "stack_size": "Stack capacity in bytes (256 KB initial)",
+      "argc": "Argument count passed to main()",
+      "argv_addr": "Address of argv pointers array in process space",
+      "argv_kernel": "Copy of argv array in kernel space for debugging",
+      "exit_code": "Termination return code",
+      "return_val": "Full typed return value (type, int, raw_eax/edx, dynamic strings, struct buffer)",
+      "return_val_explicit": "True if process explicitly set custom return value via syscall",
+      "is_running": "Active execution state flag",
+      "waiting_for_input": "Blocked waiting for keyboard / terminal input",
+      "wants_graphics": "Requested VGA Mode 13h (320x200x256)",
+      "gfx_overlay_flags": "VGA Mode 13h overlay visibility flags (VGA_OVERLAY_HIDE_BUTTON, VGA_OVERLAY_HIDE_CURSOR)",
+      "is_wm_app": "Created a Window Manager desktop window",
+      "async_task_count": "Count of active background async tasks",
+      "user_heap_base": "Per-process isolated heap start address",
+      "user_heap_break": "Per-process sbrk break address boundary",
+      "user_heap_limit": "Per-process isolated heap ceiling limit address",
+      "user_heap_slot": "Dynamic memory slot index assigned to process (-1 if none)",
+      "exec_inode": "Executable inode metadata for on-demand progressive loading",
+      "demand_loading": "True if executable is currently being loaded on-demand",
+      "demand_file_offset": "Current byte offset in executable binary file on disk",
+      "demand_mem_offset": "Current destination offset in process memory image",
+      "demand_loaded_bytes": "Total bytes of executable loaded into memory so far",
+      "demand_total_bytes": "Total byte size of all loadable binary segments",
+      "text_vram_backup": "80x25 text mode buffer backup for workspace switching",
+      "gfx_vram_backup": "320x200 graphics VRAM backup when swapped to background",
+      "gfx_palette_backup": "256-color VGA DAC palette backup (768 bytes)",
+      "text_cursor_pos": "Saved cursor coordinate in text mode",
+      "text_cursor_visible": "Saved cursor visibility flag",
+      "completed_and_acknowledged": "Process completed and acknowledged by parent",
+      "scroll_top_buffer": "Workspace top scrollback line buffer",
+      "scroll_bottom_buffer": "Workspace bottom scrollback line buffer",
+      "scroll_top_count": "Count of lines in top scrollback buffer",
+      "scroll_bottom_count": "Count of lines in bottom scrollback buffer",
+      "window_id": "Workspace window group identifier in batch mode",
+      "text_screen_shared": "True if VRAM buffers are shared with co-process",
+      "text_output_buf": "Dynamically expanding captured stdout buffer",
+      "text_output_len": "Length of captured stdout text in bytes",
+      "text_output_cap": "Allocated capacity of text_output_buf",
+      "name": "Dynamically allocated process name string",
+      "return_format": "Auto-detected format descriptor from DWARF debug symbols",
+      "next": "Pointer to next PCB in active kernel list"
+    }
+  },
+  "device_node": {
+    "title": "Unified Hardware Device Node (device_node_t)",
+    "fields": {
+      "id": "Unique system-wide device ID",
+      "parent_id": "Parent bus/controller device ID (0 if root)",
+      "capabilities": "Capability bitmask (READONLY, REMOVABLE, HOTPLUGGABLE, DMA, VIRTUAL)",
+      "type": "Category (CPU, MEMORY, PCI, STORAGE, NETWORK, INPUT, AUDIO, VIDEO, SYSTEM, USB)",
+      "state": "Operational state (DISCOVERED, DRIVER_ATTACHED, INITIALIZED, ACTIVE, DISABLED, ERROR)",
+      "name": "Dynamic canonical identifier (e.g. \"cpu0\", \"pci00:03.0\", \"ata0\")",
+      "vendor / model / description": "Dynamically allocated vendor, model, and functional description strings",
+      "res": "Bus coordinates, PCI IDs, dynamic uint32_t* bar[], I/O base, MMIO base, IRQ, size_bytes",
+      "driver_name / driver_ptr": "Attached driver name and pointer to driver_t",
+      "ops / priv_data / next": "Standard VFS-like device I/O operations (open/close/read/write/ioctl) and list link"
+    }
+  },
+  "kmalloc_stats": {
+    "title": "Kernel Heap Allocator Statistics (kmalloc_stats_t)",
+    "fields": {
+      "heap_total": "Total kernel heap capacity in bytes (64 MB / 0x04000000)",
+      "heap_used": "Bytes consumed by high-watermark with headers",
+      "alloc_bytes": "User bytes currently allocated",
+      "free_bytes": "Bytes available in free blocks pool",
+      "alloc_blocks": "Count of active allocated blocks",
+      "free_blocks": "Count of coalesced free blocks",
+      "block_header": "Size of boundary-tag header (16 bytes)"
+    }
+  },
+  "ata_device": {
+    "title": "ATA Storage Device Information (ata_device_t)",
+    "fields": {
+      "present": "1 if device detected, 0 if absent",
+      "channel": "IDE Channel (0 = Primary, 1 = Secondary)",
+      "drive": "Drive position (0 = Master, 1 = Slave)",
+      "type": "Device type (0=NONE, 1=PATA, 2=PATAPI)",
+      "cylinders": "Drive cylinders count from IDENTIFY",
+      "heads": "Drive heads count from IDENTIFY",
+      "sectors": "Sectors per track from IDENTIFY",
+      "io_base": "Primary I/O base port (e.g. 0x1F0, 0x170)",
+      "ctrl_base": "Control port base (e.g. 0x3F6, 0x376)",
+      "irq": "Hardware IRQ line (14 for Primary, 15 for Secondary)",
+      "sector_size": "Sector size in bytes (typically 512)",
+      "capacity_sectors": "Total capacity in 512-byte sectors (LBA28/LBA48)",
+      "model": "Dynamically allocated NUL-terminated ATA model string",
+      "serial": "Dynamically allocated NUL-terminated ATA serial string",
+      "firmware": "Dynamically allocated NUL-terminated ATA firmware revision string"
+    }
+  },
+  "ipo_idt_entry": {
+    "title": "x86 Interrupt Descriptor Gate (ipo_idt_entry_t)",
+    "fields": {
+      "base_lo": "Lower 16 bits of ISR entrypoint address",
+      "selector": "Kernel code segment selector (0x08)",
+      "zero": "Reserved zero byte",
+      "flags": "Gate attributes (0x8E=Interrupt, 0xEE=Syscall/User)",
+      "base_hi": "Upper 16 bits of ISR entrypoint address"
+    }
+  },
+  "bootrom_post_codes": {
+    "title": "Port 0x80 POST Diagnostic Codes (IPO_Boot_ROM)",
+    "fields": {
+      "POST_RESET_VECTOR": "CPU reset vector reached (0xFFFFFFF0)",
+      "POST_ROM_INIT_ENTRY": "Entered Boot_ROM init code (0xF000:8000)",
+      "POST_CAR_START": "MTRR Cache-as-RAM setup started",
+      "POST_CAR_READY": "CAR stack operational at 0x7000:8000",
+      "POST_CHIPSET_DETECTED": "Chipset detected (i440FX or Q35)",
+      "POST_MRC_START": "Memory Reference Code DRAM training started",
+      "POST_DRAM_TEST_PASS": "DRAM pattern test passed (0x55AA55AA / 0xAA55AA55)",
+      "POST_CAR_TEARDOWN": "CAR teardown complete, stack relocated to DRAM",
+      "POST_PAM_LOCKED": "PAM locked read-only (RE=1, WE=0)",
+      "POST_MAGIC_VALID": "Firmware header magic validated (0x464F5049)",
+      "POST_HANDOVER": "Far jump to Firmware payload (0xF000:0004)",
+      "ERR_NO_MTRR": "CPU lacks MTRR support or CAR setup failed",
+      "ERR_UNKNOWN_CHIPSET": "Unsupported PCI Host Bridge ID",
+      "ERR_DRAM_FAIL": "DRAM pattern memory test failed",
+      "ERR_MAGIC_MISMATCH": "Firmware signature mismatch (IPOF expected)"
+    }
+  },
+  "firmware_post_codes": {
+    "title": "Port 0x80 POST Diagnostic Codes (IPO_Firmware)",
+    "fields": {
+      "FW_ENTRY": "Firmware entry point reached (0xF000:0004)",
+      "FW_PCI_ENUM_DONE": "PCI bus enumeration completed",
+      "FW_IVT_INSTALLED": "Real-mode IVT registered (INT 10h–1Ah)",
+      "FW_ACPI_INSTALLED": "ACPI 1.0 tables installed in EBDA (0x9FC00)",
+      "FW_VIDEO_READY": "Video subsystem initialized (VBIOS or Mode 03h)",
+      "FW_A20_ACTIVE": "Fast A20 Gate activated and verified",
+      "FW_PS2_READY": "8042 PS/2 controller initialized",
+      "FW_STORAGE_PROBE": "Storage controllers probing (ATA, AHCI, NVMe, USB)",
+      "FW_SCAN_BOOTABLE": "Scanning drives for bootable media (0x80..0x82)",
+      "FW_MBR_VALIDATED": "Valid MBR 0xAA55 loaded at 0x0000:7C00",
+      "FW_HANDOVER_OS": "Jumping to MBR (0x0000:7C00) — OS Handover",
+      "FW_ERR_NO_BOOT": "No bootable media found on any controller"
+    }
+  }
+}

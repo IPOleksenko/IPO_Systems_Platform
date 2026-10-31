@@ -53,10 +53,10 @@ export function getRealArtifacts(): { artifacts: Artifact[]; buildDate: string }
       {
         id: 'ipo-system-bundle',
         file: 'ipo-system-bundle.zip',
-        name: 'Complete IPO Systems Bundle (All 3 Projects & Disk)',
+        name: 'Complete IPO Systems Bundle (All Projects & Disks)',
         category: 'bundle',
         featured: true,
-        description: 'All compiled binaries across the entire platform: Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), IPO_OS kernel image (IPO_OS.img), and 128 MB applications disk (disk.img).',
+        description: 'All compiled binaries across the platform: Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), IPO_OS kernel image (IPO_OS.img), clean and pre-installed disks (disk-clean.img, disk-installed.img), and pre-compiled applications package (applications.zip).',
         size_formatted: '0 B',
         sha256: 'Pre-compiled release'
       },
@@ -70,11 +70,29 @@ export function getRealArtifacts(): { artifacts: Artifact[]; buildDate: string }
         sha256: 'Pre-compiled release'
       },
       {
-        id: 'ipo-os-disk',
-        file: 'disk.img',
-        name: 'IPO_OS Applications Disk (128 MB)',
+        id: 'ipo-disk-installed',
+        file: 'disk-installed.img',
+        name: 'IPO_OS Pre-Installed Disk (512 MB)',
+        category: 'software',
+        description: 'Ready-to-use 512 MB IPO_FS disk image with all applications, DOOM, toolchains, runtime libraries, and fonts pre-installed.',
+        size_formatted: '0 B',
+        sha256: 'Pre-compiled release'
+      },
+      {
+        id: 'ipo-disk-clean',
+        file: 'disk-clean.img',
+        name: 'IPO_OS Clean Formatted Disk (512 MB)',
         category: 'os',
-        description: 'Pre-formatted 128 MB disk image with compiled applications, Doom, TinyGL demos, and userland toolchain.',
+        description: 'Clean 512 MB disk image formatted with the extent-based IPO_FS filesystem without pre-installed applications.',
+        size_formatted: '0 B',
+        sha256: 'Pre-compiled release'
+      },
+      {
+        id: 'ipo-applications',
+        file: 'applications.zip',
+        name: 'IPO_OS Compiled Applications Package',
+        category: 'software',
+        description: 'Compiled production binaries: applications, DOOM, in-OS toolchains (TCC, Lua, Python, NASM), runtime libraries (libc, libm, libapp, tinygl), SDK headers, and fonts.',
         size_formatted: '0 B',
         sha256: 'Pre-compiled release'
       },
@@ -92,7 +110,7 @@ export function getRealArtifacts(): { artifacts: Artifact[]; buildDate: string }
         file: 'ipo-firmware.zip',
         name: 'IPO_Firmware Package',
         category: 'firmware',
-        description: 'Compiled BIOS runtime service layer ROM binaries (firmware.rom, firmware.bin).',
+        description: 'Compiled BIOS runtime service layer ROM binary (firmware.rom).',
         size_formatted: '0 B',
         sha256: 'Pre-compiled release'
       }

@@ -102,7 +102,7 @@ const otherArtifacts = artifacts.filter(a => a.id !== featuredArtifact.id);
             <div class="artifact-card">
               <div class="card-top">
                 <div class="card-icon">
-                  {art.category === 'os' ? '🖥️' : (art.category === 'bootrom' ? '⚡' : '💾')}
+                  {art.category === 'os' ? '🖥️' : (art.category === 'bootrom' ? '⚡' : (art.category === 'software' ? '📦' : '💾'))}
                 </div>
                 <div class="card-header-info">
                   <h5 class="card-name">{art.name}</h5>

@@ -61,7 +61,7 @@ An x86 processor structure defining flat memory segment base addresses and limit
 Регистры чипсета, управляющие правами чтения и записи в теневую область памяти BIOS (`0x000C0000`..`0x000FFFFF`).
 
 ### PMM (Physical Memory Manager)
-Архитектура управления физической памятью в IPO_OS: таблица дескрипторов BIOS E820 передаётся по адресу `0x6000` с заголовком `e820_map_header_t` в `0x8FE0` (`'E820'`), куча ядра `kmalloc` занимает 64 МБ (`0x01000000`–`0x04FFFFFF`), страничный аллокатор фреймов (`memory_map_alloc`) работает с `0x05000000+`, а динамические кучи процессов (`sbrk`) разделены на изолированные срезы по 512 МБ начиная с `0x08000000`.
+Архитектура управления физической памятью в IPO_OS: таблица дескрипторов BIOS E820 передаётся по адресу `0x6000` с заголовком `e820_map_header_t` в `0x8FE0` (`'E820'`), куча ядра `kmalloc` занимает 64 МБ (`0x01000000`–`0x04FFFFFF`), страничный аллокатор фреймов (`memory_map_alloc`) работает с `0x05000000+`, а динамические кучи процессов (`sbrk`) разделены на изолированные слоты начиная с `0x08000000` (`USER_HEAP_START`) с динамическим шагом 256 МБ.
 
 ### TSS (Task State Segment)
 Legacy x86 hardware task structure. In IPO_OS's flat protected mode model, context switching and system call dispatch are implemented in software routines without hardware TSS stack switching.

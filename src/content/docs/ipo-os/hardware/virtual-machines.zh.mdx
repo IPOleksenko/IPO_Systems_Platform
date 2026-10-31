@@ -21,7 +21,7 @@ QEMU (`qemu-system-i386`) is the reference emulator used during active developme
 
 ### Storage Architecture in QEMU:
 - **Drive 0 (`build/IPO_OS.img`):** Contains the MBR bootloader and concatenated kernel binary.
-- **Drive 1 (`build/disk.img`):** 512 MB raw storage disk containing the `IPO_FS` partition and `/applications`.
+- **Drive 1 (`build/disks/disk.img`):** 512 MB raw storage disk containing the `IPO_FS` partition and `/applications`.
 
 ### Networking Options: TAP vs. User Mode
 - **TAP Mode (`NET_MODE=tap`):** Direct Layer 2 host interface (`tap0`). All 65,535 ports are routable between host (`192.168.7.1`) and guest (`192.168.7.2`).
@@ -40,7 +40,7 @@ romimage: file=/usr/share/bochs/BIOS-bochs-latest
 vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest
 ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 ata0-master: type=disk, path="build/IPO_OS.img", mode=flat, cylinders=1024, heads=16, spt=63
-ata0-slave:  type=disk, path="build/disk.img", mode=flat
+ata0-slave:  type=disk, path="build/disks/disk.img", mode=flat
 pci: enabled=1, chipset=i440fx
 pnic: enabled=1, mac=52:54:00:12:34:56, ethmod=tuntap, ethdev=tap0
 sb16: enabled=1, midimode=0, wavemode=1, dmatimer=250000

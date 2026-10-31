@@ -92,7 +92,7 @@ const pageTitle = getTranslation(currentLang, 'downloads.page_title');
           <div class="artifact-card">
             <div class="card-header">
               <span class="card-icon">
-                {art.category === 'os' ? '🖥️' : (art.category === 'bootrom' ? '⚡' : '💾')}
+                {art.category === 'os' ? '🖥️' : (art.category === 'bootrom' ? '⚡' : (art.category === 'software' ? '📦' : '💾'))}
               </span>
               <div>
                 <h3 class="card-title">{art.name}</h3>

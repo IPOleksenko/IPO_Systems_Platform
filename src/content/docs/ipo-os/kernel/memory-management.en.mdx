@@ -1,6 +1,6 @@
 ---
 title: "Physical & Virtual Memory Management"
-description: "Hardware RAM detection via E820 (0x6000 / 0x8FE0), kernel kmalloc heap (64 MB), 512 MB process sbrk slices, and interactive memory map."
+description: "Hardware RAM detection via E820 (0x6000 / 0x8FE0), kernel kmalloc heap (64 MB), dynamic isolated process heap slices, and interactive memory map."
 ---
 
 import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
@@ -36,12 +36,11 @@ The kernel heap spans physical addresses `0x01000000` (16 MB) to `0x05000000` (8
 - Each allocated block has a 16-byte boundary-tag header `kmalloc_block_t` containing validation magic `0xDEADBEEF` (allocated) or `0xDEADC0DE` (freed).
 - Provides `kmalloc()`, `kcalloc()`, `krealloc()`, and `kfree()`, automatically running `kmalloc_coalesce_and_shrink()` to merge contiguous free blocks and lower the heap watermark.
 
-### 3. Process Address Space & Heap Allocation (`sbrk` & `malloc`)
-User executables (both ELF32 and flat `.bin`) are loaded by `universal_exec_load()` at base address `0x00800000`.
-- Dynamic memory expansion is handled via `IPO_SYSCALL_SBRK` (`0x1045`), adjusting `proc->user_heap_break`.
-- Process heap allocations are isolated per PID into **512 MB** (`0x20000000`) slices:
-  `proc_base = 0x08000000 + (pid - 1) * 0x20000000`.
-- Userspace `malloc()` / `calloc()` / `realloc()` / `free()` (`applications/lib/libc/stdlib.c`) requests memory from `sbrk()` in 64 KB multiples and tracks blocks using `block_hdr_t` with magic `0x4D414C43` (`"MALC"`).
+### 3. Process Address Space & Isolated Heap Allocation (`sbrk` & `malloc`)
+Raw flat binaries are loaded by the kernel bare-metal loader at base address `0x00800000`, while ELF32 executables and scripts are dispatched via the dynamic `binfmt` registry and executed via userspace runners.
+- Dynamic memory expansion is handled via `IPO_SYSCALL_SBRK` (`0x1045`), adjusting `proc->user_heap_break` within the process's isolated physical dynamic heap (`USER_HEAP_START = 0x08000000` / 128 MB, or `0x05000000` / 80 MB on low-RAM systems with 128 MB or less, with `USER_HEAP_PROCESS_STRIDE = 0x10000000` / 256 MB dynamic stride).
+- Each process is dynamically allocated the first non-overlapping physical slot (`proc->user_heap_slot`, `user_heap_base`, `user_heap_limit`), preventing cross-process memory contamination. Slot memory is immediately recycled upon process termination.
+- Userspace `malloc()` / `calloc()` / `realloc()` / `free()` (`IPO_OS_Software/lib/libc/stdlib.c`) requests memory from `sbrk()` in 64 KB multiples and tracks blocks using `block_hdr_t` with magic `0x4D414C43` (`"MALC"`).
 
 ### 4. Kernel-Wide Self-Expanding Dynamic Buffers (Zero Fixed Array Limits)
 Arbitrary fixed-size array limits have been eliminated across IPO_OS kernel subsystems in favor of dynamically growing heap allocations (`krealloc`):

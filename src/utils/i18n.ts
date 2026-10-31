@@ -20,6 +20,28 @@ import jaDiagrams from '../../locales/ja/diagrams.json';
 import ptDiagrams from '../../locales/pt/diagrams.json';
 import plDiagrams from '../../locales/pl/diagrams.json';
 
+import enSyscalls from '../../locales/en/syscalls.json';
+import ruSyscalls from '../../locales/ru/syscalls.json';
+import ukSyscalls from '../../locales/uk/syscalls.json';
+import deSyscalls from '../../locales/de/syscalls.json';
+import esSyscalls from '../../locales/es/syscalls.json';
+import frSyscalls from '../../locales/fr/syscalls.json';
+import zhSyscalls from '../../locales/zh/syscalls.json';
+import jaSyscalls from '../../locales/ja/syscalls.json';
+import ptSyscalls from '../../locales/pt/syscalls.json';
+import plSyscalls from '../../locales/pl/syscalls.json';
+
+import enStructs from '../../locales/en/structs.json';
+import ruStructs from '../../locales/ru/structs.json';
+import ukStructs from '../../locales/uk/structs.json';
+import deStructs from '../../locales/de/structs.json';
+import esStructs from '../../locales/es/structs.json';
+import frStructs from '../../locales/fr/structs.json';
+import zhStructs from '../../locales/zh/structs.json';
+import jaStructs from '../../locales/ja/structs.json';
+import ptStructs from '../../locales/pt/structs.json';
+import plStructs from '../../locales/pl/structs.json';
+
 import { siteConfig } from '../../site.config';
 
 const uiDictionaries: Record<string, any> = {
@@ -46,6 +68,32 @@ const diagramDictionaries: Record<string, any> = {
   ja: jaDiagrams,
   pt: ptDiagrams,
   pl: plDiagrams
+};
+
+const syscallDictionaries: Record<string, any> = {
+  en: enSyscalls,
+  ru: ruSyscalls,
+  uk: ukSyscalls,
+  de: deSyscalls,
+  es: esSyscalls,
+  fr: frSyscalls,
+  zh: zhSyscalls,
+  ja: jaSyscalls,
+  pt: ptSyscalls,
+  pl: plSyscalls
+};
+
+const structDictionaries: Record<string, any> = {
+  en: enStructs,
+  ru: ruStructs,
+  uk: ukStructs,
+  de: deStructs,
+  es: esStructs,
+  fr: frStructs,
+  zh: zhStructs,
+  ja: jaStructs,
+  pt: ptStructs,
+  pl: plStructs
 };
 
 const diagramAliases: Record<string, string> = {
@@ -99,5 +147,34 @@ export function getDiagramData(lang: string, id: string) {
     title: id,
     caption: '',
     labels: {}
+  };
+}
+
+function resolveLang(lang: string): string {
+  return (lang in syscallDictionaries) ? lang : siteConfig.defaultLang;
+}
+
+export function getSyscallLocale(lang: string, syscallName: string): { description: string; return: string; args: string[] } {
+  const resolvedLang = resolveLang(lang);
+  const dict = syscallDictionaries[resolvedLang] || syscallDictionaries.en;
+  const enDict = syscallDictionaries.en;
+  const entry = dict[syscallName] || enDict[syscallName] || {};
+  const enEntry = enDict[syscallName] || {};
+  return {
+    description: entry.description ?? enEntry.description ?? '',
+    return: entry.return ?? enEntry.return ?? '',
+    args: Array.isArray(entry.args) ? entry.args : (Array.isArray(enEntry.args) ? enEntry.args : [])
+  };
+}
+
+export function getStructLocale(lang: string, structId: string): { title: string; fields: Record<string, string> } {
+  const resolvedLang = resolveLang(lang);
+  const dict = structDictionaries[resolvedLang] || structDictionaries.en;
+  const enDict = structDictionaries.en;
+  const entry = dict[structId] || enDict[structId] || {};
+  const enEntry = enDict[structId] || {};
+  return {
+    title: entry.title ?? enEntry.title ?? structId,
+    fields: entry.fields ?? enEntry.fields ?? {}
   };
 }

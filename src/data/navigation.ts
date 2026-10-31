@@ -66,25 +66,6 @@ export const navigationData: ProjectNav[] = [
         ]
       },
       {
-        id: 'part_d',
-        titleKey: 'sections.ipo_os.part_d',
-        items: [
-          { id: 'toolchain-setup', slug: 'ipo-os/dev/toolchain-setup', titleKey: 'pages.ipo_os.toolchain_setup' },
-          { id: 'hello-world', slug: 'ipo-os/dev/hello-world', titleKey: 'pages.ipo_os.hello_world' },
-          { id: 'binary-format', slug: 'ipo-os/dev/binary-format', titleKey: 'pages.ipo_os.binary_format' },
-          { id: 'abi-calling-conventions', slug: 'ipo-os/dev/abi-calling-conventions', titleKey: 'pages.ipo_os.abi' },
-          { id: 'syscalls-usage', slug: 'ipo-os/dev/syscalls-usage', titleKey: 'pages.ipo_os.syscalls_app' },
-          { id: 'standard-library', slug: 'ipo-os/dev/standard-library', titleKey: 'pages.ipo_os.stdlib' },
-          { id: 'memory-io-files', slug: 'ipo-os/dev/memory-io-files', titleKey: 'pages.ipo_os.memory_io' },
-          { id: 'ui-output', slug: 'ipo-os/dev/ui-output', titleKey: 'pages.ipo_os.ui_programming' },
-          { id: 'build-system', slug: 'ipo-os/dev/build-system', titleKey: 'pages.ipo_os.build_system' },
-          { id: 'packaging-deployment', slug: 'ipo-os/dev/packaging-deployment', titleKey: 'pages.ipo_os.packaging' },
-          { id: 'app-debugging', slug: 'ipo-os/dev/app-debugging', titleKey: 'pages.ipo_os.app_debugging' },
-          { id: 'best-practices', slug: 'ipo-os/dev/best-practices', titleKey: 'pages.ipo_os.best_practices' },
-          { id: 'examples', slug: 'ipo-os/dev/examples', titleKey: 'pages.ipo_os.examples' }
-        ]
-      },
-      {
         id: 'part_e',
         titleKey: 'sections.ipo_os.part_e',
         items: [
@@ -102,6 +83,44 @@ export const navigationData: ProjectNav[] = [
           { id: 'contrib-build', slug: 'ipo-os/contrib/build-kernel', titleKey: 'pages.ipo_os.contrib_build' },
           { id: 'contrib-style', slug: 'ipo-os/contrib/code-style', titleKey: 'pages.ipo_os.contrib_style' },
           { id: 'contrib-testing', slug: 'ipo-os/contrib/testing-prs', titleKey: 'pages.ipo_os.contrib_testing' }
+        ]
+      }
+    ]
+  },
+  {
+    projectId: 'ipo_os_software',
+    titleKey: 'sections.ipo_os_software.title',
+    groups: [
+      {
+        id: 'software_core',
+        titleKey: 'sections.ipo_os_software.core',
+        items: [
+          { id: 'software-overview', slug: 'ipo-os-software/overview', titleKey: 'pages.ipo_os_software.overview' },
+          { id: 'software-toolchain-setup', slug: 'ipo-os-software/toolchain-setup', titleKey: 'pages.ipo_os_software.toolchain_setup' },
+          { id: 'software-hello-world', slug: 'ipo-os-software/hello-world', titleKey: 'pages.ipo_os_software.hello_world' },
+          { id: 'software-binary-format', slug: 'ipo-os-software/binary-format', titleKey: 'pages.ipo_os_software.binary_format' },
+          { id: 'software-abi-calling-conventions', slug: 'ipo-os-software/abi-calling-conventions', titleKey: 'pages.ipo_os_software.abi' }
+        ]
+      },
+      {
+        id: 'software_runtime_apis',
+        titleKey: 'sections.ipo_os_software.runtime_apis',
+        items: [
+          { id: 'software-standard-library', slug: 'ipo-os-software/standard-library', titleKey: 'pages.ipo_os_software.stdlib' },
+          { id: 'software-syscalls-usage', slug: 'ipo-os-software/syscalls-usage', titleKey: 'pages.ipo_os_software.syscalls_app' },
+          { id: 'software-memory-io-files', slug: 'ipo-os-software/memory-io-files', titleKey: 'pages.ipo_os_software.memory_io' },
+          { id: 'software-ui-output', slug: 'ipo-os-software/ui-output', titleKey: 'pages.ipo_os_software.ui_programming' },
+          { id: 'software-app-debugging', slug: 'ipo-os-software/app-debugging', titleKey: 'pages.ipo_os_software.app_debugging' },
+          { id: 'software-best-practices', slug: 'ipo-os-software/best-practices', titleKey: 'pages.ipo_os_software.best_practices' },
+          { id: 'software-examples', slug: 'ipo-os-software/examples', titleKey: 'pages.ipo_os_software.examples' }
+        ]
+      },
+      {
+        id: 'software_build_deploy',
+        titleKey: 'sections.ipo_os_software.build_deploy',
+        items: [
+          { id: 'software-build-system', slug: 'ipo-os-software/build-system', titleKey: 'pages.ipo_os_software.build_system' },
+          { id: 'software-packaging-deployment', slug: 'ipo-os-software/packaging-deployment', titleKey: 'pages.ipo_os_software.packaging' }
         ]
       }
     ]

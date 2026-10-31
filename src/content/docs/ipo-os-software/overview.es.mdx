@@ -1,0 +1,73 @@
+---
+title: "Visión general del ecosistema IPO_OS_Software"
+description: "Arquitectura en espacio de usuario, bibliotecas estándar, toolchain y aplicaciones para IPO_OS."
+---
+
+import Callout from '../../../components/Callout.astro';
+
+# Visión general del ecosistema IPO_OS_Software
+
+**IPO_OS_Software** es el repositorio oficial para el ecosistema de usuario, bibliotecas estándar, herramientas de desarrollo y aplicaciones para el sistema operativo **[IPO_OS](https://github.com/IPOleksenko/IPO_OS)**. Proporciona entornos C/C++, gráficos 3D, interfaces de ventanas, compiladores integrados, intérpretes y utilidades de disco.
+
+<Callout type="tip" lang="es" title="Separación modular de proyectos">
+IPO_OS está dedicado exclusivamente a la arquitectura del kernel, controladores de hardware, gestión de memoria y planificación de procesos. Todos los programas de usuario, bibliotecas estándar, compiladores y herramientas de disco residen en **IPO_OS_Software**.
+</Callout>
+
+---
+
+## 🏛️ Arquitectura del ecosistema
+
+El repositorio `IPO_OS_Software` está estructurado en capas funcionales:
+
+1. **Bibliotecas en tiempo de ejecución (`lib/`):**
+   - **`libc.a`:** Biblioteca estándar C99 (memoria dinámica con `sbrk`, stdio, archivos POSIX, sockets, señales y `dlopen`/`dlsym`).
+   - **`libm.a`:** Biblioteca matemática para trigonometría y operaciones en coma flotante.
+   - **`libstdc++.a`:** Runtime básico de C++ (`new`/`delete`, RTTI, stubs de excepciones).
+   - **`libapp.a`:** Integración de sistema para Window Manager (WM), fuentes VGA, entrada y audio.
+   - **TinyGL:** Rasterizador por software 3D compatible con OpenGL 1.1.
+   - **Módulos CRT (`crt0.o`, `crti.o`, `crtn.o`):** Puntos de entrada estándar para binarios.
+
+2. **Cabeceras estándar (`include/`):**
+   - Cabeceras unificadas (`stdio.h`, `stdlib.h`, `unistd.h`, `GL/gl.h`, `wm.h`, `syscall.h`).
+
+3. **Herramientas de desarrollo integradas (`build/toolchain/`):**
+   - **TinyCC (`tcc`):** Compilador C99 rápido que se ejecuta directamente en IPO_OS.
+   - **Lua 5.3 (`lua`, `luac`):** Intérprete de scripts y compilador de bytecode.
+   - **MicroPython (`python.elf`):** Runtime ligero de Python 3.
+   - **NASM:** Ensamblador x86 de 32 bits.
+   - **GNU Binutils (`gcc`, `g++`, `as`, `ld`, `ar`, `ranlib`, `objcopy`, `objdump`, `readelf`, `nm`, `strip`).**
+
+4. **Aplicaciones y utilidades (`applications/`):**
+   - **DOOM (`doom.bin`):** Port de `linuxdoom-1.10` a 320x200 a 60 FPS con sonido Sound Blaster 16.
+   - **Editor de texto (`edit.bin`):** Editor interactivo.
+   - **Demos 3D (`gl_gears.bin`, `gl_cube.bin`, `gl_teapot.bin`):** Pruebas gráficas TinyGL.
+   - **Herramientas de red (`hosting_server.bin`, `hosting_client.bin`, `ping.bin`):** Servidor HTTP, cliente y ping.
+   - **Utilidades de consola (`echo.bin`, `hello.bin`, `player.bin`, `setfont.bin`, `term_ctl.bin`).**
+
+---
+
+## 💾 Modelos de distribución
+
+Hay dos opciones de distribución oficiales disponibles:
+
+### Opción 1: Disco limpio + Paquete de aplicaciones precompiladas
+- **`disk-clean.img`:** Imagen de disco limpia de 512 MB formateada con `IPO_FS`.
+- **`applications.zip`:** Archivo que contiene **únicamente binarios precompilados** (sin código fuente ni scripts de compilación):
+  - Binarios de aplicaciones (`applications/*.bin` + `doom1.wad`)
+  - Ejecutables del toolchain (`toolchain/*.elf`)
+  - Bibliotecas de runtime y script de enlazado (`lib/*.a`, `lib/*.o`, `lib/linker.ld`)
+  - Cabeceras SDK (`include/`)
+  - Fuentes de consola (`fonts/*.fnt`)
+
+### Opción 2: Imagen de disco preinstalada
+- **`disk-installed.img`:** Imagen de 512 MB lista para usar con todas las aplicaciones, DOOM, compiladores y bibliotecas ya instalados en `/applications`, `/lib`, `/include` y `/fonts`.
+
+---
+
+## 🛠️ Utilidades de gestión de disco
+
+Herramientas de Python para gestionar imágenes de disco:
+
+- **`tools/load_applications.py`:** Carga automática de binarios en particiones IPO_FS.
+- **`tools/disk_editor.py`:** Administrador de archivos CLI para imágenes `IPO_FS`.
+- **`load_to_disk.sh`:** Script para formatear y escribir en un solo paso.

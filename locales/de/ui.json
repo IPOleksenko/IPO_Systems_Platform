@@ -32,7 +32,6 @@
       "part_a": "Teil A: Übersicht & Architektur",
       "part_b": "Teil B: Hardware & PC-Zusammenbau",
       "part_c": "Teil C: Kernel & Boot-Subsysteme",
-      "part_d": "Teil D: Anwendungsprogrammierung",
       "part_e": "Teil E: Technische Referenzen",
       "part_f": "Teil F: Kernel-Entwicklung"
     },
@@ -53,6 +52,12 @@
       "interrupt_reference": "BIOS-Interrupt-Dienste (IVT)",
       "reference": "ACPI, POST 0x80 & Datenbereiche",
       "troubleshooting": "Boot-Fehler & Wiederherstellung"
+    },
+    "ipo_os_software": {
+      "title": "IPO_OS_Software Ökosystem",
+      "core": "Kernarchitektur & Toolchain",
+      "runtime_apis": "Laufzeitbibliotheken & APIs",
+      "build_deploy": "Build & Bereitstellung"
     }
   },
   "pages": {
@@ -119,6 +124,22 @@
       "interrupt_reference": "BIOS Interrupts Reference (INT 10h–1Ah)",
       "reference": "Contract 3, EBDA & POST Codes",
       "troubleshooting": "Storage Probing & Recovery"
+    },
+    "ipo_os_software": {
+      "overview": "Übersicht über das Software-Ökosystem",
+      "toolchain_setup": "Development Toolchain Setup",
+      "hello_world": "First Program: Hello, IPO_OS",
+      "binary_format": "Binary Layout & Memory Map",
+      "abi": "ABI & Calling Conventions",
+      "syscalls_app": "Invoking System Calls",
+      "stdlib": "C Standard Library & Runtime",
+      "memory_io": "Memory Allocation & File I/O",
+      "ui_programming": "Console & GUI Output (WM)",
+      "build_system": "Makefiles & Linker Scripts",
+      "packaging": "Packaging & Disk Deployment",
+      "app_debugging": "Application Debugging",
+      "best_practices": "Style Guide & Common Pitfalls",
+      "examples": "Practical Code Examples"
     }
   },
   "ui": {
@@ -153,8 +174,8 @@
     "dialog_subtitle": "Vorkompilierte Binärdateien. Einmal gebaut und statisch über GitHub Pages bereitgestellt.",
     "featured_badge": "⭐ Vollständiges Plattform-Bundle",
     "featured_ribbon": "⭐ Vollständiges Plattform-Bundle",
-    "featured_title": "Complete IPO Systems Bundle (Alle 3 Projekte & Disk)",
-    "featured_desc": "Enthält alle kompilierten Binärdateien der Plattform: Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), IPO_OS Kernel-Image (IPO_OS.img) und 128-MB-Anwendungsdiskette (disk.img).",
+    "featured_title": "Komplettes IPO Systems Paket (Alle Projekte & Datenträger)",
+    "featured_desc": "Enthält alle vorkompilierten Binärdateien der Plattform: Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), IPO_OS Kernel-Abbild (IPO_OS.img), saubere und vorinstallierte Datenträger (disk-clean.img, disk-installed.img) sowie das Anwendungspaket (applications.zip).",
     "download_bundle": "Komplettes Bundle herunterladen (.zip)",
     "components_title": "Einzelne Komponenten & Datenträger-Images",
     "download_btn": "Herunterladen",
@@ -179,6 +200,8 @@
     "boot_rom_docs_link": "Boot ROM Dokumentation →",
     "firmware_desc": "BIOS-kompatible Real-Mode-Firmware-Laufzeitumgebung mit IVT-Interrupt-Diensten, E820-Speicherkarte und Fast A20.",
     "firmware_docs_link": "Firmware Dokumentation →",
+    "software_desc": "Userland-Software-Ökosystem für IPO_OS: C-Standardlaufzeitbibliothek (libc, libm, libstdc++), TinyGL 3D-Grafik, Fenstermanager-APIs, betriebssystemeigene Compiler (TinyCC, Lua, MicroPython, NASM, GNU binutils), portierte Anwendungen inklusive DOOM und IPO_FS-Festplatten-Tools.",
+    "software_docs_link": "Software-Dokumentation →",
     "roles_title": "Wo anfangen (Leserprofile)",
     "roles_desc": "Wählen Sie Ihren Einstiegspunkt für maßgeschneiderte Anleitungen:",
     "user_role_title": "Endbenutzer",

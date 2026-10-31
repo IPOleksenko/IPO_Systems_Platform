@@ -19,7 +19,7 @@
     "edit_page": "Предложить правку на GitHub",
     "report_issue": "Сообщить о проблеме",
     "roles": {
-      "user": "Пользователь IPO_OS", 
+      "user": "Пользователь IPO_OS",
       "app_dev": "Разработчик приложений",
       "kernel_dev": "Разработчик ядра и драйверов",
       "pc_builder": "Сборщик ПК"
@@ -32,7 +32,6 @@
       "part_a": "Часть A: Обзор и философия",
       "part_b": "Часть B: Сборка ПК под IPO_OS",
       "part_c": "Часть C: Загрузка и ядро",
-      "part_d": "Часть D: Программирование под IPO_OS",
       "part_e": "Часть E: Справочники",
       "part_f": "Часть F: Разработка и вклад"
     },
@@ -53,6 +52,12 @@
       "interrupt_reference": "Сервисы прерываний BIOS (IVT)",
       "reference": "Спецификация ACPI, POST 0x80 и EBDA",
       "troubleshooting": "Отказы загрузки и восстановление"
+    },
+    "ipo_os_software": {
+      "title": "Экосистема IPO_OS_Software",
+      "core": "Архитектура и инструментарий разработки",
+      "runtime_apis": "Библиотеки времени исполнения и API",
+      "build_deploy": "Сборка и развертывание ПО"
     }
   },
   "pages": {
@@ -119,6 +124,22 @@
       "interrupt_reference": "Справочник прерываний BIOS (INT 10h–1Ah)",
       "reference": "Спецификация Contract 3, EBDA и коды POST",
       "troubleshooting": "Отказы поиска дисков и восстановление"
+    },
+    "ipo_os_software": {
+      "overview": "Обзор программной экосистемы",
+      "toolchain_setup": "Настройка окружения разработки",
+      "hello_world": "Первая программа: Hello, IPO_OS",
+      "binary_format": "Формат исполняемого файла и карта памяти",
+      "abi": "ABI и соглашения о вызовах",
+      "syscalls_app": "Вызов системных функций из программ",
+      "stdlib": "Стандартная библиотека C и рантайм",
+      "memory_io": "Управление кучей и файловый ввод-вывод",
+      "ui_programming": "Консольный и графический интерфейс (WM)",
+      "build_system": "Скрипты сборки Makefile и Linker Script",
+      "packaging": "Упаковка и установка программ на диск",
+      "app_debugging": "Методы отладки приложений",
+      "best_practices": "Руководство по стилю и частые ошибки",
+      "examples": "Практические обучающие примеры"
     }
   },
   "ui": {
@@ -153,8 +174,8 @@
     "dialog_subtitle": "Готовые скомпилированные образы. Собраны один раз и раздаются напрямую через GitHub Pages.",
     "featured_badge": "⭐ Полный комплект платформы",
     "featured_ribbon": "⭐ Полный комплект платформы",
-    "featured_title": "Complete IPO Systems Bundle (все 3 проекта и диск)",
-    "featured_desc": "Содержит все скомпилированные бинарники платформы: Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), образ ядра IPO_OS (IPO_OS.img) и диск приложений 128 МБ (disk.img).",
+    "featured_title": "Полный комплект IPO Systems (Все проекты и диски)",
+    "featured_desc": "Включает все скомпилированные бинарники платформы: Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), образ ядра IPO_OS (IPO_OS.img), чистый и предустановленный диски (disk-clean.img, disk-installed.img) и пакет скомпилированных приложений (applications.zip).",
     "download_bundle": "Скачать полный комплект (.zip)",
     "components_title": "Отдельные компоненты и образы дисков",
     "download_btn": "Скачать",
@@ -179,6 +200,8 @@
     "boot_rom_docs_link": "Документация Boot ROM →",
     "firmware_desc": "BIOS-совместимый сервисный слой реального режима. Устанавливает таблицу IVT (INT 10h–1Ah), строит карту E820, активирует Fast A20, выполняет многошинный автопоиск дисков (IDE/AHCI/NVMe/USB) и загружает MBR по Контракту 3.",
     "firmware_docs_link": "Документация Firmware →",
+    "software_desc": "Пользовательская программная экосистема для IPO_OS: стандартная библиотека C (libc, libm, libstdc++), 3D-графика TinyGL, оконные API, внутрисистемные компиляторы (TinyCC, Lua, MicroPython, NASM, binutils), портированные приложения включая DOOM и утилиты управления дисками IPO_FS.",
+    "software_docs_link": "Документация по ПО →",
     "roles_title": "С чего начать (Руководства по ролям)",
     "roles_desc": "Выберите ваш профиль для перехода к профильному руководству:",
     "user_role_title": "Пользователь системы",

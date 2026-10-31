@@ -1,0 +1,73 @@
+---
+title: "Übersicht über das Software-Ökosystem IPO_OS_Software"
+description: "Benutzerbereichsarchitektur, Standardbibliotheken, Toolchain und Anwendungspakete für IPO_OS."
+---
+
+import Callout from '../../../components/Callout.astro';
+
+# Übersicht über das Software-Ökosystem IPO_OS_Software
+
+**IPO_OS_Software** ist das offizielle Repository für das Benutzerbereich-Ökosystem, Standardbibliotheken, Entwickler-Tools und Anwendungssoftware für das Betriebssystem **[IPO_OS](https://github.com/IPOleksenko/IPO_OS)**. Es stellt eine C/C++-Laufzeitumgebung, 3D-Grafikbibliotheken, Fensterschnittstellen, In-OS-Compiler, Interpreter, portierte Anwendungen und Festplatten-Deployment-Tools bereit.
+
+<Callout type="tip" lang="de" title="Modulare Projekttrennung">
+IPO_OS konzentriert sich ausschließlich auf Kernelarchitektur, Bare-Metal-Hardwaretreiber, Speicherverwaltung und Prozessplanung. Alle Benutzerprogramme, Standardbibliotheken, Compiler und Festplattenwerkzeuge befinden sich in **IPO_OS_Software**.
+</Callout>
+
+---
+
+## 🏛️ Architektur des Ökosystems
+
+Das Repository `IPO_OS_Software` ist in funktionale Ebenen unterteilt:
+
+1. **Laufzeitbibliotheken (`lib/`):**
+   - **`libc.a`:** C99-Standardbibliothek (Speicherverwaltung mit `sbrk`, stdio, POSIX-Dateien, Sockets, Signale und `dlopen`/`dlsym`).
+   - **`libm.a`:** Mathematische Bibliothek für Trigonometrie und Gleitkommaoperationen.
+   - **`libstdc++.a`:** Grundlegende C++-Laufzeit (`new`/`delete`, RTTI, Exception-Stubs).
+   - **`libapp.a`:** Systemintegration für Window-Manager (WM), VGA-Schriften, Eingabe und Audio.
+   - **TinyGL:** OpenGL 1.1-kompatibler 3D-Software-Rasterizer.
+   - **CRT-Module (`crt0.o`, `crti.o`, `crtn.o`):** Standard-Einsprungpunkte für Binärdateien.
+
+2. **Standard-Header (`include/`):**
+   - Vereinheitlichte Header (`stdio.h`, `stdlib.h`, `unistd.h`, `GL/gl.h`, `wm.h`, `syscall.h`).
+
+3. **In-OS-Entwicklertools (`build/toolchain/`):**
+   - **TinyCC (`tcc`):** Schneller C99-Compiler direkt in IPO_OS.
+   - **Lua 5.3 (`lua`, `luac`):** Skript-Interpreter und Bytecode-Compiler.
+   - **MicroPython (`python.elf`):** Schlanke Python-3-Laufzeit.
+   - **NASM:** 32-Bit-x86-Assembler.
+   - **GNU Binutils (`gcc`, `g++`, `as`, `ld`, `ar`, `ranlib`, `objcopy`, `objdump`, `readelf`, `nm`, `strip`).**
+
+4. **Anwendungen & Dienstprogramme (`applications/`):**
+   - **DOOM (`doom.bin`):** Port von `linuxdoom-1.10` mit 320x200, 60 FPS und Sound Blaster 16.
+   - **Texteditor (`edit.bin`):** Interaktiver Texteditor.
+   - **3D-Demos (`gl_gears.bin`, `gl_cube.bin`, `gl_teapot.bin`):** TinyGL-Demonstrationen.
+   - **Netzwerktools (`hosting_server.bin`, `hosting_client.bin`, `ping.bin`):** HTTP-Server, Client und Ping.
+   - **Terminal-Tools (`echo.bin`, `hello.bin`, `player.bin`, `setfont.bin`, `term_ctl.bin`).**
+
+---
+
+## 💾 Vertriebsmodelle
+
+Für Entwickler und Benutzer stehen zwei Optionen zur Verfügung:
+
+### Option 1: Saubere Festplatte + Vorkompilierte Anwendungspakete
+- **`disk-clean.img`:** Sauberes 512-MB-Festplattenabbild, formatiert mit dem Dateisystem `IPO_FS`.
+- **`applications.zip`:** Archiv, das **ausschließlich vorkompilierte Binärdateien** enthält (keine Quelldateien oder Build-Skripte):
+  - Anwendungs-Binärdateien (`applications/*.bin` + `doom1.wad`)
+  - Toolchain-Programme (`toolchain/*.elf`)
+  - Laufzeitbibliotheken und Linker-Skript (`lib/*.a`, `lib/*.o`, `lib/linker.ld`)
+  - SDK-Header (`include/`)
+  - Schriftdateien (`fonts/*.fnt`)
+
+### Option 2: Vorinstalliertes Festplattenabbild
+- **`disk-installed.img`:** Sofort einsatzbereites 512-MB-Abbild mit vorinstallierten Anwendungen, DOOM, Compilern und Bibliotheken in `/applications`, `/lib`, `/include` und `/fonts`.
+
+---
+
+## 🛠️ Festplatten-Dienstprogramme
+
+Eigenständige Python-Tools zur Festplattenverwaltung:
+
+- **`tools/load_applications.py`:** Automatisches Laden kompilierter Binärdateien auf IPO_FS-Partitionen.
+- **`tools/disk_editor.py`:** Vollwertiger CLI-Dateimanager für `IPO_FS`-Abbilder.
+- **`load_to_disk.sh`:** Skript zum Formatieren und Befüllen in einem Schritt.

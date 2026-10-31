@@ -17,7 +17,7 @@ The IPO_OS task scheduling subsystem manages application execution through a **h
            ┌──────────────┐
            │   CREATED    │
            └──────┬───────┘
-                  │ process_spawn() / universal_exec_load()
+                  │ process_spawn() / exec_load()
            ┌──────▼───────┐
      ┌────►│    READY     ├─────┐
      │     └──────▲───────┘     │
@@ -34,18 +34,19 @@ The IPO_OS task scheduling subsystem manages application execution through a **h
 
 ---
 
-## 📋 Process Control Block (`process_t`) & Universal Loader (`universal_exec_load`)
+## 📋 Process Control Block (`process_t`) & Execution Architecture
 
-Each process in IPO_OS is tracked by a kernel-managed `process_t` structure (`src/include/kernel/process.h`) and spawned via `process_spawn()`. The structure includes dynamically managed process, return-value, workspace, and demand-loading state, so its total size is not a fixed ABI:
-- **Universal Executable Loader (`universal_exec_load`):** Loads both **32-bit ELF executables** (`0x7F 'E' 'L' 'F'`, parsing `PT_LOAD` segments, zero-filling `.bss`, and tracking writable `PF_W` segments) and **flat binary images (`.bin`)**, while rejecting plain text files (`is_text_file()`).
-- **Shebang (`#!`) Script Support:** `process_spawn()` detects `#!` interpreter headers and resolves them recursively (up to 4 nesting levels).
+Each process in IPO_OS is tracked by a kernel-managed `process_t` structure (`src/include/kernel/process.h`, total size **372 bytes (0x174)** in 32-bit mode) and spawned via `process_spawn()`:
+- **Dynamic Binary Format Registry (`binfmt`):** Evaluates header magic bytes using kernel registered handlers (`g_binfmt_list`). Supported formats (ELF32, Lua, Python, Shell, TinyCC) are dispatched dynamically to userspace runners (such as `/applications/elf_loader` for 32-bit ELF binaries).
+- **Standard Bare-Metal Loader (`exec_load`):** When no format handler matches, raw machine instructions are loaded directly at `0x00800000` (`PROCESS_HEAP_START`) without file format metadata overhead.
+- **Dynamic Heap Isolation (`process_heap_init`):** Allocates an independent physical heap memory slice (`USER_HEAP_START = 0x08000000`, 256 MB dynamic stride).
 
 | Field | Type | Description |
 | :--- | :--- | :--- |
 | **`pid`** | `uint32_t` | Unique Process ID (dynamically allocated) |
 | **`binary_base`** | `void *` | Base execution address (`0x800000` / `PROCESS_HEAP_START`) |
 | **`binary_size`** | `uint32_t` | Total page-aligned (4 KB) memory size of image |
-| **`entry_point`** | `uint32_t` | Absolute execution entry point (`e_entry` for ELF32 or `0x800000` for `.bin`) |
+| **`entry_point`** | `uint32_t` | Absolute execution entry point (address of allocated free block `mem`) |
 | **`binary_storage`**| `void *` | Dedicated backup storage buffer when swapped out |
 | **`data_offset`** | `uint32_t` | Offset where writable `.data` and `.bss` begin |
 | **`data_size`** | `uint32_t` | Size of writable data to preserve |
@@ -56,8 +57,12 @@ Each process in IPO_OS is tracked by a kernel-managed `process_t` structure (`sr
 | **`waiting_for_input`**| `bool` | True when blocked waiting for keyboard keystrokes |
 | **`text_vram_backup`** | `uint16_t *` | Saved 80x25 text mode framebuffer for workspace switching |
 | **`gfx_vram_backup` / `gfx_palette_backup`** | `uint8_t *` | Saved VGA graphics framebuffer and 256-color DAC palette (768 bytes) |
+| **`gfx_overlay_flags`** | `uint32_t` | VGA overlay visibility flags (`0x01` hide close button, `0x02` hide cursor) |
 | **`text_output_buf`** | `char *` | Self-expanding buffer capturing process text output (`len`/`cap`) |
-| **`user_heap_break`** | `uint32_t` | Current `sbrk` dynamic heap break pointer (512 MB slice per PID) |
+| **`user_heap_base` / `user_heap_break` / `user_heap_limit`** | `uint32_t` | Per-process isolated dynamic heap boundaries (`sbrk()`) |
+| **`user_heap_slot`** | `int32_t` | Dynamically assigned non-overlapping memory slot index |
+| **`exec_inode`** | `struct ipo_inode` | Inode descriptor of the executable on the filesystem (128 bytes) |
+| **`demand_loading`** | `bool` | Asynchronous background demand-paging loading active |
 
 ---
 

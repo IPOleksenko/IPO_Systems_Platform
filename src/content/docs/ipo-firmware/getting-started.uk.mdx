@@ -41,7 +41,7 @@ make all
 - `src/pci_scan.asm, src/ahci.asm, src/nvme.asm (Multi-bus storage discovery)
 - `src/chainload.asm (Sector 0 reading and Contract 3 handover)
 
-Результат збирання: `build/firmware.bin` (корисне навантаження прошивки до 32 КБ) та `build/firmware.rom` (завантажувальний ROM-образ, за замовчуванням 256 КБ).
+Результат збирання: `build/firmware.rom` (готовий завантажувальний ROM-образ для чипів SPI Flash або QEMU, за замовчуванням 256 КБ) та проміжний бінарний файл `build/.bin/firmware.bin`.
 
 ---
 

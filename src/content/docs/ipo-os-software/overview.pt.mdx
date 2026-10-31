@@ -1,0 +1,73 @@
+---
+title: "Visão geral do ecossistema IPO_OS_Software"
+description: "Arquitetura em espaço do usuário, bibliotecas padrão, toolchain e aplicativos para IPO_OS."
+---
+
+import Callout from '../../../components/Callout.astro';
+
+# Visão geral do ecossistema IPO_OS_Software
+
+**IPO_OS_Software** é o repositório oficial do ecossistema de usuário, bibliotecas padrão, ferramentas de desenvolvimento e aplicativos para o sistema operacional **[IPO_OS](https://github.com/IPOleksenko/IPO_OS)**. Ele fornece runtime C/C++, gráficos 3D, interfaces de janela, compiladores internos e ferramentas de disco.
+
+<Callout type="tip" lang="pt" title="Separação modular de projetos">
+O IPO_OS dedica-se estritamente à arquitetura do kernel, drivers de hardware, gerenciamento de memória e agendamento de processos. Todos os programas do usuário, bibliotecas padrão, compiladores e ferramentas de disco residem no **IPO_OS_Software**.
+</Callout>
+
+---
+
+## 🏛️ Arquitetura do ecossistema
+
+O repositório `IPO_OS_Software` está estruturado em camadas funcionais:
+
+1. **Bibliotecas de tempo de execução (`lib/`):**
+   - **`libc.a`:** Biblioteca padrão C99 (alocação por `sbrk`, stdio, arquivos POSIX, sockets, sinais e `dlopen`/`dlsym`).
+   - **`libm.a`:** Biblioteca matemática para trigonometria e ponto flutuante.
+   - **`libstdc++.a`:** Suporte básico a C++ (`new`/`delete`, RTTI).
+   - **`libapp.a`:** Integração de sistema para Window Manager (WM), fontes VGA, entrada e áudio.
+   - **TinyGL:** Rasterizador 3D em software compatível com OpenGL 1.1.
+   - **Módulos CRT (`crt0.o`, `crti.o`, `crtn.o`):** Pontos de entrada padrão para binários.
+
+2. **Cabeçalhos padrão (`include/`):**
+   - Cabeçalhos unificados (`stdio.h`, `stdlib.h`, `unistd.h`, `GL/gl.h`, `wm.h`, `syscall.h`).
+
+3. **Toolchain interno (`build/toolchain/`):**
+   - **TinyCC (`tcc`):** Compilador C99 rápido executado diretamente dentro do IPO_OS.
+   - **Lua 5.3 (`lua`, `luac`):** Interpretador de scripts e compilador de bytecode.
+   - **MicroPython (`python.elf`):** Runtime leve de Python 3.
+   - **NASM:** Assembler x86 de 32 bits.
+   - **GNU Binutils (`gcc`, `g++`, `as`, `ld`, `ar`, `ranlib`, `objcopy`, `objdump`, `readelf`, `nm`, `strip`).**
+
+4. **Aplicativos e utilitários (`applications/`):**
+   - **DOOM (`doom.bin`):** Port de `linuxdoom-1.10` a 320x200 a 60 FPS com áudio Sound Blaster 16.
+   - **Editor de texto (`edit.bin`):** Editor interativo.
+   - **Demos 3D (`gl_gears.bin`, `gl_cube.bin`, `gl_teapot.bin`):** Demonstrações gráficas TinyGL.
+   - **Ferramentas de rede (`hosting_server.bin`, `hosting_client.bin`, `ping.bin`):** Servidor HTTP, cliente e ping.
+   - **Utilitários de terminal (`echo.bin`, `hello.bin`, `player.bin`, `setfont.bin`, `term_ctl.bin`).**
+
+---
+
+## 💾 Modelos de distribuição
+
+Duas opções de distribuição oficiais estão disponíveis:
+
+### Opção 1: Disco limpo + Pacote de aplicativos pré-compilados
+- **`disk-clean.img`:** Imagem de disco limpa de 512 MB formatada com `IPO_FS`.
+- **`applications.zip`:** Arquivo contendo **exclusivamente binários pré-compilados** (sem código-fonte ou scripts de build):
+  - Binários de aplicativos (`applications/*.bin` + `doom1.wad`)
+  - Executáveis do toolchain (`toolchain/*.elf`)
+  - Bibliotecas de runtime e script do linker (`lib/*.a`, `lib/*.o`, `lib/linker.ld`)
+  - Cabeçalhos SDK (`include/`)
+  - Fontes de console (`fonts/*.fnt`)
+
+### Opção 2: Imagem de disco pré-instalada
+- **`disk-installed.img`:** Imagem de 512 MB pronta com todos os aplicativos, DOOM, compiladores e bibliotecas instalados em `/applications`, `/lib`, `/include` e `/fonts`.
+
+---
+
+## 🛠️ Utilitários de gerenciamento de disco
+
+Ferramentas Python para gerenciar imagens de disco:
+
+- **`tools/load_applications.py`:** Gravação automática de binários em partições IPO_FS.
+- **`tools/disk_editor.py`:** Gerenciador de arquivos CLI completo para imagens `IPO_FS`.
+- **`load_to_disk.sh`:** Script para formatar e gravar em um único comando.

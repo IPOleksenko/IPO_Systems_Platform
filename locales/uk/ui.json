@@ -32,7 +32,6 @@
       "part_a": "Частина A: Огляд та архітектура",
       "part_b": "Частина B: Апаратна платформа та збірка ПК",
       "part_c": "Частина C: Ядро та підсистеми завантаження",
-      "part_d": "Частина D: Програмування застосунків",
       "part_e": "Частина E: Технічні довідники",
       "part_f": "Частина F: Розробка ядра"
     },
@@ -53,6 +52,12 @@
       "interrupt_reference": "Сервіси переривань BIOS (IVT)",
       "reference": "ACPI, POST 0x80 та системні області",
       "troubleshooting": "Збої завантаження та відновлення"
+    },
+    "ipo_os_software": {
+      "title": "Екосистема IPO_OS_Software",
+      "core": "Архітектура та інструментарій розробки",
+      "runtime_apis": "Бібліотеки часу виконання та API",
+      "build_deploy": "Збірка та розгортання ПЗ"
     }
   },
   "pages": {
@@ -119,6 +124,22 @@
       "interrupt_reference": "BIOS Interrupts Reference (INT 10h–1Ah)",
       "reference": "Contract 3, EBDA & POST Codes",
       "troubleshooting": "Storage Probing & Recovery"
+    },
+    "ipo_os_software": {
+      "overview": "Огляд програмної екосистеми",
+      "toolchain_setup": "Development Toolchain Setup",
+      "hello_world": "First Program: Hello, IPO_OS",
+      "binary_format": "Binary Layout & Memory Map",
+      "abi": "ABI & Calling Conventions",
+      "syscalls_app": "Invoking System Calls",
+      "stdlib": "C Standard Library & Runtime",
+      "memory_io": "Memory Allocation & File I/O",
+      "ui_programming": "Console & GUI Output (WM)",
+      "build_system": "Makefiles & Linker Scripts",
+      "packaging": "Packaging & Disk Deployment",
+      "app_debugging": "Application Debugging",
+      "best_practices": "Style Guide & Common Pitfalls",
+      "examples": "Practical Code Examples"
     }
   },
   "ui": {
@@ -153,8 +174,8 @@
     "dialog_subtitle": "Готові скомпільовані образи. Зібрані один раз і роздаються безпосередньо через GitHub Pages.",
     "featured_badge": "⭐ Повний комплект платформи",
     "featured_ribbon": "⭐ Повний комплект платформи",
-    "featured_title": "Complete IPO Systems Bundle (усі 3 проекти та диск)",
-    "featured_desc": "Містить усі скомпільовані бінарники платформи: Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), образ ядра IPO_OS (IPO_OS.img) та диск застосунків 128 МБ (disk.img).",
+    "featured_title": "Повний комплект IPO Systems (Всі проекти та диски)",
+    "featured_desc": "Містить усі скомпільовані бінарні файли платформи: Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), образ ядра IPO_OS (IPO_OS.img), чистий та передвстановлений диски (disk-clean.img, disk-installed.img) та пакет скомпільованих програм (applications.zip).",
     "download_bundle": "Завантажити повний комплект (.zip)",
     "components_title": "Окремі компоненти та образи дисків",
     "download_btn": "Завантажити",
@@ -179,6 +200,8 @@
     "boot_rom_docs_link": "Документація Boot ROM →",
     "firmware_desc": "BIOS-сумісний сервісний шар реального режиму. Встановлює таблицю IVT (INT 10h–1Ah), будує карту E820, активує Fast A20, виконує багатошинний автопошук дисків (IDE/AHCI/NVMe/USB) та завантажує MBR за Контрактом 3.",
     "firmware_docs_link": "Документація Firmware →",
+    "software_desc": "Користувацька програмна екосистема для IPO_OS: стандартна бібліотека C (libc, libm, libstdc++), 3D-графіка TinyGL, віконні API, внутрішньосистемні компілятори (TinyCC, Lua, MicroPython, NASM, binutils), портовані застосунки включаючи DOOM та утиліти керування дисками IPO_FS.",
+    "software_docs_link": "Документація по ПЗ →",
     "roles_title": "З чого почати (Керівництва за ролями)",
     "roles_desc": "Оберіть ваш профіль для переходу до профільного керівництва:",
     "user_role_title": "Користувач системи",

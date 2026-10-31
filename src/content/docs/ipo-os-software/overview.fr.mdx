@@ -1,0 +1,73 @@
+---
+title: "Vue d'ensemble de l'écosystème IPO_OS_Software"
+description: "Architecture en espace utilisateur, bibliothèques standard, chaîne d'outils et applications pour IPO_OS."
+---
+
+import Callout from '../../../components/Callout.astro';
+
+# Vue d'ensemble de l'écosystème IPO_OS_Software
+
+**IPO_OS_Software** est le dépôt officiel de l'environnement utilisateur, des bibliothèques standard, des outils de développement et des logiciels applicatifs pour **[IPO_OS](https://github.com/IPOleksenko/IPO_OS)**. Il fournit un environnement d'exécution C/C++, un moteur graphique 3D, une interface fenêtrée, des compilateurs intégrés et des utilitaires de disque.
+
+<Callout type="tip" lang="fr" title="Séparation modulaire des projets">
+IPO_OS est strictement dédié à l'architecture du noyau, aux pilotes matériels, à la gestion de la mémoire et à l'ordonnancement. Tous les programmes utilisateur, bibliothèques, compilateurs et outils de disque résident dans **IPO_OS_Software**.
+</Callout>
+
+---
+
+## 🏛️ Architecture de l'écosystème
+
+Le dépôt `IPO_OS_Software` est organisé en couches fonctionnelles :
+
+1. **Bibliothèques d'exécution (`lib/`):**
+   - **`libc.a`:** Bibliothèque standard C99 (allocation via `sbrk`, stdio, POSIX, sockets, signaux et `dlopen`/`dlsym`).
+   - **`libm.a`:** Bibliothèque mathématique (trigonométrie, logarithmes et virgule flottante).
+   - **`libstdc++.a`:** Support d'exécution C++ minimal (`new`/`delete`, RTTI).
+   - **`libapp.a`:** Intégration système pour le gestionnaire de fenêtres (WM), les polices VGA et le son.
+   - **TinyGL:** Rasteriseur logiciel 3D conforme OpenGL 1.1.
+   - **Modules CRT (`crt0.o`, `crti.o`, `crtn.o`):** Points d'entrée standard.
+
+2. **En-têtes standard (`include/`):**
+   - En-têtes unifiés (`stdio.h`, `stdlib.h`, `unistd.h`, `GL/gl.h`, `wm.h`, `syscall.h`).
+
+3. **Chaîne d'outils intégrée (`build/toolchain/`):**
+   - **TinyCC (`tcc`):** Compilateur C99 rapide s'exécutant directement dans IPO_OS.
+   - **Lua 5.3 (`lua`, `luac`):** Interpréteur de script et compilateur de bytecode.
+   - **MicroPython (`python.elf`):** Environnement Python 3 minimal.
+   - **NASM:** Assembleur x86 32 bits.
+   - **GNU Binutils (`gcc`, `g++`, `as`, `ld`, `ar`, `ranlib`, `objcopy`, `objdump`, `readelf`, `nm`, `strip`).**
+
+4. **Applications et utilitaires (`applications/`):**
+   - **DOOM (`doom.bin`):** Port de `linuxdoom-1.10` en 320x200 à 60 FPS avec audio Sound Blaster 16.
+   - **Éditeur de texte (`edit.bin`):** Éditeur interactif.
+   - **Démos 3D (`gl_gears.bin`, `gl_cube.bin`, `gl_teapot.bin`):** Démonstrations TinyGL.
+   - **Outils réseau (`hosting_server.bin`, `hosting_client.bin`, `ping.bin`):** Serveur HTTP, client et ping.
+   - **Utilitaires de console (`echo.bin`, `hello.bin`, `player.bin`, `setfont.bin`, `term_ctl.bin`).**
+
+---
+
+## 💾 Modèles de distribution
+
+Deux options de distribution sont disponibles :
+
+### Option 1 : Disque vierge + Paquet d'applications précompilées
+- **`disk-clean.img`:** Image disque vierge de 512 Mo formatée avec le système de fichiers `IPO_FS`.
+- **`applications.zip`:** Archive contenant **uniquement les binaires précompilés** (sans code source ni scripts de compilation) :
+  - Binaires d'applications (`applications/*.bin` + `doom1.wad`)
+  - Exécutables de la chaîne d'outils (`toolchain/*.elf`)
+  - Bibliothèques et script d'édition de liens (`lib/*.a`, `lib/*.o`, `lib/linker.ld`)
+  - Fichiers d'en-tête SDK (`include/`)
+  - Polices de console (`fonts/*.fnt`)
+
+### Option 2 : Image disque préinstallée
+- **`disk-installed.img`:** Image de 512 Mo prête à l'emploi avec toutes les applications, DOOM, compilateurs et bibliothèques déjà installés dans `/applications`, `/lib`, `/include` et `/fonts`.
+
+---
+
+## 🛠️ Outils de gestion de disque
+
+Outils Python autonomes :
+
+- **`tools/load_applications.py`:** Chargement automatique des binaires sur les partitions IPO_FS.
+- **`tools/disk_editor.py`:** Gestionnaire de fichiers CLI complet pour images `IPO_FS`.
+- **`load_to_disk.sh`:** Script pour formater et déployer en une commande.

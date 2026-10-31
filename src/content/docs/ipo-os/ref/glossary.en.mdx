@@ -61,7 +61,7 @@ Model-specific CPU registers that define cacheability attributes (Write-Back, Wr
 Chipset registers controlling read and write permissions to the shadow BIOS memory region (`0x000C0000`..`0x000FFFFF`).
 
 ### PMM (Physical Memory Manager)
-Memory allocation architecture in IPO_OS: BIOS E820 descriptors are passed at `0x6000` with an `e820_map_header_t` header at `0x8FE0` (`'E820'`), the kernel heap is managed via `kmalloc` (64 MB at `0x01000000`–`0x04FFFFFF`), page frames (`memory_map_alloc`) start at `0x05000000+`, and dynamic process heaps (`sbrk`) are partitioned into 512 MB slices starting at `0x08000000`.
+Memory allocation architecture in IPO_OS: BIOS E820 descriptors are passed at `0x6000` with an `e820_map_header_t` header at `0x8FE0` (`'E820'`), the kernel heap is managed via `kmalloc` (64 MB at `0x01000000`–`0x04FFFFFF`), page frames (`memory_map_alloc`) start at `0x05000000+`, and dynamic process heaps (`sbrk`) are partitioned into isolated physical slots starting at `0x08000000` (`USER_HEAP_START`) with 256 MB dynamic stride.
 
 ### TSS (Task State Segment)
 Legacy x86 hardware task structure. In IPO_OS's flat protected mode model, context switching and system call dispatch are implemented in software routines without hardware TSS stack switching.

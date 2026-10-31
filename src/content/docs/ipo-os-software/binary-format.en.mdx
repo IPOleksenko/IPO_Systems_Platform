@@ -1,0 +1,149 @@
+---
+title: "Binary Architecture, Executable Formats & Memory Model"
+description: "Architectural reference for bare-metal exec_load, Dynamic Binary Formats (binfmt), ELF32 userspace loader, flat binaries, scripts, KMOD, dlopen, and cooperative process memory swapping in IPO_OS."
+---
+
+import SharedCode from '../../../components/SharedCode.astro';
+import Callout from '../../../components/Callout.astro';
+
+# Binary Architecture, Executable Formats & Memory Model
+
+IPO_OS implements a versatile and resilient application execution subsystem centered around the **Universal Executable Loader** (`exec_load()` in `src/kernel/core/process.c:3469`). Working in concert with `process_spawn()`, `kmod_load_file()`, and the userland dynamic linker (`dlopen()`), the kernel natively supports multiple binary and scripting formats, provides automatic DWARF return type reflection for ELF binaries, enforces text file safety guards, and executes processes in an optimized memory model with fast-path context swapping.
+
+---
+
+## 🗺️ Process Memory Map & Address Space Layout
+
+Every user application in IPO_OS executes in a 32-bit flat address space. The memory architecture cleanly separates the execution base, the kernel runtime heap, physical frame allocators, and per-process dynamic heaps:
+
+```
++-------------------------------------------------------------+ Top of RAM
+| Per-Process Isolated Dynamic Heaps (0x08000000 + slot*stride)| On-demand sbrk()
++-------------------------------------------------------------+ 0x08000000 (128 MB)
+| PMM Page Frame Pool (memory_map_alloc) / Low-RAM Heap Base  |
++-------------------------------------------------------------+ 0x05000000 (80 MB)
+| Kernel Dynamic Heap (kmalloc, 64 MB capacity)               |
+|   • Process Stacks (256 KB each, setup_stack)               |
+|   • Process Argument Arrays (argv) & Environment            |
++-------------------------------------------------------------+ 0x01000000 (16 MB)
+| Dynamic Process Allocations Pool (PROCESS_HEAP_START)       |
+|   • First-fit block allocation (allocate_process_memory)    |
+|   • Coalesced free blocks (coalesce_free_blocks)            |
+|   • Distinct base per process (entry_point = mem)           |
++-------------------------------------------------------------+ 0x00800000 (8 MB)
+| Kernel Space (Code at 0x10000, Stack at 0x500000)            |
+| E820 memory map at 0x6000, RAM detection header at 0x8FE0   |
++-------------------------------------------------------------+ 0x00000000
+```
+
+---
+
+## 📦 Supported Executable & Dynamic Formats
+
+The IPO_OS platform recognizes and executes 6 distinct binary, module, and script formats:
+
+### 1. 32-bit ELF Executables (`ET_EXEC`, `EM_386`)
+When `process_spawn()` detects the standard ELF magic header (`0x7F 'E' 'L' 'F'`), the dynamic format registry automatically invokes the userland **ELF Loader** (`/applications/elf_loader`):
+- **Program Header Parsing:** Evaluates the `Elf32_Phdr` table, identifying all `PT_LOAD` segments (`p_type == 1`).
+- **Memory Allocation & Page Alignment:** Allocates staging memory from `max_vaddr - min_vaddr` rounded up to 4 KB boundaries via `sbrk()`.
+- **Segment Loading & Relocations:** Reads segments directly from disk into staging memory and dynamically resolves `SHT_REL` relocations (`R_386_32`, `R_386_RELATIVE`) if relocated away from base address.
+- **Automatic `.bss` Allocation:** Zero-fills all uninitialized memory spans where `p_memsz > p_filesz`.
+- **Return Value & Calling Convention Detection:** Detects struct returns (`is_entry_struct_return`), hidden return buffer pointers, and parses embedded return format descriptors (`IPOR` magic `0x524F5049`), registering format metadata with the kernel via `SYS_SET_RETURN_VALUE` (0x1029).
+- **Zero-Copy Trampoline:** For binaries linked at base `0x00800000`, trampolines directly into the target entry point (`ehdr.e_entry`) with arguments and environment pointers.
+
+### 2. Raw Bare-Metal Flat Binaries (`.bin`)
+Raw flat binaries contain no headers, symbol tables, or section tables. They are pure machine instructions and data compiled to execute directly at base address `0x00800000`:
+- Handled directly by the kernel's **Standard Bare-Metal Loader** (`exec_load()`).
+- Loaded contiguously into process memory with 4 KB page alignment at `0x00800000` (`PROCESS_HEAP_START`, 8 MB).
+- Base address and entry point are both set to `0x00800000`.
+- The entire binary size is tracked as data (`data_off = 0`, `data_sz = total_memsz`).
+- Flat binaries execute with zero loader overhead; standard exit codes are returned via `EAX` on process termination.
+
+### 3. Dynamic Binary Format Registry (`binfmt` & `/autorun`)
+To dynamically support new file formats without kernel recompilation, IPO_OS provides an extensible in-kernel registry:
+- **Kernel Format Registry (`g_binfmt_list`):** Syscalls `0x10E0` (`IPO_SYSCALL_BINFMT_REGISTER`), `0x10E1` (`IPO_SYSCALL_BINFMT_UNREGISTER`), and `0x10E2` (`IPO_SYSCALL_BINFMT_LIST`) allow adding, removing, and listing runtime dispatchers.
+- **Automatic Boot Registration (`/autorun`):** During startup, `/autorun` runs `/applications/binfmt`, which registers all standard system formats:
+  - `ELF32` (`\x7fELF` at offset 0) &rarr; `/applications/elf_loader`
+  - `LuaBytecode` (`\x1bLua` at offset 0) &rarr; `/applications/lua`
+  - `PythonHashbang` (`#!/applications/python`, `#!/bin/python`, `#python`) &rarr; `/applications/python`
+  - `LuaHashbang` (`#!/applications/lua`, `#!/bin/lua`, `#lua`) &rarr; `/applications/lua`
+  - `TccHashbang` (`#!/applications/tcc`, `//tcc`, `/*tcc`) &rarr; `/applications/tcc -run`
+  - `ShHashbang` (`#!/bin/sh`, `#!/applications/sh`, `#sh`) &rarr; `/applications/sh`
+- **CLI Utility (`/applications/binfmt`):** Run `binfmt list` to inspect registered formats or `binfmt add <name> <magic> <offset> <runner>` to register custom format runners (such as WebAssembly or custom bytecodes).
+
+### 4. Shebang & Header Tag Scripts
+Interpreted scripts are intercepted at process creation via the `binfmt` subsystem:
+- Matches both standard shebangs (`#!/path/to/interpreter`) and header comment tags (e.g. `#python`, `#lua`, `//tcc`).
+- Resolves interpreter path and arguments dynamically.
+- Rewrites `argv` and recursively launches the interpreter process with the script path.
+- Supports chaining up to 16 nesting levels (`spawn_depth < 16`).
+
+### 5. Dynamic Kernel Modules (`.kmd`, Ring 0)
+Loaded dynamically by `kmod_load_file()` in `src/kernel/core/kmod.c`:
+- **Format:** `kmod_raw_header_t` with magic `'KMOD'` (`0x444F4D4B`), ABI version verification, and CRC32 payload checksum validation.
+- **Dynamic Symbol Binding:** Resolves unresolved symbol references against the exported kernel symbol table (`ksymtab`, ~1,560 symbols) using binary search.
+- **Relocations:** Fixes up absolute (`KMOD_RELOC_ABSOLUTE`) and PC-relative (`KMOD_RELOC_PCREL`) addresses.
+- **Lifecycle:** Invokes the module's `init()` and `cleanup()` entrypoints.
+
+### 6. Userland Shared Libraries & Relocatable Objects (`.so`, `.o`)
+Loaded dynamically in userspace via `dlopen()`, `dlsym()`, and `dlclose()` in `IPO_OS_Software/lib/libc/dlfcn.c`:
+- **Relocatable Objects (`ET_REL`, `.o`):** Dynamically allocates sections, resolves COMMON symbols, applies section relocations, and registers exported symbols into the process's symbol scope.
+- **Shared Objects (`ET_DYN`, `.so`):** Maps `PT_LOAD` segments, processes dynamic symbol tables, and executes constructor functions.
+- **Lookup Scopes:** Supports standard `RTLD_LAZY`, `RTLD_NOW`, `RTLD_GLOBAL`, and `RTLD_LOCAL` flags.
+
+---
+
+## ⚡ Dynamic Process Memory Allocation & Zero-Copy Context Switching
+
+In IPO_OS, multitasking processes do not swap into a single static window. Instead, each process is allocated into free memory blocks within the process memory pool:
+
+1. **First-Fit Memory Allocation (`allocate_process_memory`):**
+   - The kernel searches `allocated_blocks` for an available free block (`pid == 0`) that fits the requested image size, splitting larger blocks if needed.
+   - If no suitable free block exists, memory is allocated in contiguous free space at the end of the pool (`PROCESS_HEAP_START + global_process_heap_used`).
+2. **Direct In-Place Execution:**
+   - Raw machine instructions are loaded directly into the allocated memory block (`proc->binary_base = mem`).
+   - The entry point is set to the allocated address (`proc->entry_point = (uint32_t)mem`), with `proc->binary_storage = NULL` and `proc->code_mapped = true`.
+3. **Zero-Copy Context Switching (`process_switch_context`):**
+   - Switching between tasks preserves register state and stack pointers (`%esp`, `%ebp`, `%ebx`, `%esi`, `%edi`, `eflags`) without copying memory buffers between processes.
+   - `process_map_app(proc)` tracks `currently_mapped_app` for window manager focus and driver callbacks without memory copying.
+4. **Automatic Memory Reclamation & Coalescing:**
+   - Upon process termination, `free_process_memory()` marks the memory block as free (`pid = 0`).
+   - `coalesce_free_blocks()` immediately merges contiguous free blocks into larger contiguous pools for subsequent process allocations.
+
+---
+
+## 📈 Per-Process Dynamic Heap Isolation (`process_heap_init`)
+
+Userland dynamic memory allocated via `malloc()` and `sbrk()` (`IPO_SYSCALL_SBRK`, `0x1045`) is completely isolated between processes:
+- **Base Address:** Starts at `USER_HEAP_START` (`0x08000000`, 128 MB), or `0x05000000` (80 MB) on low-RAM systems.
+- **Dynamic Stride:** Dynamically calculated from available physical RAM (256 MB default, 32 MB minimum).
+- **Slot Discovery:** Scans active processes to find the first non-overlapping, available slot.
+- **Zero-Commit Startup:** Each process heap starts with **0 bytes committed**. Physical RAM is committed on-demand as `sbrk()` expands the heap break.
+- **Reclamation:** On process termination, the heap slot and all committed memory are immediately freed.
+
+---
+
+## 🎯 Typed Process Returns (`process_trampoline`)
+
+Process entry points are invoked through the kernel's `process_trampoline()`:
+- **Struct Return Detection:** If `main()` returns a struct (`is_entry_struct_return`), the kernel allocates a poisoned buffer (`0xDD`) and passes it as the hidden first argument pointer.
+- **Format Serialization:** When `main()` returns, the kernel inspects `proc->return_format` (extracted from ELF DWARF debug information) and serializes the return value into `proc->return_val`:
+  - `struct` / custom types: Formats members into a structured representation (e.g., `{ data: "hello", length: 5 }`).
+  - `char*`: Reads string pointer from userspace and serializes text.
+  - `float` / `double`: Formats IEEE 754 floating-point values.
+  - `int64` / `uint64`: Combines `EAX` and `EDX` register contents.
+  - `bool`: Formats `true` or `false`.
+  - `int`: Standard exit code stored in `proc->exit_code`.
+- This typed result is displayed by the shell and can be passed into inter-process pipes (`run app1 | app2`).
+
+---
+
+## ⚙️ Linker Scripts & Runtime Startup Stubs
+
+The `IPO_OS_Software` repository provides both full libc runtime files and minimal application stubs:
+
+### Full Runtime Linker Script (`lib/linker.ld`)
+<SharedCode id="app-linker-script" />
+
+### Full C Runtime Startup Stub (`lib/crt/crt0.s`)
+<SharedCode id="app-entry-s" />

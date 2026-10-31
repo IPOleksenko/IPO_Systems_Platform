@@ -32,7 +32,6 @@
       "part_a": "第 A 部分：系统概述与架构",
       "part_b": "第 B 部分：硬件选型与装机",
       "part_c": "第 C 部分：内核与启动子系统",
-      "part_d": "第 D 部分：应用程序开发",
       "part_e": "第 E 部分：技术参考手册",
       "part_f": "第 F 部分：内核开发贡献"
     },
@@ -53,6 +52,12 @@
       "interrupt_reference": "BIOS 中断服务参考 (INT 10h–1Ah)",
       "reference": "ACPI、POST 0x80 与数据区",
       "troubleshooting": "启动失败与恢复指南"
+    },
+    "ipo_os_software": {
+      "title": "IPO_OS_Software 生态系统",
+      "core": "核心架构与工具链",
+      "runtime_apis": "运行时库与 API",
+      "build_deploy": "构建与部署"
     }
   },
   "pages": {
@@ -119,6 +124,22 @@
       "interrupt_reference": "BIOS Interrupts Reference (INT 10h–1Ah)",
       "reference": "Contract 3, EBDA & POST Codes",
       "troubleshooting": "Storage Probing & Recovery"
+    },
+    "ipo_os_software": {
+      "overview": "软件生态系统概述",
+      "toolchain_setup": "Development Toolchain Setup",
+      "hello_world": "First Program: Hello, IPO_OS",
+      "binary_format": "Binary Layout & Memory Map",
+      "abi": "ABI & Calling Conventions",
+      "syscalls_app": "Invoking System Calls",
+      "stdlib": "C Standard Library & Runtime",
+      "memory_io": "Memory Allocation & File I/O",
+      "ui_programming": "Console & GUI Output (WM)",
+      "build_system": "Makefiles & Linker Scripts",
+      "packaging": "Packaging & Disk Deployment",
+      "app_debugging": "Application Debugging",
+      "best_practices": "Style Guide & Common Pitfalls",
+      "examples": "Practical Code Examples"
     }
   },
   "ui": {
@@ -153,8 +174,8 @@
     "dialog_subtitle": "预编译的生产二进制文件。构建一次并通过 GitHub Pages 静态分发。",
     "featured_badge": "⭐ 完整平台软件包",
     "featured_ribbon": "⭐ 完整平台软件包",
-    "featured_title": "Complete IPO Systems Bundle（全部 3 个项目与磁盘）",
-    "featured_desc": "包含整个平台的全部已编译二进制文件：Boot ROM（bootrom.bin）、Firmware BIOS（firmware.rom）、IPO_OS 内核镜像（IPO_OS.img）以及 128 MB 应用程序磁盘（disk.img）。",
+    "featured_title": "IPO Systems 完整捆绑包（所有项目与磁盘）",
+    "featured_desc": "包含整个平台的所有已编译二进制文件：Boot ROM (bootrom.bin)、Firmware BIOS (firmware.rom)、IPO_OS 内核镜像 (IPO_OS.img)、纯净与预安装磁盘 (disk-clean.img, disk-installed.img) 以及预编译应用程序包 (applications.zip)。",
     "download_bundle": "下载完整软件包 (.zip)",
     "components_title": "独立组件与磁盘镜像",
     "download_btn": "下载",
@@ -179,6 +200,8 @@
     "boot_rom_docs_link": "Boot ROM 文档 →",
     "firmware_desc": "实模式 BIOS 兼容固件层，提供 IVT 中断服务、E820 内存映射和 Fast A20。",
     "firmware_docs_link": "Firmware 文档 →",
+    "software_desc": "IPO_OS 用户空间软件生态：C标准运行库（libc, libm, libstdc++）、TinyGL 3D图形、窗口管理API、系统内编译器（TinyCC, Lua, MicroPython, NASM, GNU binutils）、包含 DOOM 在内的移植程序及 IPO_FS 磁盘工具。",
+    "software_docs_link": "软件生态文档 →",
     "roles_title": "从何处开始（读者路径）",
     "roles_desc": "选择您的专业背景以获取定制化的入门指南：",
     "user_role_title": "系统用户",

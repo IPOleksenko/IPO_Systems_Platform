@@ -34,13 +34,16 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
 
       <div class="hero-actions">
         <a href={`${cleanBase}${currentLang}/ipo-os/overview`} class="btn btn-primary">
-          {getTranslation(currentLang, 'home.explore_os')}
+          IPO_OS
+        </a>
+        <a href={`${cleanBase}${currentLang}/ipo-os-software/overview`} class="btn btn-secondary">
+          IPO_OS_Software
         </a>
         <a href={`${cleanBase}${currentLang}/ipo-boot-rom/overview`} class="btn btn-secondary">
-          {getTranslation(currentLang, 'home.explore_boot_rom')}
+          IPO_Boot_ROM
         </a>
         <a href={`${cleanBase}${currentLang}/ipo-firmware/overview`} class="btn btn-secondary">
-          {getTranslation(currentLang, 'home.explore_firmware')}
+          IPO_Firmware
         </a>
         <button type="button" class="btn btn-download open-download-modal-btn">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -129,6 +132,26 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
             </a>
           </div>
         </div>
+
+        <!-- Card 4: IPO_OS_Software -->
+        <div class="project-card">
+          <div class="card-header">
+            <span class="card-badge" style="background-color: #fef3c7; color: #d97706;">Userland / Software</span>
+            <a href={siteConfig.projects.ipo_os_software.repoUrl} target="_blank" rel="noopener noreferrer" class="repo-badge">GitHub ↗</a>
+          </div>
+          <h3 class="card-title">IPO_OS_Software</h3>
+          <p class="card-desc">
+            {getTranslation(currentLang, 'home.software_desc')}
+          </p>
+          <div class="card-footer">
+            <a href={`${cleanBase}${currentLang}/ipo-os-software/overview`} class="card-link">
+              {getTranslation(currentLang, 'home.software_docs_link')}
+            </a>
+            <a href={`${cleanBase}downloads/applications.zip`} download="applications.zip" class="card-download-link" title="Download applications.zip">
+              ⬇️ applications.zip
+            </a>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -153,7 +176,7 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
           <div class="role-icon">💻</div>
           <h4>{getTranslation(currentLang, 'home.app_dev_title')}</h4>
           <p>{getTranslation(currentLang, 'home.app_dev_desc')}</p>
-          <a href={`${cleanBase}${currentLang}/ipo-os/dev/hello-world`}>
+          <a href={`${cleanBase}${currentLang}/ipo-os-software/hello-world`}>
             {getTranslation(currentLang, 'home.app_dev_link')}
           </a>
         </div>

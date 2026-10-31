@@ -1,0 +1,74 @@
+---
+title: "Empacotamento e Implantação"
+description: "Implantação de aplicativos no IPO_FS usando disk_editor.py, load_applications.py, hosting_client e mídia física."
+---
+
+import SharedCode from '../../../components/SharedCode.astro';
+import Callout from '../../../components/Callout.astro';
+
+# Empacotamento e Implantação
+
+Once your application binary is compiled into a flat binary (`.bin`), it must be placed into the `IPO_FS` filesystem partition so the interactive shell can execute it.
+
+---
+
+## 🛠️ Managing Files with `tools/disk_editor.py`
+
+The standalone Python utility `tools/disk_editor.py` allows offline manipulation of raw disk images without requiring root loopback mounts:
+
+```bash
+# 1. Put compiled binary into the /applications directory
+python3 tools/disk_editor.py put hello.bin /applications/hello.bin
+
+# 2. Inspect directory contents
+python3 tools/disk_editor.py ls /applications
+
+# 3. View file contents
+python3 tools/disk_editor.py cat /applications/hello.bin
+```
+
+---
+
+## 📦 Batch Loading via `tools/load_applications.py` & `load_to_disk.sh`
+
+In `IPO_OS_Software`, you can populate your target virtual disk image with all compiled applications, toolchains, runtime libraries, headers, and fonts:
+
+```bash
+# Using load_to_disk.sh:
+./load_to_disk.sh /path/to/disk.img
+
+# Or directly with Python:
+python3 tools/load_applications.py --disk /path/to/disk.img --format
+```
+
+`load_applications.py` automatically checks whether the image has a valid `IPO_FS` superblock. If unformatted, it formats the partition at LBA 2048 with IPO_FS before loading `/applications`, `/lib`, `/include`, and `/fonts`.
+
+---
+
+## 🌐 Network Retrieval via `hosting_client`
+
+If IPO_OS is running with networking enabled (`NET_MODE=tap` or `NET_MODE=user`), files can be downloaded directly inside the running OS:
+
+```bash
+# 1. On host system: serve build files via HTTP
+python3 -m http.server 8000 --directory ./build
+
+# 2. Inside IPO_OS terminal shell: fetch file via hosting_client
+> /applications/hosting_client 192.168.7.1 8000 /hello.bin
+```
+
+---
+
+## 💾 Deploying to Physical Media
+
+To boot on physical hardware:
+
+<Callout type="warning" title="Verify Target Device">
+Always confirm the target drive identifier (`/dev/sdX`) using `lsblk` before running `dd`. Overwriting the wrong disk causes irreversible data loss!
+</Callout>
+
+```bash
+# Write OS image to USB or CompactFlash drive
+sudo dd if=build/IPO_OS.img of=/dev/sdX bs=4M status=progress conv=fsync
+sudo sync
+```

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 IPO Systems Platform — Artifact Build & Packaging Pipeline
-Clones, builds, and packages binaries for IPO_Firmware, IPO_Boot_ROM, and IPO_OS.
+Clones, builds, and packages binaries for IPO_Firmware, IPO_Boot_ROM, IPO_OS, and IPO_OS_Software.
 Compiles once, caching outputs in public/downloads/ for fast delivery on GitHub Pages.
 """
 
@@ -24,12 +24,15 @@ REPOSITORIES = {
     "IPO_Firmware": "https://github.com/IPOleksenko/IPO_Firmware.git",
     "IPO_Boot_ROM": "https://github.com/IPOleksenko/IPO_Boot_ROM.git",
     "IPO_OS": "https://github.com/IPOleksenko/IPO_OS.git",
+    "IPO_OS_Software": "https://github.com/IPOleksenko/IPO_OS_Software.git",
 }
 
 EXPECTED_ARTIFACTS = [
     "ipo-system-bundle.zip",
     "IPO_OS.img",
-    "disk.img",
+    "disk-installed.img",
+    "disk-clean.img",
+    "applications.zip",
     "ipo-boot-rom.zip",
     "ipo-firmware.zip",
 ]
@@ -67,14 +70,11 @@ def ensure_repo(name: str, url: str, force_update: bool = False) -> Path:
     local_source = BASE_DIR.parent / name
 
     if local_source.exists():
-        if force_update or not target_dir.exists():
-            print(f"[{name}] Syncing from local source directory {local_source}...")
-            if target_dir.exists():
-                shutil.rmtree(target_dir)
-            shutil.copytree(local_source, target_dir, symlinks=True, ignore=shutil.ignore_patterns(".git", "build", "__pycache__"))
-            print(f"[{name}] Copied successfully.")
-        else:
-            print(f"[{name}] Using cached repository at {target_dir}")
+        print(f"[{name}] Syncing from local source directory {local_source}...")
+        if target_dir.exists():
+            shutil.rmtree(target_dir)
+        shutil.copytree(local_source, target_dir, symlinks=True, ignore=shutil.ignore_patterns(".git", "__pycache__"))
+        print(f"[{name}] Copied successfully.")
         return target_dir
 
     CACHE_REPOS_DIR.mkdir(parents=True, exist_ok=True)
@@ -113,14 +113,13 @@ def build_firmware(repo_dir: Path) -> dict:
     print("\n--- Building IPO_Firmware ---")
     subprocess.run(["make", "clean"], cwd=repo_dir, check=True)
     subprocess.run(["make"], cwd=repo_dir, check=True)
-    subprocess.run(["make", "build/firmware.rom"], cwd=repo_dir, check=True)
 
-    fw_bin = repo_dir / "build" / "firmware.bin"
+    fw_bin = repo_dir / "build" / ".bin" / "firmware.bin"
     fw_rom = repo_dir / "build" / "firmware.rom"
     if not fw_bin.exists() or not fw_rom.exists():
         raise RuntimeError("IPO_Firmware build did not produce firmware.bin / firmware.rom")
 
-    print(f"✓ IPO_Firmware built: {fw_bin.name} ({fw_bin.stat().st_size} bytes), {fw_rom.name} ({fw_rom.stat().st_size} bytes)")
+    print(f"✓ IPO_Firmware built: {fw_rom.name} ({fw_rom.stat().st_size} bytes)")
     return {"bin": fw_bin, "rom": fw_rom}
 
 
@@ -139,22 +138,123 @@ def build_bootrom(repo_dir: Path, firmware_bin: Path, firmware_repo_dir: Path) -
 
 
 def build_os(repo_dir: Path) -> dict:
-    print("\n--- Building IPO_OS ---")
+    print("\n--- Building IPO_OS (Kernel & Boot Image) ---")
     subprocess.run(["make", "clean"], cwd=repo_dir, check=True)
-    cmd = ["make", "lib", "kernel", "boot", "applications", "toolchain", "image", "disks"]
+    cmd = ["make", "lib", "kernel", "boot", "image"]
     subprocess.run(cmd, cwd=repo_dir, check=True)
 
     os_img = repo_dir / "build" / "IPO_OS.img"
-    disk_img = repo_dir / "build" / "disk.img"
 
-    if not os_img.exists() or not disk_img.exists():
-        raise RuntimeError("IPO_OS build did not produce IPO_OS.img / disk.img")
+    if not os_img.exists():
+        raise RuntimeError("IPO_OS build did not produce IPO_OS.img")
 
-    print(f"✓ IPO_OS built: {os_img.name} ({os_img.stat().st_size} bytes), {disk_img.name} ({disk_img.stat().st_size} bytes)")
-    return {"os_img": os_img, "disk_img": disk_img}
+    print(f"✓ IPO_OS built: {os_img.name} ({os_img.stat().st_size} bytes)")
+    return {"os_img": os_img}
 
 
-def package_artifacts(fw: dict, br: dict, os_art: dict) -> list:
+def build_software(repo_dir: Path) -> dict:
+    print("\n--- Building IPO_OS_Software (Applications, Libraries, Toolchain & Disks) ---")
+    subprocess.run(["make", "all"], cwd=repo_dir, check=True)
+
+    build_dir = repo_dir / "build"
+    disk_installed = build_dir / "disk-installed.img"
+    disk_clean = build_dir / "disk-clean.img"
+    apps_zip_path = build_dir / "applications.zip"
+
+    # 1. Generate 512MB disk with pre-installed applications (Variant 2)
+    if disk_installed.exists():
+        disk_installed.unlink()
+
+    print("[IPO_OS_Software] Populating 512MB IPO_FS disk with applications (disk-installed.img)...")
+    subprocess.run(
+        [sys.executable, str(repo_dir / "tools" / "load_applications.py"), "--disk", str(disk_installed), "--format"],
+        cwd=repo_dir,
+        check=True,
+    )
+
+    if not disk_installed.exists() or disk_installed.stat().st_size == 0:
+        raise RuntimeError("IPO_OS_Software build did not produce disk-installed.img")
+
+    # Keep a copy as disk.img for backwards-compatibility
+    shutil.copy2(disk_installed, build_dir / "disk.img")
+
+    # 2. Generate 512MB clean formatted IPO_FS disk (Variant 1A)
+    if disk_clean.exists():
+        disk_clean.unlink()
+
+    print("[IPO_OS_Software] Creating clean 512MB IPO_FS disk (disk-clean.img)...")
+    with open(disk_clean, "wb") as f:
+        f.truncate(512 * 1024 * 1024)
+
+    subprocess.run(
+        [sys.executable, str(repo_dir / "tools" / "disk_editor.py"), "-i", str(disk_clean), "format"],
+        cwd=repo_dir,
+        check=True,
+    )
+
+    if not disk_clean.exists() or disk_clean.stat().st_size == 0:
+        raise RuntimeError("IPO_OS_Software build did not produce disk-clean.img")
+
+    # 3. Package applications.zip (Variant 1B: ONLY compiled binaries, no sources/build scripts)
+    if apps_zip_path.exists():
+        apps_zip_path.unlink()
+
+    print(f"[IPO_OS_Software] Packaging compiled applications only into {apps_zip_path.name}...")
+    with zipfile.ZipFile(apps_zip_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
+        # Applications (*.bin, doom1.wad)
+        apps_build = build_dir / "applications"
+        if apps_build.exists():
+            for f in apps_build.rglob("*"):
+                if f.is_file() and (f.suffix in [".bin", ".wad"] or f.name.endswith(".bin") or f.name == "doom1.wad"):
+                    z.write(f, arcname=f"applications/{f.name}")
+        doom_wad = repo_dir / "applications" / "doom" / "doom1.wad"
+        if doom_wad.exists() and "applications/doom1.wad" not in z.namelist():
+            z.write(doom_wad, arcname="applications/doom1.wad")
+
+        # Toolchain (*.elf)
+        tc_build = build_dir / "toolchain"
+        if tc_build.exists():
+            for f in tc_build.rglob("*"):
+                if f.is_file() and f.suffix == ".elf":
+                    z.write(f, arcname=f"toolchain/{f.name}")
+
+        # Libraries (*.a, *.o, linker.ld)
+        lib_build = build_dir / "lib"
+        if lib_build.exists():
+            for f in lib_build.rglob("*"):
+                if f.is_file() and f.suffix in [".a", ".o", ".ld"]:
+                    z.write(f, arcname=f"lib/{f.name}")
+        linker_ld = repo_dir / "lib" / "linker.ld"
+        if linker_ld.exists() and "lib/linker.ld" not in z.namelist():
+            z.write(linker_ld, arcname="lib/linker.ld")
+
+        # Fonts (*.fnt)
+        fonts_build = build_dir / "fonts"
+        if fonts_build.exists() and any(fonts_build.glob("*.fnt")):
+            for f in fonts_build.rglob("*.fnt"):
+                z.write(f, arcname=f"fonts/{f.name}")
+        else:
+            assets_fonts = repo_dir / "assets" / "fonts"
+            if assets_fonts.exists():
+                for f in assets_fonts.rglob("*.fnt"):
+                    z.write(f, arcname=f"fonts/{f.name}")
+
+        # Headers (include/**/*.h)
+        inc_dir = repo_dir / "include"
+        if inc_dir.exists():
+            for f in inc_dir.rglob("*.h"):
+                z.write(f, arcname=f"include/{f.relative_to(inc_dir)}")
+
+    print(f"✓ IPO_OS_Software built: {disk_installed.name}, {disk_clean.name}, {apps_zip_path.name}")
+    return {
+        "disk_installed": disk_installed,
+        "disk_clean": disk_clean,
+        "applications_zip": apps_zip_path,
+        "disk_img": build_dir / "disk.img",
+    }
+
+
+def package_artifacts(fw: dict, br: dict, os_art: dict, sw_art: dict) -> list:
     DOWNLOADS_DIR.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
     manifest_entries = []
@@ -175,37 +275,68 @@ def package_artifacts(fw: dict, br: dict, os_art: dict) -> list:
         "sha256": sha256_file(raw_os_dest),
     })
 
-    # 2. Standalone disk.img (128 MB Applications & Filesystem Disk)
-    disk_os_dest = DOWNLOADS_DIR / "disk.img"
-    shutil.copy2(os_art["disk_img"], disk_os_dest)
+    # 2. Variant 2: disk-installed.img (512 MB Pre-Installed Applications Disk)
+    disk_inst_dest = DOWNLOADS_DIR / "disk-installed.img"
+    shutil.copy2(sw_art["disk_installed"], disk_inst_dest)
     manifest_entries.append({
-        "id": "ipo-os-disk",
-        "file": "disk.img",
-        "name": "IPO_OS Applications Disk (128 MB)",
-        "category": "os",
-        "description": "Pre-formatted 128 MB disk image with compiled applications, Doom, TinyGL demos, and userland toolchain.",
-        "size_bytes": disk_os_dest.stat().st_size,
-        "size_formatted": format_size(disk_os_dest.stat().st_size),
-        "sha256": sha256_file(disk_os_dest),
+        "id": "ipo-disk-installed",
+        "file": "disk-installed.img",
+        "name": "IPO_OS Pre-Installed Disk (512 MB)",
+        "category": "software",
+        "description": "Ready-to-use 512 MB virtual disk image with all applications, DOOM, toolchains, runtime libraries, and fonts pre-installed.",
+        "size_bytes": disk_inst_dest.stat().st_size,
+        "size_formatted": format_size(disk_inst_dest.stat().st_size),
+        "sha256": sha256_file(disk_inst_dest),
     })
 
-    # 3. IPO_Firmware zip (Compiled ROM binaries ONLY)
+    # Also keep disk.img for backwards-compatibility
+    disk_os_dest = DOWNLOADS_DIR / "disk.img"
+    shutil.copy2(sw_art["disk_installed"], disk_os_dest)
+
+    # 3. Variant 1A: disk-clean.img (512 MB Clean Formatted IPO_FS Disk)
+    disk_clean_dest = DOWNLOADS_DIR / "disk-clean.img"
+    shutil.copy2(sw_art["disk_clean"], disk_clean_dest)
+    manifest_entries.append({
+        "id": "ipo-disk-clean",
+        "file": "disk-clean.img",
+        "name": "IPO_OS Clean Formatted Disk (512 MB)",
+        "category": "os",
+        "description": "Clean 512 MB disk image formatted with the extent-based IPO_FS filesystem without pre-installed applications.",
+        "size_bytes": disk_clean_dest.stat().st_size,
+        "size_formatted": format_size(disk_clean_dest.stat().st_size),
+        "sha256": sha256_file(disk_clean_dest),
+    })
+
+    # 4. Variant 1B: applications.zip (Pre-Compiled Binaries Only)
+    apps_dest = DOWNLOADS_DIR / "applications.zip"
+    shutil.copy2(sw_art["applications_zip"], apps_dest)
+    manifest_entries.append({
+        "id": "ipo-applications",
+        "file": "applications.zip",
+        "name": "IPO_OS Compiled Applications Package",
+        "category": "software",
+        "description": "Pre-compiled production binaries: applications, DOOM, in-OS developer toolchain (TCC, Lua, Python, NASM), runtime libraries (libc, libm, libapp, tinygl), SDK headers, and fonts.",
+        "size_bytes": apps_dest.stat().st_size,
+        "size_formatted": format_size(apps_dest.stat().st_size),
+        "sha256": sha256_file(apps_dest),
+    })
+
+    # 5. IPO_Firmware zip (Compiled ROM binary ONLY)
     fw_zip_path = DOWNLOADS_DIR / "ipo-firmware.zip"
     with zipfile.ZipFile(fw_zip_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
         z.write(fw["rom"], "firmware.rom")
-        z.write(fw["bin"], "firmware.bin")
     manifest_entries.append({
         "id": "ipo-firmware",
         "file": "ipo-firmware.zip",
         "name": "IPO_Firmware Package",
         "category": "firmware",
-        "description": "Compiled BIOS runtime service layer ROM binaries (firmware.rom, firmware.bin).",
+        "description": "Compiled BIOS runtime service layer ROM binary (firmware.rom).",
         "size_bytes": fw_zip_path.stat().st_size,
         "size_formatted": format_size(fw_zip_path.stat().st_size),
         "sha256": sha256_file(fw_zip_path),
     })
 
-    # 4. IPO_Boot_ROM zip (Compiled ROM binaries ONLY)
+    # 6. IPO_Boot_ROM zip (Compiled ROM binaries ONLY)
     br_zip_path = DOWNLOADS_DIR / "ipo-boot-rom.zip"
     with zipfile.ZipFile(br_zip_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
         z.write(br["bin"], "bootrom.bin")
@@ -220,36 +351,39 @@ def package_artifacts(fw: dict, br: dict, os_art: dict) -> list:
         "sha256": sha256_file(br_zip_path),
     })
 
-    # 5. Full System Turnkey Bundle (Compiled binaries of all 3 projects ONLY)
+    # 7. Full System Turnkey Bundle (Compiled binaries of all projects)
     full_bundle_path = DOWNLOADS_DIR / "ipo-system-bundle.zip"
     with zipfile.ZipFile(full_bundle_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
         z.write(br["bin"], "bootrom.bin")
         z.write(fw["rom"], "firmware.rom")
         z.write(os_art["os_img"], "IPO_OS.img")
-        z.write(os_art["disk_img"], "disk.img")
+        z.write(sw_art["disk_installed"], "disk-installed.img")
+        z.write(sw_art["disk_clean"], "disk-clean.img")
+        z.write(sw_art["applications_zip"], "applications.zip")
     manifest_entries.append({
         "id": "ipo-system-bundle",
         "file": "ipo-system-bundle.zip",
-        "name": "Complete IPO Systems Bundle (All 3 Projects & Disk)",
+        "name": "Complete IPO Systems Bundle (All Projects & Disks)",
         "category": "bundle",
         "featured": True,
-        "description": "All compiled binaries across the entire platform: Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), IPO_OS kernel image (IPO_OS.img), and 128 MB applications disk (disk.img).",
+        "description": "All compiled binaries across the platform: Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), IPO_OS kernel image (IPO_OS.img), clean and pre-installed disks (disk-clean.img, disk-installed.img), and pre-compiled applications package (applications.zip).",
         "size_bytes": full_bundle_path.stat().st_size,
         "size_formatted": format_size(full_bundle_path.stat().st_size),
         "sha256": sha256_file(full_bundle_path),
     })
 
-    # Clean up obsolete duplicate ipo-os-bundle.zip if present
-    obsolete_bundle = DOWNLOADS_DIR / "ipo-os-bundle.zip"
-    if obsolete_bundle.exists():
-        try:
-            obsolete_bundle.unlink()
-        except Exception:
-            pass
+    # Clean up obsolete archives
+    for obsolete in ["ipo-os-bundle.zip", "ipo-os-software.zip"]:
+        obsolete_file = DOWNLOADS_DIR / obsolete
+        if obsolete_file.exists():
+            try:
+                obsolete_file.unlink()
+            except Exception:
+                pass
 
     # Write manifest
     manifest = {
-        "version": "1.0.0",
+        "version": "1.1.0",
         "build_date": timestamp,
         "generator": "IPO Systems Documentation Build Pipeline",
         "artifacts": manifest_entries,
@@ -285,14 +419,16 @@ def main():
     fw_repo = ensure_repo("IPO_Firmware", REPOSITORIES["IPO_Firmware"], force_update=force_sync)
     br_repo = ensure_repo("IPO_Boot_ROM", REPOSITORIES["IPO_Boot_ROM"], force_update=force_sync)
     os_repo = ensure_repo("IPO_OS", REPOSITORIES["IPO_OS"], force_update=force_sync)
+    sw_repo = ensure_repo("IPO_OS_Software", REPOSITORIES["IPO_OS_Software"], force_update=force_sync)
 
-    # 2. Build in dependency order: Firmware -> Boot ROM -> OS
+    # Build in dependency order: Firmware -> Boot ROM -> OS -> Software
     fw_art = build_firmware(fw_repo)
     br_art = build_bootrom(br_repo, fw_art["bin"], fw_repo)
     os_art = build_os(os_repo)
+    sw_art = build_software(sw_repo)
 
-    # 3. Package and generate manifest in public/downloads/
-    package_artifacts(fw_art, br_art, os_art)
+    # Package and generate manifest in public/downloads/
+    package_artifacts(fw_art, br_art, os_art, sw_art)
 
     print("\n✓ All artifacts built and ready for distribution!\n")
     return 0

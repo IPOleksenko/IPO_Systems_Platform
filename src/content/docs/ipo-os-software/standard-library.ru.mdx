@@ -1,0 +1,106 @@
+---
+title: "Стандартная библиотека C и среда выполнения"
+description: "Собственная freestanding libc в IPO_OS: аллокация памяти через sbrk (0x1045), строковые операции и форматированный вывод."
+---
+
+# Стандартная библиотека C и среда выполнения
+
+Поскольку стандартная библиотека GNU C (`glibc`) стандарта POSIX предполагает полноценное окружение ядра Linux с сигналами, потоками и динамическим загрузчиком, приложения IPO_OS линкуются с легковесной автономной средой выполнения C (`libc.a`).
+
+---
+
+## 📚 Поддерживаемые заголовочные файлы и функции
+
+### 1. Форматированный ввод-вывод (`<stdio.h>`)
+- `int printf(const char *format, ...)`: выводит форматированную строку в активную консоль и последовательный порт COM1. Поддерживает спецификаторы формата: `%s`, `%c`, `%d`, `%i`, `%u`, `%x`, `%X`, `%p`, `%%`.
+- `int snprintf(char *str, size_t size, const char *format, ...)`: безопасное форматирование строк в буфер памяти.
+- `int puts(const char *s)`: выводит строку с добавлением перевода строки.
+- `int putchar(int c)`: выводит одиночный символ ASCII.
+
+### 2. Утилиты строк и памяти (`<string.h>`)
+- `size_t strlen(const char *s)`
+- `int strcmp(const char *s1, const char *s2)`
+- `int strncmp(const char *s1, const char *s2, size_t n)`
+- `char *strcpy(char *dest, const char *src)`
+- `char *strncpy(char *dest, const char *src, size_t n)`
+- `void *memset(void *s, int c, size_t n)`
+- `void *memcpy(void *dest, const void *src, size_t n)`
+- `void *memmove(void *dest, const void *src, size_t n)`
+
+### 3. Управление динамической памятью (`<stdlib.h>`)
+- `void *malloc(size_t size)`: динамически выделяет память в куче процесса.
+- `void free(void *ptr)`: возвращает блок памяти обратно в пул свободной памяти.
+- `void *realloc(void *ptr, size_t size)`: изменяет размер ранее выделенного блока.
+- `void *calloc(size_t nmemb, size_t size)`: выделяет и обнуляет память.
+- `int atoi(const char *nptr)`: преобразует строку ASCII в целое число.
+- `void exit(int status)`: сбрасывает буферы и завершает процесс через `IPO_SYSCALL_EXIT`.
+
+### 4. Заголовки совместимости POSIX, Сети и Терминала (`include/`)
+Для кросс-компиляции и сборки нативных программ с помощью встроенного компилятора **TCC (`tcc.bin`)** и прослойки `libc_shim.c` предоставляется расширенный набор POSIX-заголовков:
+- **Сетевые сокеты и протоколы:** `<sys/socket.h>`, `<netinet/in.h>`, `<arpa/inet.h>`, `<netdb.h>` (`socket`, `bind`, `listen`, `accept`, `connect`, `send`, `recv`, `inet_aton`, `inet_ntoa`, `htons`, `htonl`, `gethostbyname`).
+- **Мультиплексирование и управление устройствами:** `<sys/select.h>` (`select`, `FD_SET`, `FD_ZERO`), `<sys/ioctl.h>` (`ioctl`, `TIOCGWINSZ`), `<termios.h>` (`tcgetattr`, `tcsetattr`, `cfmakeraw`).
+- **Системная информация и ресурсы:** `<sys/utsname.h>` (`uname` — возвращает `"IPO_OS"`, архитектуру `"i686"`), `<sys/resource.h>` (`getrlimit`, `setrlimit`, `getrusage`).
+- **Графика и управление оверлеем VGA (`<vga_gfx.h>`):** `vga_set_mode_13h()`, `vga_set_mode_text()`, `vga_set_overlay_flags()`, `vga_hide_close_button()`, `vga_show_close_button()`, `vga_hide_overlay_cursor()`, `vga_show_overlay_cursor()`.
+- **API мыши и проверка попадания в регионы (`<driver/input/mouse.h>`):** `mouse_get_position()`, `mouse_is_pressed()`, `mouse_is_in_region()`, `mouse_is_clicked_in_region()`, `mouse_check_click()`, `mouse_get_state()`.
+
+---
+
+## 🔗 Динамическая загрузка модулей (`<dlfcn.h>`)
+
+В `libc.a` IPO_OS есть пользовательский динамический загрузчик. Он отличается от загрузчика драйверов ядра для файлов `.kmd`:
+- `dlopen()` загружает 32-битные ELF-объекты с релокациями (`ET_REL`) и разделяемые объекты (`ET_DYN`); модуль можно указать по пути или найти в `/applications/` и `/lib/`.
+- `dlsym()` ищет экспортируемый символ в модуле или через `RTLD_DEFAULT`. Если обязательный внешний символ не найден, `dlopen()` завершается ошибкой.
+- `dlclose()` уменьшает счётчик ссылок на модуль, а `dlerror()` возвращает последнюю ошибку загрузчика.
+- `dlregister_symbol()` регистрирует колбэки приложения для динамически загружаемого кода. `RTLD_GLOBAL` делает символы модуля доступными для последующих загрузок. Это не полная реализация динамического загрузчика Linux/glibc.
+
+```c
+#include <dlfcn.h>
+#include <stdio.h>
+
+void *module = dlopen("/applications/plugin.o", RTLD_NOW | RTLD_LOCAL);
+if (!module) {
+    printf("dlopen: %s\n", dlerror());
+} else {
+    void (*plugin_entry)(void) = (void (*)(void))dlsym(module, "plugin_entry");
+    if (plugin_entry) plugin_entry();
+    dlclose(module);
+}
+```
+
+---
+
+## 🧱 Диспетчер динамической памяти
+
+В файле `lib/libc/stdlib.c` управление динамической памятью реализовано через двусвязный список блоков с выравниванием по 8 байт, работающий поверх системного вызова `sbrk` (`IPO_SYSCALL_SBRK` `0x1045`):
+
+```c
+#define BLOCK_MAGIC 0x4D414C43 /* "MALC" */
+
+typedef struct block_hdr {
+    size_t size;               /* Размер полезной нагрузки в байтах */
+    uint32_t magic;
+    int is_free;
+    struct block_hdr *next;
+    struct block_hdr *prev;
+} block_hdr_t;
+
+#define HDR_SIZE sizeof(block_hdr_t)
+#define ALIGN8(s) (((s) + 7u) & ~7u)
+```
+
+### Стратегия выделения памяти:
+1. **Повторное использование (Free-List):** Сканирует список освобождённых блоков, проверяя сигнатуру `BLOCK_MAGIC`. Если найден блок подходящего размера, он используется повторно.
+2. **Блочное расширение у ядра:** Когда куча исчерпана, память запрашивается у ядра блоками по **64 КБ** (`65536` байт), чтобы минимизировать накладные расходы системных вызовов.
+3. **Контроль целостности:** Функция `free()` проверяет условие `magic == BLOCK_MAGIC` перед возвратом блока в список свободных, мгновенно выявляя повреждение памяти или попытки повторного освобождения (double-free).
+
+---
+
+## 🚫 Отличия рантайма IPO_OS от Linux glibc
+
+| Возможность | Linux `glibc` | IPO_OS `libipo` |
+| :--- | :--- | :--- |
+| **Потоки** | Полные потоки POSIX pthreads | Кооперативные асинхронные задачи (`IPO_SYSCALL_ASYNC_START`) |
+| **Локализация / Wide Chars** | Сложные таблицы локалей | Прямая передача UTF-8 и ASCII |
+| **Динамическая линковка** | Полный динамический загрузчик ELF | Пользовательские `dlopen()`/`dlsym()` для ELF32 `ET_REL` и `ET_DYN`; исполняемые файлы также могут быть плоскими бинарными файлами с базой `0x800000` |
+| **Файловые дескрипторы** | `read(fd, buf, count)` | `ipo_read(fd, buf, count, offset)` с явным 64-битным смещением |
+| **Сигналы** | Более 32 сигналов POSIX | Перехват исключений CPU и выход через `process_crash_exit` |

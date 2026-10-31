@@ -1,0 +1,101 @@
+---
+title: "Build System & Deployment Utilities"
+description: "Comprehensive guide to Makefile rules, disk_editor.py, load_applications.py, and deployment tools in IPO_OS_Software."
+---
+
+import SharedCode from '../../../components/SharedCode.astro';
+import Callout from '../../../components/Callout.astro';
+
+# Build System & Deployment Utilities
+
+The **IPO_OS_Software** repository hosts an independent ecosystem of userland libraries, compilers, developer toolchains, and interactive applications. The build pipeline is managed through modular GNU Make rules alongside specialized Python tools for formatting and populating virtual disk images with the **IPO_FS** filesystem.
+
+---
+
+## 🔨 Makefile Architecture & Targets
+
+The build pipeline is organized into modular files located in `mk/`:
+- `mk/config.mk` — Defines compilers, freestanding flags (`-m32`, `-ffreestanding`), and path definitions.
+- `mk/lib.mk` — Builds the userspace standard runtime (`libc.a`, `libm.a`, `libstdc++.a`, `libapp.a`, `libapp_api.a`, `crt0.o`).
+- `mk/applications.mk` — Builds all userland applications (DOOM, TinyCC, MicroPython, Lua, NASM, text editor, 3D demos).
+- `mk/toolchain.mk` — Prepares in-OS development toolchains.
+- `mk/disk.mk` — Virtual storage disk operations (creation, formatting, and application ingestion).
+- `mk/clean.mk` — Cleans build directories and temporary objects.
+
+### Primary Makefile Targets:
+```bash
+# Build all libraries, applications, toolchains, and font databases:
+make all
+
+# Build userland standard libraries (libc, libm, libstdc++, libapp, crt0):
+make lib
+
+# Build all applications and games:
+make applications
+
+# Generate bitmap console font databases (.fnt):
+make font-databases
+
+# Create a clean 512 MB raw disk image:
+make create-disk DISK=/path/to/disk.img
+
+# Format partition at LBA 2048 with IPO_FS:
+make format-disk DISK=/path/to/disk.img
+
+# Load all compiled applications, libraries, headers, and fonts onto the disk:
+make load-apps DISK=/path/to/disk.img
+
+# Clean build artifacts:
+make clean
+```
+
+---
+
+## ⚙️ Configuration Parameters (`mk/config.mk`)
+
+- `CC ?= gcc` — 32-bit C compiler (invoked with `-m32 -O2 -ffreestanding -fno-pic -fno-pie`).
+- `CXX ?= g++` — C++ compiler for applications leveraging `libstdc++.a`.
+- `ASM ?= nasm` — Netwide Assembler for 32-bit ELF objects and raw binaries.
+- `DISK ?= /path/to/disk.img` — Target disk image path (can also be passed via the `DISK` environment variable).
+- `START_LBA ?= 2048` — Partition start sector (MBR partition 1 offset, default: 2048).
+
+---
+
+## 💾 Direct Disk Management with `disk_editor.py`
+
+The `tools/disk_editor.py` script provides direct command-line access to inspect, modify, and format **IPO_FS** filesystems on virtual disk images:
+
+<SharedCode id="disk-editor-cmds" />
+
+### Command-Line Arguments:
+- `-i, --image <path>` — Path to target disk image (e.g. `../IPO_OS/build/disks/disk.img`).
+- `-s, --start-lba <lba>` — Sector offset for the IPO_FS partition (default: `2048`).
+
+---
+
+## 📦 Batch Disk Loading via `load_applications.py` & `load_to_disk.sh`
+
+To populate a complete disk image with all system binaries and runtime assets in one step:
+
+```bash
+# Populate target disk image with automatic creation and IPO_FS formatting:
+python3 tools/load_applications.py --disk /path/to/disk.img --format
+
+# Or use the convenience shell wrapper:
+./load_to_disk.sh /path/to/disk.img
+
+# Or through Makefile:
+make load-apps DISK=/path/to/disk.img
+```
+
+`load_applications.py` checks for a valid `IPO_FS` superblock. If unformatted, it formats the partition at LBA 2048 before installing:
+- `/applications/` — Executable binaries for userland applications and games.
+- `/lib/` — Static runtime libraries (`libc.a`, `libm.a`, `libapp.a`) and CRT objects.
+- `/include/` — Standard C99/POSIX/GL header files.
+- `/fonts/` — Console font databases for multilingual glyph rendering.
+
+---
+
+## 🔤 Font Database Compiler (`tools/build_font_db.py`)
+
+The `tools/build_font_db.py` utility parses bitmap font sources and generates binary `.fnt` font databases for the IPO_OS console video driver, providing full support for Latin, Cyrillic, and Chinese glyph sets.

@@ -1,0 +1,74 @@
+---
+title: "IPO_OS_Software Ecosystem Overview"
+description: "Architecture, runtime components, standard libraries, and application ecosystem for IPO_OS."
+---
+
+import Callout from '../../../components/Callout.astro';
+
+# IPO_OS_Software Ecosystem Overview
+
+**IPO_OS_Software** is the dedicated userland runtime ecosystem, application suite, and developer toolkit for the **[IPO_OS](https://github.com/IPOleksenko/IPO_OS)** operating system. It provides standard C/C++ runtimes, 3D graphics libraries, windowing interfaces, in-OS compilers, interpreters, ported applications, and disk deployment tools.
+
+<Callout type="tip" lang="en" title="Modular Separation">
+IPO_OS is purely dedicated to kernel architecture, bare-metal hardware drivers, memory management, and process scheduling. All userspace programs, standard libraries, compilers, and virtual disk population tools reside in **IPO_OS_Software**.
+</Callout>
+
+---
+
+## 🏛️ Ecosystem Architecture
+
+The `IPO_OS_Software` repository is organized into four primary functional layers:
+
+1. **Userland Runtime Libraries (`lib/`):**
+   - **`libc.a`:** C99 standard library implementation (memory allocation via `sbrk`, string processing, stdio formatting, POSIX file I/O, network sockets, signals, and dynamic module loading via `dlopen`/`dlsym`).
+   - **`libm.a`:** Math library providing floating-point trigonometry, logarithms, and transcendentals.
+   - **`libstdc++.a`:** Lightweight C++ runtime support (`new`/`delete`, RTTI, exception stubs).
+   - **`libapp.a`:** Higher-level system integration APIs for the Window Manager (WM), VGA font switching, keyboard/mouse input handlers, and audio playback.
+   - **TinyGL:** Embedded OpenGL 1.1 compliant 3D software rasterizer with clipping, matrix stacks, and lighting.
+   - **C Runtime Startup (`crt0.o`, `crti.o`, `crtn.o`):** Standard entrypoints for executable binaries and shared modules.
+
+2. **Standard & POSIX Headers (`include/`):**
+   - Unified standard headers (`stdio.h`, `stdlib.h`, `string.h`, `unistd.h`, `fcntl.h`, `sys/socket.h`, `GL/gl.h`, `wm.h`, `syscall.h`).
+
+3. **In-OS Developer Toolchain (`build/toolchain/`):**
+   - **TinyCC (`tcc`):** Fast in-OS C99 compiler capable of compiling and running scripts directly inside IPO_OS.
+   - **Lua 5.3 (`lua`, `luac`):** Embedded scripting interpreter and bytecode compiler.
+   - **MicroPython (`python.elf`):** Minimal Python 3 runtime for rapid scripting and automation.
+   - **NASM:** 32-bit x86 assembler running directly inside the operating system.
+   - **GNU Binutils (`gcc`, `g++`, `as`, `ld`, `ar`, `ranlib`, `objcopy`, `objdump`, `readelf`, `nm`, `strip`).
+
+4. **Applications & Utilities (`applications/`):**
+   - **DOOM (`doom.bin`):** Full port of official `linuxdoom-1.10` running bare-metal at 320x200 60 FPS with SB16 audio and BGA graphics.
+   - **Text Editor (`edit.bin`):** Interactive modal text editor with syntax display.
+   - **3D Demos (`gl_gears.bin`, `gl_cube.bin`, `gl_teapot.bin`):** Hardware-independent 3D TinyGL graphics demonstrations.
+   - **Networking Tools (`hosting_server.bin`, `hosting_client.bin`, `ping.bin`):** HTTP web server, web client, and ICMP diagnostics.
+   - **Terminal Utilities (`echo.bin`, `hello.bin`, `player.bin`, `setfont.bin`, `term_ctl.bin`):** System tools, audio player, and font switchers.
+
+---
+
+## 💾 Distribution Models
+
+IPO_OS and IPO_OS_Software provide two flexible distribution models for developers and users:
+
+### Option 1: Clean Disk + Pre-Compiled Applications Package
+- **`disk-clean.img`:** A clean 512 MB disk image pre-formatted with the 64-bit extent-based `IPO_FS` filesystem. It contains no pre-installed applications, providing a blank slate for custom development.
+- **`applications.zip`:** A lightweight archive containing **only pre-compiled production binaries** (no source code or build scripts):
+  - Compiled user application binaries (`applications/*.bin` + `doom1.wad`)
+  - Compiled in-OS toolchain executables (`toolchain/*.elf`)
+  - Pre-built runtime libraries and linker script (`lib/*.a`, `lib/*.o`, `lib/linker.ld`)
+  - SDK C/POSIX/GL header files (`include/`)
+  - Console font databases (`fonts/*.fnt`)
+
+### Option 2: Pre-Populated System Disk
+- **`disk-installed.img`:** A ready-to-use 512 MB virtual disk image with all applications, DOOM, toolchains, runtime libraries, and font databases already installed under `/applications`, `/lib`, `/include`, and `/fonts`. Simply attach this disk to QEMU or flash it to a physical drive, and boot into a fully featured environment immediately.
+
+---
+
+## 🛠️ Disk Management Utilities
+
+`IPO_OS_Software` provides standalone Python tools to create, inspect, and populate virtual disks:
+
+- **`tools/load_applications.py`:** Automates loading compiled binaries onto an IPO_FS disk partition.
+- **`tools/disk_editor.py`:** Full-featured command-line file manager to inspect, extract, upload, and delete files inside an `IPO_FS` disk image.
+- **`load_to_disk.sh`:** A convenience shell wrapper to format and populate any target disk in a single command.
+

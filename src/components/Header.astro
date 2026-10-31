@@ -21,7 +21,10 @@ const homeUrl = `${cleanBase}${currentLang}/`;
 
 let currentUrl = siteConfig.author.profileUrl;
 let currentName = siteConfig.author.name;
-if (currentSlug.startsWith('ipo-os')) {
+if (currentSlug.startsWith('ipo-os-software')) {
+  currentUrl = siteConfig.projects.ipo_os_software.repoUrl;
+  currentName = siteConfig.projects.ipo_os_software.name;
+} else if (currentSlug.startsWith('ipo-os')) {
   currentUrl = siteConfig.projects.ipo_os.repoUrl;
   currentName = siteConfig.projects.ipo_os.name;
 } else if (currentSlug.startsWith('ipo-boot-rom')) {
@@ -48,8 +51,11 @@ if (currentSlug.startsWith('ipo-os')) {
     </div>
 
     <nav class="header-nav" aria-label="Main Projects">
-      <a href={`${cleanBase}${currentLang}/ipo-os/overview`} class={`nav-item ${currentSlug.startsWith('ipo-os') ? 'active' : ''}`}>
+      <a href={`${cleanBase}${currentLang}/ipo-os/overview`} class={`nav-item ${(currentSlug.startsWith('ipo-os/') || currentSlug === 'ipo-os') && !currentSlug.startsWith('ipo-os-software') ? 'active' : ''}`}>
         IPO_OS
+      </a>
+      <a href={`${cleanBase}${currentLang}/ipo-os-software/overview`} class={`nav-item ${currentSlug.startsWith('ipo-os-software') ? 'active' : ''}`}>
+        IPO_OS_Software
       </a>
       <a href={`${cleanBase}${currentLang}/ipo-boot-rom/overview`} class={`nav-item ${currentSlug.startsWith('ipo-boot-rom') ? 'active' : ''}`}>
         IPO_Boot_ROM

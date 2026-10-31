@@ -1,6 +1,6 @@
 ---
 title: "Полный справочник системных вызовов"
-description: "Исчерпывающий справочник всех 134 системных вызовов IPO_OS: номера, сигнатуры, регистры ABI int 0x80, параметры и коды возврата."
+description: "Исчерпывающий справочник всех 140 системных вызовов IPO_OS: номера, сигнатуры, регистры ABI int 0x80, параметры и коды возврата."
 ---
 
 import SharedSyscallTable from '../../../../components/SharedSyscallTable.astro';
@@ -37,7 +37,7 @@ import Callout from '../../../../components/Callout.astro';
 
 ## 📋 Интерактивная таблица всех системных вызовов
 
-Ниже представлена полная сводка всех 134 зарегистрированных системных вызовов ядра IPO_OS:
+Ниже представлена полная сводка всех 140 зарегистрированных системных вызовов ядра IPO_OS:
 
 <SharedSyscallTable lang="ru" />
 
@@ -363,6 +363,8 @@ int connect_endpoint(int sockfd, const char *host_or_ip, uint16_t port);
 - **`0x10C2` `IPO_SYSCALL_VGA_SHOW_CURSOR`:** `void ipo_vga_show_cursor(void);` Включение аппаратного мигающего текстового курсора.
 - **`0x10C3` `IPO_SYSCALL_VGA_HIDE_CURSOR`:** `void ipo_vga_hide_cursor(void);` Скрытие аппаратного текстового курсора.
 - **`0x10C4` `IPO_SYSCALL_VGA_SET_PALETTE`:** `void ipo_vga_set_palette(uint8_t index, uint8_t r, uint8_t g, uint8_t b);` Запись 6-битных компонент цвета RGB в регистры палитры VGA DAC (`0x3C8`/`0x3C9`).
+- **`0x10C5` `IPO_SYSCALL_VGA_SET_OVERLAY_FLAGS`:** `void ipo_vga_set_overlay_flags(uint32_t flags);` Устанавливает флаги видимости оверлея графического режима VGA Mode 13h (управление отображением унифицированной кнопки Close и курсора мыши).
+- **`0x10C6` `IPO_SYSCALL_VGA_GET_OVERLAY_FLAGS`:** `uint32_t ipo_vga_get_overlay_flags(void);` Возвращает текущую битовую маску флагов видимости оверлея VGA.
 
 ---
 
@@ -384,3 +386,18 @@ int connect_endpoint(int sockfd, const char *host_or_ip, uint16_t port);
 - **`0x10DB` `IPO_SYSCALL_AUDIO_STREAM_PROGRESS`:** `void ipo_audio_stream_progress(audio_stream_t *stream, double *out_progress);` Запрос прогресса воспроизведения аудиопотока.
 - **`0x10DC` `IPO_SYSCALL_AUDIO_STREAM_UPDATE`:** `void ipo_audio_stream_update_buffered(audio_stream_t *stream, size_t new_size, bool loop);` Запись новой порции сэмплов в кольцевой аудиопоток.
 
+---
+
+## 🚀 Группа 15: Форматы исполняемых файлов и динамический запуск (`binfmt`)
+
+Регистрация кастомных бинарных форматов и маршрутизация исполнения:
+
+- **`0x10E0` `IPO_SYSCALL_BINFMT_REGISTER`:** `int ipo_binfmt_register(const char *name, const void *magic, uint32_t magic_len, uint32_t offset, const char *runner_path);` Регистрирует обработчик бинарного формата по сигнатуре (magic), перенаправляя запуск указанному интерпретатору/раннеру.
+- **`0x10E1` `IPO_SYSCALL_BINFMT_UNREGISTER`:** `int ipo_binfmt_unregister(const char *name);` Удаляет регистрацию обработчика бинарного формата по имени.
+- **`0x10E2` `IPO_SYSCALL_BINFMT_LIST`:** `int ipo_binfmt_list(void);` Возвращает количество и выводит список зарегистрированных обработчиков форматов.
+
+---
+
+## 🛑 Группа 16: Завершение процесса
+
+- **`0xFFFF` `IPO_SYSCALL_EXIT`:** `void ipo_exit(int status);` Завершает вызывающий процесс, освобождает выделенные страницы памяти, закрывает файловые дескрипторы и возвращает код статуса родителю.

@@ -23,7 +23,7 @@ IPO_OS implements a robust execution and stability model designed for bare-metal
 │                Background Applications Storage                   │
 │   • Dedicated binary_storage buffers allocated in heap           │
 │   • Modified .data and .bss segments preserved across switches   │
-│   • Per-process heap slices: 0x08000000 + (pid-1)*0x20000000     │
+│   • Isolated dynamic heap slots: 0x08000000 + slot * 0x10000000   │
 └──────────────────────────────────────────────────────────────────┘
                                  │
 ┌────────────────────────────────▼─────────────────────────────────┐
@@ -40,18 +40,19 @@ IPO_OS implements a robust execution and stability model designed for bare-metal
 
 To prevent user processes from colliding with the kernel heap or each other:
 1. **Kernel Heap (`kmalloc`):** Allocated at `0x01000000` (16 MB) to `0x05000000` (80 MB) with **64 MB** (`0x04000000`) capacity.
-2. **Process Heaps (`sbrk`):** Dynamic user allocations are partitioned into deterministic **512 MB** (`0x20000000`) slices:
-   `Base Address = 0x08000000 + (PID - 1) * 0x20000000`
-   Total capacity is checked against physical RAM detected during boot via BIOS E820 (`memory_map_get_total_ram()` / `0x8FF0`).
+2. **Process Heaps (`sbrk`):** Dynamic user allocations are partitioned into strictly isolated physical slots:
+   `Base Address = USER_HEAP_START (0x08000000, or 0x05000000 on systems with 128 MB RAM or less) + slot * USER_HEAP_PROCESS_STRIDE (256 MB dynamic stride)`
+   Slots are dynamically allocated as the first non-overlapping range, validated against E820 RAM capacity, and reclaimed immediately upon process termination.
 
 ---
 
-## 🔄 2. Application Memory Mapping & Swapping (`process_map_app`)
+## 🔄 2. Dynamic Memory Allocation in Free Space & Zero-Copy Switching
 
-In cooperative multitasking batch mode, applications run from `0x800000`:
-- When switching between processes, `process_map_app(process_t *proc)` saves the previous process's modified `.data` and `.bss` (`data_offset`, `data_size`) into its private `binary_storage` buffer.
-- The incoming process's data is copied back into `0x800000`.
-- This ensures concurrent applications (both ELF32 and flat `.bin`) never overwrite each other's global state or static variables.
+Instead of copying processes into a single static memory window, the kernel dynamically places processes into free memory:
+- **First-Fit Memory Management (`allocate_process_memory`):** Finds the first available free memory block in the process heap pool (`PROCESS_HEAP_START = 0x00800000`) or appends to unallocated space, splitting blocks if larger than requested.
+- **In-Place Execution:** The application's binary image is copied directly into the allocated memory block (`proc->binary_base = mem`), and `proc->entry_point` points to this address.
+- **Zero-Copy Context Switching (`process_switch_context`):** CPU registers and stack pointers are switched directly without copying `.data`, `.bss`, or `.text` memory slices.
+- **Block Coalescing (`coalesce_free_blocks`):** When processes exit, their memory blocks are released (`pid = 0`) and adjacent free blocks are merged automatically.
 
 ---
 

@@ -1,0 +1,73 @@
+---
+title: "IPO_OS_Software エコシステムの概要"
+description: "IPO_OS のユーザー空間アーキテクチャ、標準ライブラリ、ツールチェーン、アプリケーション。"
+---
+
+import Callout from '../../../components/Callout.astro';
+
+# IPO_OS_Software エコシステムの概要
+
+**IPO_OS_Software** は、**[IPO_OS](https://github.com/IPOleksenko/IPO_OS)** オペレーティングシステム向けの公式ユーザー空間ランタイム、標準ライブラリ、開発ツール、およびアプリケーションリポジトリです。C/C++ 実行環境、3D グラフィックス、ウィンドウシステム、OS内コンパイラ、移植アプリ、ディスクツールを提供します。
+
+<Callout type="tip" lang="ja" title="モジュール分離設計">
+IPO_OS はカーネル、ハードウェアドライバ、メモリ管理、スケジューラに専念しています。すべてのユーザー空間プログラム、ライブラリ、コンパイラ、ディスクツールは **IPO_OS_Software** に集約されています。
+</Callout>
+
+---
+
+## 🏛️ エコシステムのアーキテクチャ
+
+`IPO_OS_Software` リポジトリは主要なサブシステムに分かれています：
+
+1. **ランタイムライブラリ (`lib/`):**
+   - **`libc.a`:** C99 標準ライブラリ（`sbrk` メモリ割り当て、stdio、POSIX ファイル、ソケット、シグナル、`dlopen`/`dlsym`）。
+   - **`libm.a`:** 数学ライブラリ（三角関数、浮動小数点演算）。
+   - **`libstdc++.a`:** 基本的な C++ ランタイム（`new`/`delete`、RTTI）。
+   - **`libapp.a`:** ウィンドウマネージャー (WM)、フォント切替、入力、オーディオ用 API。
+   - **TinyGL:** OpenGL 1.1 準拠の 3D ソフトウェアラスタライザ。
+   - **CRT モジュール (`crt0.o`, `crti.o`, `crtn.o`):** バイナリのエントリポイント。
+
+2. **標準ヘッダー (`include/`):**
+   - 統一ヘッダー群 (`stdio.h`, `stdlib.h`, `unistd.h`, `GL/gl.h`, `wm.h`, `syscall.h`)。
+
+3. **OS内開発ツールチェーン (`build/toolchain/`):**
+   - **TinyCC (`tcc`):** IPO_OS 内で直接動作する高速 C99 コンパイラ。
+   - **Lua 5.3 (`lua`, `luac`):** スクリプトインタープリタとバイトコードコンパイラ。
+   - **MicroPython (`python.elf`):** 軽量 Python 3 ランタイム。
+   - **NASM:** 32ビット x86 アセンブラ。
+   - **GNU Binutils (`gcc`, `g++`, `as`, `ld`, `ar`, `ranlib`, `objcopy`, `objdump`, `readelf`, `nm`, `strip`)。**
+
+4. **アプリケーションとユーティリティ (`applications/`):**
+   - **DOOM (`doom.bin`):** 320x200、60 FPS、Sound Blaster 16 音声対応の公式 `linuxdoom-1.10` 移植版。
+   - **テキストエディタ (`edit.bin`):** インタラクティブエディタ。
+   - **3Dデモ (`gl_gears.bin`, `gl_cube.bin`, `gl_teapot.bin`):** TinyGL グラフィックテスト。
+   - **ネットワークツール (`hosting_server.bin`, `hosting_client.bin`, `ping.bin`):** HTTP サーバー、クライアント、Ping。
+   - **コンソールユーティリティ (`echo.bin`, `hello.bin`, `player.bin`, `setfont.bin`, `term_ctl.bin`)。**
+
+---
+
+## 💾 配布モデル
+
+開発者およびユーザー向けに2つの配布形式を用意しています：
+
+### オプション 1: クリーンディスク + コンパイル済みアプリケーションパッケージ
+- **`disk-clean.img`:** `IPO_FS` ファイルシステムでフォーマットされたクリーンな 512 MB ディスクイメージ。
+- **`applications.zip`:** **コンパイル済みバイナリのみ** を含む軽量アーカイブ（ソースコードやビルドスクリプトは含まれません）：
+  - アプリケーションバイナリ (`applications/*.bin` + `doom1.wad`)
+  - ツールチェーン実行ファイル (`toolchain/*.elf`)
+  - ランタイムライブラリとリンカースクリプト (`lib/*.a`, `lib/*.o`, `lib/linker.ld`)
+  - SDK ヘッダーファイル (`include/`)
+  - フォントデータベース (`fonts/*.fnt`)
+
+### オプション 2: プリインストール済みシステムディスク
+- **`disk-installed.img`:** 全てのアプリ、DOOM、コンパイラ、ライブラリ、フォントが `/applications`, `/lib`, `/include`, `/fonts` にインストール済みの 512 MB ディスクイメージ。
+
+---
+
+## 🛠️ ディスク管理ユーティリティ
+
+仮想ディスクの作成・管理用 Python ツール：
+
+- **`tools/load_applications.py`:** IPO_FS パーティションへのバイナリ自動書き込み。
+- **`tools/disk_editor.py`:** `IPO_FS` イメージのフル機能 CLI ファイルマネージャー。
+- **`load_to_disk.sh`:** フォーマットと配備を行うワンクリックシェルスクリプト。

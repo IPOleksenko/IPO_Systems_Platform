@@ -1,6 +1,6 @@
 ---
-import { sharedStructTables, getStructTitle, getFieldDescription } from '../data/shared-code';
-import { getTranslation } from '../utils/i18n';
+import { sharedStructTables } from '../data/shared-code';
+import { getTranslation, getStructLocale } from '../utils/i18n';
 import { siteConfig } from '../../site.config';
 
 interface Props {
@@ -18,7 +18,8 @@ if (!table) {
   throw new Error(`SharedStruct table not found for ID: ${id}`);
 }
 
-const title = getStructTitle(table, detectedLang);
+const structLocale = getStructLocale(detectedLang, id);
+const title = structLocale.title;
 ---
 
 <div class="struct-table-wrapper" id={`struct-${id}`}>
@@ -43,7 +44,7 @@ const title = getStructTitle(table, detectedLang);
           <td>{f.size}</td>
           <td><code>{f.type}</code></td>
           <td><strong><code>{f.name}</code></strong></td>
-          <td>{getFieldDescription(f, detectedLang)}</td>
+          <td>{structLocale.fields[f.name] ?? ''}</td>
         </tr>
       ))}
     </tbody>

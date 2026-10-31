@@ -37,7 +37,7 @@ When `int 0x80` is triggered, the CPU transfers execution to IDT gate `0x80` (`s
 
 ## 📋 Comprehensive System Calls Table
 
-Below is the complete interactive list of all 134 registered system calls:
+Below is the complete interactive list of all 140 registered system calls:
 
 <SharedSyscallTable lang="pl" />
 
@@ -340,6 +340,8 @@ Direct hardware text and graphics registers manipulation:
 - **`0x10C2` `IPO_SYSCALL_VGA_SHOW_CURSOR`:** `void ipo_vga_show_cursor(void);` Enables and unhides hardware blinking text cursor.
 - **`0x10C3` `IPO_SYSCALL_VGA_HIDE_CURSOR`:** `void ipo_vga_hide_cursor(void);` Hides hardware text cursor.
 - **`0x10C4` `IPO_SYSCALL_VGA_SET_PALETTE`:** `void ipo_vga_set_palette(uint8_t index, uint8_t r, uint8_t g, uint8_t b);` Programs 6-bit RGB values directly into VGA DAC palette registers (`0x3C8`/`0x3C9`).
+- **`0x10C5` `IPO_SYSCALL_VGA_SET_OVERLAY_FLAGS`:** `void ipo_vga_set_overlay_flags(uint32_t flags);` Ustawia flagi widoczności nakładki VGA Mode 13h (sterowanie przyciskiem Close i kursorem myszy).
+- **`0x10C6` `IPO_SYSCALL_VGA_GET_OVERLAY_FLAGS`:** `uint32_t ipo_vga_get_overlay_flags(void);` Zwraca bieżące flagi widoczności nakładki VGA.
 
 ---
 
@@ -361,3 +363,18 @@ Sound Blaster 16 DSP hardware control and double-buffered audio streaming:
 - **`0x10DB` `IPO_SYSCALL_AUDIO_STREAM_PROGRESS`:** `void ipo_audio_stream_progress(audio_stream_t *stream, double *out_progress);` Queries current playback progress.
 - **`0x10DC` `IPO_SYSCALL_AUDIO_STREAM_UPDATE`:** `void ipo_audio_stream_update_buffered(audio_stream_t *stream, size_t new_size, bool loop);` Appends new audio data into ring buffer.
 
+---
+
+## 🚀 Grupa 15: Formaty Binarne i Dynamiczne Wykonywanie (`binfmt`)
+
+Rejestracja plików wykonywalnych i obsługa formatów binarnych:
+
+- **`0x10E0` `IPO_SYSCALL_BINFMT_REGISTER`:** `int ipo_binfmt_register(const char *name, const void *magic, uint32_t magic_len, uint32_t offset, const char *runner_path);` Rejestruje procedurę obsługi formatu binarnego z dopasowaniem sygnatury magic.
+- **`0x10E1` `IPO_SYSCALL_BINFMT_UNREGISTER`:** `int ipo_binfmt_unregister(const char *name);` Wyrejestrowuje procedurę obsługi formatu binarnego.
+- **`0x10E2` `IPO_SYSCALL_BINFMT_LIST`:** `int ipo_binfmt_list(void);` Wyświetla listę wszystkich zarejestrowanych procedur obsługi formatów binarnych.
+
+---
+
+## 🛑 Grupa 16: Zakończenie Procesu
+
+- **`0xFFFF` `IPO_SYSCALL_EXIT`:** `void ipo_exit(int status);` Kończy bieżący proces, zwalnia pamięć i przekazuje kod statusu do procesu nadrzędnego.

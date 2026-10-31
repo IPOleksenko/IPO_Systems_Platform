@@ -1,11 +1,6 @@
 ---
-import { 
-  sharedSyscallsList, 
-  getSyscallDescription, 
-  getSyscallArgs, 
-  getSyscallReturn 
-} from '../data/shared-code';
-import { getTranslation } from '../utils/i18n';
+import { sharedSyscallsList } from '../data/shared-code';
+import { getTranslation, getSyscallLocale } from '../utils/i18n';
 import { siteConfig } from '../../site.config';
 
 interface Props {
@@ -29,31 +24,34 @@ const detectedLang = lang || pathSegments.find((s) => s in siteConfig.languages)
       </tr>
     </thead>
     <tbody>
-      {sharedSyscallsList.map((sc) => (
-        <tr id={`syscall-${sc.numHex}`}>
-          <td><code>{sc.numHex}</code></td>
-          <td><strong><code>{sc.name}</code></strong></td>
-          <td><code>{sc.signature}</code></td>
-          <td>
-            <div style="margin-bottom: 0.35rem;">
-              {getSyscallDescription(sc, detectedLang)}
-            </div>
-            <details style="font-size: 0.85rem; color: var(--text-secondary);">
-              <summary style="cursor: pointer; font-weight: 500;">
-                {getTranslation(detectedLang, 'tables.syscall.details')}
-              </summary>
-              <ul style="margin: 0.35rem 0 0.35rem 1rem;">
-                {getSyscallArgs(sc, detectedLang).map((arg) => (
-                  <li><code>{arg}</code></li>
-                ))}
-              </ul>
-              <div>
-                <strong>{getTranslation(detectedLang, 'tables.syscall.returns')}</strong> {getSyscallReturn(sc, detectedLang)}
+      {sharedSyscallsList.map((sc) => {
+        const scLocale = getSyscallLocale(detectedLang, sc.name);
+        return (
+          <tr id={`syscall-${sc.numHex}`}>
+            <td><code>{sc.numHex}</code></td>
+            <td><strong><code>{sc.name}</code></strong></td>
+            <td><code>{sc.signature}</code></td>
+            <td>
+              <div style="margin-bottom: 0.35rem;">
+                {scLocale.description}
               </div>
-            </details>
-          </td>
-        </tr>
-      ))}
+              <details style="font-size: 0.85rem; color: var(--text-secondary);">
+                <summary style="cursor: pointer; font-weight: 500;">
+                  {getTranslation(detectedLang, 'tables.syscall.details')}
+                </summary>
+                <ul style="margin: 0.35rem 0 0.35rem 1rem;">
+                  {scLocale.args.map((arg) => (
+                    <li><code>{arg}</code></li>
+                  ))}
+                </ul>
+                <div>
+                  <strong>{getTranslation(detectedLang, 'tables.syscall.returns')}</strong> {scLocale.return}
+                </div>
+              </details>
+            </td>
+          </tr>
+        );
+      })}
     </tbody>
   </table>
 </div>

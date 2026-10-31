@@ -75,6 +75,16 @@ export const siteConfig: SiteConfig = {
       badge: 'BIOS Service Layer',
       icon: 'hard-drive',
       accentColor: '#8b5cf6'
+    },
+    ipo_os_software: {
+      id: 'ipo_os_software',
+      name: 'IPO_OS_Software',
+      taglineKey: 'projects.ipo_os_software.tagline',
+      descriptionKey: 'projects.ipo_os_software.description',
+      repoUrl: 'https://github.com/IPOleksenko/IPO_OS_Software',
+      badge: 'Userland Ecosystem',
+      icon: 'package',
+      accentColor: '#f59e0b'
     }
   }
 };
