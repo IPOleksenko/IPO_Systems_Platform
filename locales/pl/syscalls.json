@@ -1,769 +1,558 @@
 {
   "IPO_SYSCALL_REGISTER": {
-    "description": "Dynamically registers a custom system call handler into the kernel dispatch table.",
-    "return": "0 on success, negative error code on failure",
-    "args": []
+    "description": "Dynamicznie rejestruje niestandardową procedurę obsługi wywołania systemowego w tabeli dyspozytora jądra.",
+    "return": "0 przy powodzeniu, ujemny kod błędu w przypadku niepowodzenia"
   },
   "IPO_SYSCALL_CALL": {
-    "description": "Indirect invocation mechanism to dispatch a syscall through kernel dispatcher.",
-    "return": "Return value of dispatched syscall",
-    "args": []
+    "description": "Mechanizm wywołania pośredniego do przekazywania wywołania systemowego przez dyspozytora jądra.",
+    "return": "Wartość zwrócona przez obsłużone wywołanie systemowe"
   },
   "IPO_SYSCALL_PRINT": {
-    "description": "Outputs text to active VGA console and mirrors to COM1 serial.",
-    "return": "Number of printed characters, or negative error code",
-    "args": []
+    "description": "Wypisuje tekst na aktywnej konsoli VGA i duplikuje go na porcie szeregowym COM1.",
+    "return": "Liczba wydrukowanych znaków lub ujemny kod błędu"
   },
   "IPO_SYSCALL_WRITE": {
-    "description": "Writes raw byte stream into an open file descriptor or console.",
-    "return": "Bytes written, or negative on failure",
-    "args": []
+    "description": "Zapisuje surowy strumień bajtów do otwartego deskryptora pliku lub konsoli.",
+    "return": "Zapisane bajty lub ujemny w przypadku niepowodzenia"
   },
   "IPO_SYSCALL_FS_CREATE": {
-    "description": "Creates a new empty file or directory in IPO_FS.",
-    "return": "0 on success, negative error code otherwise",
-    "args": []
+    "description": "Tworzy nowy pusty plik lub katalog w IPO_FS.",
+    "return": "0 przy powodzeniu, w przeciwnym razie ujemny kod błędu"
   },
   "IPO_SYSCALL_FS_OPEN": {
-    "description": "Opens an existing inode and allocates a process file descriptor.",
-    "return": "Allocated file descriptor index (>= 0), or negative on error",
-    "args": []
+    "description": "Otwiera istniejący i-węzeł i alokuje deskryptor pliku procesu.",
+    "return": "Przydzielony indeks deskryptora pliku (>= 0) lub ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_FS_READ": {
-    "description": "Reads data from storage extents into memory buffer.",
-    "return": "Bytes read into buffer, or negative error",
-    "args": []
+    "description": "Odczytuje dane z ekstentów pamięci masowej do bufora pamięci.",
+    "return": "Bajty odczytane do bufora lub ujemny błąd"
   },
   "IPO_SYSCALL_FS_WRITE": {
-    "description": "Writes data into file extents, allocating new blocks from bitmap as needed.",
-    "return": "Bytes written to storage, or negative error code",
-    "args": []
+    "description": "Zapisuje dane do ekstentów pliku, alokując w razie potrzeby nowe bloki z mapy bitowej.",
+    "return": "Bajty zapisane w pamięci masowej lub ujemny kod błędu"
   },
   "IPO_SYSCALL_FS_DELETE": {
-    "description": "Deletes file or directory, frees extents in bitmap and clears inode.",
-    "return": "0 on success, negative error code on failure",
-    "args": []
+    "description": "Usuwa plik lub katalog, zwalnia ekstenty w mapie bitowej i czyści i-węzeł.",
+    "return": "0 przy powodzeniu, ujemny kod błędu w przypadku niepowodzenia"
   },
   "IPO_SYSCALL_FS_STAT": {
-    "description": "Retrieves metadata of specified path: size, extents, links, protection flags.",
-    "return": "0 on success, negative error code otherwise",
-    "args": []
+    "description": "Pobiera metadane podanej ścieżki: rozmiar, ekstenty, dowiązania, flagi ochrony.",
+    "return": "0 przy powodzeniu, w przeciwnym razie ujemny kod błędu"
   },
   "IPO_SYSCALL_FS_LIST": {
-    "description": "Enumerates directory contents into formatted buffer.",
-    "return": "Number of directory entries, or negative on error",
-    "args": []
+    "description": "Wylicza zawartość katalogu do sformatowanego bufora.",
+    "return": "Liczba wpisów katalogu lub ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_FS_RENAME": {
-    "description": "Renames or moves a file or directory within IPO_FS.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "Zmienia nazwę lub przenosi plik lub katalog w ramach IPO_FS.",
+    "return": "0 przy powodzeniu, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_FS_CLOSE": {
-    "description": "Closes file descriptor and flushes modified inode metadata.",
-    "return": "0 on success, negative error code on failure",
-    "args": []
+    "description": "Zamyka deskryptor pliku i zapisuje zmodyfikowane metadane i-węzła.",
+    "return": "0 przy powodzeniu, ujemny kod błędu w przypadku niepowodzenia"
   },
   "IPO_SYSCALL_FS_SEEK": {
-    "description": "Modifies file read/write cursor offset.",
-    "return": "New absolute byte position, or negative on failure",
-    "args": []
+    "description": "Modyfikuje przesunięcie kursora odczytu/zapisu pliku.",
+    "return": "Nowa bezwzględna pozycja bajtu lub ujemny w przypadku niepowodzenia"
   },
   "IPO_SYSCALL_EXEC": {
-    "description": "Loads executable binary into allocated free memory block and dispatches new process.",
-    "return": "PID of spawned process, or negative on error",
-    "args": []
+    "description": "Ładuje plik wykonywalny do wolnego bloku pamięci i uruchamia nowy proces.",
+    "return": "PID utworzonego procesu lub ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_READ": {
-    "description": "Reads a line of user input from active terminal keyboard buffer.",
-    "return": "Length of input string, or negative on error",
-    "args": []
+    "description": "Odczytuje linię danych wejściowych użytkownika z aktywnego bufora klawiatury terminala.",
+    "return": "Długość ciągu wejściowego lub ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_TERMINAL_INPUT": {
-    "description": "Injects keystroke text programmatically into terminal input buffer.",
-    "return": "0 on success, negative error code on failure",
-    "args": []
+    "description": "Wprowadza programowo tekst klawiszy do bufora wejściowego terminala.",
+    "return": "0 przy powodzeniu, ujemny kod błędu w przypadku niepowodzenia"
   },
   "IPO_SYSCALL_PROCESS_YIELD": {
-    "description": "Yields remainder of current CPU time slice to scheduler.",
-    "return": "0 on success",
-    "args": [
-      "None"
-    ]
+    "description": "Oddaje resztę bieżącego kwantu czasu procesora programowi planującemu.",
+    "return": "0 przy powodzeniu"
   },
   "IPO_SYSCALL_PROCESS_IS_FOREGROUND": {
-    "description": "Checks if calling task is currently running in the active foreground.",
-    "return": "1 if process owns terminal display, 0 if background",
-    "args": [
-      "None"
-    ]
+    "description": "Sprawdza, czy wywołujące zadanie działa obecnie na pierwszym planie.",
+    "return": "1, jeśli proces posiada wyświetlacz terminala, 0 jeśli działa w tle"
   },
   "IPO_SYSCALL_GETCWD": {
-    "description": "Gets canonical absolute path of process current working directory.",
-    "return": "String length copied, or negative error code",
-    "args": []
+    "description": "Pobiera kanoniczną ścieżkę bezwzględną bieżącego katalogu roboczego procesu.",
+    "return": "Długość skopiowanego ciągu lub ujemny kod błędu"
   },
   "IPO_SYSCALL_CHDIR": {
-    "description": "Changes current working directory of process.",
-    "return": "0 on success, negative error code if path invalid",
-    "args": []
+    "description": "Zmienia bieżący katalog roboczy procesu.",
+    "return": "0 przy powodzeniu, ujemny kod błędu, jeśli ścieżka jest nieprawidłowa"
   },
   "IPO_SYSCALL_GET_EXIT_CODE": {
-    "description": "Returns exit code of last child process for shell piping and scripting.",
-    "return": "Exit code of last executed program",
-    "args": [
-      "None"
-    ]
+    "description": "Zwraca kod wyjścia ostatniego procesu potomnego dla potoków powłoki i skryptów.",
+    "return": "Kod wyjścia ostatnio wykonanego programu"
   },
   "IPO_SYSCALL_PROCESS_IS_BATCH_ACTIVE": {
-    "description": "Queries whether multitasking batch mode (run & / &&) is running.",
-    "return": "1 if batch pipeline active, 0 otherwise",
-    "args": [
-      "None"
-    ]
+    "description": "Sprawdza, czy wielozadaniowy tryb wsadowy (run & / &&) jest uruchomiony.",
+    "return": "1, jeśli potok wsadowy jest aktywny, w przeciwnym razie 0"
   },
   "IPO_SYSCALL_SET_RETURN_VALUE": {
-    "description": "Sets explicit typed return value for the current process to pass through pipelines.",
-    "return": "0 on success, negative error code on failure",
-    "args": []
+    "description": "Ustawia jawną, typowaną wartość zwracaną dla bieżącego procesu w celu przekazania przez potoki.",
+    "return": "0 przy powodzeniu, ujemny kod błędu w przypadku niepowodzenia"
   },
   "IPO_SYSCALL_GET_RETURN_VALUE": {
-    "description": "Retrieves formatted return string of the last finished child process.",
-    "return": "Length of return string on success, negative error code on failure",
-    "args": []
+    "description": "Pobiera sformatowany ciąg zwracany ostatnio zakończonego procesu potomnego.",
+    "return": "Długość zwróconego ciągu przy powodzeniu, ujemny kod błędu przy niepowodzeniu"
   },
   "IPO_SYSCALL_ASYNC_START": {
-    "description": "Registers a recurring kernel task with a caller-selected name and interval.",
-    "return": "Task ID handle (>= 0), or negative on failure",
-    "args": []
+    "description": "Rejestruje cykliczne zadanie jądra z wybraną przez wywołującego nazwą i interwałem.",
+    "return": "Uchwyt ID zadania (>= 0) lub ujemny w przypadku niepowodzenia"
   },
   "IPO_SYSCALL_ASYNC_STOP": {
-    "description": "Stops and unregisters background async task.",
-    "return": "0 on success, negative error code otherwise",
-    "args": []
+    "description": "Zatrzymuje i wyrejestrowuje asynchroniczne zadanie w tle.",
+    "return": "0 przy powodzeniu, w przeciwnym razie ujemny kod błędu"
   },
   "IPO_SYSCALL_STACK_GROW": {
-    "description": "Dynamically expands process stack allocation limit.",
-    "return": "0 on success, negative on out of memory",
-    "args": []
+    "description": "Dynamicznie powiększa limit alokacji stosu procesu.",
+    "return": "0 przy powodzeniu, ujemny w przypadku braku pamięci"
   },
   "IPO_SYSCALL_STACK_SHRINK": {
-    "description": "Reclaims unused process stack memory.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "Odzyskuje nieużywaną pamięć stosu procesu.",
+    "return": "0 przy powodzeniu, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_VAR_SET": {
-    "description": "Sets or creates persistent shared kernel system variable.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "Ustawia lub tworzy trwałą, współdzieloną zmienną systemową jądra.",
+    "return": "0 przy powodzeniu, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_VAR_GET": {
-    "description": "Retrieves value of named shared kernel variable.",
-    "return": "Bytes copied, or negative if variable not found",
-    "args": []
+    "description": "Pobiera wartość nazwanej współdzielonej zmiennej jądra.",
+    "return": "Skopiowane bajty lub ujemny, jeśli zmienna nie została znaleziona"
   },
   "IPO_SYSCALL_VAR_DELETE": {
-    "description": "Deletes shared system variable and reclaims memory.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "Usuwa współdzieloną zmienną systemową i odzyskuje pamięć.",
+    "return": "0 przy powodzeniu, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_SBRK": {
-    "description": "Adjusts process data segment break for userspace malloc/free.",
-    "return": "Previous heap break pointer, or (void*)-1 on out of memory",
-    "args": []
+    "description": "Dostosowuje granicę segmentu danych procesu dla malloc/free w przestrzeni użytkownika.",
+    "return": "Poprzedni wskaźnik granicy sterty lub (void*)-1 w przypadku braku pamięci"
   },
   "IPO_SYSCALL_TIME": {
-    "description": "Returns system uptime in seconds measured from kernel boot.",
-    "return": "System uptime in seconds",
-    "args": []
+    "description": "Zwraca czas pracy systemu w sekundach mierzony od uruchomienia jądra.",
+    "return": "Czas pracy systemu w sekundach"
   },
   "IPO_SYSCALL_FREE": {
-    "description": "Frees kernel-allocated memory buffer returned to userspace.",
-    "return": "0 on success",
-    "args": []
+    "description": "Zwalnia bufor pamięci przydzielony przez jądro i zwrócony do przestrzeni użytkownika.",
+    "return": "0 przy powodzeniu"
   },
   "IPO_SYSCALL_MILLIS": {
-    "description": "Returns millisecond-resolution system uptime.",
-    "return": "System uptime in milliseconds",
-    "args": [
-      "None"
-    ]
+    "description": "Zwraca czas pracy systemu z dokładnością do milisekund.",
+    "return": "Czas pracy systemu w milisekundach"
   },
   "IPO_SYSCALL_ELAPSED_MS": {
-    "description": "Returns elapsed time using wrap-safe millisecond arithmetic.",
-    "return": "Elapsed milliseconds since start_ms",
-    "args": []
+    "description": "Zwraca upływający czas przy użyciu arytmetyki milisekund odpornej na przepełnienia.",
+    "return": "Milisekundy, które upłynęły od start_ms"
   },
   "IPO_SYSCALL_TIMER_AFTER": {
-    "description": "Checks whether the requested interval elapsed since start_ms.",
-    "return": "1 if delay has elapsed, otherwise 0",
-    "args": []
+    "description": "Sprawdza, czy żądany interwał upłynął od momentu start_ms.",
+    "return": "1, jeśli upłynęło opóźnienie, w przeciwnym razie 0"
   },
   "IPO_SYSCALL_KEYMAP_SET": {
-    "description": "Registers dynamic keyboard layout with custom unicode glyphs.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "Rejestruje dynamiczny układ klawiatury z niestandardowymi glifami Unicode.",
+    "return": "0 przy powodzeniu, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_KEYMAP_GET": {
-    "description": "Gets identifier of currently active keyboard layout.",
-    "return": "Name length, or negative on error",
-    "args": []
+    "description": "Pobiera identyfikator aktualnie aktywnego układu klawiatury.",
+    "return": "Długość nazwy lub ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_FONT_LOAD": {
-    "description": "Loads custom bitmap font into VGA character generator.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "Ładuje niestandardową czcionkę bitmapową do generatora znaków VGA.",
+    "return": "0 przy powodzeniu, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_KEYMAP_DISABLE": {
-    "description": "Disables keymap from layout switching rotation.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "Wyłącza układ klawiatury z rotacji przełączania.",
+    "return": "0 przy powodzeniu, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_KEYMAP_ENABLE": {
-    "description": "Enables previously disabled layout in switching rotation.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "Włącza ponownie wcześniej wyłączony układ w rotacji przełączania.",
+    "return": "0 przy powodzeniu, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_KEYMAP_REMOVE": {
-    "description": "Removes and unregisters keymap completely from kernel.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "Całkowicie usuwa i wyrejestrowuje układ klawiatury z jądra.",
+    "return": "0 przy powodzeniu, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_KEYMAP_TRANSLATE": {
-    "description": "Translates hardware scancode via active keymap translation table.",
-    "return": "Translated character codepoint, or 0 if unmapped",
-    "args": []
+    "description": "Tłumaczy sprzętowy kod skanowania za pomocą aktywnej tabeli translacji.",
+    "return": "Przetłumaczony punkt kodowy znaku lub 0, jeśli nieprzypisany"
   },
   "IPO_SYSCALL_KEYMAP_IS_ACTIVE": {
-    "description": "Checks if specified keymap is currently active.",
-    "return": "1 if active, 0 if inactive, negative on error",
-    "args": []
+    "description": "Sprawdza, czy określony układ klawiatury jest aktualnie aktywny.",
+    "return": "1, jeśli aktywny, 0, jeśli nieaktywny, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_KEYMAP_CYCLE_NEXT": {
-    "description": "Cycles to next active keyboard layout and updates VGA language bar.",
-    "return": "Index of new active layout",
-    "args": [
-      "None"
-    ]
+    "description": "Przełącza na następny aktywny układ klawiatury i aktualizuje pasek języka VGA.",
+    "return": "Indeks nowego aktywnego układu"
   },
   "IPO_SYSCALL_KEYMAP_CYCLE_PREV": {
-    "description": "Cycles to previous active keyboard layout and updates VGA language bar.",
-    "return": "Index of new active layout",
-    "args": [
-      "None"
-    ]
+    "description": "Przełącza na poprzedni aktywny układ klawiatury i aktualizuje pasek języka VGA.",
+    "return": "Indeks nowego aktywnego układu"
   },
   "IPO_SYSCALL_KEYMAP_GET_NAME": {
-    "description": "Gets active layout abbreviation (EN, RU, UA, ZH).",
-    "return": "Length of layout label string",
-    "args": []
+    "description": "Pobiera skrót aktywnego układu (EN, RU, UA, ZH).",
+    "return": "Długość ciągu etykiety układu"
   },
   "IPO_SYSCALL_FONT_GET_INFO": {
-    "description": "Queries loaded font family name and count of registered glyphs.",
-    "return": "0 on success, negative error code otherwise",
-    "args": []
+    "description": "Pobiera nazwę załadowanej rodziny czcionek i liczbę zarejestrowanych glifów.",
+    "return": "0 przy powodzeniu, w przeciwnym razie ujemny kod błędu"
   },
   "IPO_SYSCALL_VGA_GLYPH": {
-    "description": "Renders custom unicode glyph to current screen cursor position.",
-    "return": "0 on success, negative if glyph missing",
-    "args": []
+    "description": "Renderuje niestandardowy glif Unicode na bieżącej pozycji kursora ekranu.",
+    "return": "0 przy powodzeniu, ujemny, jeśli brak glifu"
   },
   "IPO_SYSCALL_VGA_SET_MODE": {
-    "description": "Switches display video mode and reconfigures DAC / Framebuffer.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "Przełącza tryb wideo wyświetlacza i rekonfiguruje DAC / bufor ramki.",
+    "return": "0 przy powodzeniu, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_VGA_GET_MODE": {
-    "description": "Queries currently active video display mode.",
-    "return": "Active video mode index (e.g. 0x03, 0x13)",
-    "args": [
-      "None"
-    ]
+    "description": "Pobiera aktualnie aktywny tryb wyświetlania wideo.",
+    "return": "Indeks aktywnego trybu wideo (np. 0x03, 0x13)"
   },
   "IPO_SYSCALL_SYSTEM_INTERRUPT": {
-    "description": "Performs hardware system control: 8042 reboot, ACPI shutdown, crash dump.",
-    "return": "0 on success, or does not return",
-    "args": []
+    "description": "Wykonuje sprzętowe sterowanie systemem: restart 8042, wyłączenie ACPI, zrzut awaryjny.",
+    "return": "0 przy powodzeniu lub nie powraca"
   },
   "IPO_SYSCALL_DRIVER_REGISTER": {
-    "description": "Registers runtime device driver and connects its subsystem hooks.",
-    "return": "Registration index (>= 0), or negative on error",
-    "args": []
+    "description": "Rejestruje sterownik urządzenia w czasie wykonywania i dołącza jego procedury hakowe podsystemu.",
+    "return": "Indeks rejestracji (>= 0) lub ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_DRIVER_UNREGISTER": {
-    "description": "Detaches hooks and unloads dynamic runtime driver.",
-    "return": "0 on success, negative error code otherwise",
-    "args": []
+    "description": "Wyrejestrowuje sterownik, odłącza porty wejścia/wyjścia i czyści zasoby.",
+    "return": "0 przy powodzeniu, w przeciwnym razie ujemny kod błędu"
   },
   "IPO_SYSCALL_DRIVER_LIST": {
-    "description": "Lists all registered device drivers and active subsystem hooks.",
-    "return": "Count of registered drivers",
-    "args": [
-      "None"
-    ]
+    "description": "Zwraca listę zarejestrowanych sterowników, wersji i możliwości.",
+    "return": "Liczba zarejestrowanych sterowników"
   },
   "IPO_SYSCALL_DRIVER_SET_DESC": {
-    "description": "Sets descriptive text metadata for registered driver.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "Aktualizuje czytelny dla człowieka opis tekstowy dla sterownika urządzenia.",
+    "return": "0 przy powodzeniu, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_FS_STATVFS": {
-    "description": "Queries mounted IPO_FS storage pool block and inode capacity statistics.",
-    "return": "0 on success, non-zero on error",
-    "args": []
+    "description": "Pobiera statystyki systemu plików: łączne/wolne bloki, stan i-węzłów, flagi montowania.",
+    "return": "0 przy powodzeniu, niezerowy w przypadku błędu"
   },
   "IPO_SYSCALL_WM_CREATE_WINDOW": {
-    "description": "Creates managed desktop window with titlebar, borders, framebuffer and event callbacks.",
-    "return": "Pointer to allocated wm_window_t, or NULL on error",
-    "args": []
+    "description": "Tworzy i alokuje nowe okno GUI przez kompozytor.",
+    "return": "Wskaźnik na przydzielone wm_window_t lub NULL w przypadku błędu"
   },
   "IPO_SYSCALL_WM_DESTROY_WINDOW": {
-    "description": "Closes and destroys window, releasing its framebuffer and compositor nodes.",
-    "return": "0 on success",
-    "args": []
+    "description": "Niszczy okno, zwalnia pamięć bufora tylnego i ponownie ustawia fokus.",
+    "return": "0 przy powodzeniu"
   },
   "IPO_SYSCALL_WM_SESSION_START": {
-    "description": "Enters VGA Mode 13h, allocates a backbuffer, and starts the compositor session.",
-    "return": "0 on success",
-    "args": [
-      "None"
-    ]
+    "description": "Inicjuje sesję kompozytora GUI i przełącza w tryb graficzny.",
+    "return": "0 przy powodzeniu"
   },
   "IPO_SYSCALL_WM_SESSION_STOP": {
-    "description": "Stops WM compositor task, destroys all open windows and restores text mode.",
-    "return": "0 on success",
-    "args": [
-      "None"
-    ]
+    "description": "Kończy sesję kompozytora i przywraca konsolę trybu tekstowego.",
+    "return": "0 przy powodzeniu"
   },
   "IPO_SYSCALL_WM_SESSION_ACTIVE": {
-    "description": "Checks whether GUI Window Manager desktop session is running.",
-    "return": "1 if GUI session active, 0 if in text mode",
-    "args": [
-      "None"
-    ]
+    "description": "Sprawdza, czy menedżer okien GUI jest aktualnie uruchomiony.",
+    "return": "1, jeśli sesja GUI jest aktywna, 0 w trybie tekstowym"
   },
   "IPO_SYSCALL_WM_GET_COUNT": {
-    "description": "Returns total number of active windows in compositor list.",
-    "return": "Total open windows count",
-    "args": [
-      "None"
-    ]
+    "description": "Zwraca łączną liczbę otwartych okien.",
+    "return": "Całkowita liczba otwartych okien"
   },
   "IPO_SYSCALL_WM_GET_FOCUSED": {
-    "description": "Gets top-level window handle currently possessing user input focus.",
-    "return": "Pointer to focused window, or NULL",
-    "args": [
-      "None"
-    ]
+    "description": "Zwraca wskaźnik na aktualnie aktywne okno.",
+    "return": "Wskaźnik na aktywne okno lub NULL"
   },
   "IPO_SYSCALL_WM_SET_FOCUS": {
-    "description": "Raises window to top of z-order and sets input focus.",
-    "return": "0 on success",
-    "args": []
+    "description": "Ustawia fokus wejścia na podane okno i przenosi je na wierzch.",
+    "return": "0 przy powodzeniu"
   },
   "IPO_SYSCALL_WM_FOCUS_NEXT": {
-    "description": "Cycles focus forward to next window in z-order (Alt+Tab behavior).",
-    "return": "0 on success",
-    "args": [
-      "None"
-    ]
+    "description": "Przełącza fokus wejścia na następne okno w porządku Z (Alt+Tab).",
+    "return": "0 przy powodzeniu"
   },
   "IPO_SYSCALL_WM_FOCUS_PREV": {
-    "description": "Cycles focus backward to previous window in z-order.",
-    "return": "0 on success",
-    "args": [
-      "None"
-    ]
+    "description": "Przełącza fokus wejścia na poprzednie okno w porządku Z.",
+    "return": "0 przy powodzeniu"
   },
   "IPO_SYSCALL_WM_INVALIDATE": {
-    "description": "Marks window dirty, triggering redraw in next compositor frame.",
-    "return": "0 on success",
-    "args": []
+    "description": "Unieważnia obszar okna, żądając ponownego odrysowania w następnej klatce.",
+    "return": "0 przy powodzeniu"
   },
   "IPO_SYSCALL_WM_IS_VALID": {
-    "description": "Checks whether window handle exists in active compositor list.",
-    "return": "1 if valid and active, 0 otherwise",
-    "args": []
+    "description": "Sprawdza, czy uchwyt okna jest prawidłowy i znany kompozytorowi.",
+    "return": "1, jeśli prawidłowy i aktywny, w przeciwnym razie 0"
   },
   "IPO_SYSCALL_GETPID": {
-    "description": "Returns unique process ID (PID) of calling task.",
-    "return": "Current process ID (PID)",
-    "args": [
-      "None"
-    ]
+    "description": "Zwraca identyfikator procesu (PID) wywołującego zadania.",
+    "return": "Identyfikator bieżącego procesu (PID)"
   },
   "IPO_SYSCALL_WM_TOGGLE_MAXIMIZE": {
-    "description": "Toggles window between fullscreen maximized and floating geometry.",
-    "return": "0 on success",
-    "args": []
+    "description": "Przełącza stan maksymalizacji okna.",
+    "return": "0 przy powodzeniu"
   },
   "IPO_SYSCALL_WM_RESIZE": {
-    "description": "Resizes window dimensions and reallocates pixel framebuffer.",
-    "return": "1 on success, 0 on memory allocation failure",
-    "args": []
+    "description": "Zmienia wymiary okna i ponownie alokuje bufor tylny.",
+    "return": "1 przy powodzeniu, 0 w przypadku błędu alokacji pamięci"
   },
   "IPO_SYSCALL_WM_GET_LIST": {
-    "description": "Returns pointer to head of active window list.",
-    "return": "Pointer to head of active window list, or NULL if empty",
-    "args": [
-      "None"
-    ]
+    "description": "Zwraca wskaźnik na początek listy aktywnych okien kompozytora.",
+    "return": "Wskaźnik na początek listy aktywnych okien lub NULL, jeśli pusta"
   },
   "IPO_SYSCALL_PROCESS_SWITCH_FG": {
-    "description": "Switches foreground terminal screen buffer and focus to specified PID.",
-    "return": "0 on success, negative if PID not found",
-    "args": []
+    "description": "Przełącza fokus wprowadzania danych na pierwszy plan do procesu docelowego.",
+    "return": "0 przy powodzeniu, ujemny, jeśli nie znaleziono PID"
   },
   "IPO_SYSCALL_WM_INIT": {
-    "description": "Initializes the window list when it is empty.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "Inicjalizuje główne struktury i konfigurację wyświetlania menedżera okien.",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_INVALIDATE_ALL": {
-    "description": "Marks every window as needing redraw.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "Żąda pełnego odrysowania ekranu dla wszystkich otwartych okien.",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_SET_FULLSCREEN": {
-    "description": "Enables or disables fullscreen mode for a window.",
-    "return": "0",
-    "args": []
+    "description": "Włącza lub wyłącza tryb pełnoekranowy dla okna.",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_MINIMIZE": {
-    "description": "Minimizes a window.",
-    "return": "0",
-    "args": []
+    "description": "Minimalizuje okno, ukrywając je na ekranie.",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_RESTORE": {
-    "description": "Restores a minimized window.",
-    "return": "0",
-    "args": []
+    "description": "Przywraca zminimalizowane lub zmaksymalizowane okno do normalnych wymiarów.",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_MOVE": {
-    "description": "Moves a window to the specified position.",
-    "return": "0",
-    "args": []
+    "description": "Przesuwa pozycję okna na ekranie.",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_SET_TITLE": {
-    "description": "Sets a window title.",
-    "return": "0",
-    "args": []
+    "description": "Ustawia etykietę tekstową paska tytułu okna.",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_SET_SHAPE": {
-    "description": "Sets the window shape mask and its dimensions.",
-    "return": "0",
-    "args": []
+    "description": "Konfiguruje geometrię obramowania, cienia i narożników okna.",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_DISPATCH_KEY": {
-    "description": "Routes a keyboard scancode through the window manager.",
-    "return": "1 if handled, otherwise 0",
-    "args": []
+    "description": "Przekazuje zdarzenia klawiatury do aktywnego okna z fokusem.",
+    "return": "1, jeśli obsłużono, w przeciwnym razie 0"
   },
   "IPO_SYSCALL_WM_COMPOSE": {
-    "description": "Composes windows and overlays into the supplied backbuffer.",
-    "return": "0",
-    "args": []
+    "description": "Renderuje uporządkowaną scenę okien i nakładki do podanego bufora tylnego.",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_COMPOSITOR_TICK": {
-    "description": "Runs one window compositor update.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "Wykonuje jeden cykl aktualizacji kompozytora okien.",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_SESSION_RUN": {
-    "description": "Runs the blocking, animated window-manager session.",
-    "return": "None (returns when session ends)",
-    "args": [
-      "None"
-    ]
+    "description": "Uruchamia blokującą, animowaną sesję menedżera okien.",
+    "return": "Brak (powraca po zakończeniu sesji)"
   },
   "IPO_SYSCALL_WM_GET_COUNT_PID": {
-    "description": "Returns the number of windows owned by a process.",
-    "return": "Number of windows owned by the process",
-    "args": []
+    "description": "Zwraca liczbę okien należących do danego procesu.",
+    "return": "Liczba okien należących do procesu"
   },
   "IPO_SYSCALL_WM_HAS_WINDOWS_PID": {
-    "description": "Checks whether a process owns any windows.",
-    "return": "1 if the process owns windows, otherwise 0",
-    "args": []
+    "description": "Sprawdza, czy proces posiada jakiekolwiek okna.",
+    "return": "1, jeśli proces posiada okna, w przeciwnym razie 0"
   },
   "IPO_SYSCALL_WM_FOCUS_PID": {
-    "description": "Focuses a window owned by the specified process.",
-    "return": "0",
-    "args": []
+    "description": "Ustawia fokus na okno należące do podanego procesu.",
+    "return": "0"
   },
   "IPO_SYSCALL_NET_DNS_RESOLVE": {
-    "description": "Resolves a hostname using the configured DNS server.",
-    "return": "1 on success, otherwise 0",
-    "args": []
+    "description": "Rozpoznaje nazwę hosta za pomocą skonfigurowanego serwera DNS.",
+    "return": "1 przy powodzeniu, w przeciwnym razie 0"
   },
   "IPO_SYSCALL_NET_ICMP_SEND": {
-    "description": "Sends an ICMP echo request.",
-    "return": "ICMP send result, or negative on error",
-    "args": []
+    "description": "Wysyła żądanie echa ICMP.",
+    "return": "Wynik wysłania ICMP lub ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_NET_ICMP_POLL": {
-    "description": "Waits for an ICMP echo reply matching the identifier and sequence.",
-    "return": "1 if a matching reply is received, otherwise 0",
-    "args": []
+    "description": "Czeka na odpowiedź echa ICMP zgodną z identyfikatorem i sekwencją.",
+    "return": "1, jeśli odebrano pasującą odpowiedź, w przeciwnym razie 0"
   },
   "IPO_SYSCALL_NET_SOCKET": {
-    "description": "Creates a kernel-managed network socket.",
-    "return": "Socket descriptor, or negative on error",
-    "args": []
+    "description": "Tworzy gniazdo sieciowe zarządzane przez jądro.",
+    "return": "Deskryptor gniazda lub ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_NET_BIND": {
-    "description": "Assigns a local address to a socket.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "Przypisuje adres lokalny do gniazda.",
+    "return": "0 przy powodzeniu, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_NET_LISTEN": {
-    "description": "Marks a bound stream socket as listening for connections.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "Oznacza powiązane gniazdo strumieniowe jako nasłuchujące połączeń.",
+    "return": "0 przy powodzeniu, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_NET_ACCEPT": {
-    "description": "Accepts an incoming connection, optionally waiting up to timeout_ms.",
-    "return": "Connected socket descriptor, or negative on error/timeout",
-    "args": []
+    "description": "Akceptuje połączenie przychodzące, opcjonalnie czekając do timeout_ms.",
+    "return": "Deskryptor połączonego gniazda lub ujemny w przypadku błędu/przekroczenia limitu czasu"
   },
   "IPO_SYSCALL_NET_CONNECT": {
-    "description": "Connects a socket to a remote address.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "Łączy gniazdo ze zdalnym adresem.",
+    "return": "0 przy powodzeniu, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_NET_SEND": {
-    "description": "Sends data through a connected socket.",
-    "return": "Number of bytes sent, or negative on error",
-    "args": []
+    "description": "Wysyła dane przez połączone gniazdo.",
+    "return": "Liczba wysłanych bajtów lub ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_NET_RECV": {
-    "description": "Receives data from a connected socket.",
-    "return": "Number of bytes received, or negative on error",
-    "args": []
+    "description": "Odbiera dane z połączonego gniazda.",
+    "return": "Liczba odebranych bajtów lub ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_NET_CLOSE": {
-    "description": "Closes a socket and releases its kernel resources.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "Zamyka gniazdo i zwalnia jego zasoby jądra.",
+    "return": "0 przy powodzeniu, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_NET_CONNECT_ENDPOINT": {
-    "description": "Resolves the endpoint if needed and connects the socket.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "Rozpoznaje punkt końcowy w razie potrzeby i łączy gniazdo.",
+    "return": "0 przy powodzeniu, ujemny w przypadku błędu"
   },
   "IPO_SYSCALL_NET_POLL": {
-    "description": "Polls the network device and processes pending network work.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "Odpytuje urządzenie sieciowe i przetwarza oczekujące zadania sieciowe.",
+    "return": "0"
   },
   "IPO_SYSCALL_NET_GET_INTERFACE": {
-    "description": "Copies network interface configuration and link state to userspace.",
-    "return": "1 on success, 0 on failure (or pointer to cached net_if_t in C API)",
-    "args": []
+    "description": "Kopiuje konfigurację interfejsu sieciowego i stan łącza do przestrzeni użytkownika.",
+    "return": "1 przy powodzeniu, 0 przy niepowodzeniu (lub wskaźnik na buforowane net_if_t w C API)"
   },
   "IPO_SYSCALL_NET_INIT": {
-    "description": "Initializes network subsystems using capacities supplied by the caller.",
-    "return": "1 on success, otherwise 0",
-    "args": []
+    "description": "Inicjalizuje podsystemy sieciowe przy użyciu pojemności dostarczonych przez wywołującego.",
+    "return": "1 przy powodzeniu, w przeciwnym razie 0"
   },
   "IPO_SYSCALL_NET_SET_IP": {
-    "description": "Updates the network interface IPv4 configuration.",
-    "return": "0",
-    "args": []
+    "description": "Aktualizuje konfigurację IPv4 interfejsu sieciowego.",
+    "return": "0"
   },
   "IPO_SYSCALL_KBD_GET_SCANCODE": {
-    "description": "Pulls next available raw hardware scancode non-blocking.",
-    "return": "Next scancode from queue or 0 if queue empty",
-    "args": [
-      "None"
-    ]
+    "description": "Pobiera następny dostępny surowy kod skanowania w sposób nieblokujący.",
+    "return": "Następny scancode z kolejki lub 0, jeśli kolejka jest pusta"
   },
   "IPO_SYSCALL_KBD_WAIT_SCANCODE": {
-    "description": "Blocks calling process until a keyboard scancode is received.",
-    "return": "Scancode of pressed key",
-    "args": [
-      "None"
-    ]
+    "description": "Blokuje proces wywołujący do momentu odebrania kodu skanowania klawiatury.",
+    "return": "Scancode naciśniętego klawisza"
   },
   "IPO_SYSCALL_KBD_SET_APP_MODE": {
-    "description": "Switches keyboard focus between terminal shell and raw application mode.",
-    "return": "0",
-    "args": []
+    "description": "Przełącza fokus klawiatury między powłoką terminala a trybem surowej aplikacji.",
+    "return": "0"
   },
   "IPO_SYSCALL_KBD_FLUSH": {
-    "description": "Flushes all kernel keyboard queues, 8042 hardware buffers, and modifier states.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "Czyści wszystkie kolejki klawiatury jądra, bufory sprzętowe 8042 i stany modyfikatorów.",
+    "return": "0"
   },
   "IPO_SYSCALL_KBD_GET_MODIFIERS": {
-    "description": "Returns current state bitmask of keyboard modifier keys.",
-    "return": "Bitmask of active modifier keys (Shift, Ctrl, Alt, CapsLock, NumLock, ScrollLock)",
-    "args": [
-      "None"
-    ]
+    "description": "Zwraca bieżącą maskę bitową stanu klawiszy modyfikujących klawiatury.",
+    "return": "Maska bitowa aktywnych klawiszy modyfikujących (Shift, Ctrl, Alt, CapsLock, NumLock, ScrollLock)"
   },
   "IPO_SYSCALL_KBD_POLL": {
-    "description": "Polls 8042 keyboard controller ports and dispatches pending events.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "Odpytuje porty kontrolera klawiatury 8042 i rozsyła oczekujące zdarzenia.",
+    "return": "0"
   },
   "IPO_SYSCALL_KBD_GET_KEY_STRING": {
-    "description": "Resolves human-readable name string for a hardware scancode (e.g. \"Enter\", \"Space\").",
-    "return": "1 on copy to buffer, or kernel string pointer if no buffer provided",
-    "args": []
+    "description": "Rozpoznaje czytelną dla człowieka nazwę sprzętowego kodu skanowania (np. \"Enter\", \"Space\").",
+    "return": "1 przy kopiowaniu do bufora lub wskaźnik na ciąg jądra, jeśli nie podano bufora"
   },
   "IPO_SYSCALL_MOUSE_GET_STATE": {
-    "description": "Retrieves current PS/2 mouse coordinates, button click states, and wheel delta.",
-    "return": "0",
-    "args": []
+    "description": "Pobiera bieżące współrzędne myszy PS/2, stany kliknięć przycisków i przesunięcie kółka.",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_SET_CURSOR": {
-    "description": "Sets hardware CRTC text mode cursor position via ports 0x3D4/0x3D5.",
-    "return": "0",
-    "args": []
+    "description": "Ustawia pozycję kursora trybu tekstowego CRTC przez porty 0x3D4/0x3D5.",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_GET_CURSOR": {
-    "description": "Reads hardware text mode cursor position from CRTC registers.",
-    "return": "Current cursor linear offset (row * 80 + col)",
-    "args": [
-      "None"
-    ]
+    "description": "Odczytuje pozycję kursora trybu tekstowego z rejestrów CRTC.",
+    "return": "Bieżące liniowe przesunięcie kursora (wiersz * 80 + kolumna)"
   },
   "IPO_SYSCALL_VGA_SHOW_CURSOR": {
-    "description": "Enables and shows the hardware text mode blinking cursor.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "Włącza i pokazuje migający kursor sprzętowy trybu tekstowego.",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_HIDE_CURSOR": {
-    "description": "Disables and hides the hardware text mode cursor.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "Wyłącza i ukrywa sprzętowy kursor trybu tekstowego.",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_SET_PALETTE": {
-    "description": "Programs 6-bit RGB values into the VGA DAC palette registers (ports 0x3C8/0x3C9).",
-    "return": "0",
-    "args": []
+    "description": "Programuje 6-bitowe wartości RGB do rejestrów palety VGA DAC (porty 0x3C8/0x3C9).",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_SET_OVERLAY_FLAGS": {
-    "description": "Sets overlay visibility flags for raw VGA Mode 13h processes (hiding Close button or mouse cursor).",
-    "return": "0",
-    "args": []
+    "description": "Ustawia flagi widoczności nakładki dla procesów bezpośredniego trybu VGA 13h.",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_GET_OVERLAY_FLAGS": {
-    "description": "Returns current VGA overlay visibility flags for the active process.",
-    "return": "Current overlay flags bitmask",
-    "args": [
-      "None"
-    ]
+    "description": "Zwraca bieżące flagi widoczności nakładki VGA dla aktywnego procesu.",
+    "return": "Bieżąca maska bitowa flag nakładki"
   },
   "IPO_SYSCALL_AUDIO_INIT": {
-    "description": "Initializes the Sound Blaster 16 DSP, DMA Channel 5, and software mixer.",
-    "return": "1 if audio hardware initialized, 0 otherwise",
-    "args": [
-      "None"
-    ]
+    "description": "Inicjalizuje DSP Sound Blaster 16, kanał DMA 5 i mikser oprogramowania.",
+    "return": "1, jeśli sprzęt audio jest zainicjowany, w przeciwnym razie 0"
   },
   "IPO_SYSCALL_AUDIO_TICK": {
-    "description": "Advances audio playback stream mixer and refills DMA buffers.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "Przesuwa mikser strumieni odtwarzania audio i uzupełnia bufory DMA.",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STOP_ALL": {
-    "description": "Stops all active audio playback streams and halts Sound Blaster 16 DMA.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "Zatrzymuje wszystkie aktywne strumienie audio i wstrzymuje DMA Sound Blaster 16.",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_CREATE": {
-    "description": "Creates a static in-memory audio playback stream.",
-    "return": "Pointer to audio_stream_t handle, or NULL on error",
-    "args": []
+    "description": "Tworzy statyczny strumień odtwarzania audio w pamięci.",
+    "return": "Wskaźnik na uchwyt audio_stream_t lub NULL w przypadku błędu"
   },
   "IPO_SYSCALL_AUDIO_STREAM_CREATE_RING": {
-    "description": "Creates a continuous ring-buffered audio stream for dynamic real-time playback.",
-    "return": "Pointer to audio_stream_t handle, or NULL on error",
-    "args": []
+    "description": "Tworzy ciągły strumień audio z buforem pierścieniowym do dynamicznego odtwarzania w czasie rzeczywistym.",
+    "return": "Wskaźnik na uchwyt audio_stream_t lub NULL w przypadku błędu"
   },
   "IPO_SYSCALL_AUDIO_STREAM_DESTROY": {
-    "description": "Stops playback, unlinks, and frees an audio stream handle.",
-    "return": "0",
-    "args": []
+    "description": "Zatrzymuje odtwarzanie, odłącza i zwalnia uchwyt strumienia audio.",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_PLAY": {
-    "description": "Starts or resumes playback of an audio stream.",
-    "return": "0",
-    "args": []
+    "description": "Rozpoczyna lub wznawia odtwarzanie strumienia audio.",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_PAUSE": {
-    "description": "Pauses playback of an audio stream preserving current position.",
-    "return": "0",
-    "args": []
+    "description": "Wstrzymuje odtwarzanie strumienia audio z zachowaniem bieżącej pozycji.",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_STOP": {
-    "description": "Stops playback and rewinds audio stream position to beginning.",
-    "return": "0",
-    "args": []
+    "description": "Zatrzymuje odtwarzanie i przewija pozycję strumienia audio na początek.",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_SEEK": {
-    "description": "Seeks playback position within an audio stream.",
-    "return": "0",
-    "args": []
+    "description": "Przewija pozycję odtwarzania w strumieniu audio.",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_SET_VOL": {
-    "description": "Adjusts individual playback volume of an audio stream.",
-    "return": "0",
-    "args": []
+    "description": "Dostosowuje indywidualną głośność odtwarzania strumienia audio.",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_PROGRESS": {
-    "description": "Queries current playback progress of an audio stream.",
-    "return": "0",
-    "args": []
+    "description": "Pobiera bieżący postęp odtwarzania strumienia audio.",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_UPDATE": {
-    "description": "Appends or updates buffer data in a streaming ring-buffer.",
-    "return": "0",
-    "args": []
+    "description": "Dołącza lub aktualizuje dane w strumieniowym buforze pierścieniowym.",
+    "return": "0"
   },
   "IPO_SYSCALL_BINFMT_REGISTER": {
-    "description": "Registers dynamic executable binary format handler with signature matching, delegating non-native execution to an interpreter.",
-    "return": "0 on success, or negative error code",
-    "args": []
+    "description": "Rejestruje procedurę obsługi formatów binarnych z dopasowywaniem sygnatur, delegując wykonanie do interpretera.",
+    "return": "0 przy powodzeniu lub ujemny kod błędu"
   },
   "IPO_SYSCALL_BINFMT_UNREGISTER": {
-    "description": "Unregisters a previously registered dynamic binary format handler by name.",
-    "return": "0 on success, or negative error code",
-    "args": []
+    "description": "Wyrejestrowuje wcześniej zarejestrowaną procedurę obsługi formatu binarnego po nazwie.",
+    "return": "0 przy powodzeniu lub ujemny kod błędu"
   },
   "IPO_SYSCALL_BINFMT_LIST": {
-    "description": "Enumerates and lists all currently registered dynamic binary format handlers.",
-    "return": "Count of active registered binary format handlers",
-    "args": [
-      "None"
-    ]
+    "description": "Wylicza i wyświetla wszystkie aktualnie zarejestrowane procedury obsługi formatów binarnych.",
+    "return": "Liczba aktywnych zarejestrowanych procedur obsługi formatów binarnych"
   },
   "IPO_SYSCALL_EXIT": {
-    "description": "Terminates calling process, releases memory and switches context.",
-    "return": "Does not return (process context destroyed)",
-    "args": []
+    "description": "Kończy wywołujący proces, zwalnia pamięć i przełącza kontekst.",
+    "return": "Nie powraca (kontekst procesu zniszczony)"
   }
 }

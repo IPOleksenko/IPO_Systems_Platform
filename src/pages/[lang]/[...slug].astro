@@ -7,7 +7,7 @@ import SharedStruct from '../../components/SharedStruct.astro';
 import SharedSyscallTable from '../../components/SharedSyscallTable.astro';
 import MemoryMapVisualizer from '../../components/MemoryMapVisualizer.astro';
 import PsuCalculator from '../../components/PsuCalculator.astro';
-import { getAllSlugs } from '../../data/navigation';
+import { getAllSlugs, getPageTitleKey } from '../../data/navigation';
 import { getTranslation } from '../../utils/i18n';
 import { siteConfig } from '../../../site.config';
 
@@ -54,8 +54,10 @@ const Content = mod.default;
 const frontmatter = mod.frontmatter || {};
 const headings = mod.getHeadings ? await mod.getHeadings() : [];
 
-// Frontmatter title or localized nav title
-const pageTitle = frontmatter.title || getTranslation(currentLang, `pages.${currentSlug.replace(/[\/-]/g, '_')}`);
+const titleKey = getPageTitleKey(currentSlug);
+const pageTitle = titleKey
+  ? getTranslation(currentLang, titleKey)
+  : frontmatter.title || currentSlug;
 const pageDesc = frontmatter.description || '';
 ---
 

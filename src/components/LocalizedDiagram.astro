@@ -1,5 +1,5 @@
 ---
-import { getDiagramData, getTranslation } from '../utils/i18n';
+import { getDiagramData, getTranslation, detectLang } from '../utils/i18n';
 import { generateDiagramSvg } from '../utils/diagram-svgs';
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
 }
 
 const { id, lang: propLang, figureNum } = Astro.props;
-const lang = propLang || (Astro.params.lang as string) || 'en';
+const lang = detectLang(propLang, Astro.url, Astro.params);
 const data = getDiagramData(lang, id);
 const svgContent = generateDiagramSvg(id, data.labels || {});
 

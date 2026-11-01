@@ -1,13 +1,13 @@
 ---
-title: "Полный довідник системних викликів"
-description: "Исчерпывающий довідник всіх 105 системних викликів IPO_OS: номера, сигнатуры, регістры ABI int 0x80, параметри та коды возврата."
+title: "Повний довідник системних викликів"
+description: "Вичерпний довідник усіх 139 системних викликів IPO_OS: номери, сигнатури, регістри ABI int 0x80, параметри та коди повернення."
 ---
 
 import SharedSyscallTable from '../../../../components/SharedSyscallTable.astro';
 import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
 import Callout from '../../../../components/Callout.astro';
 
-# Полный довідник системних викликів
+# Повний довідник системних викликів
 
 In **IPO_OS**, system calls serve as the primary protected gateway between processes and privileged kernel subsystem services in flat 32-bit Protected Mode. Syscalls are triggered via the x86 software interrupt gate `int 0x80` (IDT flags `0xEE`).
 
@@ -37,9 +37,9 @@ When `int 0x80` is triggered, the CPU transfers execution to IDT gate `0x80` (`s
 
 ## 📋 Comprehensive System Calls Table
 
-Below is the complete interactive list of all 140 registered system calls:
+Нижче наведено повний інтерактивний список усіх 139 зареєстрованих системних викликів ядра IPO_OS:
 
-<SharedSyscallTable lang="uk" />
+<SharedSyscallTable />
 
 ---
 

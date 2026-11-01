@@ -296,54 +296,56 @@ run setfont /fonts/terminus.fnt ; startwm
     lang: 'bash',
     title: 'tools/disk_editor.py Complete Command Reference',
     code: `# Inspect disk image contents (root directory)
-python3 tools/disk_editor.py -i build/disk.img ls /
+python3 tools/disk_editor.py -i build/disks/disk.img ls /
 
 # Copy host compiled executable into IPO_FS /applications folder
-python3 tools/disk_editor.py -i build/disk.img put ./build/applications/doom/doom.bin /applications/doom
+python3 tools/disk_editor.py -i build/disks/disk.img put ./build/applications/doom/doom.bin /applications/doom
 
 # Create directory inside filesystem
-python3 tools/disk_editor.py -i build/disk.img mkdir /home/user
+python3 tools/disk_editor.py -i build/disks/disk.img mkdir /home/user
 
 # Write text file into image
-python3 tools/disk_editor.py -i build/disk.img touch /autorun "startwm\nrun gl_gears\n"
+python3 tools/disk_editor.py -i build/disks/disk.img touch /autorun "startwm\nrun gl_gears\n"
 
 # View file content
-python3 tools/disk_editor.py -i build/disk.img cat /autorun
+python3 tools/disk_editor.py -i build/disks/disk.img cat /autorun
 
 # Delete file or directory
-python3 tools/disk_editor.py -i build/disk.img rm /old_app
+python3 tools/disk_editor.py -i build/disks/disk.img rm /old_app
 `
   },
 
   'makefile-all-targets': {
     id: 'makefile-all-targets',
     lang: 'bash',
-    title: 'Makefile Target Reference (IPO_OS)',
-    code: `# Full build, disk/live-image generation, and run in QEMU:
+    title: 'Makefile Target Reference (IPO_OS & IPO_OS_Software)',
+    code: `# === IPO_OS (Kernel & Base System) ===
+# Full build and run in QEMU (clean, lib, kernel, boot, image, disks, run):
 make all
 
-# Incremental module builds:
-make lib          # Builds libc.a, libm.a, libstdc++.a, libk.a
-make kernel       # Builds kernel.bin + two-pass generate_ksyms.py symbol table
+# Incremental kernel module builds:
+make lib          # Builds kernel standard library (src/lib/libk.a)
+make kernel       # Builds kernel.bin + symbol table via generate_ksyms.py
 make boot         # Builds boot.bin bootloader (Stage 1 + Stage 2 + E820)
-make applications # Compiles user applications in applications/
-make toolchain    # Packages in-OS TinyCC (TCC) compiler & headers
-make disks        # Formats 128 MB disk.img via OS and loads applications
-make live-image   # Builds unified bootable 128 MB Live USB image (IPO_OS.img)
-make image        # Builds IPO_OS.img, disks, and unified live-image
+make image        # Builds bootable IPO_OS.img and ensures virtual disk images exist
+make disks        # Prepares build/disks/disk.img and build/disks/disk.iso
 
-# Host TAP networking configuration (exposes all 65535 ports):
+# Host TAP networking configuration (direct L2 communication, host 192.168.7.1):
 make setup-tap
 
-# Launch in QEMU with specific parameters:
+# Launch in QEMU:
 make run NET_MODE=tap AUDIODEV=pa
 make run NET_MODE=user DRIVE_TYPE=ide
 
 # Cleanups:
-make clean
-make clean-lib
-make clean-applications
-make clean-disks
+make clean        # Removes build directory (except disks)
+make clean-lib    # Cleans kernel library artifacts
+make clean-disks  # Removes build/disks directory
+
+# === IPO_OS_Software (Userland Ecosystem) ===
+# Build all userland libraries, apps, compilers, and font tables:
+make -C ../IPO_OS_Software all
+make -C ../IPO_OS_Software load-apps DISK=../IPO_OS/build/disks/disk.img
 `
   },
 
@@ -375,7 +377,7 @@ qemu-system-i386 \\
     -bios build/bootrom.bin \\
     -m 2048 \\
     -drive format=raw,file=build/IPO_OS.img,if=ide,index=0 \\
-    -drive format=raw,file=build/disk.img,if=ide,index=1 \\
+    -drive format=raw,file=build/disks/disk.img,if=ide,index=1 \\
     -device rtl8139,netdev=net0 \\
     -netdev user,id=net0,net=192.168.7.0/24,host=192.168.7.1,dhcpstart=192.168.7.2 \\
     -device sb16 \\
@@ -396,8 +398,8 @@ flashrom -p ch341a_spi -r backup2.bin
 # 3. Verify identical checksums before proceeding
 cmp backup1.bin backup2.bin || echo "CRITICAL: Clamp contact unstable! Re-attach clip!"
 
-# 4. Build unified ROM image (default 4MB, or specify FLASH_SIZE)
-make FIRMWARE=path/to/firmware.bin FLASH_SIZE=4M
+# 4. Build unified ROM image (default 4MB, embedding firmware payload)
+make FIRMWARE=../IPO_Firmware/build/.bin/firmware.bin FLASH_SIZE=4M
 
 # 5. Flash physical chip with verification
 flashrom -p ch341a_spi -w build/bootrom.bin
@@ -728,7 +730,7 @@ export const sharedStructTables: StructTable[] = [
   },
   {
     id: 'process_pcb',
-    totalSize: '208 bytes (0xD0)',
+    totalSize: '372 bytes (0x174)',
     fields: [
       { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'pid' },
       { offset: '0x04', size: '4 bytes', type: 'void*', name: 'binary_base' },
@@ -751,27 +753,37 @@ export const sharedStructTables: StructTable[] = [
       { offset: '0x81', size: '1 byte', type: 'uint8_t', name: 'is_running' },
       { offset: '0x82', size: '1 byte', type: 'bool', name: 'waiting_for_input' },
       { offset: '0x83', size: '1 byte', type: 'bool', name: 'wants_graphics' },
-      { offset: '0x84', size: '1 byte', type: 'bool', name: 'is_wm_app' },
-      { offset: '0x88', size: '4 bytes', type: 'uint32_t', name: 'async_task_count' },
-      { offset: '0x8C', size: '4 bytes', type: 'uint32_t', name: 'user_heap_break' },
-      { offset: '0x90', size: '4 bytes', type: 'uint16_t*', name: 'text_vram_backup' },
-      { offset: '0x94', size: '4 bytes', type: 'uint8_t*', name: 'gfx_vram_backup' },
-      { offset: '0x98', size: '4 bytes', type: 'uint8_t*', name: 'gfx_palette_backup' },
-      { offset: '0x9C', size: '2 bytes', type: 'uint16_t', name: 'text_cursor_pos' },
-      { offset: '0x9E', size: '1 byte', type: 'bool', name: 'text_cursor_visible' },
-      { offset: '0x9F', size: '1 byte', type: 'bool', name: 'completed_and_acknowledged' },
-      { offset: '0xA0', size: '4 bytes', type: 'uint16_t*', name: 'scroll_top_buffer' },
-      { offset: '0xA4', size: '4 bytes', type: 'uint16_t*', name: 'scroll_bottom_buffer' },
-      { offset: '0xA8', size: '4 bytes', type: 'int', name: 'scroll_top_count' },
-      { offset: '0xAC', size: '4 bytes', type: 'int', name: 'scroll_bottom_count' },
-      { offset: '0xB0', size: '4 bytes', type: 'int', name: 'window_id' },
-      { offset: '0xB4', size: '1 byte', type: 'bool', name: 'text_screen_shared' },
-      { offset: '0xB8', size: '4 bytes', type: 'char*', name: 'text_output_buf' },
-      { offset: '0xBC', size: '4 bytes', type: 'uint32_t', name: 'text_output_len' },
-      { offset: '0xC0', size: '4 bytes', type: 'uint32_t', name: 'text_output_cap' },
-      { offset: '0xC4', size: '4 bytes', type: 'char*', name: 'name' },
-      { offset: '0xC8', size: '4 bytes', type: 'char*', name: 'return_format' },
-      { offset: '0xCC', size: '4 bytes', type: 'struct process*', name: 'next' }
+      { offset: '0x84', size: '4 bytes', type: 'uint32_t', name: 'gfx_overlay_flags' },
+      { offset: '0x88', size: '1 byte', type: 'bool', name: 'is_wm_app' },
+      { offset: '0x8C', size: '4 bytes', type: 'uint32_t', name: 'async_task_count' },
+      { offset: '0x90', size: '4 bytes', type: 'uint32_t', name: 'user_heap_base' },
+      { offset: '0x94', size: '4 bytes', type: 'uint32_t', name: 'user_heap_break' },
+      { offset: '0x98', size: '4 bytes', type: 'uint32_t', name: 'user_heap_limit' },
+      { offset: '0x9C', size: '4 bytes', type: 'int32_t', name: 'user_heap_slot' },
+      { offset: '0xA0', size: '128 bytes', type: 'struct ipo_inode', name: 'exec_inode' },
+      { offset: '0x120', size: '1 byte', type: 'bool', name: 'demand_loading' },
+      { offset: '0x124', size: '4 bytes', type: 'uint32_t', name: 'demand_file_offset' },
+      { offset: '0x128', size: '4 bytes', type: 'uint32_t', name: 'demand_mem_offset' },
+      { offset: '0x12C', size: '4 bytes', type: 'uint32_t', name: 'demand_loaded_bytes' },
+      { offset: '0x130', size: '4 bytes', type: 'uint32_t', name: 'demand_total_bytes' },
+      { offset: '0x134', size: '4 bytes', type: 'uint16_t*', name: 'text_vram_backup' },
+      { offset: '0x138', size: '4 bytes', type: 'uint8_t*', name: 'gfx_vram_backup' },
+      { offset: '0x13C', size: '4 bytes', type: 'uint8_t*', name: 'gfx_palette_backup' },
+      { offset: '0x140', size: '2 bytes', type: 'uint16_t', name: 'text_cursor_pos' },
+      { offset: '0x142', size: '1 byte', type: 'bool', name: 'text_cursor_visible' },
+      { offset: '0x143', size: '1 byte', type: 'bool', name: 'completed_and_acknowledged' },
+      { offset: '0x144', size: '4 bytes', type: 'uint16_t*', name: 'scroll_top_buffer' },
+      { offset: '0x148', size: '4 bytes', type: 'uint16_t*', name: 'scroll_bottom_buffer' },
+      { offset: '0x14C', size: '4 bytes', type: 'int', name: 'scroll_top_count' },
+      { offset: '0x150', size: '4 bytes', type: 'int', name: 'scroll_bottom_count' },
+      { offset: '0x154', size: '4 bytes', type: 'int', name: 'window_id' },
+      { offset: '0x158', size: '1 byte', type: 'bool', name: 'text_screen_shared' },
+      { offset: '0x15C', size: '4 bytes', type: 'char*', name: 'text_output_buf' },
+      { offset: '0x160', size: '4 bytes', type: 'uint32_t', name: 'text_output_len' },
+      { offset: '0x164', size: '4 bytes', type: 'uint32_t', name: 'text_output_cap' },
+      { offset: '0x168', size: '4 bytes', type: 'char*', name: 'name' },
+      { offset: '0x16C', size: '4 bytes', type: 'char*', name: 'return_format' },
+      { offset: '0x170', size: '4 bytes', type: 'struct process*', name: 'next' }
     ]
   },
   {
@@ -1598,6 +1610,18 @@ export const sharedSyscallsList: SyscallDoc[] = [
     signature: 'void ipo_vga_set_palette(uint8_t index, uint8_t r, uint8_t g, uint8_t b)',
   },
   {
+    numHex: '0x10C5',
+    numDec: 4293,
+    name: 'IPO_SYSCALL_VGA_SET_OVERLAY_FLAGS',
+    signature: 'void ipo_vga_set_overlay_flags(uint32_t flags)',
+  },
+  {
+    numHex: '0x10C6',
+    numDec: 4294,
+    name: 'IPO_SYSCALL_VGA_GET_OVERLAY_FLAGS',
+    signature: 'uint32_t ipo_vga_get_overlay_flags(void)',
+  },
+  {
     numHex: '0x10D0',
     numDec: 4304,
     name: 'IPO_SYSCALL_AUDIO_INIT',
@@ -1676,32 +1700,27 @@ export const sharedSyscallsList: SyscallDoc[] = [
     signature: 'void ipo_audio_stream_update_buffered(audio_stream_t *stream, size_t new_size, bool loop)',
   },
   {
+    numHex: '0x10E0',
+    numDec: 4320,
+    name: 'IPO_SYSCALL_BINFMT_REGISTER',
+    signature: 'int ipo_binfmt_register(const char *name, const void *magic, uint32_t magic_len, uint32_t offset, const char *runner_path)',
+  },
+  {
+    numHex: '0x10E1',
+    numDec: 4321,
+    name: 'IPO_SYSCALL_BINFMT_UNREGISTER',
+    signature: 'int ipo_binfmt_unregister(const char *name)',
+  },
+  {
+    numHex: '0x10E2',
+    numDec: 4322,
+    name: 'IPO_SYSCALL_BINFMT_LIST',
+    signature: 'int ipo_binfmt_list(void)',
+  },
+  {
     numHex: '0xFFFF',
     numDec: 65535,
     name: 'IPO_SYSCALL_EXIT',
     signature: 'void ipo_exit(int status)',
   }
 ];
-
-import { getSyscallLocale, getStructLocale } from '../utils/i18n';
-
-export function getStructTitle(table: StructTable, lang: string): string {
-  return getStructLocale(lang, table.id).title;
-}
-
-export function getFieldDescription(_field: StructTableField, _lang: string): string {
-  // Deprecated: use getStructLocale(lang, structId).fields[fieldName] in components
-  return '';
-}
-
-export function getSyscallDescription(syscall: SyscallDoc, lang: string): string {
-  return getSyscallLocale(lang, syscall.name).description;
-}
-
-export function getSyscallArgs(syscall: SyscallDoc, lang: string): string[] {
-  return getSyscallLocale(lang, syscall.name).args;
-}
-
-export function getSyscallReturn(syscall: SyscallDoc, lang: string): string {
-  return getSyscallLocale(lang, syscall.name).return;
-}

@@ -1,16 +1,39 @@
 ---
 import { sharedSyscallsList } from '../data/shared-code';
-import { getTranslation, getSyscallLocale } from '../utils/i18n';
-import { siteConfig } from '../../site.config';
+import { getTranslation, getSyscallLocale, detectLang } from '../utils/i18n';
 
 interface Props {
   lang?: string;
 }
 
 const { lang } = Astro.props;
-const currentPath = Astro.url.pathname;
-const pathSegments = currentPath.split('/').filter(Boolean);
-const detectedLang = lang || pathSegments.find((s) => s in siteConfig.languages) || siteConfig.defaultLang;
+const detectedLang = detectLang(lang, Astro.url, Astro.params);
+const noArgsLabel = getTranslation(detectedLang, 'tables.syscall.no_args');
+
+function parseSignatureArgs(signature: string): string[] {
+  // Take the outermost parameter list so that function-pointer arguments
+  // like `void (*cb)(int)` are not truncated at the first ')'.
+  const start = signature.indexOf('(');
+  const end = signature.lastIndexOf(')');
+  if (start < 0 || end <= start) return [];
+  const inside = signature.slice(start + 1, end).trim();
+  if (!inside || inside === 'void') return [];
+  const args: string[] = [];
+  let depth = 0;
+  let current = '';
+  for (const ch of inside) {
+    if (ch === '(') depth++;
+    if (ch === ')') depth--;
+    if (ch === ',' && depth === 0) {
+      args.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) args.push(current.trim());
+  return args;
+}
 ---
 
 <div class="syscalls-table-container">
@@ -26,6 +49,10 @@ const detectedLang = lang || pathSegments.find((s) => s in siteConfig.languages)
     <tbody>
       {sharedSyscallsList.map((sc) => {
         const scLocale = getSyscallLocale(detectedLang, sc.name);
+        // Optional per-language argument descriptions override the raw signature args.
+        const effectiveArgs = scLocale.args.length > 0 ? scLocale.args : parseSignatureArgs(sc.signature);
+        const isVoid = effectiveArgs.length === 0;
+
         return (
           <tr id={`syscall-${sc.numHex}`}>
             <td><code>{sc.numHex}</code></td>
@@ -39,11 +66,17 @@ const detectedLang = lang || pathSegments.find((s) => s in siteConfig.languages)
                 <summary style="cursor: pointer; font-weight: 500;">
                   {getTranslation(detectedLang, 'tables.syscall.details')}
                 </summary>
-                <ul style="margin: 0.35rem 0 0.35rem 1rem;">
-                  {scLocale.args.map((arg) => (
-                    <li><code>{arg}</code></li>
-                  ))}
-                </ul>
+                {isVoid ? (
+                  <div style="margin: 0.3rem 0; font-style: italic;">
+                    {noArgsLabel}
+                  </div>
+                ) : (
+                  <ul style="margin: 0.35rem 0 0.35rem 1rem;">
+                    {effectiveArgs.map((arg) => (
+                      <li><code>{arg}</code></li>
+                    ))}
+                  </ul>
+                )}
                 <div>
                   <strong>{getTranslation(detectedLang, 'tables.syscall.returns')}</strong> {scLocale.return}
                 </div>

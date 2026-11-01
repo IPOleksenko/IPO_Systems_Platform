@@ -11,7 +11,7 @@ const darkLabel = getTranslation(lang, 'ui.theme_dark');
 const autoLabel = getTranslation(lang, 'ui.theme_auto');
 ---
 
-<div class="theme-toggle" role="group" aria-label="Color theme">
+<div class="theme-toggle" role="group" aria-label={getTranslation(lang, 'interface.color_theme')}>
   <button type="button" class="theme-btn" id="btn-theme-light" title={lightLabel} aria-label={lightLabel}>
     ☀️
   </button>

@@ -41,7 +41,7 @@ This compiles:
 - `src/pci_scan.asm, src/ahci.asm, src/nvme.asm (Multi-bus storage discovery)
 - `src/chainload.asm (Sector 0 reading and Contract 3 handover)
 
-The build creates: `build/firmware.rom` (bootable ROM image ready for SPI flash chips or QEMU, default 256 KB) and intermediate payload `build/.bin/firmware.bin`.
+The default `make` target (`all`) creates `build/firmware.rom` (bootable ROM image ready for SPI flash chips or QEMU, default 256 KB) and intermediate payload `build/.bin/firmware.bin`.
 
 ---
 

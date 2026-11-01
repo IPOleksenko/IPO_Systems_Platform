@@ -13,6 +13,8 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
+import tarfile
 import zipfile
 from pathlib import Path
 
@@ -27,14 +29,30 @@ REPOSITORIES = {
     "IPO_OS_Software": "https://github.com/IPOleksenko/IPO_OS_Software.git",
 }
 
+STANDARD_BOOTROM_SIZES = [
+    ("64K", "64k", "64 KB"),
+    ("128K", "128k", "128 KB"),
+    ("256K", "256k", "256 KB"),
+    ("512K", "512k", "512 KB"),
+    ("1M", "1m", "1 MB"),
+    ("2M", "2m", "2 MB"),
+    ("4M", "4m", "4 MB"),
+    ("8M", "8m", "8 MB"),
+    ("16M", "16m", "16 MB"),
+]
+RETIRED_BOOTROM_SIZES = ["32m", "64m", "128m"]
+ARCHIVE_FORMATS = ["zip", "tar.gz", "tar.bz2", "tar.xz"]
 EXPECTED_ARTIFACTS = [
-    "ipo-system-bundle.zip",
+    *[f"ipo-system-bundle.{extension}" for extension in ARCHIVE_FORMATS],
     "IPO_OS.img",
     "disk-installed.img",
     "disk-clean.img",
-    "applications.zip",
-    "ipo-boot-rom.zip",
-    "ipo-firmware.zip",
+    *[f"applications.{extension}" for extension in ARCHIVE_FORMATS],
+    *[
+        f"ipo-boot-rom{'' if size == '4m' else f'-{size}'}.bin"
+        for _, size, _ in STANDARD_BOOTROM_SIZES
+    ],
+    "firmware.rom",
 ]
 
 
@@ -44,6 +62,99 @@ def sha256_file(filepath: Path) -> str:
         while chunk := f.read(65536):
             h.update(chunk)
     return h.hexdigest()
+
+
+def create_tar_archive_from_zip(source_path: Path, destination_path: Path, compression: str) -> None:
+    with zipfile.ZipFile(source_path) as source, tarfile.open(destination_path, f"w:{compression}") as archive:
+        for member in source.infolist():
+            info = tarfile.TarInfo(member.filename)
+            info.size = member.file_size
+            info.mode = (member.external_attr >> 16) & 0xFFFF or 0o644
+            info.mtime = datetime.datetime(*member.date_time, tzinfo=datetime.timezone.utc).timestamp()
+            if member.is_dir():
+                info.type = tarfile.DIRTYPE
+                info.size = 0
+                archive.addfile(info)
+            else:
+                with source.open(member) as content:
+                    archive.addfile(info, content)
+
+
+def add_tar_archive_variants(
+    source_path: Path,
+    artifact: dict,
+    manifest_entries: list,
+    archive_group: str | None = None,
+    extra_metadata: dict | None = None,
+) -> None:
+    variants = [
+        ("tar.gz", "gz", "TAR.GZ"),
+        ("tar.bz2", "bz2", "TAR.BZ2"),
+        ("tar.xz", "xz", "TAR.XZ"),
+    ]
+    archive_group = archive_group or artifact["id"]
+    artifact["archive_group"] = archive_group
+    artifact["archive_format"] = "ZIP"
+    if extra_metadata:
+        artifact.update(extra_metadata)
+
+    for extension, compression, label in variants:
+        destination = DOWNLOADS_DIR / f"{source_path.stem}.{extension}"
+        create_tar_archive_from_zip(source_path, destination, compression)
+        variant = artifact.copy()
+        variant.update({
+            "id": f"{artifact['id']}-{extension.replace('.', '-')}",
+            "file": destination.name,
+            "archive_group": archive_group,
+            "archive_format": label,
+            "size_bytes": destination.stat().st_size,
+            "size_formatted": format_size(destination.stat().st_size),
+            "sha256": sha256_file(destination),
+        })
+        if extra_metadata:
+            variant.update(extra_metadata)
+        variant.pop("featured", None)
+        manifest_entries.append(variant)
+
+
+def build_bootrom_binaries(bootrom: dict, manifest_entries: list) -> None:
+    with tempfile.TemporaryDirectory(prefix="ipo-boot-rom-") as temp_dir:
+        temp_path = Path(temp_dir)
+        build_rom_script = bootrom["build_rom_script"]
+
+        for flash_size, size_slug, size_label in STANDARD_BOOTROM_SIZES:
+            binary_name = f"ipo-boot-rom{'' if size_slug == '4m' else f'-{size_slug}'}.bin"
+            binary_path = DOWNLOADS_DIR / binary_name
+            raw_path = temp_path / f"bootrom-{size_slug}.bin"
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(build_rom_script),
+                    flash_size,
+                    str(bootrom["firmware_bin"]),
+                    str(bootrom["init_bin"]),
+                    str(bootrom["reset_bin"]),
+                    str(raw_path),
+                ],
+                check=True,
+            )
+            rom_size_bytes = raw_path.stat().st_size
+            shutil.copy2(raw_path, binary_path)
+
+            artifact = {
+                "id": f"ipo-boot-rom-{size_slug}",
+                "file": binary_name,
+                "name": f"IPO_Boot_ROM ({size_label})",
+                "category": "bootrom",
+                "description": f"IPO_Boot_ROM image sized for a {size_label} flash chip.",
+                "download_group": "ipo-boot-rom",
+                "rom_size": size_label,
+                "rom_size_bytes": rom_size_bytes,
+                "size_bytes": rom_size_bytes,
+                "size_formatted": format_size(rom_size_bytes),
+                "sha256": sha256_file(binary_path),
+            }
+            manifest_entries.append(artifact)
 
 
 def format_size(bytes_num: int) -> str:
@@ -58,9 +169,18 @@ def artifacts_exist() -> bool:
     manifest_path = DOWNLOADS_DIR / "manifest.json"
     if not manifest_path.exists():
         return False
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest_files = {artifact["file"] for artifact in manifest.get("artifacts", [])}
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
+        return False
+    expected_bootrom_files = {filename for filename in EXPECTED_ARTIFACTS if filename.startswith("ipo-boot-rom")}
+    manifest_bootrom_files = {filename for filename in manifest_files if filename.startswith("ipo-boot-rom")}
+    if manifest_bootrom_files != expected_bootrom_files:
+        return False
     for filename in EXPECTED_ARTIFACTS:
         target = DOWNLOADS_DIR / filename
-        if not target.exists() or target.stat().st_size == 0:
+        if filename not in manifest_files or not target.exists() or target.stat().st_size == 0:
             return False
     return True
 
@@ -134,7 +254,13 @@ def build_bootrom(repo_dir: Path, firmware_bin: Path, firmware_repo_dir: Path) -
         raise RuntimeError("IPO_Boot_ROM build did not produce bootrom.bin")
 
     print(f"✓ IPO_Boot_ROM built: {bootrom_bin.name} ({bootrom_bin.stat().st_size} bytes)")
-    return {"bin": bootrom_bin}
+    return {
+        "bin": bootrom_bin,
+        "firmware_bin": firmware_bin,
+        "init_bin": repo_dir / "build" / ".bin" / "init.bin",
+        "reset_bin": repo_dir / "build" / ".bin" / "reset.bin",
+        "build_rom_script": repo_dir / "tools" / "build_rom.sh",
+    }
 
 
 def build_os(repo_dir: Path) -> dict:
@@ -320,36 +446,24 @@ def package_artifacts(fw: dict, br: dict, os_art: dict, sw_art: dict) -> list:
         "size_formatted": format_size(apps_dest.stat().st_size),
         "sha256": sha256_file(apps_dest),
     })
+    add_tar_archive_variants(apps_dest, manifest_entries[-1], manifest_entries)
 
-    # 5. IPO_Firmware zip (Compiled ROM binary ONLY)
-    fw_zip_path = DOWNLOADS_DIR / "ipo-firmware.zip"
-    with zipfile.ZipFile(fw_zip_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
-        z.write(fw["rom"], "firmware.rom")
+    # 5. IPO_Firmware ROM (single-file artifact)
+    firmware_dest = DOWNLOADS_DIR / "firmware.rom"
+    shutil.copy2(fw["rom"], firmware_dest)
     manifest_entries.append({
         "id": "ipo-firmware",
-        "file": "ipo-firmware.zip",
-        "name": "IPO_Firmware Package",
+        "file": "firmware.rom",
+        "name": "IPO_Firmware",
         "category": "firmware",
-        "description": "Compiled BIOS runtime service layer ROM binary (firmware.rom).",
-        "size_bytes": fw_zip_path.stat().st_size,
-        "size_formatted": format_size(fw_zip_path.stat().st_size),
-        "sha256": sha256_file(fw_zip_path),
+        "description": "Compiled IPO_Firmware runtime services ROM binary (firmware.rom).",
+        "size_bytes": firmware_dest.stat().st_size,
+        "size_formatted": format_size(firmware_dest.stat().st_size),
+        "sha256": sha256_file(firmware_dest),
     })
 
-    # 6. IPO_Boot_ROM zip (Compiled ROM binaries ONLY)
-    br_zip_path = DOWNLOADS_DIR / "ipo-boot-rom.zip"
-    with zipfile.ZipFile(br_zip_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
-        z.write(br["bin"], "bootrom.bin")
-    manifest_entries.append({
-        "id": "ipo-boot-rom",
-        "file": "ipo-boot-rom.zip",
-        "name": "IPO_Boot_ROM Package",
-        "category": "bootrom",
-        "description": "Compiled unified hardware reset vector 0xFFFFFFF0 ROM binary (bootrom.bin).",
-        "size_bytes": br_zip_path.stat().st_size,
-        "size_formatted": format_size(br_zip_path.stat().st_size),
-        "sha256": sha256_file(br_zip_path),
-    })
+    # 6. IPO_Boot_ROM binaries for standard flash chip sizes
+    build_bootrom_binaries(br, manifest_entries)
 
     # 7. Full System Turnkey Bundle (Compiled binaries of all projects)
     full_bundle_path = DOWNLOADS_DIR / "ipo-system-bundle.zip"
@@ -366,24 +480,39 @@ def package_artifacts(fw: dict, br: dict, os_art: dict, sw_art: dict) -> list:
         "name": "Complete IPO Systems Bundle (All Projects & Disks)",
         "category": "bundle",
         "featured": True,
-        "description": "All compiled binaries across the platform: Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), IPO_OS kernel image (IPO_OS.img), clean and pre-installed disks (disk-clean.img, disk-installed.img), and pre-compiled applications package (applications.zip).",
+        "description": "All compiled binaries across the platform: Boot ROM (bootrom.bin), Firmware (firmware.rom), IPO_OS kernel image (IPO_OS.img), clean and pre-installed disks (disk-clean.img, disk-installed.img), and pre-compiled applications package (applications.zip).",
         "size_bytes": full_bundle_path.stat().st_size,
         "size_formatted": format_size(full_bundle_path.stat().st_size),
         "sha256": sha256_file(full_bundle_path),
     })
+    add_tar_archive_variants(full_bundle_path, manifest_entries[-1], manifest_entries)
 
     # Clean up obsolete archives
-    for obsolete in ["ipo-os-bundle.zip", "ipo-os-software.zip"]:
+    for obsolete in [
+        "ipo-os-bundle.zip",
+        "ipo-os-software.zip",
+        "ipo-firmware.zip",
+        "ipo-firmware.tar.gz",
+        "ipo-firmware.tar.bz2",
+        "ipo-firmware.tar.xz",
+        *[
+            f"ipo-boot-rom{'' if size == '4m' else f'-{size}'}.{extension}"
+            for _, size, _ in STANDARD_BOOTROM_SIZES
+            for extension in ARCHIVE_FORMATS
+        ],
+        *[
+            f"ipo-boot-rom-{size}.{extension}"
+            for size in RETIRED_BOOTROM_SIZES
+            for extension in [*ARCHIVE_FORMATS, "bin"]
+        ],
+    ]:
         obsolete_file = DOWNLOADS_DIR / obsolete
         if obsolete_file.exists():
-            try:
-                obsolete_file.unlink()
-            except Exception:
-                pass
+            obsolete_file.unlink()
 
     # Write manifest
     manifest = {
-        "version": "1.1.0",
+        "version": "1.4.0",
         "build_date": timestamp,
         "generator": "IPO Systems Documentation Build Pipeline",
         "artifacts": manifest_entries,

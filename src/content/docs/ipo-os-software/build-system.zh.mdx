@@ -17,7 +17,7 @@ The **IPO_OS_Software** repository hosts an independent ecosystem of userland li
 The build pipeline is organized into modular files located in `mk/`:
 - `mk/config.mk` — Defines compilers, freestanding flags (`-m32`, `-ffreestanding`), and path definitions.
 - `mk/lib.mk` — Builds the userspace standard runtime (`libc.a`, `libm.a`, `libstdc++.a`, `libapp.a`, `libapp_api.a`, `crt0.o`).
-- `mk/applications.mk` — Builds all userland applications (DOOM, TinyCC, MicroPython, Lua, NASM, text editor, 3D demos).
+- `mk/applications.mk` — Builds all userland applications, including `binfmt` (dynamic executable-format registry) and `elf_loader` (ELF32 runner), alongside DOOM, TinyCC, MicroPython, Lua, NASM, the text editor, and 3D demos.
 - `mk/toolchain.mk` — Prepares in-OS development toolchains.
 - `mk/disk.mk` — Virtual storage disk operations (creation, formatting, and application ingestion).
 - `mk/clean.mk` — Cleans build directories and temporary objects.

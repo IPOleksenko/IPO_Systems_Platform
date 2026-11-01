@@ -14,7 +14,7 @@ System calls provide the protected gateway through which applications request op
 
 ## 🚪 Dispatch Pipeline Architecture
 
-<LocalizedDiagram id="syscall_pipeline" lang="en" figureNum={6} />
+<LocalizedDiagram id="syscall_pipeline" figureNum={6} />
 
 ---
 
@@ -49,4 +49,4 @@ void ipo_register_syscall(uint32_t num, ipo_syscall_handler_t handler);
 ### Userspace Assembly Wrapper:
 The universal assembly wrapper used across C library calls:
 
-<SharedCode id="syscall-c-wrapper" lang="en" />
+<SharedCode id="syscall-c-wrapper" />

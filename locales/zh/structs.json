@@ -1,6 +1,7 @@
 {
   "ipo_superblock": {
-    "title": "IPO_FS Superblock Structure (LBA 2048)",
+    "totalSize": "64 字节（512 字节块的头部）",
+    "title": "IPO_FS 超级块结构 (LBA 2048)",
     "fields": {
       "magic": "Magic signature (\"IPO_FS\\0\\0\")",
       "fs_size_blocks": "Total 512-byte blocks in storage pool",
@@ -14,7 +15,8 @@
     }
   },
   "ipo_inode": {
-    "title": "IPO_FS Inode Structure (128 bytes, 4 per block)",
+    "totalSize": "128 字节",
+    "title": "IPO_FS Inode 结构 (128 字节，每块 4 个)",
     "fields": {
       "mode": "File type (0x1=Dir, 0x2=File, 0x80000000=Protected)",
       "links_count": "Number of active hard links",
@@ -25,7 +27,8 @@
     }
   },
   "ipo_extent": {
-    "title": "IPO_FS Extent Descriptor (24 bytes)",
+    "totalSize": "24 字节",
+    "title": "IPO_FS 区段描述符 (24 字节)",
     "fields": {
       "logical_block": "Starting logical block inside file",
       "physical_block": "Starting physical LBA block in storage pool",
@@ -34,7 +37,8 @@
     }
   },
   "storage_pool_raw_sb": {
-    "title": "Storage Pool Superblock (storage_pool_raw_sb_t, LBA 2030 & 2039)",
+    "totalSize": "512 字节（68 B 头部 + 可变 members[] + CRC32）",
+    "title": "存储池超级块 (storage_pool_raw_sb_t, LBA 2030 与 2039)",
     "fields": {
       "magic": "Pool magic signature (0x504F4F4C \"POOL\")",
       "version": "Superblock format version (2)",
@@ -51,7 +55,8 @@
     }
   },
   "storage_raw_disk_tx_entry": {
-    "title": "Storage Pool WAL Journal Entry (storage_raw_disk_tx_entry_t, LBA 2031–2038)",
+    "totalSize": "64 字节（每个 512 字节扇区 8 条记录，共 64 条）",
+    "title": "存储池 WAL 事务日志条目 (storage_raw_disk_tx_entry_t, LBA 2031–2038)",
     "fields": {
       "magic": "Journal entry signature (0x54584E4C \"TXNL\")",
       "tx_id": "Monotonic transaction identifier",
@@ -66,7 +71,8 @@
     }
   },
   "kmod_header": {
-    "title": "Relocatable Kernel Module Header (kmod_raw_header_t / kmod_header_t)",
+    "totalSize": "192 字节（磁盘上为 0xC0）/ RAM 中的动态指针",
+    "title": "可重定位内核模块头 (kmod_raw_header_t / kmod_header_t)",
     "fields": {
       "magic": "Module magic signature (0x444D4B49 \"IKMD\")",
       "abi_version": "Kernel Module ABI version (0x0100 = v1.0)",
@@ -84,7 +90,8 @@
     }
   },
   "cpu_info": {
-    "title": "Per-CPU SMP Descriptor (cpu_info_t)",
+    "totalSize": "24 字节",
+    "title": "每 CPU SMP 描述符 (cpu_info_t)",
     "fields": {
       "cpu_id": "Logical processor core ID (0 = BSP, 1..N = AP)",
       "lapic_id": "Hardware Local APIC physical ID",
@@ -96,79 +103,82 @@
     }
   },
   "process_pcb": {
-    "title": "Process Descriptor Structure (process_t)",
+    "totalSize": "372 字节（0x174）",
+    "title": "进程控制块描述符结构 (process_t)",
     "fields": {
-      "pid": "Unique process ID (allocated dynamically starting from 1)",
-      "binary_base": "Base address of loaded executable image in allocated memory block (mem)",
-      "binary_size": "4 KB page-aligned binary memory size in bytes",
-      "entry_point": "Absolute execution entry point (allocated free block mem address)",
-      "binary_storage": "Reserved backup buffer pointer (NULL in in-place execution)",
-      "data_offset": "Offset where writable data/bss begins in image",
-      "data_size": "Size of writable data/bss segment in bytes",
-      "code_mapped": "True if code segment has been loaded into memory",
-      "stack_base": "Allocated process stack buffer",
-      "stack_ptr": "Saved ESP stack pointer during multitasking",
-      "stack_start": "Start address of stack region",
-      "stack_size": "Stack capacity in bytes (256 KB initial)",
-      "argc": "Argument count passed to main()",
-      "argv_addr": "Address of argv pointers array in process space",
-      "argv_kernel": "Copy of argv array in kernel space for debugging",
-      "exit_code": "Termination return code",
-      "return_val": "Full typed return value (type, int, raw_eax/edx, dynamic strings, struct buffer)",
-      "return_val_explicit": "True if process explicitly set custom return value via syscall",
-      "is_running": "Active execution state flag",
-      "waiting_for_input": "Blocked waiting for keyboard / terminal input",
-      "wants_graphics": "Requested VGA Mode 13h (320x200x256)",
-      "gfx_overlay_flags": "VGA Mode 13h overlay visibility flags (VGA_OVERLAY_HIDE_BUTTON, VGA_OVERLAY_HIDE_CURSOR)",
-      "is_wm_app": "Created a Window Manager desktop window",
-      "async_task_count": "Count of active background async tasks",
-      "user_heap_base": "Per-process isolated heap start address",
-      "user_heap_break": "Per-process sbrk break address boundary",
-      "user_heap_limit": "Per-process isolated heap ceiling limit address",
-      "user_heap_slot": "Dynamic memory slot index assigned to process (-1 if none)",
-      "exec_inode": "Executable inode metadata for on-demand progressive loading",
-      "demand_loading": "True if executable is currently being loaded on-demand",
-      "demand_file_offset": "Current byte offset in executable binary file on disk",
-      "demand_mem_offset": "Current destination offset in process memory image",
-      "demand_loaded_bytes": "Total bytes of executable loaded into memory so far",
-      "demand_total_bytes": "Total byte size of all loadable binary segments",
-      "text_vram_backup": "80x25 text mode buffer backup for workspace switching",
-      "gfx_vram_backup": "320x200 graphics VRAM backup when swapped to background",
-      "gfx_palette_backup": "256-color VGA DAC palette backup (768 bytes)",
-      "text_cursor_pos": "Saved cursor coordinate in text mode",
-      "text_cursor_visible": "Saved cursor visibility flag",
-      "completed_and_acknowledged": "Process completed and acknowledged by parent",
-      "scroll_top_buffer": "Workspace top scrollback line buffer",
-      "scroll_bottom_buffer": "Workspace bottom scrollback line buffer",
-      "scroll_top_count": "Count of lines in top scrollback buffer",
-      "scroll_bottom_count": "Count of lines in bottom scrollback buffer",
-      "window_id": "Workspace window group identifier in batch mode",
-      "text_screen_shared": "True if VRAM buffers are shared with co-process",
-      "text_output_buf": "Dynamically expanding captured stdout buffer",
-      "text_output_len": "Length of captured stdout text in bytes",
-      "text_output_cap": "Allocated capacity of text_output_buf",
-      "name": "Dynamically allocated process name string",
-      "return_format": "Auto-detected format descriptor from DWARF debug symbols",
-      "next": "Pointer to next PCB in active kernel list"
+      "pid": "唯一进程标识符 (PID)",
+      "binary_base": "内存中二进制程序的基准加载地址",
+      "binary_size": "二进制镜像的总字节大小",
+      "entry_point": "程序执行入口点地址 (_start)",
+      "binary_storage": "原始二进制镜像存储缓冲区指针",
+      "data_offset": "二进制镜像中的数据节偏移量",
+      "data_size": "已初始化数据节的字节大小",
+      "code_mapped": "指示代码段是否已映射到内存",
+      "stack_base": "进程所分配栈空间的基地址",
+      "stack_ptr": "当前栈指针 (ESP)",
+      "stack_start": "栈分配区域的虚拟起始地址",
+      "stack_size": "已分配栈的总字节大小",
+      "argc": "命令行参数数量 (argc)",
+      "argv_addr": "用户栈中 argv 指针数组地址",
+      "argv_kernel": "内核空间中保存的参数字符串数组",
+      "exit_code": "进程退出状态码 (0=成功)",
+      "return_val": "结构化返回值联合体 (标量/指针/结构体)",
+      "return_val_explicit": "指示是否显式调用了系统调用设置返回值",
+      "is_running": "进程正在运行状态标志 (1=活跃)",
+      "waiting_for_input": "进程阻塞等待键盘输入",
+      "wants_graphics": "进程请求了 VGA 模式 13h (320x200x256)",
+      "gfx_overlay_flags": "VGA 覆盖层可见性标志 (关闭按钮、鼠标光标)",
+      "is_wm_app": "进程拥有窗口管理器所管理的 GUI 窗口",
+      "async_task_count": "活跃的异步后台任务计数",
+      "user_heap_base": "进程独立堆的虚拟基地址",
+      "user_heap_break": "当前堆的动态 sbrk 边界断点",
+      "user_heap_limit": "独立堆的最大虚拟内存上限",
+      "user_heap_slot": "动态内存分配槽位索引 (未分配则为 -1)",
+      "exec_inode": "用于按需加载的可执行文件 inode 副本",
+      "demand_loading": "指示可执行程序是否正在按需渐进加载",
+      "demand_file_offset": "当前在磁盘程序文件中的读取偏移量 (字节)",
+      "demand_mem_offset": "当前写入进程内存的目标地址偏移量",
+      "demand_loaded_bytes": "迄今为止已从磁盘加载到内存中的字节数",
+      "demand_total_bytes": "需要加载的所有段的总字节数",
+      "text_vram_backup": "进程切换至后台时备份的 80x25 文本显存",
+      "gfx_vram_backup": "进程切换至后台时备份的 320x200 图形显存",
+      "gfx_palette_backup": "备份的 256 色 DAC 调色板数据 (768 字节)",
+      "text_cursor_pos": "文本模式下保存的光标位置 (行列偏移)",
+      "text_cursor_visible": "文本模式下保存的光标可见性状态",
+      "completed_and_acknowledged": "进程已执行完毕并已被终端/用户确认关闭",
+      "scroll_top_buffer": "终端窗口的上半部回滚缓冲区",
+      "scroll_bottom_buffer": "终端窗口的下半部回滚缓冲区",
+      "scroll_top_count": "顶部区域已滚动的行数",
+      "scroll_bottom_count": "底部区域已滚动的行数",
+      "window_id": "批处理或窗口管理器工作区组 ID",
+      "text_screen_shared": "指示屏幕缓冲区是否与同窗口内的其他进程共享",
+      "text_output_buf": "管道/批处理重定向捕获的文本输出缓冲区",
+      "text_output_len": "捕获的文本输出数据的当前字节长度",
+      "text_output_cap": "文本输出缓冲区的总分配容量 (字节)",
+      "name": "动态分配的进程名称字符串",
+      "return_format": "返回值类型格式描述字符串 (int、string、struct等)",
+      "next": "指向内核进程就绪/调度链表中下一个进程的指针"
     }
   },
   "device_node": {
-    "title": "Unified Hardware Device Node (device_node_t)",
+    "totalSize": "148 字节（0x94），含动态字符串和可扩展 BAR 数组（src/include/kernel/device.h）",
+    "title": "统一硬件设备节点 (device_node_t)",
     "fields": {
-      "id": "Unique system-wide device ID",
-      "parent_id": "Parent bus/controller device ID (0 if root)",
-      "capabilities": "Capability bitmask (READONLY, REMOVABLE, HOTPLUGGABLE, DMA, VIRTUAL)",
-      "type": "Category (CPU, MEMORY, PCI, STORAGE, NETWORK, INPUT, AUDIO, VIDEO, SYSTEM, USB)",
-      "state": "Operational state (DISCOVERED, DRIVER_ATTACHED, INITIALIZED, ACTIVE, DISABLED, ERROR)",
-      "name": "Dynamic canonical identifier (e.g. \"cpu0\", \"pci00:03.0\", \"ata0\")",
-      "vendor / model / description": "Dynamically allocated vendor, model, and functional description strings",
-      "res": "Bus coordinates, PCI IDs, dynamic uint32_t* bar[], I/O base, MMIO base, IRQ, size_bytes",
-      "driver_name / driver_ptr": "Attached driver name and pointer to driver_t",
-      "ops / priv_data / next": "Standard VFS-like device I/O operations (open/close/read/write/ioctl) and list link"
+      "id": "唯一设备节点 ID",
+      "parent_id": "父级总线控制器 ID (0 为根设备)",
+      "capabilities": "设备功能位掩码 (DMA, IRQ, PCI)",
+      "type": "设备类别枚举 (存储、网络等)",
+      "state": "设备运行状态 (INIT, RUNNING, ERROR)",
+      "name": "动态设备标识名称 (例如 \"ata0_m\")",
+      "vendor / model / description": "从 PCI/ATA 探测中提取的制造商、型号与描述字符串",
+      "res": "设备资源描述符: I/O 端口、MMIO 基址、IRQ 中断号",
+      "driver_name / driver_ptr": "绑定的驱动程序名称与驱动结构体指针",
+      "ops / priv_data / next": "操作函数指针表、驱动私有数据指针及下一节点链接"
     }
   },
   "kmalloc_stats": {
-    "title": "Kernel Heap Allocator Statistics (kmalloc_stats_t)",
+    "totalSize": "28 字节",
+    "title": "内核堆分配器统计信息 (kmalloc_stats_t)",
     "fields": {
       "heap_total": "Total kernel heap capacity in bytes (64 MB / 0x04000000)",
       "heap_used": "Bytes consumed by high-watermark with headers",
@@ -180,27 +190,29 @@
     }
   },
   "ata_device": {
-    "title": "ATA Storage Device Information (ata_device_t)",
+    "totalSize": "44 字节（0x2C）",
+    "title": "ATA 存储设备信息 (ata_device_t)",
     "fields": {
-      "present": "1 if device detected, 0 if absent",
-      "channel": "IDE Channel (0 = Primary, 1 = Secondary)",
-      "drive": "Drive position (0 = Master, 1 = Slave)",
-      "type": "Device type (0=NONE, 1=PATA, 2=PATAPI)",
-      "cylinders": "Drive cylinders count from IDENTIFY",
-      "heads": "Drive heads count from IDENTIFY",
-      "sectors": "Sectors per track from IDENTIFY",
-      "io_base": "Primary I/O base port (e.g. 0x1F0, 0x170)",
-      "ctrl_base": "Control port base (e.g. 0x3F6, 0x376)",
-      "irq": "Hardware IRQ line (14 for Primary, 15 for Secondary)",
-      "sector_size": "Sector size in bytes (typically 512)",
-      "capacity_sectors": "Total capacity in 512-byte sectors (LBA28/LBA48)",
-      "model": "Dynamically allocated NUL-terminated ATA model string",
-      "serial": "Dynamically allocated NUL-terminated ATA serial string",
-      "firmware": "Dynamically allocated NUL-terminated ATA firmware revision string"
+      "present": "若检测到设备存在则为 1，否则为 0",
+      "channel": "IDE 通道索引 (0=主通道 Primary, 1=副通道 Secondary)",
+      "drive": "驱动器主从选择 (0=Master, 1=Slave)",
+      "type": "设备类型 (0=ATA 硬盘, 1=ATAPI 光驱)",
+      "cylinders": "柱面数 (CHS 寻址模式)",
+      "heads": "磁头数 (CHS 寻址模式)",
+      "sectors": "每磁道扇区数 (CHS 寻址模式)",
+      "io_base": "命令 I/O 端口基地址 (0x1F0 或 0x170)",
+      "ctrl_base": "控制 I/O 端口基地址 (0x3F6 或 0x376)",
+      "irq": "硬件中断号 IRQ (14=主通道, 15=副通道)",
+      "sector_size": "扇区物理/逻辑字节大小 (始终为 512)",
+      "capacity_sectors": "总容量扇区数 (512 字节/扇区，LBA28/LBA48)",
+      "model": "动态分配的 NUL 结尾 ATA 驱动器型号字符串",
+      "serial": "动态分配的 NUL 结尾驱动器序列号字符串",
+      "firmware": "动态分配的 NUL 结尾固件版本修订字符串"
     }
   },
   "ipo_idt_entry": {
-    "title": "x86 Interrupt Descriptor Gate (ipo_idt_entry_t)",
+    "totalSize": "8 字节",
+    "title": "x86 中断描述符门 (ipo_idt_entry_t)",
     "fields": {
       "base_lo": "Lower 16 bits of ISR entrypoint address",
       "selector": "Kernel code segment selector (0x08)",
@@ -210,27 +222,29 @@
     }
   },
   "bootrom_post_codes": {
-    "title": "Port 0x80 POST Diagnostic Codes (IPO_Boot_ROM)",
+    "totalSize": "8 位诊断端口 0x80",
+    "title": "端口 0x80 POST 诊断码 (IPO_Boot_ROM)",
     "fields": {
-      "POST_RESET_VECTOR": "CPU reset vector reached (0xFFFFFFF0)",
-      "POST_ROM_INIT_ENTRY": "Entered Boot_ROM init code (0xF000:8000)",
-      "POST_CAR_START": "MTRR Cache-as-RAM setup started",
-      "POST_CAR_READY": "CAR stack operational at 0x7000:8000",
-      "POST_CHIPSET_DETECTED": "Chipset detected (i440FX or Q35)",
-      "POST_MRC_START": "Memory Reference Code DRAM training started",
-      "POST_DRAM_TEST_PASS": "DRAM pattern test passed (0x55AA55AA / 0xAA55AA55)",
-      "POST_CAR_TEARDOWN": "CAR teardown complete, stack relocated to DRAM",
-      "POST_PAM_LOCKED": "PAM locked read-only (RE=1, WE=0)",
-      "POST_MAGIC_VALID": "Firmware header magic validated (0x464F5049)",
-      "POST_HANDOVER": "Far jump to Firmware payload (0xF000:0004)",
-      "ERR_NO_MTRR": "CPU lacks MTRR support or CAR setup failed",
-      "ERR_UNKNOWN_CHIPSET": "Unsupported PCI Host Bridge ID",
-      "ERR_DRAM_FAIL": "DRAM pattern memory test failed",
-      "ERR_MAGIC_MISMATCH": "Firmware signature mismatch (IPOF expected)"
+      "POST_RESET_VECTOR": "已到达 CPU 复位向量 (0xFFFFFFF0)",
+      "POST_ROM_INIT_ENTRY": "进入 Boot_ROM 初始化入口代码 (0xF000:8000)",
+      "POST_CAR_START": "启动基于 MTRR 的 Cache-as-RAM 配置",
+      "POST_CAR_READY": "CAR 临时栈在 0x7000:8000 就绪并可用",
+      "POST_CHIPSET_DETECTED": "芯片组成功识别 (i440FX 或 Q35)",
+      "POST_MRC_START": "内存参考代码 (MRC) DRAM 训练启动",
+      "POST_DRAM_TEST_PASS": "DRAM 读写模式测试通过 (0x55AA55AA / 0xAA55AA55)",
+      "POST_CAR_TEARDOWN": "CAR 拆卸完成，栈已成功迁移至 DRAM 物理内存",
+      "POST_PAM_LOCKED": "PAM 寄存器已锁定为只读状态 (RE=1, WE=0)",
+      "POST_MAGIC_VALID": "固件头部魔数校验通过 (0x464F5049 \"IPOF\")",
+      "POST_HANDOVER": "远跳转至固件有效载荷 (0xF000:0004)",
+      "ERR_NO_MTRR": "错误: CPU 不支持 MTRR 或 CAR 设置失败",
+      "ERR_UNKNOWN_CHIPSET": "错误: 不受支持的 PCI 宿主桥设备 ID",
+      "ERR_DRAM_FAIL": "错误: DRAM 位单元读写模式测试失败",
+      "ERR_MAGIC_MISMATCH": "错误: 固件签名不匹配 (预期为 IPOF)"
     }
   },
   "firmware_post_codes": {
-    "title": "Port 0x80 POST Diagnostic Codes (IPO_Firmware)",
+    "totalSize": "8 位诊断端口 0x80",
+    "title": "端口 0x80 POST 诊断码 (IPO_Firmware)",
     "fields": {
       "FW_ENTRY": "Firmware entry point reached (0xF000:0004)",
       "FW_PCI_ENUM_DONE": "PCI bus enumeration completed",
@@ -238,12 +252,12 @@
       "FW_ACPI_INSTALLED": "ACPI 1.0 tables installed in EBDA (0x9FC00)",
       "FW_VIDEO_READY": "Video subsystem initialized (VBIOS or Mode 03h)",
       "FW_A20_ACTIVE": "Fast A20 Gate activated and verified",
-      "FW_PS2_READY": "8042 PS/2 controller initialized",
-      "FW_STORAGE_PROBE": "Storage controllers probing (ATA, AHCI, NVMe, USB)",
-      "FW_SCAN_BOOTABLE": "Scanning drives for bootable media (0x80..0x82)",
-      "FW_MBR_VALIDATED": "Valid MBR 0xAA55 loaded at 0x0000:7C00",
-      "FW_HANDOVER_OS": "Jumping to MBR (0x0000:7C00) — OS Handover",
-      "FW_ERR_NO_BOOT": "No bootable media found on any controller"
+      "FW_PS2_READY": "8042 PS/2 键盘控制器初始化完成",
+      "FW_STORAGE_PROBE": "初始化探测存储总线与控制器 (ATA, AHCI, NVMe, USB)",
+      "FW_SCAN_BOOTABLE": "在磁盘驱动器中搜索引导介质 (0x80..0x82)",
+      "FW_MBR_VALIDATED": "包含 0xAA55 签名的有效 MBR 扇区已加载至 0x0000:7C00",
+      "FW_HANDOVER_OS": "跳转至 MBR (0x0000:7C00) — 操作系统引导交接",
+      "FW_ERR_NO_BOOT": "错误: 任何已连接的存储设备中均未发现有效 MBR"
     }
   }
 }

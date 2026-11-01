@@ -1,769 +1,558 @@
 {
   "IPO_SYSCALL_REGISTER": {
-    "description": "Dynamically registers a custom system call handler into the kernel dispatch table.",
-    "return": "0 on success, negative error code on failure",
-    "args": []
+    "description": "カスタムシステムコールハンドラをカーネルディスパッチテーブルに動的に登録します。",
+    "return": "成功時は0、失敗時は負のエラーコード"
   },
   "IPO_SYSCALL_CALL": {
-    "description": "Indirect invocation mechanism to dispatch a syscall through kernel dispatcher.",
-    "return": "Return value of dispatched syscall",
-    "args": []
+    "description": "カーネルディスパッチャを介してシステムコールをディスパッチする間接呼び出しメカニズム。",
+    "return": "ディスパッチされたシステムコールの戻り値"
   },
   "IPO_SYSCALL_PRINT": {
-    "description": "Outputs text to active VGA console and mirrors to COM1 serial.",
-    "return": "Number of printed characters, or negative error code",
-    "args": []
+    "description": "アクティブなVGAコンソールにテキストを出力し、COM1シリアルポートにミラーリングします。",
+    "return": "出力された文字数、または負のエラーコード"
   },
   "IPO_SYSCALL_WRITE": {
-    "description": "Writes raw byte stream into an open file descriptor or console.",
-    "return": "Bytes written, or negative on failure",
-    "args": []
+    "description": "開いているファイル記述子またはコンソールに未加工のバイトストリームを書き込みます。",
+    "return": "書き込まれたバイト数、失敗時は負"
   },
   "IPO_SYSCALL_FS_CREATE": {
-    "description": "Creates a new empty file or directory in IPO_FS.",
-    "return": "0 on success, negative error code otherwise",
-    "args": []
+    "description": "IPO_FS 内に新しい空のファイルまたはディレクトリを作成します。",
+    "return": "成功時は0、それ以外は負のエラーコード"
   },
   "IPO_SYSCALL_FS_OPEN": {
-    "description": "Opens an existing inode and allocates a process file descriptor.",
-    "return": "Allocated file descriptor index (>= 0), or negative on error",
-    "args": []
+    "description": "既存の inode を開き、プロセスファイル記述子を割り当てます。",
+    "return": "割り当てられたファイル記述子インデックス (>= 0)、エラー時は負"
   },
   "IPO_SYSCALL_FS_READ": {
-    "description": "Reads data from storage extents into memory buffer.",
-    "return": "Bytes read into buffer, or negative error",
-    "args": []
+    "description": "ストレージエクステントからメモリバッファにデータを読み込みます。",
+    "return": "バッファに読み込まれたバイト数、または負のエラー"
   },
   "IPO_SYSCALL_FS_WRITE": {
-    "description": "Writes data into file extents, allocating new blocks from bitmap as needed.",
-    "return": "Bytes written to storage, or negative error code",
-    "args": []
+    "description": "ファイルエクステントにデータを書き込み、必要に応じてビットマップから新しいブロックを割り当てます。",
+    "return": "ストレージに書き込まれたバイト数、または負のエラーコード"
   },
   "IPO_SYSCALL_FS_DELETE": {
-    "description": "Deletes file or directory, frees extents in bitmap and clears inode.",
-    "return": "0 on success, negative error code on failure",
-    "args": []
+    "description": "ファイルまたはディレクトリを削除し、ビットマップ内のエクステントを解放して inode をクリアします。",
+    "return": "成功時は0、失敗時は負のエラーコード"
   },
   "IPO_SYSCALL_FS_STAT": {
-    "description": "Retrieves metadata of specified path: size, extents, links, protection flags.",
-    "return": "0 on success, negative error code otherwise",
-    "args": []
+    "description": "指定されたパスのメタデータ（サイズ、エクステント、リンク、保護フラグ）を取得します。",
+    "return": "成功時は0、それ以外は負のエラーコード"
   },
   "IPO_SYSCALL_FS_LIST": {
-    "description": "Enumerates directory contents into formatted buffer.",
-    "return": "Number of directory entries, or negative on error",
-    "args": []
+    "description": "ディレクトリの内容をフォーマットされたバッファに列挙します。",
+    "return": "ディレクトリエントリ数、エラー時は負"
   },
   "IPO_SYSCALL_FS_RENAME": {
-    "description": "Renames or moves a file or directory within IPO_FS.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "IPO_FS 内でファイルまたはディレクトリの名前を変更または移動します。",
+    "return": "成功時は0、エラー時は負"
   },
   "IPO_SYSCALL_FS_CLOSE": {
-    "description": "Closes file descriptor and flushes modified inode metadata.",
-    "return": "0 on success, negative error code on failure",
-    "args": []
+    "description": "ファイル記述子を閉じ、変更された inode メタデータをフラッシュします。",
+    "return": "成功時は0、失敗時は負のエラーコード"
   },
   "IPO_SYSCALL_FS_SEEK": {
-    "description": "Modifies file read/write cursor offset.",
-    "return": "New absolute byte position, or negative on failure",
-    "args": []
+    "description": "ファイルの読み取り/書き込みカーソルオフセットを変更します。",
+    "return": "新しい絶対バイト位置、失敗時は負"
   },
   "IPO_SYSCALL_EXEC": {
-    "description": "Loads executable binary into allocated free memory block and dispatches new process.",
-    "return": "PID of spawned process, or negative on error",
-    "args": []
+    "description": "実行可能バイナリを割り当てられた空きメモリブロックにロードし、新しいプロセスをディスパッチします。",
+    "return": "生成されたプロセスのPID、エラー時は負"
   },
   "IPO_SYSCALL_READ": {
-    "description": "Reads a line of user input from active terminal keyboard buffer.",
-    "return": "Length of input string, or negative on error",
-    "args": []
+    "description": "アクティブな端末キーボードバッファからユーザー入力の1行を読み取ります。",
+    "return": "入力文字列の長さ、エラー時は負"
   },
   "IPO_SYSCALL_TERMINAL_INPUT": {
-    "description": "Injects keystroke text programmatically into terminal input buffer.",
-    "return": "0 on success, negative error code on failure",
-    "args": []
+    "description": "端末入力バッファにプログラムでキーストロークテキストを挿入します。",
+    "return": "成功時は0、失敗時は負のエラーコード"
   },
   "IPO_SYSCALL_PROCESS_YIELD": {
-    "description": "Yields remainder of current CPU time slice to scheduler.",
-    "return": "0 on success",
-    "args": [
-      "None"
-    ]
+    "description": "現在のCPUタイムスライスの残りをスケジューラに譲ります。",
+    "return": "成功時は0"
   },
   "IPO_SYSCALL_PROCESS_IS_FOREGROUND": {
-    "description": "Checks if calling task is currently running in the active foreground.",
-    "return": "1 if process owns terminal display, 0 if background",
-    "args": [
-      "None"
-    ]
+    "description": "呼び出し元のタスクが現在アクティブなフォアグラウンドで実行されているか確認します。",
+    "return": "プロセスが端末表示を所有している場合は1、バックグラウンドの場合は0"
   },
   "IPO_SYSCALL_GETCWD": {
-    "description": "Gets canonical absolute path of process current working directory.",
-    "return": "String length copied, or negative error code",
-    "args": []
+    "description": "プロセスの現在の作業ディレクトリの正規の絶対パスを取得します。",
+    "return": "コピーされた文字列の長さ、または負のエラーコード"
   },
   "IPO_SYSCALL_CHDIR": {
-    "description": "Changes current working directory of process.",
-    "return": "0 on success, negative error code if path invalid",
-    "args": []
+    "description": "プロセスの現在の作業ディレクトリを変更します。",
+    "return": "成功時は0、パスが無効な場合は負のエラーコード"
   },
   "IPO_SYSCALL_GET_EXIT_CODE": {
-    "description": "Returns exit code of last child process for shell piping and scripting.",
-    "return": "Exit code of last executed program",
-    "args": [
-      "None"
-    ]
+    "description": "シェルパイプラインやスクリプト用に最後に終了した子プロセスの終了コードを返します。",
+    "return": "最後に実行されたプログラムの終了コード"
   },
   "IPO_SYSCALL_PROCESS_IS_BATCH_ACTIVE": {
-    "description": "Queries whether multitasking batch mode (run & / &&) is running.",
-    "return": "1 if batch pipeline active, 0 otherwise",
-    "args": [
-      "None"
-    ]
+    "description": "マルチタスクバッチモード (run & / &&) が実行中かどうかを照会します。",
+    "return": "バッチパイプラインがアクティブな場合は1、それ以外は0"
   },
   "IPO_SYSCALL_SET_RETURN_VALUE": {
-    "description": "Sets explicit typed return value for the current process to pass through pipelines.",
-    "return": "0 on success, negative error code on failure",
-    "args": []
+    "description": "パイプライン経由で渡すために、現在のプロセスに明示的な型付き戻り値を設定します。",
+    "return": "成功時は0、失敗時は負のエラーコード"
   },
   "IPO_SYSCALL_GET_RETURN_VALUE": {
-    "description": "Retrieves formatted return string of the last finished child process.",
-    "return": "Length of return string on success, negative error code on failure",
-    "args": []
+    "description": "最後に終了した子プロセスのフォーマットされた戻り文字列を取得します。",
+    "return": "成功時は返された文字列の長さ、失敗時は負のエラーコード"
   },
   "IPO_SYSCALL_ASYNC_START": {
-    "description": "Registers a recurring kernel task with a caller-selected name and interval.",
-    "return": "Task ID handle (>= 0), or negative on failure",
-    "args": []
+    "description": "呼び出し元が選択した名前と間隔で定期的なカーネルタスクを登録します。",
+    "return": "タスクIDハンドル (>= 0)、失敗時は負"
   },
   "IPO_SYSCALL_ASYNC_STOP": {
-    "description": "Stops and unregisters background async task.",
-    "return": "0 on success, negative error code otherwise",
-    "args": []
+    "description": "バックグラウンドの非同期タスクを停止して登録解除します。",
+    "return": "成功時は0、それ以外は負のエラーコード"
   },
   "IPO_SYSCALL_STACK_GROW": {
-    "description": "Dynamically expands process stack allocation limit.",
-    "return": "0 on success, negative on out of memory",
-    "args": []
+    "description": "プロセスのスタック割り当て制限を動的に拡張します。",
+    "return": "成功時は0、メモリ不足時は負"
   },
   "IPO_SYSCALL_STACK_SHRINK": {
-    "description": "Reclaims unused process stack memory.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "未使用のプロセススタックメモリを回収します。",
+    "return": "成功時は0、エラー時は負"
   },
   "IPO_SYSCALL_VAR_SET": {
-    "description": "Sets or creates persistent shared kernel system variable.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "永続的な共有カーネルシステム変数を設定または作成します。",
+    "return": "成功時は0、エラー時は負"
   },
   "IPO_SYSCALL_VAR_GET": {
-    "description": "Retrieves value of named shared kernel variable.",
-    "return": "Bytes copied, or negative if variable not found",
-    "args": []
+    "description": "指定された名前の共有カーネル変数の値を取得します。",
+    "return": "コピーされたバイト数、変数が見つからない場合は負"
   },
   "IPO_SYSCALL_VAR_DELETE": {
-    "description": "Deletes shared system variable and reclaims memory.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "共有システム変数を削除してメモリを回収します。",
+    "return": "成功時は0、エラー時は負"
   },
   "IPO_SYSCALL_SBRK": {
-    "description": "Adjusts process data segment break for userspace malloc/free.",
-    "return": "Previous heap break pointer, or (void*)-1 on out of memory",
-    "args": []
+    "description": "ユーザースペースの malloc/free のためにプロセスのデータセグメントブレークを調整します。",
+    "return": "以前のヒープブレークポインタ、メモリ不足時は(void*)-1"
   },
   "IPO_SYSCALL_TIME": {
-    "description": "Returns system uptime in seconds measured from kernel boot.",
-    "return": "System uptime in seconds",
-    "args": []
+    "description": "カーネルの起動から計測されたシステム稼働時間（秒）を返します。",
+    "return": "システムの稼働時間（秒）"
   },
   "IPO_SYSCALL_FREE": {
-    "description": "Frees kernel-allocated memory buffer returned to userspace.",
-    "return": "0 on success",
-    "args": []
+    "description": "ユーザースペースに返されたカーネル割り当てメモリバッファを解放します。",
+    "return": "成功時は0"
   },
   "IPO_SYSCALL_MILLIS": {
-    "description": "Returns millisecond-resolution system uptime.",
-    "return": "System uptime in milliseconds",
-    "args": [
-      "None"
-    ]
+    "description": "ミリ秒精度のシステム稼働時間を返します。",
+    "return": "システムの稼働時間（ミリ秒）"
   },
   "IPO_SYSCALL_ELAPSED_MS": {
-    "description": "Returns elapsed time using wrap-safe millisecond arithmetic.",
-    "return": "Elapsed milliseconds since start_ms",
-    "args": []
+    "description": "ラップセーフなミリ秒演算を使用して経過時間を返します。",
+    "return": "start_ms からの経過ミリ秒数"
   },
   "IPO_SYSCALL_TIMER_AFTER": {
-    "description": "Checks whether the requested interval elapsed since start_ms.",
-    "return": "1 if delay has elapsed, otherwise 0",
-    "args": []
+    "description": "start_ms から要求された時間間隔が経過したかどうかを確認します。",
+    "return": "遅延時間が経過した場合は1、それ以外は0"
   },
   "IPO_SYSCALL_KEYMAP_SET": {
-    "description": "Registers dynamic keyboard layout with custom unicode glyphs.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "カスタム Unicode グリフを持つ動的キーボードレイアウトを登録します。",
+    "return": "成功時は0、エラー時は負"
   },
   "IPO_SYSCALL_KEYMAP_GET": {
-    "description": "Gets identifier of currently active keyboard layout.",
-    "return": "Name length, or negative on error",
-    "args": []
+    "description": "現在アクティブなキーボードレイアウトの識別子を取得します。",
+    "return": "名前の長さ、エラー時は負"
   },
   "IPO_SYSCALL_FONT_LOAD": {
-    "description": "Loads custom bitmap font into VGA character generator.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "カスタムビットマップフォントを VGA 文字ジェネレータにロードします。",
+    "return": "成功時は0、エラー時は負"
   },
   "IPO_SYSCALL_KEYMAP_DISABLE": {
-    "description": "Disables keymap from layout switching rotation.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "レイアウト切り替えローテーションからキーマップを無効化します。",
+    "return": "成功時は0、エラー時は負"
   },
   "IPO_SYSCALL_KEYMAP_ENABLE": {
-    "description": "Enables previously disabled layout in switching rotation.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "切り替えローテーションで以前に無効化されたレイアウトを再度有効にします。",
+    "return": "成功時は0、エラー時は負"
   },
   "IPO_SYSCALL_KEYMAP_REMOVE": {
-    "description": "Removes and unregisters keymap completely from kernel.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "カーネルからキーマップを完全に削除して登録解除します。",
+    "return": "成功時は0、エラー時は負"
   },
   "IPO_SYSCALL_KEYMAP_TRANSLATE": {
-    "description": "Translates hardware scancode via active keymap translation table.",
-    "return": "Translated character codepoint, or 0 if unmapped",
-    "args": []
+    "description": "アクティブなキーマップ変換テーブルを介してハードウェアスキャンコードを変換します。",
+    "return": "変換された文字コードポイント、マップされていない場合は0"
   },
   "IPO_SYSCALL_KEYMAP_IS_ACTIVE": {
-    "description": "Checks if specified keymap is currently active.",
-    "return": "1 if active, 0 if inactive, negative on error",
-    "args": []
+    "description": "指定されたキーマップが現在アクティブかどうかを確認します。",
+    "return": "アクティブな場合は1、非アクティブな場合は0、エラー時は負"
   },
   "IPO_SYSCALL_KEYMAP_CYCLE_NEXT": {
-    "description": "Cycles to next active keyboard layout and updates VGA language bar.",
-    "return": "Index of new active layout",
-    "args": [
-      "None"
-    ]
+    "description": "次のアクティブなキーボードレイアウトに切り替え、VGA 言語バーを更新します。",
+    "return": "新しいアクティブレイアウトのインデックス"
   },
   "IPO_SYSCALL_KEYMAP_CYCLE_PREV": {
-    "description": "Cycles to previous active keyboard layout and updates VGA language bar.",
-    "return": "Index of new active layout",
-    "args": [
-      "None"
-    ]
+    "description": "前のアクティブなキーボードレイアウトに切り替え、VGA 言語バーを更新します。",
+    "return": "新しいアクティブレイアウトのインデックス"
   },
   "IPO_SYSCALL_KEYMAP_GET_NAME": {
-    "description": "Gets active layout abbreviation (EN, RU, UA, ZH).",
-    "return": "Length of layout label string",
-    "args": []
+    "description": "アクティブなレイアウトの略称（EN, RU, UA, ZH）を取得します。",
+    "return": "レイアウトラベル文字列の長さ"
   },
   "IPO_SYSCALL_FONT_GET_INFO": {
-    "description": "Queries loaded font family name and count of registered glyphs.",
-    "return": "0 on success, negative error code otherwise",
-    "args": []
+    "description": "ロードされているフォントファミリ名と登録されているグリフの数を照会します。",
+    "return": "成功時は0、それ以外は負のエラーコード"
   },
   "IPO_SYSCALL_VGA_GLYPH": {
-    "description": "Renders custom unicode glyph to current screen cursor position.",
-    "return": "0 on success, negative if glyph missing",
-    "args": []
+    "description": "現在の画面カーソル位置にカスタム Unicode グリフを描画します。",
+    "return": "成功時は0、グリフが見つからない場合は負"
   },
   "IPO_SYSCALL_VGA_SET_MODE": {
-    "description": "Switches display video mode and reconfigures DAC / Framebuffer.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "ディスプレイスクリーンモードを切り替え、DAC / フレームバッファを再構成します。",
+    "return": "成功時は0、エラー時は負"
   },
   "IPO_SYSCALL_VGA_GET_MODE": {
-    "description": "Queries currently active video display mode.",
-    "return": "Active video mode index (e.g. 0x03, 0x13)",
-    "args": [
-      "None"
-    ]
+    "description": "現在アクティブなビデオ表示モードを照会します。",
+    "return": "アクティブなビデオモードインデックス（例: 0x03, 0x13）"
   },
   "IPO_SYSCALL_SYSTEM_INTERRUPT": {
-    "description": "Performs hardware system control: 8042 reboot, ACPI shutdown, crash dump.",
-    "return": "0 on success, or does not return",
-    "args": []
+    "description": "ハードウェアシステム制御を実行します：8042リブート、ACPIシャットダウン、クラッシュダンプ。",
+    "return": "成功時は0、または制御を返さない"
   },
   "IPO_SYSCALL_DRIVER_REGISTER": {
-    "description": "Registers runtime device driver and connects its subsystem hooks.",
-    "return": "Registration index (>= 0), or negative on error",
-    "args": []
+    "description": "実行時デバイスドライバを登録し、そのサブシステムフックを接続します。",
+    "return": "登録インデックス (>= 0)、エラー時は負"
   },
   "IPO_SYSCALL_DRIVER_UNREGISTER": {
-    "description": "Detaches hooks and unloads dynamic runtime driver.",
-    "return": "0 on success, negative error code otherwise",
-    "args": []
+    "description": "ドライバをアンロードし、I/O ポートを切断してリソースをクリーンアップします。",
+    "return": "成功時は0、それ以外は負のエラーコード"
   },
   "IPO_SYSCALL_DRIVER_LIST": {
-    "description": "Lists all registered device drivers and active subsystem hooks.",
-    "return": "Count of registered drivers",
-    "args": [
-      "None"
-    ]
+    "description": "登録されているドライバ、バージョン、および機能を一覧表示します。",
+    "return": "登録されているドライバの数"
   },
   "IPO_SYSCALL_DRIVER_SET_DESC": {
-    "description": "Sets descriptive text metadata for registered driver.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "デバイスドライバの人間が読める説明文字列を更新します。",
+    "return": "成功時は0、エラー時は負"
   },
   "IPO_SYSCALL_FS_STATVFS": {
-    "description": "Queries mounted IPO_FS storage pool block and inode capacity statistics.",
-    "return": "0 on success, non-zero on error",
-    "args": []
+    "description": "ファイルシステムの統計情報を取得します：合計/空きブロック、inodeの健全性、マウントフラグ。",
+    "return": "成功時は0、エラー時は非ゼロ"
   },
   "IPO_SYSCALL_WM_CREATE_WINDOW": {
-    "description": "Creates managed desktop window with titlebar, borders, framebuffer and event callbacks.",
-    "return": "Pointer to allocated wm_window_t, or NULL on error",
-    "args": []
+    "description": "コンポジタを介して新しい GUI ウィンドウを作成および割り当てます。",
+    "return": "割り当てられたwm_window_tへのポインタ、エラー時はNULL"
   },
   "IPO_SYSCALL_WM_DESTROY_WINDOW": {
-    "description": "Closes and destroys window, releasing its framebuffer and compositor nodes.",
-    "return": "0 on success",
-    "args": []
+    "description": "ウィンドウを破棄し、バックバッファメモリを解放してフォーカスを再設定します。",
+    "return": "成功時は0"
   },
   "IPO_SYSCALL_WM_SESSION_START": {
-    "description": "Enters VGA Mode 13h, allocates a backbuffer, and starts the compositor session.",
-    "return": "0 on success",
-    "args": [
-      "None"
-    ]
+    "description": "GUI コンポジタセッションを初期化し、グラフィックモードに切り替えます。",
+    "return": "成功時は0"
   },
   "IPO_SYSCALL_WM_SESSION_STOP": {
-    "description": "Stops WM compositor task, destroys all open windows and restores text mode.",
-    "return": "0 on success",
-    "args": [
-      "None"
-    ]
+    "description": "コンポジタセッションを終了し、テキストモードコンソールを復元します。",
+    "return": "成功時は0"
   },
   "IPO_SYSCALL_WM_SESSION_ACTIVE": {
-    "description": "Checks whether GUI Window Manager desktop session is running.",
-    "return": "1 if GUI session active, 0 if in text mode",
-    "args": [
-      "None"
-    ]
+    "description": "GUI ウィンドウマネージャがアクティブに実行されているかどうかを確認します。",
+    "return": "GUIセッションがアクティブな場合は1、テキストモードの場合は0"
   },
   "IPO_SYSCALL_WM_GET_COUNT": {
-    "description": "Returns total number of active windows in compositor list.",
-    "return": "Total open windows count",
-    "args": [
-      "None"
-    ]
+    "description": "開いているウィンドウの総数を返します。",
+    "return": "開いているウィンドウの合計数"
   },
   "IPO_SYSCALL_WM_GET_FOCUSED": {
-    "description": "Gets top-level window handle currently possessing user input focus.",
-    "return": "Pointer to focused window, or NULL",
-    "args": [
-      "None"
-    ]
+    "description": "現在フォーカスされているウィンドウへのポインタを返します。",
+    "return": "フォーカスされたウィンドウへのポインタ、またはNULL"
   },
   "IPO_SYSCALL_WM_SET_FOCUS": {
-    "description": "Raises window to top of z-order and sets input focus.",
-    "return": "0 on success",
-    "args": []
+    "description": "指定されたウィンドウに入力フォーカスを設定し、最前面に表示します。",
+    "return": "成功時は0"
   },
   "IPO_SYSCALL_WM_FOCUS_NEXT": {
-    "description": "Cycles focus forward to next window in z-order (Alt+Tab behavior).",
-    "return": "0 on success",
-    "args": [
-      "None"
-    ]
+    "description": "Zオーダーの次のウィンドウに入力フォーカスを切り替えます (Alt+Tab)。",
+    "return": "成功時は0"
   },
   "IPO_SYSCALL_WM_FOCUS_PREV": {
-    "description": "Cycles focus backward to previous window in z-order.",
-    "return": "0 on success",
-    "args": [
-      "None"
-    ]
+    "description": "Zオーダーの前のウィンドウに入力フォーカスを切り替えます。",
+    "return": "成功時は0"
   },
   "IPO_SYSCALL_WM_INVALIDATE": {
-    "description": "Marks window dirty, triggering redraw in next compositor frame.",
-    "return": "0 on success",
-    "args": []
+    "description": "ウィンドウ領域を無効化し、次のフレームでの再描画を要求します。",
+    "return": "成功時は0"
   },
   "IPO_SYSCALL_WM_IS_VALID": {
-    "description": "Checks whether window handle exists in active compositor list.",
-    "return": "1 if valid and active, 0 otherwise",
-    "args": []
+    "description": "ウィンドウハンドルが有効でコンポジタに認識されているか確認します。",
+    "return": "有効かつアクティブな場合は1、それ以外は0"
   },
   "IPO_SYSCALL_GETPID": {
-    "description": "Returns unique process ID (PID) of calling task.",
-    "return": "Current process ID (PID)",
-    "args": [
-      "None"
-    ]
+    "description": "呼び出し元タスクのプロセスID (PID) を返します。",
+    "return": "現在のプロセスID (PID)"
   },
   "IPO_SYSCALL_WM_TOGGLE_MAXIMIZE": {
-    "description": "Toggles window between fullscreen maximized and floating geometry.",
-    "return": "0 on success",
-    "args": []
+    "description": "ウィンドウの最大化状態を切り替えます。",
+    "return": "成功時は0"
   },
   "IPO_SYSCALL_WM_RESIZE": {
-    "description": "Resizes window dimensions and reallocates pixel framebuffer.",
-    "return": "1 on success, 0 on memory allocation failure",
-    "args": []
+    "description": "ウィンドウの寸法を変更し、バックバッファを再割り当てします。",
+    "return": "成功時は1、メモリ割り当て失敗時は0"
   },
   "IPO_SYSCALL_WM_GET_LIST": {
-    "description": "Returns pointer to head of active window list.",
-    "return": "Pointer to head of active window list, or NULL if empty",
-    "args": [
-      "None"
-    ]
+    "description": "コンポジタのアクティブウィンドウリストの先頭へのポインタを返します。",
+    "return": "アクティブウィンドウリストの先頭へのポインタ、空の場合はNULL"
   },
   "IPO_SYSCALL_PROCESS_SWITCH_FG": {
-    "description": "Switches foreground terminal screen buffer and focus to specified PID.",
-    "return": "0 on success, negative if PID not found",
-    "args": []
+    "description": "フォアグラウンド入力フォーカスを対象プロセスに切り替えます。",
+    "return": "成功時は0、PIDが見つからない場合は負"
   },
   "IPO_SYSCALL_WM_INIT": {
-    "description": "Initializes the window list when it is empty.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "ウィンドウマネージャのコア構造とディスプレイ設定を初期化します。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_INVALIDATE_ALL": {
-    "description": "Marks every window as needing redraw.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "開いているすべてのウィンドウに対して完全な画面再描画を要求します。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_SET_FULLSCREEN": {
-    "description": "Enables or disables fullscreen mode for a window.",
-    "return": "0",
-    "args": []
+    "description": "ウィンドウの全画面表示モードを有効または無効にします。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_MINIMIZE": {
-    "description": "Minimizes a window.",
-    "return": "0",
-    "args": []
+    "description": "ウィンドウを最小化し、画面から非表示にします。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_RESTORE": {
-    "description": "Restores a minimized window.",
-    "return": "0",
-    "args": []
+    "description": "最小化または最大化されたウィンドウを通常の大きさに復元します。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_MOVE": {
-    "description": "Moves a window to the specified position.",
-    "return": "0",
-    "args": []
+    "description": "ウィンドウの画面上の位置を移動します。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_SET_TITLE": {
-    "description": "Sets a window title.",
-    "return": "0",
-    "args": []
+    "description": "ウィンドウのタイトルバーのテキストを設定します。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_SET_SHAPE": {
-    "description": "Sets the window shape mask and its dimensions.",
-    "return": "0",
-    "args": []
+    "description": "ウィンドウの境界線、影、および角のジオメトリを構成します。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_DISPATCH_KEY": {
-    "description": "Routes a keyboard scancode through the window manager.",
-    "return": "1 if handled, otherwise 0",
-    "args": []
+    "description": "キーボードイベントをアクティブなフォーカスウィンドウに転送します。",
+    "return": "処理された場合は1、それ以外は0"
   },
   "IPO_SYSCALL_WM_COMPOSE": {
-    "description": "Composes windows and overlays into the supplied backbuffer.",
-    "return": "0",
-    "args": []
+    "description": "Z オーダーでソートされたウィンドウシーンとオーバーレイを指定のバックバッファに描画します。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_COMPOSITOR_TICK": {
-    "description": "Runs one window compositor update.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "ウィンドウコンポジタの更新を1回実行します。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_SESSION_RUN": {
-    "description": "Runs the blocking, animated window-manager session.",
-    "return": "None (returns when session ends)",
-    "args": [
-      "None"
-    ]
+    "description": "ブロッキングアニメーションウィンドウマネージャセッションを実行します。",
+    "return": "なし（セッション終了時に制御を返す）"
   },
   "IPO_SYSCALL_WM_GET_COUNT_PID": {
-    "description": "Returns the number of windows owned by a process.",
-    "return": "Number of windows owned by the process",
-    "args": []
+    "description": "指定されたプロセスが所有するウィンドウの数を返します。",
+    "return": "プロセスが所有するウィンドウの数"
   },
   "IPO_SYSCALL_WM_HAS_WINDOWS_PID": {
-    "description": "Checks whether a process owns any windows.",
-    "return": "1 if the process owns windows, otherwise 0",
-    "args": []
+    "description": "プロセスがウィンドウを所有しているかどうかを確認します。",
+    "return": "プロセスがウィンドウを所有している場合は1、それ以外は0"
   },
   "IPO_SYSCALL_WM_FOCUS_PID": {
-    "description": "Focuses a window owned by the specified process.",
-    "return": "0",
-    "args": []
+    "description": "指定されたプロセスが所有するウィンドウにフォーカスを設定します。",
+    "return": "0"
   },
   "IPO_SYSCALL_NET_DNS_RESOLVE": {
-    "description": "Resolves a hostname using the configured DNS server.",
-    "return": "1 on success, otherwise 0",
-    "args": []
+    "description": "構成された DNS サーバーを使用してホスト名を解決します。",
+    "return": "成功時は1、それ以外は0"
   },
   "IPO_SYSCALL_NET_ICMP_SEND": {
-    "description": "Sends an ICMP echo request.",
-    "return": "ICMP send result, or negative on error",
-    "args": []
+    "description": "ICMP エコー要求を送信します。",
+    "return": "ICMP送信結果、エラー時は負"
   },
   "IPO_SYSCALL_NET_ICMP_POLL": {
-    "description": "Waits for an ICMP echo reply matching the identifier and sequence.",
-    "return": "1 if a matching reply is received, otherwise 0",
-    "args": []
+    "description": "識別子とシーケンスに一致する ICMP エコー応答を待機します。",
+    "return": "一致する応答を受信した場合は1、それ以外は0"
   },
   "IPO_SYSCALL_NET_SOCKET": {
-    "description": "Creates a kernel-managed network socket.",
-    "return": "Socket descriptor, or negative on error",
-    "args": []
+    "description": "カーネル管理のネットワークソケットを作成します。",
+    "return": "ソケット記述子、エラー時は負"
   },
   "IPO_SYSCALL_NET_BIND": {
-    "description": "Assigns a local address to a socket.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "ローカルアドレスをソケットに割り当てます。",
+    "return": "成功時は0、エラー時は負"
   },
   "IPO_SYSCALL_NET_LISTEN": {
-    "description": "Marks a bound stream socket as listening for connections.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "バインドされたストリームソケットを接続待機中としてマークします。",
+    "return": "成功時は0、エラー時は負"
   },
   "IPO_SYSCALL_NET_ACCEPT": {
-    "description": "Accepts an incoming connection, optionally waiting up to timeout_ms.",
-    "return": "Connected socket descriptor, or negative on error/timeout",
-    "args": []
+    "description": "着信接続を受け入れ、オプションで最大 timeout_ms まで待機します。",
+    "return": "接続されたソケット記述子、エラーまたはタイムアウト時は負"
   },
   "IPO_SYSCALL_NET_CONNECT": {
-    "description": "Connects a socket to a remote address.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "ソケットをリモートアドレスに接続します。",
+    "return": "成功時は0、エラー時は負"
   },
   "IPO_SYSCALL_NET_SEND": {
-    "description": "Sends data through a connected socket.",
-    "return": "Number of bytes sent, or negative on error",
-    "args": []
+    "description": "接続されたソケットを介してデータを送信します。",
+    "return": "送信バイト数、エラー時は負"
   },
   "IPO_SYSCALL_NET_RECV": {
-    "description": "Receives data from a connected socket.",
-    "return": "Number of bytes received, or negative on error",
-    "args": []
+    "description": "接続されたソケットからデータを受信します。",
+    "return": "受信バイト数、エラー時は負"
   },
   "IPO_SYSCALL_NET_CLOSE": {
-    "description": "Closes a socket and releases its kernel resources.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "ソケットを閉じ、そのカーネルリソースを解放します。",
+    "return": "成功時は0、エラー時は負"
   },
   "IPO_SYSCALL_NET_CONNECT_ENDPOINT": {
-    "description": "Resolves the endpoint if needed and connects the socket.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "必要に応じてエンドポイントを解決し、ソケットを接続します。",
+    "return": "成功時は0、エラー時は負"
   },
   "IPO_SYSCALL_NET_POLL": {
-    "description": "Polls the network device and processes pending network work.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "ネットワークデバイスをポーリングし、保留中のネットワーク処理を実行します。",
+    "return": "0"
   },
   "IPO_SYSCALL_NET_GET_INTERFACE": {
-    "description": "Copies network interface configuration and link state to userspace.",
-    "return": "1 on success, 0 on failure (or pointer to cached net_if_t in C API)",
-    "args": []
+    "description": "ネットワークインターフェイスの構成とリンク状態をユーザースペースにコピーします。",
+    "return": "成功時は1、失敗時は0（またはC APIのキャッシュされたnet_if_tへのポインタ）"
   },
   "IPO_SYSCALL_NET_INIT": {
-    "description": "Initializes network subsystems using capacities supplied by the caller.",
-    "return": "1 on success, otherwise 0",
-    "args": []
+    "description": "呼び出し元が指定した容量を使用してネットワークサブシステムを初期化します。",
+    "return": "成功時は1、それ以外は0"
   },
   "IPO_SYSCALL_NET_SET_IP": {
-    "description": "Updates the network interface IPv4 configuration.",
-    "return": "0",
-    "args": []
+    "description": "ネットワークインターフェイスの IPv4 構成を更新します。",
+    "return": "0"
   },
   "IPO_SYSCALL_KBD_GET_SCANCODE": {
-    "description": "Pulls next available raw hardware scancode non-blocking.",
-    "return": "Next scancode from queue or 0 if queue empty",
-    "args": [
-      "None"
-    ]
+    "description": "次に利用可能な生のハードウェアスキャンコードを非ブロッキングで取得します。",
+    "return": "キューからの次のスキャンコード、空の場合は0"
   },
   "IPO_SYSCALL_KBD_WAIT_SCANCODE": {
-    "description": "Blocks calling process until a keyboard scancode is received.",
-    "return": "Scancode of pressed key",
-    "args": [
-      "None"
-    ]
+    "description": "キーボードスキャンコードを受信するまで呼び出し元プロセスをブロックします。",
+    "return": "押されたキーのスキャンコード"
   },
   "IPO_SYSCALL_KBD_SET_APP_MODE": {
-    "description": "Switches keyboard focus between terminal shell and raw application mode.",
-    "return": "0",
-    "args": []
+    "description": "キーボードフォーカスを端末シェルと生アプリケーションモードの間で切り替えます。",
+    "return": "0"
   },
   "IPO_SYSCALL_KBD_FLUSH": {
-    "description": "Flushes all kernel keyboard queues, 8042 hardware buffers, and modifier states.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "すべてのカーネルキーボードキュー、8042ハードウェアバッファ、および修飾子状態をフラッシュします。",
+    "return": "0"
   },
   "IPO_SYSCALL_KBD_GET_MODIFIERS": {
-    "description": "Returns current state bitmask of keyboard modifier keys.",
-    "return": "Bitmask of active modifier keys (Shift, Ctrl, Alt, CapsLock, NumLock, ScrollLock)",
-    "args": [
-      "None"
-    ]
+    "description": "キーボード修飾キーの現在の状態ビットマスクを返します。",
+    "return": "アクティブな修飾キーのビットマスク（Shift、Ctrl、Alt、CapsLock、NumLock、ScrollLock）"
   },
   "IPO_SYSCALL_KBD_POLL": {
-    "description": "Polls 8042 keyboard controller ports and dispatches pending events.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "8042キーボードコントローラポートをポーリングし、保留中のイベントをディスパッチします。",
+    "return": "0"
   },
   "IPO_SYSCALL_KBD_GET_KEY_STRING": {
-    "description": "Resolves human-readable name string for a hardware scancode (e.g. \"Enter\", \"Space\").",
-    "return": "1 on copy to buffer, or kernel string pointer if no buffer provided",
-    "args": []
+    "description": "ハードウェアスキャンコードの人間が読める名前文字列を解決します（例：「Enter」、「Space」）。",
+    "return": "バッファへのコピー時は1、バッファが指定されない場合はカーネル文字列ポインタ"
   },
   "IPO_SYSCALL_MOUSE_GET_STATE": {
-    "description": "Retrieves current PS/2 mouse coordinates, button click states, and wheel delta.",
-    "return": "0",
-    "args": []
+    "description": "現在の PS/2 マウス座標、ボタンのクリック状態、およびホイールのデルタを取得します。",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_SET_CURSOR": {
-    "description": "Sets hardware CRTC text mode cursor position via ports 0x3D4/0x3D5.",
-    "return": "0",
-    "args": []
+    "description": "ポート 0x3D4/0x3D5 を介してハードウェア CRTC テキストモードカーソル位置を設定します。",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_GET_CURSOR": {
-    "description": "Reads hardware text mode cursor position from CRTC registers.",
-    "return": "Current cursor linear offset (row * 80 + col)",
-    "args": [
-      "None"
-    ]
+    "description": "CRTC レジスタからハードウェアテキストモードカーソル位置を読み取ります。",
+    "return": "現在のカーソルの線形オフセット (行 * 80 + 列)"
   },
   "IPO_SYSCALL_VGA_SHOW_CURSOR": {
-    "description": "Enables and shows the hardware text mode blinking cursor.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "ハードウェアテキストモードの点滅カーソルを有効にして表示します。",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_HIDE_CURSOR": {
-    "description": "Disables and hides the hardware text mode cursor.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "ハードウェアテキストモードカーソルを無効化して非表示にします。",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_SET_PALETTE": {
-    "description": "Programs 6-bit RGB values into the VGA DAC palette registers (ports 0x3C8/0x3C9).",
-    "return": "0",
-    "args": []
+    "description": "6ビットRGB値をVGA DACパレットレジスタ（ポート 0x3C8/0x3C9）にプログラムします。",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_SET_OVERLAY_FLAGS": {
-    "description": "Sets overlay visibility flags for raw VGA Mode 13h processes (hiding Close button or mouse cursor).",
-    "return": "0",
-    "args": []
+    "description": "生の VGA モード 13h プロセスのオーバーレイ可視性フラグを設定します（閉じるボタンやマウスカーソルの非表示）。",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_GET_OVERLAY_FLAGS": {
-    "description": "Returns current VGA overlay visibility flags for the active process.",
-    "return": "Current overlay flags bitmask",
-    "args": [
-      "None"
-    ]
+    "description": "アクティブなプロセスの現在の VGA オーバーレイ可視性フラグを返します。",
+    "return": "現在のオーバーレイフラグビットマスク"
   },
   "IPO_SYSCALL_AUDIO_INIT": {
-    "description": "Initializes the Sound Blaster 16 DSP, DMA Channel 5, and software mixer.",
-    "return": "1 if audio hardware initialized, 0 otherwise",
-    "args": [
-      "None"
-    ]
+    "description": "Sound Blaster 16 DSP、DMA チャンネル 5、およびソフトウェアミキサーを初期化します。",
+    "return": "オーディオハードウェアが初期化されている場合は1、それ以外は0"
   },
   "IPO_SYSCALL_AUDIO_TICK": {
-    "description": "Advances audio playback stream mixer and refills DMA buffers.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "オーディオ再生ストリームミキサーを進め、DMA バッファを補充します。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STOP_ALL": {
-    "description": "Stops all active audio playback streams and halts Sound Blaster 16 DMA.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "すべてのアクティブなオーディオ再生ストリームを停止し、Sound Blaster 16 DMA を停止します。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_CREATE": {
-    "description": "Creates a static in-memory audio playback stream.",
-    "return": "Pointer to audio_stream_t handle, or NULL on error",
-    "args": []
+    "description": "静的なインメモリオーディオ再生ストリームを作成します。",
+    "return": "audio_stream_tハンドルへのポインタ、エラー時はNULL"
   },
   "IPO_SYSCALL_AUDIO_STREAM_CREATE_RING": {
-    "description": "Creates a continuous ring-buffered audio stream for dynamic real-time playback.",
-    "return": "Pointer to audio_stream_t handle, or NULL on error",
-    "args": []
+    "description": "動的リアルタイム再生用の連続リングバッファオーディオストリームを作成します。",
+    "return": "audio_stream_tハンドルへのポインタ、エラー時はNULL"
   },
   "IPO_SYSCALL_AUDIO_STREAM_DESTROY": {
-    "description": "Stops playback, unlinks, and frees an audio stream handle.",
-    "return": "0",
-    "args": []
+    "description": "再生を停止し、リンクを解除してオーディオストリームハンドルを解放します。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_PLAY": {
-    "description": "Starts or resumes playback of an audio stream.",
-    "return": "0",
-    "args": []
+    "description": "オーディオストリームの再生を開始または再開します。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_PAUSE": {
-    "description": "Pauses playback of an audio stream preserving current position.",
-    "return": "0",
-    "args": []
+    "description": "現在の位置を保持してオーディオストリームの再生を一時停止します。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_STOP": {
-    "description": "Stops playback and rewinds audio stream position to beginning.",
-    "return": "0",
-    "args": []
+    "description": "再生を停止し、オーディオストリームの位置を先頭に巻き戻します。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_SEEK": {
-    "description": "Seeks playback position within an audio stream.",
-    "return": "0",
-    "args": []
+    "description": "オーディオストリーム内の再生位置をシークします。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_SET_VOL": {
-    "description": "Adjusts individual playback volume of an audio stream.",
-    "return": "0",
-    "args": []
+    "description": "オーディオストリームの個別の再生音量を調整します。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_PROGRESS": {
-    "description": "Queries current playback progress of an audio stream.",
-    "return": "0",
-    "args": []
+    "description": "オーディオストリームの現在の再生進行状況を照会します。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_UPDATE": {
-    "description": "Appends or updates buffer data in a streaming ring-buffer.",
-    "return": "0",
-    "args": []
+    "description": "ストリーミングリングバッファ内のバッファデータを追加または更新します。",
+    "return": "0"
   },
   "IPO_SYSCALL_BINFMT_REGISTER": {
-    "description": "Registers dynamic executable binary format handler with signature matching, delegating non-native execution to an interpreter.",
-    "return": "0 on success, or negative error code",
-    "args": []
+    "description": "シグネチャ照合機能を持つ動的実行可能バイナリ形式ハンドラを登録し、非ネイティブの実行をインタプリタに委任します。",
+    "return": "成功時は0、または負のエラーコード"
   },
   "IPO_SYSCALL_BINFMT_UNREGISTER": {
-    "description": "Unregisters a previously registered dynamic binary format handler by name.",
-    "return": "0 on success, or negative error code",
-    "args": []
+    "description": "以前に登録された動的バイナリ形式ハンドラを名前で登録解除します。",
+    "return": "成功時は0、または負のエラーコード"
   },
   "IPO_SYSCALL_BINFMT_LIST": {
-    "description": "Enumerates and lists all currently registered dynamic binary format handlers.",
-    "return": "Count of active registered binary format handlers",
-    "args": [
-      "None"
-    ]
+    "description": "現在登録されているすべての動的バイナリ形式ハンドラを一覧表示します。",
+    "return": "アクティブな登録済みバイナリ形式ハンドラの数"
   },
   "IPO_SYSCALL_EXIT": {
-    "description": "Terminates calling process, releases memory and switches context.",
-    "return": "Does not return (process context destroyed)",
-    "args": []
+    "description": "呼び出し元プロセスを終了し、メモリを解放してコンテキストを切り替えます。",
+    "return": "制御を返さない（プロセスコンテキストが破棄される）"
   }
 }

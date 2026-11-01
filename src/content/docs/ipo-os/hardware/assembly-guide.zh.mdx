@@ -11,7 +11,7 @@ Assembling a physical x86 computer requires systematic mechanical care and stric
 
 ## ⚡ Electrostatic & Electrical Safety
 
-<Callout type="caution" lang="en" title="Electrostatic Discharge (ESD) Hazards">
+<Callout type="caution" title="Electrostatic Discharge (ESD) Hazards">
 Integrated circuits (especially vintage Northbridge chipsets and CPU L2 cache chips) are vulnerable to static voltages as low as 100V — far below what humans can feel.
 - Work on a static-dissipative mat or wooden surface. Never assemble a PC on carpeting.
 - Wear an anti-static wrist strap connected to earth ground, or periodically discharge static by touching the bare metal chassis of an unpowered, plugged-in power supply.
@@ -22,7 +22,7 @@ Integrated circuits (especially vintage Northbridge chipsets and CPU L2 cache ch
 
 ## 📋 Complete Assembly Progression
 
-<LocalizedDiagram id="pc_assembly_flow" lang="en" figureNum={2} />
+<LocalizedDiagram id="pc_assembly_flow" figureNum={2} />
 
 ### Step 1: Workbench Setup & Inspection
 1. Unpack the motherboard onto a non-conductive cardboard box (the motherboard's retail box is ideal). Never place the board on the outside of an anti-static bag (the conductive silver coating can cause short circuits if a CMOS battery is active).
@@ -44,7 +44,7 @@ Integrated circuits (especially vintage Northbridge chipsets and CPU L2 cache ch
 3. Press firmly downward on both ends until the side retaining clips snap shut with an audible click.
 
 ### Step 5: Chassis Standoffs & Motherboard Mounting
-<Callout type="important" lang="en" title="Preventing Motherboard Shorts">
+<Callout type="important" title="Preventing Motherboard Shorts">
 Ensure brass standoffs in the computer chassis are installed **only** where there are matching mounting holes on your motherboard. A stray standoff touching the underside of the PCB will create a dead short on power delivery traces.
 </Callout>
 1. Snap the I/O shield into the rear chassis cutout from the inside.
@@ -66,7 +66,7 @@ Ensure brass standoffs in the computer chassis are installed **only** where ther
 
 Connecting the front panel power switch, reset button, and status LEDs is a common source of confusion on vintage motherboards:
 
-<LocalizedDiagram id="front_panel_pinout" lang="en" figureNum={3} />
+<LocalizedDiagram id="front_panel_pinout" figureNum={3} />
 
 - **Power Switch (`PWR_SW`):** Pins 6 and 8. Momentary push-button. Has **no polarity** (can be connected in either orientation).
 - **Reset Switch (`RESET_SW`):** Pins 5 and 7. Momentary push-button. Has **no polarity**.

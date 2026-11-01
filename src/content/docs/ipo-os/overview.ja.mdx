@@ -10,7 +10,7 @@ import Callout from '../../../components/Callout.astro';
 
 **IPO_OS** is an independent, bare-metal operating system engineered for the **x86 32-bit (IA-32 / i386 / i686)** processor architecture. Built entirely from scratch, it targets PC-AT compatible personal computers, embedded hardware platforms, and virtual machines without reliance on third-party kernel code or bloated abstraction runtimes.
 
-<Callout type="beginners" lang="ja" title="Why build a bare-metal OS?">
+<Callout type="beginners" title="Why build a bare-metal OS?">
 Modern operating systems often hide hardware interactions behind millions of lines of legacy abstractions. IPO_OS strips away opacity: every hardware interrupt, memory block, disk extent, and network frame has an explicit, traceable path from silicon to screen.
 </Callout>
 
@@ -48,7 +48,7 @@ To preserve architectural clarity and stability, IPO_OS intentionally avoids:
 
 IPO_OS represents the top execution layer of the three-tier **IPO Systems Platform**:
 
-<LocalizedDiagram id="global_stack" lang="ja" figureNum={1} />
+<LocalizedDiagram id="global_stack" figureNum={1} />
 
 - **Layer 1: Physical Hardware** — CPU, DRAM, Chipset, Storage, and Peripherals.
 - **Layer 2: IPO_Boot_ROM** — Reset vector code, Cache-as-RAM, and DRAM training.

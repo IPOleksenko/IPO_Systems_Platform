@@ -45,7 +45,7 @@
       "troubleshooting": "Диагностика и устранение сбоев"
     },
     "ipo_firmware": {
-      "title": "IPO_Firmware (BIOS Service Layer)",
+      "title": "Сервисный слой IPO_Firmware",
       "overview": "Обзор и рантайм-сервисы",
       "getting_started": "Эмуляция и настройка запуска",
       "architecture": "IVT, автопоиск накопителей и передача управления",
@@ -62,8 +62,8 @@
   },
   "pages": {
     "ipo_os": {
-      "overview": "Обзор системы и философия",
-      "architecture": "Глобальная архитектура и потоки данных",
+      "overview": "Обзор программной экосистемы IPO_OS_Software",
+      "architecture": "Архитектура IPO_OS",
       "hardware_requirements": "Матрица требований к оборудованию",
       "platform_selection": "Выбор платформы и чипсетов",
       "components": "Компоненты ПК и подсистемы",
@@ -72,74 +72,74 @@
       "firmware_setup": "Настройка параметров BIOS/UEFI",
       "media_preparation": "Подготовка носителя и разметка",
       "first_boot": "Первый запуск и POST-диагностика",
-      "virtual_machines": "Запуск в QEMU, Bochs и VirtualBox",
+      "virtual_machines": "Настройка QEMU, Bochs и VirtualBox",
       "checklists": "Инженерные чек-листы сборки и проверки",
       "boot_sequence": "Последовательность и таймлайн загрузки",
       "bootloader_contract": "Контракт передачи управления от загрузчика",
       "cpu_modes": "Режимы процессора, GDT и IDT",
-      "memory_management": "Физическая и виртуальная память",
+      "memory_management": "Управление физической и виртуальной памятью",
       "scheduler": "Планировщик процессов и потоков",
       "syscalls_kernel": "Подсистема системных вызовов",
-      "interrupts": "Прерывания, PIC/APIC и таймеры",
+      "interrupts": "Прерывания, IDT и таймеры",
       "vfs_storage": "Виртуальная файловая система и IPO_FS",
       "driver_model": "Архитектура драйверов устройств",
       "io_console": "Ввод/вывод, видео и текстовая консоль",
-      "ipc": "Межпроцессное взаимодействие",
-      "security": "Изоляция и защита адресных пространств",
-      "kernel_debugging": "Отладка ядра и обработка Panic",
-      "toolchain_setup": "Настройка окружения разработки",
+      "ipc": "Межпроцессное взаимодействие (IPC)",
+      "security": "Изоляция и защита памяти",
+      "kernel_debugging": "Отладка ядра и обработка исключений CPU",
+      "toolchain_setup": "Настройка инструментария разработки",
       "hello_world": "Первая программа: Hello, IPO_OS",
-      "binary_format": "Формат исполняемого файла и карта памяти",
+      "binary_format": "Архитектура бинарных форматов, загрузчик и модель памяти",
       "abi": "ABI и соглашения о вызовах",
-      "syscalls_app": "Вызов системных функций из программ",
-      "stdlib": "Стандартная библиотека C и рантайм",
-      "memory_io": "Управление кучей и файловый ввод-вывод",
-      "ui_programming": "Консольный и графический интерфейс (WM)",
-      "build_system": "Скрипты сборки Makefile и Linker Script",
-      "packaging": "Упаковка и установка программ на диск",
-      "app_debugging": "Методы отладки приложений",
+      "syscalls_app": "Использование системных вызовов",
+      "stdlib": "Стандартная библиотека C и среда выполнения",
+      "memory_io": "Работа с памятью и файловый ввод-вывод",
+      "ui_programming": "Интерфейс пользователя, Shell, GUI и Мультимедиа",
+      "build_system": "Система сборки и утилиты развертывания",
+      "packaging": "Упаковка и развертывание",
+      "app_debugging": "Отладка приложений",
       "best_practices": "Руководство по стилю и частые ошибки",
-      "examples": "Практические обучающие примеры",
+      "examples": "Практические примеры приложений",
       "ref_syscalls": "Полный справочник системных вызовов",
       "ref_memory_io": "Карта памяти и портов ввода-вывода",
-      "ref_structures": "Структуры данных и заголовочные файлы",
+      "ref_structures": "Структуры данных и системные заголовки",
       "ref_errors": "Справочник кодов ошибок",
-      "ref_glossary": "Глоссарий системной архитектуры",
+      "ref_glossary": "Архитектурный глоссарий",
       "contrib_build": "Сборка IPO_OS из исходных кодов",
-      "contrib_style": "Стандарты оформления кода ядра",
-      "contrib_testing": "Тестирование и создание Pull Request"
+      "contrib_style": "Руководство по стилю кода ядра",
+      "contrib_testing": "Тестирование и Pull Requests"
     },
     "ipo_boot_rom": {
       "overview": "Обзор и вектор аппаратного сброса",
-      "getting_started": "Команды сборки и эмуляция в QEMU",
-      "architecture": "Инициализация CAR, MRC и Shadow RAM",
+      "getting_started": "Команды сборки и запуск в QEMU",
+      "architecture": "Настройка CAR, MRC и теневой памяти PAM",
       "hardware_flashing": "Физическая прошивка SPI (CH341A)",
-      "reference": "Спецификация Contract 2 и коды порта 0x80",
+      "reference": "Спецификация Контракта 2 и POST-коды порта 0x80",
       "troubleshooting": "Диагностика и аппаратные сбои"
     },
     "ipo_firmware": {
-      "overview": "Обзор и архитектура прошивки",
-      "getting_started": "Сборка и chainload-запуск",
-      "architecture": "IVT и автопоиск контроллеров дисков",
+      "overview": "Обзор и архитектура",
+      "getting_started": "Сборка и цепочечная загрузка",
+      "architecture": "IVT и многошинное обнаружение накопителей",
       "interrupt_reference": "Справочник прерываний BIOS (INT 10h–1Ah)",
-      "reference": "Спецификация Contract 3, EBDA и коды POST",
-      "troubleshooting": "Отказы поиска дисков и восстановление"
+      "reference": "Спецификация Контракта 3, EBDA и POST-коды",
+      "troubleshooting": "Диагностика накопителей и восстановление"
     },
     "ipo_os_software": {
-      "overview": "Обзор программной экосистемы",
-      "toolchain_setup": "Настройка окружения разработки",
+      "overview": "Обзор программной экосистемы IPO_OS_Software",
+      "toolchain_setup": "Настройка инструментария разработки",
       "hello_world": "Первая программа: Hello, IPO_OS",
-      "binary_format": "Формат исполняемого файла и карта памяти",
+      "binary_format": "Архитектура бинарных форматов, загрузчик и модель памяти",
       "abi": "ABI и соглашения о вызовах",
-      "syscalls_app": "Вызов системных функций из программ",
-      "stdlib": "Стандартная библиотека C и рантайм",
-      "memory_io": "Управление кучей и файловый ввод-вывод",
-      "ui_programming": "Консольный и графический интерфейс (WM)",
-      "build_system": "Скрипты сборки Makefile и Linker Script",
-      "packaging": "Упаковка и установка программ на диск",
-      "app_debugging": "Методы отладки приложений",
+      "syscalls_app": "Использование системных вызовов",
+      "stdlib": "Стандартная библиотека C и среда выполнения",
+      "memory_io": "Работа с памятью и файловый ввод-вывод",
+      "ui_programming": "Интерфейс пользователя, Shell, GUI и Мультимедиа",
+      "build_system": "Система сборки и утилиты развертывания",
+      "packaging": "Упаковка и развертывание",
+      "app_debugging": "Отладка приложений",
       "best_practices": "Руководство по стилю и частые ошибки",
-      "examples": "Практические обучающие примеры"
+      "examples": "Практические примеры приложений"
     }
   },
   "ui": {
@@ -163,7 +163,8 @@
       "caution": "Осторожно",
       "beginners": "Для начинающих",
       "deep_dive": "Углублённо"
-    }
+    },
+    "select_language": "Пожалуйста, выберите язык"
   },
   "downloads": {
     "page_title": "Загрузка сборок и релизов",
@@ -175,10 +176,17 @@
     "featured_badge": "⭐ Полный комплект платформы",
     "featured_ribbon": "⭐ Полный комплект платформы",
     "featured_title": "Полный комплект IPO Systems (Все проекты и диски)",
-    "featured_desc": "Включает все скомпилированные бинарники платформы: Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), образ ядра IPO_OS (IPO_OS.img), чистый и предустановленный диски (disk-clean.img, disk-installed.img) и пакет скомпилированных приложений (applications.zip).",
-    "download_bundle": "Скачать полный комплект (.zip)",
+    "featured_desc": "Включает все скомпилированные бинарники платформы: Boot ROM (bootrom.bin), Firmware (firmware.rom), образ ядра IPO_OS (IPO_OS.img), чистый и предустановленный диски (disk-clean.img, disk-installed.img) и пакет скомпилированных приложений (applications.zip).",
+    "download_bundle": "Скачать полный комплект",
     "components_title": "Отдельные компоненты и образы дисков",
     "download_btn": "Скачать",
+    "archive_formats": "Форматы архивов: ZIP, TAR.GZ, TAR.BZ2, TAR.XZ",
+    "choose_archive": "Формат архива",
+    "choose_rom_size": "Размер микросхемы для Boot ROM",
+    "bootrom_binary_description": "Бинарный файл Boot ROM для прямого скачивания, собранный под выбранный размер микросхемы.",
+    "choose_download": "Выберите параметры загрузки",
+    "download_selected": "Скачать выбранный архив",
+    "close": "Закрыть",
     "download_zip": "Скачать .zip",
     "download_builds": "Скачать сборки платформы",
     "vm_guide_link": "Руководство по виртуальным машинам →",
@@ -223,15 +231,16 @@
       "size": "Размер",
       "type": "Тип",
       "name": "Имя поля",
-      "description": "Назначение и описание"
+      "description": "Описание"
     },
     "syscall": {
       "hex": "Hex",
       "call": "Системный вызов",
-      "signature": "Сигнатура",
-      "description": "Аргументы и описание",
+      "signature": "Сигнатура C",
+      "description": "Параметры и описание",
       "details": "Параметры и возврат",
-      "returns": "Возврат:"
+      "returns": "Возвращает:",
+      "no_args": "Нет аргументов"
     }
   },
   "widgets": {
@@ -272,6 +281,80 @@
         "userspace": "Окно исполнения пользовательских приложений ELF32 и плоских бинарников (0x00800000, стек на 0x00A00000)."
       }
     }
+  },
+  "snippets": {
+    "hello-c": "main.c (Первое приложение для IPO_OS)",
+    "hello-asm": "hello_asm.asm (Приложение на чистом ассемблере)",
+    "socket-tcp-server": "tcp_server.c (HTTP-сервер на POSIX-сокетах в IPO_OS)",
+    "opengl-cube": "gl_cube.c (3D-рендеринг TinyGL в IPO_OS)",
+    "wm-gui-window": "wm_app.c (Создание GUI-окна с callback-функциями)",
+    "micropython-script": "test.py (Запуск Python в bare-metal IPO_OS)",
+    "in-os-tcc": "Компиляция кода C непосредственно в IPO_OS",
+    "multitasking-shell-operators": "Многозадачность оболочки и операторы рабочих пространств",
+    "disk-editor-cmds": "tools/disk_editor.py — полный справочник команд",
+    "makefile-all-targets": "Справочник целей Makefile (IPO_OS и IPO_OS_Software)",
+    "tap-networking-setup": "Настройка сетевого интерфейса TAP0 на хосте",
+    "qemu-full-stack-run": "Запуск полного стека в QEMU",
+    "flashrom-spi-cmds": "Физическая прошивка SPI с flashrom и CH341A",
+    "syscall-c-wrapper": "applications/lib/libc/sys.c (вызов системных вызовов)",
+    "app-linker-script": "applications/app.ld (скрипт компоновки приложения)",
+    "app-entry-s": "applications/entry.s (заглушка точки входа)",
+    "kernel-linker-script": "src/kernel/linker.ld (скрипт компоновки ядра)",
+    "app-makefile": "Makefile пользовательского приложения",
+    "tap-setup-cmds": "Настройка TAP0"
+  },
+  "interface": {
+    "close_dialog": "Закрыть диалоговое окно",
+    "toggle_navigation": "Переключить навигацию",
+    "main_projects": "Основные проекты",
+    "documentation_navigation": "Навигация по документации",
+    "color_theme": "Цветовая тема",
+    "table_of_contents": "Содержание",
+    "open_github": "Открыть проект на GitHub",
+    "download_image": "Скачать образ",
+    "breadcrumb": "Навигационная цепочка",
+    "pagination": "Постраничная навигация"
+  },
+  "home_badges": {
+    "os": "ОС / ядро",
+    "boot_rom": "Инициализатор сброса",
+    "firmware": "Прошивка",
+    "software": "Пользовательские программы"
+  },
+  "psu_labels": {
+    "ram_opt1": "2 модуля SDRAM / DDR2 (10 Вт)",
+    "ram_opt2": "4 модуля DDR2 / DDR3 (20 Вт)"
+  },
+  "artifact_labels": {
+    "ipo_os_raw": {
+      "name": "Загрузочный образ IPO_OS",
+      "description": "Необработанный 32-битный загрузочный образ с ядром IPO_OS и загрузчиком."
+    },
+    "ipo_disk_installed": {
+      "name": "Диск IPO_OS с установленными приложениями (512 МБ)",
+      "description": "Готовый образ диска IPO_FS объёмом 512 МБ с приложениями, инструментами разработки, библиотеками и шрифтами."
+    },
+    "ipo_disk_clean": {
+      "name": "Чистый диск IPO_OS (512 МБ)",
+      "description": "Чистый образ диска объёмом 512 МБ, отформатированный в IPO_FS без предустановленных приложений."
+    },
+    "ipo_applications": {
+      "name": "Пакет приложений IPO_OS",
+      "description": "Скомпилированные приложения, инструменты разработки, библиотеки времени выполнения, заголовки SDK и шрифты для IPO_OS."
+    },
+    "ipo_firmware": {
+      "name": "IPO_Firmware",
+      "description": "Скомпилированный бинарный образ служб времени выполнения IPO_Firmware (firmware.rom)."
+    }
+  },
+  "units": {
+    "byte": {
+      "one": "байт",
+      "few": "байта",
+      "many": "байтов",
+      "other": "байта"
+    },
+    "byte_short": "B"
   },
   "search": {
     "placeholder": "Поиск по документации...",

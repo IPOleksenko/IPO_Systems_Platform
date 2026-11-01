@@ -1,13 +1,13 @@
 ---
-title: "Complete Chamada de sistemas Referência"
-description: "Exhaustive reference of all 105 chamada de sistemas in IPO_OS: call numbers, C signatures, x86 int 0x80 ABI registers, parameters, and error codes."
+title: "Referência completa de chamadas de sistema"
+description: "Referência exaustiva de todas as 139 chamadas de sistema no IPO_OS: números de chamada, assinaturas C, registros ABI x86 int 0x80, parâmetros e códigos de erro."
 ---
 
 import SharedSyscallTable from '../../../../components/SharedSyscallTable.astro';
 import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
 import Callout from '../../../../components/Callout.astro';
 
-# Complete Chamada de sistemas Referência
+# Referência completa de chamadas de sistema
 
 In **IPO_OS**, system calls serve as the primary protected gateway between processes and privileged kernel subsystem services in flat 32-bit Protected Mode. Syscalls are triggered via the x86 software interrupt gate `int 0x80` (IDT flags `0xEE`).
 
@@ -37,9 +37,9 @@ When `int 0x80` is triggered, the CPU transfers execution to IDT gate `0x80` (`s
 
 ## 📋 Comprehensive System Calls Table
 
-Below is the complete interactive list of all 140 registered system calls:
+Abaixo está a lista interativa completa de todas as 139 chamadas de sistema registradas:
 
-<SharedSyscallTable lang="pt" />
+<SharedSyscallTable />
 
 ---
 

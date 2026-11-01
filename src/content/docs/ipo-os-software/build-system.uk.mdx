@@ -17,7 +17,7 @@ import Callout from '../../../components/Callout.astro';
 Складальний конвеєр розділений на модульні правила в каталозі `mk/`:
 - `mk/config.mk` — Визначення компіляторів, прапорців (`-m32`, `-ffreestanding`) та шляхів.
 - `mk/lib.mk` — Збирання стандартних бібліотек (`libc.a`, `libm.a`, `libstdc++.a`, `libapp.a`, `libapp_api.a`, `crt0.o`).
-- `mk/applications.mk` — Збирання всіх прикладних програм (DOOM, TinyCC, MicroPython, Lua, NASM, редактор, 3D-демо).
+- `mk/applications.mk` — Збирання всіх прикладних програм, зокрема `binfmt` (реєстр форматів виконуваних файлів) і `elf_loader` (завантажувач ELF32), а також DOOM, TinyCC, MicroPython, Lua, NASM, редактора та 3D-демо.
 - `mk/toolchain.mk` — Підготовка вбудованих інструментів розробки.
 - `mk/disk.mk` — Операції з дисковими образами (створення, форматування, встановлення ПЗ).
 - `mk/clean.mk` — Очищення проміжних об'єктів та скомпільованих пакетів.

@@ -1,6 +1,7 @@
 {
   "ipo_superblock": {
-    "title": "IPO_FS Superblock Structure (LBA 2048)",
+    "totalSize": "64 bytes (cabecera de un bloque de 512 bytes)",
+    "title": "Estructura del superbloque IPO_FS (LBA 2048)",
     "fields": {
       "magic": "Magic signature (\"IPO_FS\\0\\0\")",
       "fs_size_blocks": "Total 512-byte blocks in storage pool",
@@ -14,7 +15,8 @@
     }
   },
   "ipo_inode": {
-    "title": "IPO_FS Inode Structure (128 bytes, 4 per block)",
+    "totalSize": "128 bytes",
+    "title": "Estructura de inodo IPO_FS (128 bytes, 4 por bloque)",
     "fields": {
       "mode": "File type (0x1=Dir, 0x2=File, 0x80000000=Protected)",
       "links_count": "Number of active hard links",
@@ -25,7 +27,8 @@
     }
   },
   "ipo_extent": {
-    "title": "IPO_FS Extent Descriptor (24 bytes)",
+    "totalSize": "24 bytes",
+    "title": "Descriptor de extensión IPO_FS (24 bytes)",
     "fields": {
       "logical_block": "Starting logical block inside file",
       "physical_block": "Starting physical LBA block in storage pool",
@@ -34,7 +37,8 @@
     }
   },
   "storage_pool_raw_sb": {
-    "title": "Storage Pool Superblock (storage_pool_raw_sb_t, LBA 2030 & 2039)",
+    "totalSize": "512 bytes (cabecera de 68 B + members[] flexible + CRC32)",
+    "title": "Superbloque del grupo de almacenamiento (storage_pool_raw_sb_t, LBA 2030 y 2039)",
     "fields": {
       "magic": "Pool magic signature (0x504F4F4C \"POOL\")",
       "version": "Superblock format version (2)",
@@ -51,7 +55,8 @@
     }
   },
   "storage_raw_disk_tx_entry": {
-    "title": "Storage Pool WAL Journal Entry (storage_raw_disk_tx_entry_t, LBA 2031–2038)",
+    "totalSize": "64 bytes (8 entradas por sector de 512 bytes, 64 entradas en total)",
+    "title": "Entrada de diario WAL del grupo de almacenamiento (storage_raw_disk_tx_entry_t, LBA 2031–2038)",
     "fields": {
       "magic": "Journal entry signature (0x54584E4C \"TXNL\")",
       "tx_id": "Monotonic transaction identifier",
@@ -66,7 +71,8 @@
     }
   },
   "kmod_header": {
-    "title": "Relocatable Kernel Module Header (kmod_raw_header_t / kmod_header_t)",
+    "totalSize": "192 bytes (0xC0 en disco) / punteros dinámicos en RAM",
+    "title": "Cabecera de módulo de kernel reubicable (kmod_raw_header_t / kmod_header_t)",
     "fields": {
       "magic": "Module magic signature (0x444D4B49 \"IKMD\")",
       "abi_version": "Kernel Module ABI version (0x0100 = v1.0)",
@@ -84,7 +90,8 @@
     }
   },
   "cpu_info": {
-    "title": "Per-CPU SMP Descriptor (cpu_info_t)",
+    "totalSize": "24 bytes",
+    "title": "Descriptor de CPU SMP (cpu_info_t)",
     "fields": {
       "cpu_id": "Logical processor core ID (0 = BSP, 1..N = AP)",
       "lapic_id": "Hardware Local APIC physical ID",
@@ -96,79 +103,82 @@
     }
   },
   "process_pcb": {
-    "title": "Process Descriptor Structure (process_t)",
+    "totalSize": "372 bytes (0x174)",
+    "title": "Estructura descriptora de proceso (process_t)",
     "fields": {
-      "pid": "Unique process ID (allocated dynamically starting from 1)",
-      "binary_base": "Base address of loaded executable image in allocated memory block (mem)",
-      "binary_size": "4 KB page-aligned binary memory size in bytes",
-      "entry_point": "Absolute execution entry point (allocated free block mem address)",
-      "binary_storage": "Reserved backup buffer pointer (NULL in in-place execution)",
-      "data_offset": "Offset where writable data/bss begins in image",
-      "data_size": "Size of writable data/bss segment in bytes",
-      "code_mapped": "True if code segment has been loaded into memory",
-      "stack_base": "Allocated process stack buffer",
-      "stack_ptr": "Saved ESP stack pointer during multitasking",
-      "stack_start": "Start address of stack region",
-      "stack_size": "Stack capacity in bytes (256 KB initial)",
-      "argc": "Argument count passed to main()",
-      "argv_addr": "Address of argv pointers array in process space",
-      "argv_kernel": "Copy of argv array in kernel space for debugging",
-      "exit_code": "Termination return code",
-      "return_val": "Full typed return value (type, int, raw_eax/edx, dynamic strings, struct buffer)",
-      "return_val_explicit": "True if process explicitly set custom return value via syscall",
-      "is_running": "Active execution state flag",
-      "waiting_for_input": "Blocked waiting for keyboard / terminal input",
-      "wants_graphics": "Requested VGA Mode 13h (320x200x256)",
-      "gfx_overlay_flags": "VGA Mode 13h overlay visibility flags (VGA_OVERLAY_HIDE_BUTTON, VGA_OVERLAY_HIDE_CURSOR)",
-      "is_wm_app": "Created a Window Manager desktop window",
-      "async_task_count": "Count of active background async tasks",
-      "user_heap_base": "Per-process isolated heap start address",
-      "user_heap_break": "Per-process sbrk break address boundary",
-      "user_heap_limit": "Per-process isolated heap ceiling limit address",
-      "user_heap_slot": "Dynamic memory slot index assigned to process (-1 if none)",
-      "exec_inode": "Executable inode metadata for on-demand progressive loading",
-      "demand_loading": "True if executable is currently being loaded on-demand",
-      "demand_file_offset": "Current byte offset in executable binary file on disk",
-      "demand_mem_offset": "Current destination offset in process memory image",
-      "demand_loaded_bytes": "Total bytes of executable loaded into memory so far",
-      "demand_total_bytes": "Total byte size of all loadable binary segments",
-      "text_vram_backup": "80x25 text mode buffer backup for workspace switching",
-      "gfx_vram_backup": "320x200 graphics VRAM backup when swapped to background",
-      "gfx_palette_backup": "256-color VGA DAC palette backup (768 bytes)",
-      "text_cursor_pos": "Saved cursor coordinate in text mode",
-      "text_cursor_visible": "Saved cursor visibility flag",
-      "completed_and_acknowledged": "Process completed and acknowledged by parent",
-      "scroll_top_buffer": "Workspace top scrollback line buffer",
-      "scroll_bottom_buffer": "Workspace bottom scrollback line buffer",
-      "scroll_top_count": "Count of lines in top scrollback buffer",
-      "scroll_bottom_count": "Count of lines in bottom scrollback buffer",
-      "window_id": "Workspace window group identifier in batch mode",
-      "text_screen_shared": "True if VRAM buffers are shared with co-process",
-      "text_output_buf": "Dynamically expanding captured stdout buffer",
-      "text_output_len": "Length of captured stdout text in bytes",
-      "text_output_cap": "Allocated capacity of text_output_buf",
-      "name": "Dynamically allocated process name string",
-      "return_format": "Auto-detected format descriptor from DWARF debug symbols",
-      "next": "Pointer to next PCB in active kernel list"
+      "pid": "Identificador de proceso único (PID)",
+      "binary_base": "Dirección base de carga del binario en memoria",
+      "binary_size": "Tamaño total del binario en bytes",
+      "entry_point": "Dirección del punto de entrada (_start)",
+      "binary_storage": "Puntero al búfer de almacenamiento del binario",
+      "data_offset": "Desplazamiento de datos en el binario",
+      "data_size": "Tamaño de los datos en bytes",
+      "code_mapped": "Indica si los segmentos de código están mapeados",
+      "stack_base": "Dirección base de la pila del proceso",
+      "stack_ptr": "Puntero de pila actual (ESP)",
+      "stack_start": "Dirección inicial de la asignación de pila",
+      "stack_size": "Tamaño total de la pila asignada en bytes",
+      "argc": "Número de argumentos de línea de comandos",
+      "argv_addr": "Dirección en pila del usuario del arreglo argv",
+      "argv_kernel": "Arreglo de cadenas de argumentos del kernel",
+      "exit_code": "Código de salida del proceso (0=éxito)",
+      "return_val": "Unión del valor de retorno estructurado",
+      "return_val_explicit": "Indica retorno establecido explícitamente vía syscall",
+      "is_running": "Indicador de proceso en ejecución (1=activo)",
+      "waiting_for_input": "Bloqueado esperando entrada del teclado",
+      "wants_graphics": "Proceso solicitó modo gráfico VGA 13h",
+      "gfx_overlay_flags": "Banderas de visibilidad del overlay VGA (botón cerrar, cursor)",
+      "is_wm_app": "Proceso registrado como ventana en el Gestor de Ventanas",
+      "async_task_count": "Cantidad de tareas asíncronas en segundo plano activas",
+      "user_heap_base": "Dirección base del montón (heap) aislado del proceso",
+      "user_heap_break": "Punto de interrupción dinámica de sbrk del proceso",
+      "user_heap_limit": "Límite máximo del montón aislado del proceso",
+      "user_heap_slot": "Índice de ranura de memoria dinámica (-1 si no hay)",
+      "exec_inode": "Copia del inodo del ejecutable para carga bajo demanda",
+      "demand_loading": "Indica si el binario se está cargando progresivamente",
+      "demand_file_offset": "Desplazamiento actual en el archivo en disco",
+      "demand_mem_offset": "Desplazamiento de memoria actual en el proceso",
+      "demand_loaded_bytes": "Bytes cargados en memoria hasta el momento",
+      "demand_total_bytes": "Tamaño total de segmentos que deben cargarse",
+      "text_vram_backup": "Copia de seguridad del VRAM de texto 80x25 al cambiar a fondo",
+      "gfx_vram_backup": "Copia de seguridad del VRAM gráfico 320x200 al cambiar a fondo",
+      "gfx_palette_backup": "Copia de seguridad de paleta DAC de 256 colores (768 B)",
+      "text_cursor_pos": "Posición guardada del cursor de texto",
+      "text_cursor_visible": "Visibilidad guardada del cursor en modo texto",
+      "completed_and_acknowledged": "Proceso terminado y confirmado por el usuario",
+      "scroll_top_buffer": "Búfer de desplazamiento superior de la consola",
+      "scroll_bottom_buffer": "Búfer de desplazamiento inferior de la consola",
+      "scroll_top_count": "Número de líneas desplazadas en la parte superior",
+      "scroll_bottom_count": "Número de líneas desplazadas en la parte inferior",
+      "window_id": "ID de grupo de ventanas o espacio de trabajo",
+      "text_screen_shared": "Indica si los búferes de pantalla se comparten",
+      "text_output_buf": "Búfer de captura de salida de texto (tuberías)",
+      "text_output_len": "Longitud actual de la salida de texto capturada",
+      "text_output_cap": "Capacidad del búfer de salida de texto en bytes",
+      "name": "Nombre del proceso asignado dinámicamente",
+      "return_format": "Descriptor de formato de datos devueltos",
+      "next": "Puntero al siguiente proceso en la lista del kernel"
     }
   },
   "device_node": {
-    "title": "Unified Hardware Device Node (device_node_t)",
+    "totalSize": "148 bytes (0x94) con cadenas dinámicas y una matriz BAR ampliable (src/include/kernel/device.h)",
+    "title": "Nodo unificado de dispositivo de hardware (device_node_t)",
     "fields": {
-      "id": "Unique system-wide device ID",
-      "parent_id": "Parent bus/controller device ID (0 if root)",
-      "capabilities": "Capability bitmask (READONLY, REMOVABLE, HOTPLUGGABLE, DMA, VIRTUAL)",
-      "type": "Category (CPU, MEMORY, PCI, STORAGE, NETWORK, INPUT, AUDIO, VIDEO, SYSTEM, USB)",
-      "state": "Operational state (DISCOVERED, DRIVER_ATTACHED, INITIALIZED, ACTIVE, DISABLED, ERROR)",
-      "name": "Dynamic canonical identifier (e.g. \"cpu0\", \"pci00:03.0\", \"ata0\")",
-      "vendor / model / description": "Dynamically allocated vendor, model, and functional description strings",
-      "res": "Bus coordinates, PCI IDs, dynamic uint32_t* bar[], I/O base, MMIO base, IRQ, size_bytes",
-      "driver_name / driver_ptr": "Attached driver name and pointer to driver_t",
-      "ops / priv_data / next": "Standard VFS-like device I/O operations (open/close/read/write/ioctl) and list link"
+      "id": "ID único del dispositivo",
+      "parent_id": "ID del bus/controlador padre (0 si es raíz)",
+      "capabilities": "Máscara de capacidades (DMA, IRQ, PCI)",
+      "type": "Tipo de dispositivo (almacenamiento, red, etc.)",
+      "state": "Estado operativo (INIT, RUNNING, ERROR)",
+      "name": "Nombre del dispositivo (ej. \"ata0_m\")",
+      "vendor / model / description": "Cadenas de fabricante, modelo y descripción",
+      "res": "Descriptor de recursos: puertos de E/S, MMIO, IRQ",
+      "driver_name / driver_ptr": "Nombre y puntero del controlador vinculado",
+      "ops / priv_data / next": "Punteros de operaciones, datos privados y enlace siguiente"
     }
   },
   "kmalloc_stats": {
-    "title": "Kernel Heap Allocator Statistics (kmalloc_stats_t)",
+    "totalSize": "28 bytes",
+    "title": "Estadísticas del asignador de memoria del kernel (kmalloc_stats_t)",
     "fields": {
       "heap_total": "Total kernel heap capacity in bytes (64 MB / 0x04000000)",
       "heap_used": "Bytes consumed by high-watermark with headers",
@@ -180,27 +190,29 @@
     }
   },
   "ata_device": {
-    "title": "ATA Storage Device Information (ata_device_t)",
+    "totalSize": "44 bytes (0x2C)",
+    "title": "Información del dispositivo de almacenamiento ATA (ata_device_t)",
     "fields": {
-      "present": "1 if device detected, 0 if absent",
-      "channel": "IDE Channel (0 = Primary, 1 = Secondary)",
-      "drive": "Drive position (0 = Master, 1 = Slave)",
-      "type": "Device type (0=NONE, 1=PATA, 2=PATAPI)",
-      "cylinders": "Drive cylinders count from IDENTIFY",
-      "heads": "Drive heads count from IDENTIFY",
-      "sectors": "Sectors per track from IDENTIFY",
-      "io_base": "Primary I/O base port (e.g. 0x1F0, 0x170)",
-      "ctrl_base": "Control port base (e.g. 0x3F6, 0x376)",
-      "irq": "Hardware IRQ line (14 for Primary, 15 for Secondary)",
-      "sector_size": "Sector size in bytes (typically 512)",
-      "capacity_sectors": "Total capacity in 512-byte sectors (LBA28/LBA48)",
-      "model": "Dynamically allocated NUL-terminated ATA model string",
-      "serial": "Dynamically allocated NUL-terminated ATA serial string",
-      "firmware": "Dynamically allocated NUL-terminated ATA firmware revision string"
+      "present": "1 si el dispositivo fue detectado, 0 si no",
+      "channel": "Canal IDE (0=Primario, 1=Secundario)",
+      "drive": "Selección de unidad (0=Maestro, 1=Esclavo)",
+      "type": "Tipo de dispositivo (0=Disco ATA, 1=ATAPI CD-ROM)",
+      "cylinders": "Número de cilindros (modo CHS)",
+      "heads": "Número de cabezales por cilindro (modo CHS)",
+      "sectors": "Sectores por pista (modo CHS)",
+      "io_base": "Puerto base de E/S de comando (0x1F0 o 0x170)",
+      "ctrl_base": "Puerto base de E/S de control (0x3F6 o 0x376)",
+      "irq": "Línea de interrupción de hardware (14=Primario, 15=Secundario)",
+      "sector_size": "Tamaño de sector en bytes (siempre 512)",
+      "capacity_sectors": "Capacidad total en sectores de 512 bytes (LBA28/LBA48)",
+      "model": "Cadena ASCII del modelo de disco asignada dinámicamente",
+      "serial": "Cadena de número de serie del disco asignada dinámicamente",
+      "firmware": "Cadena de revisión de firmware asignada dinámicamente"
     }
   },
   "ipo_idt_entry": {
-    "title": "x86 Interrupt Descriptor Gate (ipo_idt_entry_t)",
+    "totalSize": "8 bytes",
+    "title": "Puerta descriptora de interrupción x86 (ipo_idt_entry_t)",
     "fields": {
       "base_lo": "Lower 16 bits of ISR entrypoint address",
       "selector": "Kernel code segment selector (0x08)",
@@ -210,27 +222,29 @@
     }
   },
   "bootrom_post_codes": {
-    "title": "Port 0x80 POST Diagnostic Codes (IPO_Boot_ROM)",
+    "totalSize": "Puerto de diagnóstico de 8 bits 0x80",
+    "title": "Códigos de diagnóstico POST del puerto 0x80 (IPO_Boot_ROM)",
     "fields": {
-      "POST_RESET_VECTOR": "CPU reset vector reached (0xFFFFFFF0)",
-      "POST_ROM_INIT_ENTRY": "Entered Boot_ROM init code (0xF000:8000)",
-      "POST_CAR_START": "MTRR Cache-as-RAM setup started",
-      "POST_CAR_READY": "CAR stack operational at 0x7000:8000",
-      "POST_CHIPSET_DETECTED": "Chipset detected (i440FX or Q35)",
-      "POST_MRC_START": "Memory Reference Code DRAM training started",
-      "POST_DRAM_TEST_PASS": "DRAM pattern test passed (0x55AA55AA / 0xAA55AA55)",
-      "POST_CAR_TEARDOWN": "CAR teardown complete, stack relocated to DRAM",
-      "POST_PAM_LOCKED": "PAM locked read-only (RE=1, WE=0)",
-      "POST_MAGIC_VALID": "Firmware header magic validated (0x464F5049)",
-      "POST_HANDOVER": "Far jump to Firmware payload (0xF000:0004)",
-      "ERR_NO_MTRR": "CPU lacks MTRR support or CAR setup failed",
-      "ERR_UNKNOWN_CHIPSET": "Unsupported PCI Host Bridge ID",
-      "ERR_DRAM_FAIL": "DRAM pattern memory test failed",
-      "ERR_MAGIC_MISMATCH": "Firmware signature mismatch (IPOF expected)"
+      "POST_RESET_VECTOR": "Vector de reinicio alcanzado (0xFFFFFFF0)",
+      "POST_ROM_INIT_ENTRY": "Entrada al código de inicio Boot_ROM (0xF000:8000)",
+      "POST_CAR_START": "Inicio de configuración Cache-as-RAM con MTRRs",
+      "POST_CAR_READY": "Pila CAR operativa en 0x7000:8000",
+      "POST_CHIPSET_DETECTED": "Chipset detectado con éxito (i440FX o Q35)",
+      "POST_MRC_START": "Inicio de entrenamiento de memoria DRAM (MRC)",
+      "POST_DRAM_TEST_PASS": "Prueba de patrón de memoria DRAM superada con éxito",
+      "POST_CAR_TEARDOWN": "Desmantelamiento de CAR completo, pila movida a DRAM",
+      "POST_PAM_LOCKED": "Registros PAM bloqueados en modo de solo lectura",
+      "POST_MAGIC_VALID": "Firma de cabecera de firmware validada (IPOF)",
+      "POST_HANDOVER": "Salto lejano al payload de firmware (0xF000:0004)",
+      "ERR_NO_MTRR": "ERROR: la CPU no soporta MTRR o falló CAR",
+      "ERR_UNKNOWN_CHIPSET": "ERROR: ID de puente host PCI no compatible",
+      "ERR_DRAM_FAIL": "ERROR: Falló la prueba de memoria DRAM",
+      "ERR_MAGIC_MISMATCH": "ERROR: Firma de firmware incorrecta (esperaba IPOF)"
     }
   },
   "firmware_post_codes": {
-    "title": "Port 0x80 POST Diagnostic Codes (IPO_Firmware)",
+    "totalSize": "Puerto de diagnóstico de 8 bits 0x80",
+    "title": "Códigos de diagnóstico POST del puerto 0x80 (IPO_Firmware)",
     "fields": {
       "FW_ENTRY": "Firmware entry point reached (0xF000:0004)",
       "FW_PCI_ENUM_DONE": "PCI bus enumeration completed",
@@ -238,12 +252,12 @@
       "FW_ACPI_INSTALLED": "ACPI 1.0 tables installed in EBDA (0x9FC00)",
       "FW_VIDEO_READY": "Video subsystem initialized (VBIOS or Mode 03h)",
       "FW_A20_ACTIVE": "Fast A20 Gate activated and verified",
-      "FW_PS2_READY": "8042 PS/2 controller initialized",
-      "FW_STORAGE_PROBE": "Storage controllers probing (ATA, AHCI, NVMe, USB)",
-      "FW_SCAN_BOOTABLE": "Scanning drives for bootable media (0x80..0x82)",
-      "FW_MBR_VALIDATED": "Valid MBR 0xAA55 loaded at 0x0000:7C00",
-      "FW_HANDOVER_OS": "Jumping to MBR (0x0000:7C00) — OS Handover",
-      "FW_ERR_NO_BOOT": "No bootable media found on any controller"
+      "FW_PS2_READY": "Controlador de teclado 8042 PS/2 inicializado",
+      "FW_STORAGE_PROBE": "Sondeo de controladores de almacenamiento (ATA, AHCI, NVMe, USB)",
+      "FW_SCAN_BOOTABLE": "Búsqueda de dispositivo de arranque activo (0x80..0x82)",
+      "FW_MBR_VALIDATED": "Sector MBR válido con firma 0xAA55 cargado en 0x0000:7C00",
+      "FW_HANDOVER_OS": "Salto a MBR (0x0000:7C00) — Transferencia de control al SO",
+      "FW_ERR_NO_BOOT": "ERROR: No se encontró ningún medio de arranque compatible"
     }
   }
 }

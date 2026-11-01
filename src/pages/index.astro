@@ -1,5 +1,6 @@
 ---
 import { siteConfig } from '../../site.config';
+import { getTranslation } from '../utils/i18n';
 
 const base = siteConfig.base;
 const cleanBase = base.endsWith('/') ? base : `${base}/`;
@@ -45,12 +46,21 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
   </head>
   <body>
     <noscript>
-      <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 4rem auto; text-align: center; padding: 2rem;">
+      <div style="font-family: system-ui, sans-serif; max-width: 720px; margin: 4rem auto; text-align: center; padding: 2rem;">
         <h1>{siteConfig.siteTitle}</h1>
-        <p>Please select your preferred language / Пожалуйста, выберите язык:</p>
-        <div style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 1rem;">
-          <a href={`${cleanBase}en/`} style="padding: 0.5rem 1rem; border: 1px solid #ccc; border-radius: 4px; text-decoration: none;">English (EN)</a>
-          <a href={`${cleanBase}ru/`} style="padding: 0.5rem 1rem; border: 1px solid #ccc; border-radius: 4px; text-decoration: none;">Русский (RU)</a>
+        <p style="color: #666; margin-bottom: 2rem;">
+          {Object.keys(siteConfig.languages).map((code) => getTranslation(code, 'ui.select_language')).join(' · ')}
+        </p>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem;">
+          {Object.entries(siteConfig.languages).map(([code, meta]) => (
+            <a
+              href={`${cleanBase}${code}/`}
+              style="padding: 0.6rem 1.1rem; border: 1px solid #ddd; border-radius: 6px; text-decoration: none; color: #111; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; background: #fafafa; transition: all 0.15s ease;"
+            >
+              <span>{meta.flag}</span>
+              <span>{meta.name}</span>
+            </a>
+          ))}
         </div>
       </div>
     </noscript>

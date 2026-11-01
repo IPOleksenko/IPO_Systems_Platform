@@ -1,13 +1,13 @@
 ---
-title: "Complete システムコールs 技術リファレンス"
-description: "Exhaustive reference of all 105 システムコールs in IPO_OS: call numbers, C signatures, x86 int 0x80 ABI registers, parameters, and error codes."
+title: "システムコール完全リファレンス"
+description: "IPO_OSの全139件のシステムコールの網羅的リファレンス：コール番号、Cシグネチャ、x86 int 0x80 ABIレジスタ、パラメータ、およびエラーコード。"
 ---
 
 import SharedSyscallTable from '../../../../components/SharedSyscallTable.astro';
 import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
 import Callout from '../../../../components/Callout.astro';
 
-# Complete システムコールs 技術リファレンス
+# システムコール完全リファレンス
 
 In **IPO_OS**, system calls serve as the primary protected gateway between processes and privileged kernel subsystem services in flat 32-bit Protected Mode. Syscalls are triggered via the x86 software interrupt gate `int 0x80` (IDT flags `0xEE`).
 
@@ -37,9 +37,9 @@ When `int 0x80` is triggered, the CPU transfers execution to IDT gate `0x80` (`s
 
 ## 📋 Comprehensive System Calls Table
 
-Below is the complete interactive list of all 140 registered system calls:
+以下は、登録されている全139件のシステムコールの完全なインタラクティブリストです：
 
-<SharedSyscallTable lang="ja" />
+<SharedSyscallTable />
 
 ---
 

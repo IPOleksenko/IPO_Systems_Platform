@@ -1,5 +1,5 @@
 ---
-import { getTranslation } from '../utils/i18n';
+import { getTranslation, detectLang } from '../utils/i18n';
 
 interface Props {
   type: 'note' | 'tip' | 'important' | 'warning' | 'caution' | 'beginners' | 'deep_dive';
@@ -7,7 +7,8 @@ interface Props {
   title?: string;
 }
 
-const { type = 'note', lang = 'en', title } = Astro.props;
+const { type = 'note', title } = Astro.props;
+const lang = detectLang(Astro.props.lang, Astro.url, Astro.params);
 
 const icons: Record<string, string> = {
   note: 'ℹ️',

@@ -1,11 +1,11 @@
 ---
-import { getTranslation } from '../utils/i18n';
+import { getTranslation, detectLang } from '../utils/i18n';
 
 interface Props {
-  lang: string;
+  lang?: string;
 }
 
-const { lang } = Astro.props;
+const lang = detectLang(Astro.props.lang, Astro.url, Astro.params);
 ---
 
 <div class="psu-calculator-widget">
@@ -28,8 +28,8 @@ const { lang } = Astro.props;
       <div class="calc-field">
         <label for="psu-ram">{getTranslation(lang, 'widgets.psu.ram_label')}</label>
         <select id="psu-ram">
-          <option value="10">2x SDRAM / DDR2 (10W)</option>
-          <option value="20" selected>4x DDR2 / DDR3 (20W)</option>
+          <option value="10">{getTranslation(lang, 'psu_labels.ram_opt1')}</option>
+          <option value="20" selected>{getTranslation(lang, 'psu_labels.ram_opt2')}</option>
         </select>
       </div>
 

@@ -8,10 +8,48 @@ export interface Artifact {
   name: string;
   category: string;
   description: string;
+  archive_group?: string;
+  download_group?: string;
+  archive_format?: string;
+  rom_size?: string;
+  rom_size_bytes?: number;
   size_bytes?: number;
   size_formatted: string;
   sha256: string;
   featured?: boolean;
+}
+
+export interface ArtifactGroup {
+  id: string;
+  artifacts: Artifact[];
+}
+
+const artifactTranslationKeys: Record<string, string> = {
+  'ipo-os-raw': 'artifact_labels.ipo_os_raw',
+  'ipo-disk-installed': 'artifact_labels.ipo_disk_installed',
+  'ipo-disk-clean': 'artifact_labels.ipo_disk_clean',
+  'ipo-applications': 'artifact_labels.ipo_applications',
+  'ipo-firmware': 'artifact_labels.ipo_firmware'
+};
+
+export function getArtifactTranslationKey(artifactId: string): string | undefined {
+  return artifactTranslationKeys[artifactId];
+}
+
+export function groupArtifacts(artifacts: Artifact[]): ArtifactGroup[] {
+  const groups = new Map<string, ArtifactGroup>();
+  for (const artifact of artifacts) {
+    const id = artifact.archive_group ?? artifact.download_group ?? artifact.id;
+    const group = groups.get(id) ?? { id, artifacts: [] };
+    group.artifacts.push(artifact);
+    groups.set(id, group);
+  }
+  return [...groups.values()];
+}
+
+export function getArtifactFormat(artifact: Artifact): string {
+  if (artifact.archive_format) return artifact.archive_format;
+  return artifact.file.split('.').pop()?.toUpperCase() ?? 'FILE';
 }
 
 export function formatBytes(bytes: number): string {
@@ -49,14 +87,27 @@ export function getRealArtifacts(): { artifacts: Artifact[]; buildDate: string }
 
   // Base fallback structure if manifest does not exist
   if (artifacts.length === 0) {
+    const bootromSizes = [
+      ['64k', '64 KB', 64 * 1024],
+      ['128k', '128 KB', 128 * 1024],
+      ['256k', '256 KB', 256 * 1024],
+      ['512k', '512 KB', 512 * 1024],
+      ['1m', '1 MB', 1024 * 1024],
+      ['2m', '2 MB', 2 * 1024 * 1024],
+      ['4m', '4 MB', 4 * 1024 * 1024],
+      ['8m', '8 MB', 8 * 1024 * 1024],
+      ['16m', '16 MB', 16 * 1024 * 1024]
+    ] as const;
     artifacts = [
       {
         id: 'ipo-system-bundle',
         file: 'ipo-system-bundle.zip',
         name: 'Complete IPO Systems Bundle (All Projects & Disks)',
         category: 'bundle',
+        archive_group: 'ipo-system-bundle',
+        archive_format: 'ZIP',
         featured: true,
-        description: 'All compiled binaries across the platform: Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), IPO_OS kernel image (IPO_OS.img), clean and pre-installed disks (disk-clean.img, disk-installed.img), and pre-compiled applications package (applications.zip).',
+        description: 'All compiled binaries across the platform: Boot ROM (bootrom.bin), Firmware (firmware.rom), IPO_OS kernel image (IPO_OS.img), clean and pre-installed disks (disk-clean.img, disk-installed.img), and pre-compiled applications package (applications.zip).',
         size_formatted: '0 B',
         sha256: 'Pre-compiled release'
       },
@@ -92,29 +143,49 @@ export function getRealArtifacts(): { artifacts: Artifact[]; buildDate: string }
         file: 'applications.zip',
         name: 'IPO_OS Compiled Applications Package',
         category: 'software',
+        archive_group: 'ipo-applications',
+        archive_format: 'ZIP',
         description: 'Compiled production binaries: applications, DOOM, in-OS toolchains (TCC, Lua, Python, NASM), runtime libraries (libc, libm, libapp, tinygl), SDK headers, and fonts.',
         size_formatted: '0 B',
         sha256: 'Pre-compiled release'
       },
-      {
-        id: 'ipo-boot-rom',
-        file: 'ipo-boot-rom.zip',
-        name: 'IPO_Boot_ROM Package',
+      ...bootromSizes.map(([slug, size, bytes]) => ({
+        id: `ipo-boot-rom-${slug}`,
+        file: `ipo-boot-rom${slug === '4m' ? '' : `-${slug}`}.bin`,
+        name: `IPO_Boot_ROM (${size})`,
         category: 'bootrom',
-        description: 'Compiled hardware reset vector 0xFFFFFFF0 ROM binary (bootrom.bin).',
-        size_formatted: '0 B',
+        download_group: 'ipo-boot-rom',
+        rom_size: size,
+        rom_size_bytes: bytes,
+        description: `IPO_Boot_ROM image sized for a ${size} flash chip.`,
+        size_bytes: bytes,
+        size_formatted: formatBytes(bytes),
         sha256: 'Pre-compiled release'
-      },
+      })),
       {
         id: 'ipo-firmware',
-        file: 'ipo-firmware.zip',
-        name: 'IPO_Firmware Package',
+        file: 'firmware.rom',
+        name: 'IPO_Firmware',
         category: 'firmware',
-        description: 'Compiled BIOS runtime service layer ROM binary (firmware.rom).',
+        description: 'Compiled IPO_Firmware runtime services ROM binary (firmware.rom).',
         size_formatted: '0 B',
         sha256: 'Pre-compiled release'
       }
     ];
+  }
+
+  const knownArchiveGroups: Record<string, string> = {
+    'ipo-system-bundle': 'ipo-system-bundle',
+    'ipo-applications': 'ipo-applications',
+  };
+  for (const artifact of artifacts) {
+    const format = ['tar.gz', 'tar.bz2', 'tar.xz'].find((extension) => artifact.file.endsWith(`.${extension}`))
+      ?? (artifact.file.endsWith('.zip') ? 'zip' : undefined);
+    const archiveGroup = artifact.archive_group ?? knownArchiveGroups[artifact.id];
+    if (format && archiveGroup) {
+      artifact.archive_group = archiveGroup;
+      artifact.archive_format ??= format.toUpperCase();
+    }
   }
 
   // Always enrich/override with real file size and sha256 directly from disk

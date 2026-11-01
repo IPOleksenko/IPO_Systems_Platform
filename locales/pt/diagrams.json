@@ -52,21 +52,21 @@
     "title": "IPO_OS Kernel Initialization Pipeline",
     "caption": "Transition from MBR bootloader through Protected Mode to the running kernel, filesystem mount, and interactive shell.",
     "labels": {
-      "mbr_stage1": "Stage 1 Bootloader (MBR Sector 0x7C00)",
-      "stage2_load": "Stage 2 Bootloader Loaded from Disk",
-      "prot_mode": "Enter 32-bit Protected Mode (GDT loaded, CR0 PE=1)",
-      "kernel_load": "Load Kernel ELF32 to Physical Address 0x10000",
-      "kernel_entry": "Kernel Entry (_start in linker.ld)",
-      "mm_init": "Physical Memory Manager & Kernel Heap (kmalloc)",
-      "idt_init": "Interrupt Descriptor Table (IDT) & Syscall Gate (0x80)",
-      "fs_mount": "Mount Root File System (IPO_FS Partition at LBA 2048)",
-      "drivers_init": "Init Drivers (ATA, Keyboard, Mouse, RTL8139, VBE/WM)",
-      "launch_shell": "Spawn Initial Process (/applications/shell.bin)"
+      "mbr_stage1": "Carregador de inicialização de primeira etapa (setor MBR 0x7C00)",
+      "stage2_load": "Carregamento do carregador de segunda etapa a partir do disco",
+      "prot_mode": "Entrada no modo protegido de 32 bits (GDT carregada, CR0 PE=1)",
+      "kernel_load": "Carregamento do kernel ELF32 no endereço físico 0x10000",
+      "kernel_entry": "Ponto de entrada do kernel (_start em linker.ld)",
+      "mm_init": "Mapa de memória E820 e heap do kernel de 64 MB (kmalloc: 0x01000000–0x04FFFFFF)",
+      "idt_init": "IDT, PIC/APIC, detecção SMP e porta de chamadas do sistema (0x80)",
+      "fs_mount": "Montagem do sistema de arquivos raiz (partição IPO_FS no LBA 2048)",
+      "drivers_init": "Camada de blocos, ATA, Storage Pool + WAL, KMOD e registro de dispositivos",
+      "launch_shell": "Inicialização do terminal interativo e do console serial"
     }
   },
   "memory_map": {
     "title": "IPO_OS Physical & Virtual Memory Layout",
-    "caption": "Map of memory zones: Real-mode legacy tables, kernel space at 64 KB, and userspace applications at 8 MB.",
+    "caption": "Mapa das zonas de memória: tabelas legadas do modo real, kernel em 64 KB, aplicações de usuário em 8 MB (0x00800000) e heap do kernel de 64 MB a partir de 16 MB (0x01000000).",
     "labels": {
       "ivt_bda": "0x00000 - 0x004FF: IVT (1 KB) & BDA (256 B)",
       "free_conv": "0x00500 - 0x07BFF: Scratch RAM & Stacks",
@@ -74,7 +74,7 @@
       "kernel_bin": "0x10000 - 0x7FFFF: IPO_OS Kernel Core (.text, .data, .bss)",
       "video_ram": "0xA0000 - 0xBFFFF: Video Framebuffer (VGA Text 0xB8000)",
       "ebda_rom": "0xC0000 - 0xFFFFF: VBIOS, Shadow RAM & ROM Firmware",
-      "kernel_heap": "0x100000 - 0x7FFFFF: Extended Memory & Kernel kmalloc Pool",
+      "kernel_heap": "0x01000000 - 0x04FFFFFF: heap kmalloc do kernel (64 MB) e PMM / sbrk",
       "user_apps": "0x800000+: Userspace Applications (Entry at 0x800000)"
     }
   },
@@ -98,7 +98,18 @@
       "superblock": "LBA 2048: Superblock ('IPO_FS\\0\\0', Block Size, Pointers)",
       "inode_bitmap": "Block Bitmap / Inode Bitmap (Allocation Tracking)",
       "inode_table": "Inode Table (128 bytes per inode, 4 inodes / block)",
-      "data_blocks": "Data Extent Pool (Contiguous Multi-Block Extents)"
+      "data_blocks": "Data Extent Pool (Contiguous Multi-Block Extents)",
+      "mbr_title": "MBR / Pool+WAL",
+      "mbr_lba": "LBA 0..2047",
+      "wal_lba": "(WAL 2030..2039)",
+      "superblock_title": "Superbloco",
+      "superblock_lba": "LBA 2048",
+      "bitmap_title": "Mapas de bits",
+      "bitmap_desc": "Inodes + blocos",
+      "inode_table_title": "Tabela de inodes",
+      "inode_table_desc": "128 B por inode",
+      "data_extents_title": "Extensões de dados",
+      "contiguous_blocks": "Blocos contíguos"
     }
   },
   "pc_assembly_flow": {

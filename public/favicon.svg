@@ -40,7 +40,7 @@
   <path d="M50 43 L32 52 L32 55.5 L50 46.5 Z" fill="#78350F" />
   <path d="M32 34 L50 43 L32 52 L14 43 Z" fill="url(#romTop)" />
 
-  <!-- LAYER 2: Firmware BIOS (Middle Service Tier) -->
+  <!-- LAYER 2: Firmware (Middle Service Tier) -->
   <path d="M14 29 L32 38 L32 41.5 L14 32.5 Z" fill="#0E7490" />
   <path d="M50 29 L32 38 L32 41.5 L50 32.5 Z" fill="#155E75" />
   <path d="M32 20 L50 29 L32 38 L14 29 Z" fill="url(#fwTop)" />

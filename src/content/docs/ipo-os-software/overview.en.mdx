@@ -9,7 +9,7 @@ import Callout from '../../../components/Callout.astro';
 
 **IPO_OS_Software** is the dedicated userland runtime ecosystem, application suite, and developer toolkit for the **[IPO_OS](https://github.com/IPOleksenko/IPO_OS)** operating system. It provides standard C/C++ runtimes, 3D graphics libraries, windowing interfaces, in-OS compilers, interpreters, ported applications, and disk deployment tools.
 
-<Callout type="tip" lang="en" title="Modular Separation">
+<Callout type="tip" title="Modular Separation">
 IPO_OS is purely dedicated to kernel architecture, bare-metal hardware drivers, memory management, and process scheduling. All userspace programs, standard libraries, compilers, and virtual disk population tools reside in **IPO_OS_Software**.
 </Callout>
 
@@ -71,4 +71,3 @@ IPO_OS and IPO_OS_Software provide two flexible distribution models for develope
 - **`tools/load_applications.py`:** Automates loading compiled binaries onto an IPO_FS disk partition.
 - **`tools/disk_editor.py`:** Full-featured command-line file manager to inspect, extract, upload, and delete files inside an `IPO_FS` disk image.
 - **`load_to_disk.sh`:** A convenience shell wrapper to format and populate any target disk in a single command.
-

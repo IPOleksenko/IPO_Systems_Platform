@@ -20,19 +20,14 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
 const homeUrl = `${cleanBase}${currentLang}/`;
 
 let currentUrl = siteConfig.author.profileUrl;
-let currentName = siteConfig.author.name;
 if (currentSlug.startsWith('ipo-os-software')) {
   currentUrl = siteConfig.projects.ipo_os_software.repoUrl;
-  currentName = siteConfig.projects.ipo_os_software.name;
 } else if (currentSlug.startsWith('ipo-os')) {
   currentUrl = siteConfig.projects.ipo_os.repoUrl;
-  currentName = siteConfig.projects.ipo_os.name;
 } else if (currentSlug.startsWith('ipo-boot-rom')) {
   currentUrl = siteConfig.projects.ipo_boot_rom.repoUrl;
-  currentName = siteConfig.projects.ipo_boot_rom.name;
 } else if (currentSlug.startsWith('ipo-firmware')) {
   currentUrl = siteConfig.projects.ipo_firmware.repoUrl;
-  currentName = siteConfig.projects.ipo_firmware.name;
 }
 ---
 
@@ -40,7 +35,7 @@ if (currentSlug.startsWith('ipo-os-software')) {
   <div class="header-inner">
     <div class="header-left">
       {hasSidebar && (
-        <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle navigation" aria-expanded="false">
+        <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label={getTranslation(currentLang, 'interface.toggle_navigation')} aria-expanded="false">
           ☰
         </button>
       )}
@@ -50,7 +45,7 @@ if (currentSlug.startsWith('ipo-os-software')) {
       </a>
     </div>
 
-    <nav class="header-nav" aria-label="Main Projects">
+    <nav class="header-nav" aria-label={getTranslation(currentLang, 'interface.main_projects')}>
       <a href={`${cleanBase}${currentLang}/ipo-os/overview`} class={`nav-item ${(currentSlug.startsWith('ipo-os/') || currentSlug === 'ipo-os') && !currentSlug.startsWith('ipo-os-software') ? 'active' : ''}`}>
         IPO_OS
       </a>
@@ -70,7 +65,7 @@ if (currentSlug.startsWith('ipo-os-software')) {
       <DownloadModal lang={currentLang} />
       <LanguageSwitcher currentLang={currentLang} currentSlug={currentSlug} />
       <ThemeToggle lang={currentLang} />
-      <a href={currentUrl} target="_blank" rel="noopener noreferrer" class="github-link" title={`GitHub - ${currentName}`} aria-label={`GitHub - ${currentName}`}>
+      <a href={currentUrl} target="_blank" rel="noopener noreferrer" class="github-link" title={getTranslation(currentLang, 'interface.open_github')} aria-label={getTranslation(currentLang, 'interface.open_github')}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
         </svg>
@@ -165,7 +160,7 @@ if (currentSlug.startsWith('ipo-os-software')) {
     font-weight: 700;
     font-size: clamp(0.85rem, 1.8vw + 0.35rem, 1.15rem);
     min-width: 0;
-    flex-shrink: 1;
+    flex: 0 1 auto;
   }
 
   .brand-link:hover {
@@ -173,11 +168,9 @@ if (currentSlug.startsWith('ipo-os-software')) {
   }
 
   .brand-title {
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: block;
+    white-space: normal;
+    line-height: 1.15;
     min-width: 0;
   }
 
@@ -222,11 +215,36 @@ if (currentSlug.startsWith('ipo-os-software')) {
     font-weight: 600;
   }
 
+  @media (max-width: 1400px) and (min-width: 1025px) {
+    .header-nav {
+      gap: 0.6rem;
+    }
+
+    .nav-item {
+      padding-inline: 0.3rem;
+      font-size: 0.84rem;
+    }
+  }
+
+  @media (max-width: 1400px) and (min-width: 1025px) {
+    :global(.search-placeholder),
+    :global(.downloads-btn-text),
+    :global(.lang-current-label) {
+      display: none;
+    }
+
+    :global(.search-trigger),
+    :global(.downloads-trigger),
+    :global(.lang-trigger) {
+      padding-inline: 0.5rem;
+    }
+  }
+
   .header-right {
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    flex-shrink: 0;
+    flex: 0 0 auto;
   }
 
   @media (max-width: 640px) {
@@ -238,6 +256,15 @@ if (currentSlug.startsWith('ipo-os-software')) {
   @media (max-width: 420px) {
     .header-right {
       gap: 0.2rem;
+    }
+
+    .brand-link {
+      font-size: 0.78rem;
+      gap: 0.25rem;
+    }
+
+    .brand-title {
+      max-width: 6rem;
     }
   }
 

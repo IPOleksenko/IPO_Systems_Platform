@@ -14,7 +14,7 @@ Storage in IPO_OS is managed through a Virtual File System (VFS) layer backed by
 
 ## 🗄️ IPO_FS Partition Layout
 
-<LocalizedDiagram id="fs_layout" lang="de" figureNum={7} />
+<LocalizedDiagram id="fs_layout" figureNum={7} />
 
 ---
 
@@ -22,7 +22,7 @@ Storage in IPO_OS is managed through a Virtual File System (VFS) layer backed by
 
 The filesystem begins with a 64-byte superblock header located at LBA 2048:
 
-<SharedStruct id="ipo_superblock" lang="de" />
+<SharedStruct id="ipo_superblock" />
 
 ---
 
@@ -30,7 +30,7 @@ The filesystem begins with a 64-byte superblock header located at LBA 2048:
 
 Each file or directory is represented by a compact **128-byte inode** (packed 4 inodes per 512-byte block):
 
-<SharedStruct id="ipo_inode" lang="de" />
+<SharedStruct id="ipo_inode" />
 
 ### Extent-Based Allocation Mechanism
 Unlike traditional filesystems that use multi-level pointer blocks (indirect blocks) which require multiple seeks per read, `IPO_FS` uses contiguous **extents**:
@@ -85,7 +85,7 @@ Pool metadata is stored in the reserved sectors immediately preceding the `IPO_F
 | **`LBA 2031–2038`** | 4 KB (8 sectors) | `storage_raw_disk_tx_entry_t[64]` | **Write-Ahead Logging (WAL) Journal**: 64 entries of 64 bytes (`magic = 0x54584E4C` `'TXNL'`, states `INIT` → `PENDING` → `COMMITTED`) |
 | **`LBA 2039`** | 512 B (1 sector) | `storage_pool_raw_sb_t` | **Backup Pool Superblock** for automatic failover and recovery if LBA 2030 is corrupted |
 
-<SharedStruct id="storage_pool_raw_sb" lang="de" />
+<SharedStruct id="storage_pool_raw_sb" />
 
 ### 2. Write-Ahead Logging (WAL) & Crash Recovery
 Every block write through `storage_pool_write_blocks()` is bracketed by an atomic WAL journal transaction (LBA 2031–2038):
@@ -94,7 +94,7 @@ Every block write through `storage_pool_write_blocks()` is bracketed by an atomi
 3. The WAL entry is updated to `STORAGE_TX_COMMITTED`, the superblock `generation` counter is incremented, and the device is flushed.
 4. During boot or `storage_pool_recover()`, the kernel validates the primary superblock CRC32 (failing over to LBA 2039 if needed) and scans the WAL journal, automatically rolling back any interrupted `PENDING` transactions.
 
-<SharedStruct id="storage_raw_disk_tx_entry" lang="de" />
+<SharedStruct id="storage_raw_disk_tx_entry" />
 
 ### 3. Shell Management (`storage`) & `statvfs` Syscall
 System call `IPO_SYSCALL_FS_STATVFS` (`0x1064`) exposes live filesystem capacity metrics to user applications, while the built-in `storage` shell command manages the pool interactively:

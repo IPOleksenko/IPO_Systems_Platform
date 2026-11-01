@@ -13,7 +13,7 @@ const base = siteConfig.base;
 const cleanBase = base.endsWith('/') ? base : `${base}/`;
 ---
 
-<aside class="sidebar" id="docs-sidebar" aria-label="Documentation Navigation">
+<aside class="sidebar" id="docs-sidebar" aria-label={getTranslation(currentLang, 'interface.documentation_navigation')}>
   <div class="sidebar-inner">
     <div class="sidebar-quick-links">
       <a href={`${cleanBase}${currentLang}/downloads`} class={`sidebar-download-link ${currentSlug === 'downloads' ? 'active' : ''}`}>

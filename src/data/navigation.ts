@@ -175,6 +175,16 @@ export function getAllSlugs(): string[] {
   return slugs;
 }
 
+export function getPageTitleKey(currentSlug: string): string | undefined {
+  for (const project of navigationData) {
+    for (const group of project.groups) {
+      const item = group.items.find((entry) => entry.slug === currentSlug);
+      if (item) return item.titleKey;
+    }
+  }
+  return undefined;
+}
+
 export function getAdjacentPages(currentSlug: string): { prev?: NavItem; next?: NavItem } {
   const allItems: NavItem[] = [];
   for (const p of navigationData) {

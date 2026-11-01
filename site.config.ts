@@ -72,7 +72,7 @@ export const siteConfig: SiteConfig = {
       taglineKey: 'projects.ipo_firmware.tagline',
       descriptionKey: 'projects.ipo_firmware.description',
       repoUrl: 'https://github.com/IPOleksenko/IPO_Firmware',
-      badge: 'BIOS Service Layer',
+      badge: 'Firmware',
       icon: 'hard-drive',
       accentColor: '#8b5cf6'
     },

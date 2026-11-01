@@ -1,7 +1,6 @@
 ---
 import { sharedStructTables } from '../data/shared-code';
-import { getTranslation, getStructLocale } from '../utils/i18n';
-import { siteConfig } from '../../site.config';
+import { getTranslation, getStructLocale, formatByteSize, detectLang } from '../utils/i18n';
 
 interface Props {
   id: string;
@@ -9,9 +8,7 @@ interface Props {
 }
 
 const { id, lang } = Astro.props;
-const currentPath = Astro.url.pathname;
-const pathSegments = currentPath.split('/').filter(Boolean);
-const detectedLang = lang || pathSegments.find((s) => s in siteConfig.languages) || siteConfig.defaultLang;
+const detectedLang = detectLang(lang, Astro.url, Astro.params);
 const table = sharedStructTables.find((t) => t.id === id);
 
 if (!table) {
@@ -20,12 +17,13 @@ if (!table) {
 
 const structLocale = getStructLocale(detectedLang, id);
 const title = structLocale.title;
+const totalSize = structLocale.totalSize ?? formatByteSize(detectedLang, table.totalSize);
 ---
 
 <div class="struct-table-wrapper" id={`struct-${id}`}>
   <div class="struct-header">
     <span class="struct-title">📊 {title}</span>
-    <span class="struct-badge">{table.totalSize}</span>
+    <span class="struct-badge">{totalSize}</span>
   </div>
   <table>
     <thead>
@@ -41,7 +39,7 @@ const title = structLocale.title;
       {table.fields.map((f) => (
         <tr>
           <td><code>{f.offset}</code></td>
-          <td>{f.size}</td>
+          <td>{formatByteSize(detectedLang, f.size)}</td>
           <td><code>{f.type}</code></td>
           <td><strong><code>{f.name}</code></strong></td>
           <td>{structLocale.fields[f.name] ?? ''}</td>

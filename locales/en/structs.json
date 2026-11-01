@@ -1,6 +1,7 @@
 {
   "ipo_superblock": {
     "title": "IPO_FS Superblock Structure (LBA 2048)",
+    "totalSize": "64 bytes (Header of 512-byte block)",
     "fields": {
       "magic": "Magic signature (\"IPO_FS\\0\\0\")",
       "fs_size_blocks": "Total 512-byte blocks in storage pool",
@@ -15,6 +16,7 @@
   },
   "ipo_inode": {
     "title": "IPO_FS Inode Structure (128 bytes, 4 per block)",
+    "totalSize": "128 bytes",
     "fields": {
       "mode": "File type (0x1=Dir, 0x2=File, 0x80000000=Protected)",
       "links_count": "Number of active hard links",
@@ -26,6 +28,7 @@
   },
   "ipo_extent": {
     "title": "IPO_FS Extent Descriptor (24 bytes)",
+    "totalSize": "24 bytes",
     "fields": {
       "logical_block": "Starting logical block inside file",
       "physical_block": "Starting physical LBA block in storage pool",
@@ -35,6 +38,7 @@
   },
   "storage_pool_raw_sb": {
     "title": "Storage Pool Superblock (storage_pool_raw_sb_t, LBA 2030 & 2039)",
+    "totalSize": "512 bytes (68 B header + flexible members[] + CRC32)",
     "fields": {
       "magic": "Pool magic signature (0x504F4F4C \"POOL\")",
       "version": "Superblock format version (2)",
@@ -52,6 +56,7 @@
   },
   "storage_raw_disk_tx_entry": {
     "title": "Storage Pool WAL Journal Entry (storage_raw_disk_tx_entry_t, LBA 2031–2038)",
+    "totalSize": "64 bytes (8 entries per 512-byte sector, 64 entries total)",
     "fields": {
       "magic": "Journal entry signature (0x54584E4C \"TXNL\")",
       "tx_id": "Monotonic transaction identifier",
@@ -67,6 +72,7 @@
   },
   "kmod_header": {
     "title": "Relocatable Kernel Module Header (kmod_raw_header_t / kmod_header_t)",
+    "totalSize": "192 bytes (0xC0 on-disk raw) / Dynamic pointers in RAM",
     "fields": {
       "magic": "Module magic signature (0x444D4B49 \"IKMD\")",
       "abi_version": "Kernel Module ABI version (0x0100 = v1.0)",
@@ -85,6 +91,7 @@
   },
   "cpu_info": {
     "title": "Per-CPU SMP Descriptor (cpu_info_t)",
+    "totalSize": "24 bytes",
     "fields": {
       "cpu_id": "Logical processor core ID (0 = BSP, 1..N = AP)",
       "lapic_id": "Hardware Local APIC physical ID",
@@ -97,6 +104,7 @@
   },
   "process_pcb": {
     "title": "Process Descriptor Structure (process_t)",
+    "totalSize": "372 bytes (0x174)",
     "fields": {
       "pid": "Unique process ID (allocated dynamically starting from 1)",
       "binary_base": "Base address of loaded executable image in allocated memory block (mem)",
@@ -154,6 +162,7 @@
   },
   "device_node": {
     "title": "Unified Hardware Device Node (device_node_t)",
+    "totalSize": "148 bytes (0x94) with dynamic strings & self-expanding BAR array (src/include/kernel/device.h)",
     "fields": {
       "id": "Unique system-wide device ID",
       "parent_id": "Parent bus/controller device ID (0 if root)",
@@ -169,6 +178,7 @@
   },
   "kmalloc_stats": {
     "title": "Kernel Heap Allocator Statistics (kmalloc_stats_t)",
+    "totalSize": "28 bytes",
     "fields": {
       "heap_total": "Total kernel heap capacity in bytes (64 MB / 0x04000000)",
       "heap_used": "Bytes consumed by high-watermark with headers",
@@ -181,6 +191,7 @@
   },
   "ata_device": {
     "title": "ATA Storage Device Information (ata_device_t)",
+    "totalSize": "44 bytes (0x2C)",
     "fields": {
       "present": "1 if device detected, 0 if absent",
       "channel": "IDE Channel (0 = Primary, 1 = Secondary)",
@@ -201,6 +212,7 @@
   },
   "ipo_idt_entry": {
     "title": "x86 Interrupt Descriptor Gate (ipo_idt_entry_t)",
+    "totalSize": "8 bytes",
     "fields": {
       "base_lo": "Lower 16 bits of ISR entrypoint address",
       "selector": "Kernel code segment selector (0x08)",
@@ -211,6 +223,7 @@
   },
   "bootrom_post_codes": {
     "title": "Port 0x80 POST Diagnostic Codes (IPO_Boot_ROM)",
+    "totalSize": "8-bit Diagnostic Port 0x80",
     "fields": {
       "POST_RESET_VECTOR": "CPU reset vector reached (0xFFFFFFF0)",
       "POST_ROM_INIT_ENTRY": "Entered Boot_ROM init code (0xF000:8000)",
@@ -231,6 +244,7 @@
   },
   "firmware_post_codes": {
     "title": "Port 0x80 POST Diagnostic Codes (IPO_Firmware)",
+    "totalSize": "8-bit Diagnostic Port 0x80",
     "fields": {
       "FW_ENTRY": "Firmware entry point reached (0xF000:0004)",
       "FW_PCI_ENUM_DONE": "PCI bus enumeration completed",

@@ -1,0 +1,226 @@
+---
+import type { Artifact } from '../utils/artifacts';
+import { getArtifactFormat } from '../utils/artifacts';
+import { getTranslation } from '../utils/i18n';
+
+interface Props {
+  artifacts: Artifact[];
+  lang: string;
+  downloadsBase: string;
+  actionText?: string;
+}
+
+const { artifacts, lang, downloadsBase, actionText } = Astro.props;
+const options = artifacts.map((artifact) => ({
+  file: artifact.file,
+  format: getArtifactFormat(artifact),
+  romSize: artifact.rom_size,
+  romSizeBytes: artifact.rom_size_bytes,
+  size: artifact.size_formatted,
+  sha256: artifact.sha256
+}));
+const sizes = [...new Map(
+  options
+    .filter((option) => option.romSize)
+    .map((option) => [option.romSize!, { label: option.romSize!, bytes: option.romSizeBytes ?? 0 }])
+).values()].sort((a, b) => a.bytes - b.bytes);
+const formats = [...new Set(options.map((option) => option.format))];
+const defaultSize = sizes.find((size) => size.label === '4 MB')?.label ?? sizes[0]?.label;
+const defaultFormat = formats.includes('ZIP') ? 'ZIP' : formats[0] ?? '';
+const initialOption = options.find((option) =>
+  option.format === defaultFormat && (!option.romSize || option.romSize === defaultSize)
+) ?? options[0];
+---
+
+{initialOption && (
+  <div class="archive-options" data-options={JSON.stringify(options)} data-downloads-base={downloadsBase}>
+    <div class="archive-options-fields">
+      {sizes.length > 0 && (
+        <label class="archive-options-field">
+          <span>{getTranslation(lang, 'downloads.choose_rom_size')}</span>
+          <select data-rom-size>
+            {sizes.map((size) => (
+              <option value={size.label} selected={size.label === defaultSize}>{size.label}</option>
+            ))}
+          </select>
+        </label>
+      )}
+      {formats.length > 1 && (
+        <label class="archive-options-field">
+          <span>{getTranslation(lang, 'downloads.choose_archive')}</span>
+          <select data-archive-format>
+            {formats.map((format) => (
+              <option value={format} selected={format === defaultFormat}>{format}</option>
+            ))}
+          </select>
+        </label>
+      )}
+    </div>
+    <div class="archive-options-action">
+      <span class="archive-options-meta" data-option-meta title={`SHA256: ${initialOption.sha256}`}>
+        {initialOption.size} · SHA256: {initialOption.sha256.slice(0, 12)}...
+      </span>
+      <a
+        class="archive-options-download"
+        data-option-download
+        href={`${downloadsBase}${encodeURIComponent(initialOption.file)}`}
+        download={initialOption.file}
+      >
+        {actionText ?? getTranslation(lang, 'downloads.download_selected')}
+      </a>
+    </div>
+  </div>
+)}
+
+<style>
+  .archive-options {
+    display: grid;
+    gap: 0.7rem;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .archive-options-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+    gap: 0.65rem;
+  }
+
+  .archive-options-field {
+    display: grid;
+    gap: 0.3rem;
+    min-width: 0;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    font-weight: 650;
+  }
+
+  .archive-options-field select {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.45rem;
+    padding: 0.5rem 2rem 0.5rem 0.65rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .archive-options-field select:focus-visible,
+  .archive-options-download:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+  }
+
+  .archive-options-action {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .archive-options-meta {
+    min-width: 0;
+    flex: 1;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .archive-options-download {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-height: 2.45rem;
+    padding: 0.55rem 0.9rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    background: var(--accent-primary);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .archive-options-download:hover {
+    background: var(--accent-primary-hover);
+    transform: translateY(-1px);
+  }
+
+  .archive-options-download[aria-disabled='true'] {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  @media (max-width: 420px) {
+    .archive-options-action {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .archive-options-download {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  interface ArchiveOption {
+    file: string;
+    format: string;
+    romSize?: string;
+    size: string;
+    sha256: string;
+  }
+
+  document.addEventListener('change', (event) => {
+    const changed = event.target;
+    if (!(changed instanceof HTMLSelectElement)) return;
+    const container = changed.closest<HTMLElement>('.archive-options');
+    if (!container) return;
+
+    const options = JSON.parse(container.dataset.options || '[]') as ArchiveOption[];
+    const sizeSelect = container.querySelector<HTMLSelectElement>('[data-rom-size]');
+    const formatSelect = container.querySelector<HTMLSelectElement>('[data-archive-format]');
+    const meta = container.querySelector<HTMLElement>('[data-option-meta]');
+    const download = container.querySelector<HTMLAnchorElement>('[data-option-download]');
+    if (!meta || !download) return;
+
+    const size = sizeSelect?.value;
+    const availableFormats = [...new Set(options
+      .filter((option) => !option.romSize || option.romSize === size)
+      .map((option) => option.format))];
+    if (formatSelect && !availableFormats.includes(formatSelect.value)) {
+      formatSelect.value = availableFormats[0] ?? '';
+    }
+    const format = formatSelect?.value ?? availableFormats[0] ?? '';
+
+    const selected = options.find((option) =>
+      option.format === format && (!option.romSize || option.romSize === size)
+    );
+    if (!selected) {
+      download.removeAttribute('href');
+      download.removeAttribute('download');
+      download.setAttribute('aria-disabled', 'true');
+      meta.textContent = '';
+      meta.removeAttribute('title');
+      return;
+    }
+
+    const downloadsBase = container.dataset.downloadsBase || '/downloads/';
+    download.href = `${downloadsBase}${encodeURIComponent(selected.file)}`;
+    download.download = selected.file;
+    download.removeAttribute('aria-disabled');
+    meta.textContent = `${selected.size} · SHA256: ${selected.sha256.slice(0, 12)}...`;
+    meta.title = `SHA256: ${selected.sha256}`;
+  });
+</script>

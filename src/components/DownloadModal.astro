@@ -1,7 +1,8 @@
 ---
 import { siteConfig } from '../../site.config';
 import { getTranslation } from '../utils/i18n';
-import { getRealArtifacts, type Artifact } from '../utils/artifacts';
+import { getArtifactFormat, getArtifactTranslationKey, getRealArtifacts, groupArtifacts } from '../utils/artifacts';
+import ArchiveDownloadOptions from './ArchiveDownloadOptions.astro';
 
 interface Props {
   lang: string;
@@ -14,9 +15,10 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
 const downloadsBase = `${cleanBase}downloads/`;
 
 const { artifacts } = getRealArtifacts();
-
-const featuredArtifact = artifacts.find(a => a.featured) || artifacts[0];
-const otherArtifacts = artifacts.filter(a => a.id !== featuredArtifact.id);
+const artifactGroups = groupArtifacts(artifacts);
+const featuredGroup = artifactGroups.find((group) => group.artifacts.some((artifact) => artifact.featured)) ?? artifactGroups[0];
+const featuredArtifact = featuredGroup?.artifacts.find((artifact) => artifact.featured) ?? featuredGroup?.artifacts[0];
+const otherArtifactGroups = artifactGroups.filter((group) => group.id !== featuredGroup?.id);
 ---
 
 <div class="downloads-wrapper">
@@ -49,7 +51,7 @@ const otherArtifacts = artifacts.filter(a => a.id !== featuredArtifact.id);
             </p>
           </div>
         </div>
-        <button type="button" class="dialog-close" id="close-downloads-btn" aria-label="Close dialog">✕</button>
+        <button type="button" class="dialog-close" id="close-downloads-btn" aria-label={getTranslation(lang, 'interface.close_dialog')}>✕</button>
       </div>
 
       <div class="dialog-body">
@@ -67,26 +69,16 @@ const otherArtifacts = artifacts.filter(a => a.id !== featuredArtifact.id);
                 <p class="featured-desc">
                   {getTranslation(lang, 'downloads.featured_desc')}
                 </p>
-                <div class="artifact-meta">
-                  <span class="meta-tag size-tag">💾 {featuredArtifact.size_formatted}</span>
-                  <span class="meta-tag hash-tag" title={featuredArtifact.sha256}>
-                    SHA256: {featuredArtifact.sha256.substring(0, 10)}...
-                  </span>
-                </div>
               </div>
               <div class="featured-action">
-                <a 
-                  href={`${downloadsBase}${featuredArtifact.file}`} 
-                  download={featuredArtifact.file}
-                  class="btn-download primary"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                  <span>{getTranslation(lang, 'downloads.download_bundle')}</span>
-                </a>
+                {featuredGroup?.artifacts.some((artifact) => artifact.archive_group) && (
+                  <ArchiveDownloadOptions
+                    artifacts={featuredGroup.artifacts}
+                    lang={lang}
+                    downloadsBase={downloadsBase}
+                    actionText={getTranslation(lang, 'downloads.download_bundle')}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -98,36 +90,51 @@ const otherArtifacts = artifacts.filter(a => a.id !== featuredArtifact.id);
         </h4>
 
         <div class="artifacts-grid">
-          {otherArtifacts.map((art) => (
+          {otherArtifactGroups.map((group) => {
+            const art = group.artifacts[0];
+            const formats = [...new Set(group.artifacts.map(getArtifactFormat))];
+            const artifactKey = getArtifactTranslationKey(art.id);
+            const artifactName = art.category === 'bootrom'
+              ? 'IPO_Boot_ROM'
+              : artifactKey
+                ? getTranslation(lang, `${artifactKey}.name`)
+                : art.name;
+            const artifactDescription = art.category === 'bootrom'
+              ? getTranslation(lang, 'downloads.bootrom_binary_description')
+              : artifactKey
+                ? getTranslation(lang, `${artifactKey}.description`)
+                : art.description;
+            return (
             <div class="artifact-card">
               <div class="card-top">
                 <div class="card-icon">
                   {art.category === 'os' ? '🖥️' : (art.category === 'bootrom' ? '⚡' : (art.category === 'software' ? '📦' : '💾'))}
                 </div>
                 <div class="card-header-info">
-                  <h5 class="card-name">{art.name}</h5>
-                  <span class="card-size">{art.size_formatted}</span>
+                  <h5 class="card-name">{artifactName}</h5>
+                  <span class="card-size">{formats.join(' · ') || art.size_formatted}</span>
                 </div>
               </div>
-              <p class="card-desc">{art.description}</p>
+              <p class="card-desc">
+                {artifactDescription}
+              </p>
               <div class="card-bottom">
-                <span class="card-filename">{art.file}</span>
-                <a 
-                  href={`${downloadsBase}${art.file}`} 
-                  download={art.file}
-                  class="btn-download secondary"
-                  title={`Download ${art.file}`}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                  <span>{getTranslation(lang, 'downloads.download_btn')}</span>
-                </a>
+                {art.archive_group || group.artifacts.length > 1 ? (
+                  <ArchiveDownloadOptions
+                    artifacts={group.artifacts}
+                    lang={lang}
+                    downloadsBase={downloadsBase}
+                    actionText={getTranslation(lang, 'downloads.download_btn')}
+                  />
+                ) : (
+                  <a href={`${downloadsBase}${art.file}`} download={art.file} class="btn-download secondary">
+                    {getTranslation(lang, 'downloads.download_btn')}
+                  </a>
+                )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
       </div>
@@ -326,10 +333,20 @@ const otherArtifacts = artifacts.filter(a => a.id !== featuredArtifact.id);
     margin-top: 0.25rem;
   }
 
+  .featured-action {
+    flex: 0 1 19rem;
+    min-width: min(100%, 15rem);
+  }
+
   @media (max-width: 640px) {
     .featured-main {
       flex-direction: column;
       align-items: stretch;
+    }
+
+    .featured-action {
+      width: 100%;
+      flex-basis: auto;
     }
   }
 
@@ -347,26 +364,6 @@ const otherArtifacts = artifacts.filter(a => a.id !== featuredArtifact.id);
     line-height: 1.45;
   }
 
-  .artifact-meta {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-
-  .meta-tag {
-    font-size: 0.75rem;
-    padding: 0.2rem 0.5rem;
-    border-radius: var(--radius-sm);
-    background-color: var(--bg-tertiary);
-    color: var(--text-secondary);
-    font-family: var(--font-mono, monospace);
-  }
-
-  .size-tag {
-    font-weight: 600;
-    color: var(--accent-primary);
-  }
-
   .btn-download {
     display: inline-flex;
     align-items: center;
@@ -379,11 +376,14 @@ const otherArtifacts = artifacts.filter(a => a.id !== featuredArtifact.id);
     transition: all 0.15s ease;
     white-space: nowrap;
     justify-content: center;
+    font-family: inherit;
+    cursor: pointer;
   }
 
   .btn-download.primary {
     background-color: var(--accent-primary);
     color: #ffffff;
+    border: 0;
   }
 
   .btn-download.primary:hover {
@@ -441,10 +441,6 @@ const otherArtifacts = artifacts.filter(a => a.id !== featuredArtifact.id);
       align-items: stretch;
       gap: 0.5rem;
     }
-    .card-bottom .btn-download {
-      width: 100%;
-      justify-content: center;
-    }
   }
 
   .artifact-card {
@@ -494,19 +490,11 @@ const otherArtifacts = artifacts.filter(a => a.id !== featuredArtifact.id);
 
   .card-bottom {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     gap: 0.5rem;
     padding-top: 0.5rem;
     border-top: 1px solid var(--border-color);
-  }
-
-  .card-filename {
-    font-size: 0.75rem;
-    font-family: var(--font-mono, monospace);
-    color: var(--text-muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 </style>
 

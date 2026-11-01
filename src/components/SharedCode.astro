@@ -1,21 +1,22 @@
 ---
 import { sharedCodeSnippets } from '../data/shared-code';
-import { getTranslation } from '../utils/i18n';
+import { getTranslation, getOptionalTranslation, detectLang } from '../utils/i18n';
 
 interface Props {
   id: string;
-  lang: string;
+  lang?: string;
   titleOverride?: string;
 }
 
-const { id, lang, titleOverride } = Astro.props;
+const { id, titleOverride } = Astro.props;
+const lang = detectLang(Astro.props.lang, Astro.url, Astro.params);
 const snippet = sharedCodeSnippets[id];
 
 if (!snippet) {
   throw new Error(`SharedCode snippet not found for ID: ${id}`);
 }
 
-const displayTitle = titleOverride || snippet.title;
+const displayTitle = titleOverride || getOptionalTranslation(lang, `snippets.${id}`) || snippet.title;
 const copyText = getTranslation(lang, 'ui.copy');
 const copiedText = getTranslation(lang, 'ui.copied');
 ---

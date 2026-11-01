@@ -1,6 +1,7 @@
 {
   "ipo_superblock": {
-    "title": "IPO_FS Superblock Structure (LBA 2048)",
+    "totalSize": "64 バイト（512 バイトブロックのヘッダー）",
+    "title": "IPO_FS スーパーブロック構造 (LBA 2048)",
     "fields": {
       "magic": "Magic signature (\"IPO_FS\\0\\0\")",
       "fs_size_blocks": "Total 512-byte blocks in storage pool",
@@ -14,7 +15,8 @@
     }
   },
   "ipo_inode": {
-    "title": "IPO_FS Inode Structure (128 bytes, 4 per block)",
+    "totalSize": "128 バイト",
+    "title": "IPO_FS Inode構造 (128バイト、ブロックあたり4個)",
     "fields": {
       "mode": "File type (0x1=Dir, 0x2=File, 0x80000000=Protected)",
       "links_count": "Number of active hard links",
@@ -25,7 +27,8 @@
     }
   },
   "ipo_extent": {
-    "title": "IPO_FS Extent Descriptor (24 bytes)",
+    "totalSize": "24 バイト",
+    "title": "IPO_FS エクステント記述子 (24バイト)",
     "fields": {
       "logical_block": "Starting logical block inside file",
       "physical_block": "Starting physical LBA block in storage pool",
@@ -34,7 +37,8 @@
     }
   },
   "storage_pool_raw_sb": {
-    "title": "Storage Pool Superblock (storage_pool_raw_sb_t, LBA 2030 & 2039)",
+    "totalSize": "512 バイト（68 B ヘッダー + 可変長 members[] + CRC32）",
+    "title": "ストレージプール スーパーブロック (storage_pool_raw_sb_t, LBA 2030 & 2039)",
     "fields": {
       "magic": "Pool magic signature (0x504F4F4C \"POOL\")",
       "version": "Superblock format version (2)",
@@ -51,7 +55,8 @@
     }
   },
   "storage_raw_disk_tx_entry": {
-    "title": "Storage Pool WAL Journal Entry (storage_raw_disk_tx_entry_t, LBA 2031–2038)",
+    "totalSize": "64 バイト（512 バイトセクターあたり8エントリー、合計64エントリー）",
+    "title": "ストレージプール WALトランザクションジャーナルエントリ (storage_raw_disk_tx_entry_t, LBA 2031–2038)",
     "fields": {
       "magic": "Journal entry signature (0x54584E4C \"TXNL\")",
       "tx_id": "Monotonic transaction identifier",
@@ -66,7 +71,8 @@
     }
   },
   "kmod_header": {
-    "title": "Relocatable Kernel Module Header (kmod_raw_header_t / kmod_header_t)",
+    "totalSize": "192 バイト（ディスク上で0xC0）/ RAM内の動的ポインター",
+    "title": "再配置可能カーネルモジュールヘッダー (kmod_raw_header_t / kmod_header_t)",
     "fields": {
       "magic": "Module magic signature (0x444D4B49 \"IKMD\")",
       "abi_version": "Kernel Module ABI version (0x0100 = v1.0)",
@@ -84,7 +90,8 @@
     }
   },
   "cpu_info": {
-    "title": "Per-CPU SMP Descriptor (cpu_info_t)",
+    "totalSize": "24 バイト",
+    "title": "CPU別 SMP記述子 (cpu_info_t)",
     "fields": {
       "cpu_id": "Logical processor core ID (0 = BSP, 1..N = AP)",
       "lapic_id": "Hardware Local APIC physical ID",
@@ -96,79 +103,82 @@
     }
   },
   "process_pcb": {
-    "title": "Process Descriptor Structure (process_t)",
+    "totalSize": "372 バイト（0x174）",
+    "title": "プロセス記述子構造体 (process_t)",
     "fields": {
-      "pid": "Unique process ID (allocated dynamically starting from 1)",
-      "binary_base": "Base address of loaded executable image in allocated memory block (mem)",
-      "binary_size": "4 KB page-aligned binary memory size in bytes",
-      "entry_point": "Absolute execution entry point (allocated free block mem address)",
-      "binary_storage": "Reserved backup buffer pointer (NULL in in-place execution)",
-      "data_offset": "Offset where writable data/bss begins in image",
-      "data_size": "Size of writable data/bss segment in bytes",
-      "code_mapped": "True if code segment has been loaded into memory",
-      "stack_base": "Allocated process stack buffer",
-      "stack_ptr": "Saved ESP stack pointer during multitasking",
-      "stack_start": "Start address of stack region",
-      "stack_size": "Stack capacity in bytes (256 KB initial)",
-      "argc": "Argument count passed to main()",
-      "argv_addr": "Address of argv pointers array in process space",
-      "argv_kernel": "Copy of argv array in kernel space for debugging",
-      "exit_code": "Termination return code",
-      "return_val": "Full typed return value (type, int, raw_eax/edx, dynamic strings, struct buffer)",
-      "return_val_explicit": "True if process explicitly set custom return value via syscall",
-      "is_running": "Active execution state flag",
-      "waiting_for_input": "Blocked waiting for keyboard / terminal input",
-      "wants_graphics": "Requested VGA Mode 13h (320x200x256)",
-      "gfx_overlay_flags": "VGA Mode 13h overlay visibility flags (VGA_OVERLAY_HIDE_BUTTON, VGA_OVERLAY_HIDE_CURSOR)",
-      "is_wm_app": "Created a Window Manager desktop window",
-      "async_task_count": "Count of active background async tasks",
-      "user_heap_base": "Per-process isolated heap start address",
-      "user_heap_break": "Per-process sbrk break address boundary",
-      "user_heap_limit": "Per-process isolated heap ceiling limit address",
-      "user_heap_slot": "Dynamic memory slot index assigned to process (-1 if none)",
-      "exec_inode": "Executable inode metadata for on-demand progressive loading",
-      "demand_loading": "True if executable is currently being loaded on-demand",
-      "demand_file_offset": "Current byte offset in executable binary file on disk",
-      "demand_mem_offset": "Current destination offset in process memory image",
-      "demand_loaded_bytes": "Total bytes of executable loaded into memory so far",
-      "demand_total_bytes": "Total byte size of all loadable binary segments",
-      "text_vram_backup": "80x25 text mode buffer backup for workspace switching",
-      "gfx_vram_backup": "320x200 graphics VRAM backup when swapped to background",
-      "gfx_palette_backup": "256-color VGA DAC palette backup (768 bytes)",
-      "text_cursor_pos": "Saved cursor coordinate in text mode",
-      "text_cursor_visible": "Saved cursor visibility flag",
-      "completed_and_acknowledged": "Process completed and acknowledged by parent",
-      "scroll_top_buffer": "Workspace top scrollback line buffer",
-      "scroll_bottom_buffer": "Workspace bottom scrollback line buffer",
-      "scroll_top_count": "Count of lines in top scrollback buffer",
-      "scroll_bottom_count": "Count of lines in bottom scrollback buffer",
-      "window_id": "Workspace window group identifier in batch mode",
-      "text_screen_shared": "True if VRAM buffers are shared with co-process",
-      "text_output_buf": "Dynamically expanding captured stdout buffer",
-      "text_output_len": "Length of captured stdout text in bytes",
-      "text_output_cap": "Allocated capacity of text_output_buf",
-      "name": "Dynamically allocated process name string",
-      "return_format": "Auto-detected format descriptor from DWARF debug symbols",
-      "next": "Pointer to next PCB in active kernel list"
+      "pid": "一意のプロセス識別子 (PID)",
+      "binary_base": "メモリ内の実行バイナリのロードベースアドレス",
+      "binary_size": "バイナリの総バイトサイズ",
+      "entry_point": "実行開始アドレス (_start)",
+      "binary_storage": "生バイナリ格納バッファのアドレス",
+      "data_offset": "バイナリ内のデータセクションオフセット",
+      "data_size": "初期化データセクションのバイトサイズ",
+      "code_mapped": "コードセグメントがメモリにマッピングされているか",
+      "stack_base": "プロセスに割り当てられたスタックのベースアドレス",
+      "stack_ptr": "現在のスタックポインタ (ESP)",
+      "stack_start": "スタック割り当ての仮想開始アドレス",
+      "stack_size": "割り当てられたスタックの総バイト数",
+      "argc": "コマンドライン引数の数",
+      "argv_addr": "ユーザー空間スタック上のargvポインタ配列アドレス",
+      "argv_kernel": "カーネル空間内の引数文字列配列",
+      "exit_code": "プロセスの終了コード (0=正常終了)",
+      "return_val": "構造化された戻り値の共用体 (スカラー/ポインタ/構造体)",
+      "return_val_explicit": "明示的な戻り値が設定されたかを示すフラグ",
+      "is_running": "プロセス実行中フラグ (1=実行中)",
+      "waiting_for_input": "キーボード入力待ちでブロック中",
+      "wants_graphics": "プロセスがVGAモード13h (320x200x256) を要求中",
+      "gfx_overlay_flags": "VGAオーバーレイの可視性フラグ (閉じるボタンやマウスカーソル)",
+      "is_wm_app": "ウィンドウマネージャで管理されるGUIウィンドウを持つか",
+      "async_task_count": "アクティブな非同期バックグラウンドタスクの数",
+      "user_heap_base": "プロセス専用の分離ヒープのベースアドレス",
+      "user_heap_break": "現在の動的ヒープブレークポイント (sbrk)",
+      "user_heap_limit": "分離ヒープの最大仮想アドレス上限",
+      "user_heap_slot": "割り当てられた動的メモリスロットインデックス (未割り当ては-1)",
+      "exec_inode": "オンデマンド読み込み用実行可能バイナリのinodeコピー",
+      "demand_loading": "バイナリがディスクから段階的に読み込み中かを示すフラグ",
+      "demand_file_offset": "ディスク上の実行ファイル内の現在の読み込みオフセット",
+      "demand_mem_offset": "プロセス仮想メモリ内の現在の書き込みオフセット",
+      "demand_loaded_bytes": "これまでにメモリへ読み込まれたバイト数",
+      "demand_total_bytes": "ロード対象セグメントの総バイト数",
+      "text_vram_backup": "バックグラウンド切り替え時に退避された80x25テキストVRAM",
+      "gfx_vram_backup": "バックグラウンド切り替え時に退避された320x200グラフィックスVRAM",
+      "gfx_palette_backup": "退避された256色DACパレットデータ (768バイト)",
+      "text_cursor_pos": "テキストモードで退避されたカーソル位置",
+      "text_cursor_visible": "テキストモードで退避されたカーソルの可視性",
+      "completed_and_acknowledged": "プロセスが完了し承認/クローズされたかを示すフラグ",
+      "scroll_top_buffer": "ターミナルウィンドウの上部スクロールバックバッファ",
+      "scroll_bottom_buffer": "ターミナルウィンドウの下部スクロールバックバッファ",
+      "scroll_top_count": "上部スクロール行数",
+      "scroll_bottom_count": "下部スクロール行数",
+      "window_id": "バッチモードのウィンドウグループまたはワークスペースID",
+      "text_screen_shared": "画面バッファが同じウィンドウ内の別プロセスと共有されているか",
+      "text_output_buf": "パイプライン/バッチ用のテキスト出力キャプチャバッファ",
+      "text_output_len": "キャプチャされたテキスト出力の現在のバイト長",
+      "text_output_cap": "テキスト出力バッファの総容量 (バイト単位)",
+      "name": "動的に割り当てられたプロセス名",
+      "return_format": "戻り値の型記述フォーマット文字列 (int, string, structなど)",
+      "next": "カーネルのプロセスキュー内の次のプロセスへのポインタ"
     }
   },
   "device_node": {
-    "title": "Unified Hardware Device Node (device_node_t)",
+    "totalSize": "148 バイト（0x94）、動的文字列と拡張可能なBAR配列を含む（src/include/kernel/device.h）",
+    "title": "統合ハードウェアデバイスノード (device_node_t)",
     "fields": {
-      "id": "Unique system-wide device ID",
-      "parent_id": "Parent bus/controller device ID (0 if root)",
-      "capabilities": "Capability bitmask (READONLY, REMOVABLE, HOTPLUGGABLE, DMA, VIRTUAL)",
-      "type": "Category (CPU, MEMORY, PCI, STORAGE, NETWORK, INPUT, AUDIO, VIDEO, SYSTEM, USB)",
-      "state": "Operational state (DISCOVERED, DRIVER_ATTACHED, INITIALIZED, ACTIVE, DISABLED, ERROR)",
-      "name": "Dynamic canonical identifier (e.g. \"cpu0\", \"pci00:03.0\", \"ata0\")",
-      "vendor / model / description": "Dynamically allocated vendor, model, and functional description strings",
-      "res": "Bus coordinates, PCI IDs, dynamic uint32_t* bar[], I/O base, MMIO base, IRQ, size_bytes",
-      "driver_name / driver_ptr": "Attached driver name and pointer to driver_t",
-      "ops / priv_data / next": "Standard VFS-like device I/O operations (open/close/read/write/ioctl) and list link"
+      "id": "一意のデバイスノードID",
+      "parent_id": "親バス/コントローラのID (ルートの場合は0)",
+      "capabilities": "デバイス機能ビットマスク (DMA, IRQ, PCI)",
+      "type": "デバイス種別 (ストレージ, ネットワークなど)",
+      "state": "動作状態 (INIT, RUNNING, ERROR)",
+      "name": "デバイス識別名 (例: \"ata0_m\")",
+      "vendor / model / description": "PCI/ATAプローブから取得したベンダー・モデル・説明文字列",
+      "res": "リソース記述子: I/Oポート, MMIO, IRQ",
+      "driver_name / driver_ptr": "バインドされたドライバの名前と関数テーブルポインタ",
+      "ops / priv_data / next": "操作関数テーブル, プライベートデータ, 次のノードへのリンク"
     }
   },
   "kmalloc_stats": {
-    "title": "Kernel Heap Allocator Statistics (kmalloc_stats_t)",
+    "totalSize": "28 バイト",
+    "title": "カーネルヒープアロケータ統計 (kmalloc_stats_t)",
     "fields": {
       "heap_total": "Total kernel heap capacity in bytes (64 MB / 0x04000000)",
       "heap_used": "Bytes consumed by high-watermark with headers",
@@ -180,27 +190,29 @@
     }
   },
   "ata_device": {
-    "title": "ATA Storage Device Information (ata_device_t)",
+    "totalSize": "44 バイト（0x2C）",
+    "title": "ATAストレージデバイス情報 (ata_device_t)",
     "fields": {
-      "present": "1 if device detected, 0 if absent",
-      "channel": "IDE Channel (0 = Primary, 1 = Secondary)",
-      "drive": "Drive position (0 = Master, 1 = Slave)",
-      "type": "Device type (0=NONE, 1=PATA, 2=PATAPI)",
-      "cylinders": "Drive cylinders count from IDENTIFY",
-      "heads": "Drive heads count from IDENTIFY",
-      "sectors": "Sectors per track from IDENTIFY",
-      "io_base": "Primary I/O base port (e.g. 0x1F0, 0x170)",
-      "ctrl_base": "Control port base (e.g. 0x3F6, 0x376)",
-      "irq": "Hardware IRQ line (14 for Primary, 15 for Secondary)",
-      "sector_size": "Sector size in bytes (typically 512)",
-      "capacity_sectors": "Total capacity in 512-byte sectors (LBA28/LBA48)",
-      "model": "Dynamically allocated NUL-terminated ATA model string",
-      "serial": "Dynamically allocated NUL-terminated ATA serial string",
-      "firmware": "Dynamically allocated NUL-terminated ATA firmware revision string"
+      "present": "デバイスが検出された場合1、未接続時0",
+      "channel": "IDEチャネル (0=プライマリ, 1=セカンダリ)",
+      "drive": "ドライブ選択 (0=マスター, 1=スレーブ)",
+      "type": "デバイス種別 (0=ATAハードディスク, 1=ATAPI CD-ROM)",
+      "cylinders": "シリンダ数 (CHSモード)",
+      "heads": "ヘッド数 (CHSモード)",
+      "sectors": "トラックあたりのセクター数 (CHSモード)",
+      "io_base": "コマンドI/Oポートベース (0x1F0 または 0x170)",
+      "ctrl_base": "コントロールI/Oポートベース (0x3F6 または 0x376)",
+      "irq": "ハードウェア割り込みライン (14=プライマリ, 15=セカンダリ)",
+      "sector_size": "セクターのバイトサイズ (常に512)",
+      "capacity_sectors": "512バイトセクター総数 (LBA28/LBA48)",
+      "model": "動的に割り当てられたATAモデル名文字列",
+      "serial": "動的に割り当てられたシリアル番号文字列",
+      "firmware": "動的に割り当てられたファームウェアリビジョン文字列"
     }
   },
   "ipo_idt_entry": {
-    "title": "x86 Interrupt Descriptor Gate (ipo_idt_entry_t)",
+    "totalSize": "8 バイト",
+    "title": "x86 割り込み記述子ゲート (ipo_idt_entry_t)",
     "fields": {
       "base_lo": "Lower 16 bits of ISR entrypoint address",
       "selector": "Kernel code segment selector (0x08)",
@@ -210,27 +222,29 @@
     }
   },
   "bootrom_post_codes": {
-    "title": "Port 0x80 POST Diagnostic Codes (IPO_Boot_ROM)",
+    "totalSize": "8ビット診断ポート 0x80",
+    "title": "ポート 0x80 POST 診断コード (IPO_Boot_ROM)",
     "fields": {
-      "POST_RESET_VECTOR": "CPU reset vector reached (0xFFFFFFF0)",
-      "POST_ROM_INIT_ENTRY": "Entered Boot_ROM init code (0xF000:8000)",
-      "POST_CAR_START": "MTRR Cache-as-RAM setup started",
-      "POST_CAR_READY": "CAR stack operational at 0x7000:8000",
-      "POST_CHIPSET_DETECTED": "Chipset detected (i440FX or Q35)",
-      "POST_MRC_START": "Memory Reference Code DRAM training started",
-      "POST_DRAM_TEST_PASS": "DRAM pattern test passed (0x55AA55AA / 0xAA55AA55)",
-      "POST_CAR_TEARDOWN": "CAR teardown complete, stack relocated to DRAM",
-      "POST_PAM_LOCKED": "PAM locked read-only (RE=1, WE=0)",
-      "POST_MAGIC_VALID": "Firmware header magic validated (0x464F5049)",
-      "POST_HANDOVER": "Far jump to Firmware payload (0xF000:0004)",
-      "ERR_NO_MTRR": "CPU lacks MTRR support or CAR setup failed",
-      "ERR_UNKNOWN_CHIPSET": "Unsupported PCI Host Bridge ID",
-      "ERR_DRAM_FAIL": "DRAM pattern memory test failed",
-      "ERR_MAGIC_MISMATCH": "Firmware signature mismatch (IPOF expected)"
+      "POST_RESET_VECTOR": "CPUリセットベクタ到達 (0xFFFFFFF0)",
+      "POST_ROM_INIT_ENTRY": "Boot_ROM初期化コード開始 (0xF000:8000)",
+      "POST_CAR_START": "MTRR Cache-as-RAM セットアップ開始",
+      "POST_CAR_READY": "CARスタックが 0x7000:8000 で動作可能",
+      "POST_CHIPSET_DETECTED": "チップセット検出完了 (i440FX または Q35)",
+      "POST_MRC_START": "メモリ参照コード (MRC) DRAMトレーニング開始",
+      "POST_DRAM_TEST_PASS": "DRAMパターンテスト成功 (0x55AA55AA / 0xAA55AA55)",
+      "POST_CAR_TEARDOWN": "CARクリーンアップ完了、スタックをDRAMへ移行",
+      "POST_PAM_LOCKED": "PAMレジスタを読み取り専用にロック (RE=1, WE=0)",
+      "POST_MAGIC_VALID": "ファームウェアヘッダーのマジック署名検証完了 (IPOF)",
+      "POST_HANDOVER": "ファームウェアペイロードへの遠隔ジャンプ (0xF000:0004)",
+      "ERR_NO_MTRR": "エラー: CPUがMTRR非対応またはCARセットアップ失敗",
+      "ERR_UNKNOWN_CHIPSET": "エラー: サポートされていないPCIホストブリッジID",
+      "ERR_DRAM_FAIL": "エラー: DRAMパターンテストに失敗しました",
+      "ERR_MAGIC_MISMATCH": "エラー: ファームウェアシグネチャ不一致 (IPOF期待)"
     }
   },
   "firmware_post_codes": {
-    "title": "Port 0x80 POST Diagnostic Codes (IPO_Firmware)",
+    "totalSize": "8ビット診断ポート 0x80",
+    "title": "ポート 0x80 POST 診断コード (IPO_Firmware)",
     "fields": {
       "FW_ENTRY": "Firmware entry point reached (0xF000:0004)",
       "FW_PCI_ENUM_DONE": "PCI bus enumeration completed",
@@ -238,12 +252,12 @@
       "FW_ACPI_INSTALLED": "ACPI 1.0 tables installed in EBDA (0x9FC00)",
       "FW_VIDEO_READY": "Video subsystem initialized (VBIOS or Mode 03h)",
       "FW_A20_ACTIVE": "Fast A20 Gate activated and verified",
-      "FW_PS2_READY": "8042 PS/2 controller initialized",
-      "FW_STORAGE_PROBE": "Storage controllers probing (ATA, AHCI, NVMe, USB)",
-      "FW_SCAN_BOOTABLE": "Scanning drives for bootable media (0x80..0x82)",
-      "FW_MBR_VALIDATED": "Valid MBR 0xAA55 loaded at 0x0000:7C00",
-      "FW_HANDOVER_OS": "Jumping to MBR (0x0000:7C00) — OS Handover",
-      "FW_ERR_NO_BOOT": "No bootable media found on any controller"
+      "FW_PS2_READY": "8042 PS/2 コントローラ初期化完了",
+      "FW_STORAGE_PROBE": "ストレージコントローラの検出中 (ATA, AHCI, NVMe, USB)",
+      "FW_SCAN_BOOTABLE": "起動可能メディアのドライブをスキャン中 (0x80..0x82)",
+      "FW_MBR_VALIDATED": "0xAA55署名を持つ有効なMBRが 0x0000:7C00 にロード完了",
+      "FW_HANDOVER_OS": "MBR (0x0000:7C00) へジャンプ — OSへ制御をハンドオーバー",
+      "FW_ERR_NO_BOOT": "エラー: 起動可能なブートメディアが見つかりません"
     }
   }
 }

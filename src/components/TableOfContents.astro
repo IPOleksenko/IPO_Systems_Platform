@@ -18,7 +18,7 @@ const filteredHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 ---
 
 {filteredHeadings.length > 0 && (
-  <nav class="toc" aria-label="Table of contents">
+  <nav class="toc" aria-label={getTranslation(lang, 'interface.table_of_contents')}>
     <div class="toc-title">{tocTitle}</div>
     <ul class="toc-list">
       {filteredHeadings.map((h) => (

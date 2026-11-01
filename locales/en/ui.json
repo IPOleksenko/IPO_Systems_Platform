@@ -45,7 +45,7 @@
       "troubleshooting": "Diagnostics & Diagnostics FAQ"
     },
     "ipo_firmware": {
-      "title": "IPO_Firmware BIOS Service Layer",
+      "title": "IPO_Firmware Service Layer",
       "overview": "Overview & Runtime Services",
       "getting_started": "Emulation & Boot Setup",
       "architecture": "IVT, Multi-Bus Storage & Handover",
@@ -163,7 +163,8 @@
       "caution": "Caution",
       "beginners": "For Beginners",
       "deep_dive": "Deep Dive"
-    }
+    },
+    "select_language": "Please select your language"
   },
   "downloads": {
     "page_title": "Downloads & System Builds",
@@ -175,10 +176,17 @@
     "featured_badge": "⭐ Full Platform Bundle",
     "featured_ribbon": "⭐ Full Platform Bundle",
     "featured_title": "Complete IPO Systems Bundle (All Projects & Disks)",
-    "featured_desc": "Contains all compiled binaries across the platform: Boot ROM (bootrom.bin), Firmware BIOS (firmware.rom), IPO_OS kernel image (IPO_OS.img), clean and pre-installed disks (disk-clean.img, disk-installed.img), and pre-compiled applications package (applications.zip).",
-    "download_bundle": "Download Complete Bundle (.zip)",
+    "featured_desc": "Contains all compiled binaries across the platform: Boot ROM (bootrom.bin), Firmware (firmware.rom), IPO_OS kernel image (IPO_OS.img), clean and pre-installed disks (disk-clean.img, disk-installed.img), and pre-compiled applications package (applications.zip). Choose an archive format before downloading.",
+    "download_bundle": "Download Complete Bundle",
     "components_title": "Individual Components & Disk Images",
     "download_btn": "Download",
+    "archive_formats": "Archive formats: ZIP, TAR.GZ, TAR.BZ2, TAR.XZ",
+    "choose_archive": "Archive format",
+    "choose_rom_size": "Boot ROM flash size",
+    "bootrom_binary_description": "Directly downloadable Boot ROM binary, built for the selected flash size.",
+    "choose_download": "Choose download options",
+    "download_selected": "Download selected archive",
+    "close": "Close",
     "download_zip": "Download .zip",
     "download_builds": "Download System Builds",
     "vm_guide_link": "Virtual Machines Guide →",
@@ -231,7 +239,8 @@
       "signature": "C Signature",
       "description": "Arguments & Description",
       "details": "Arguments & Return",
-      "returns": "Returns:"
+      "returns": "Returns:",
+      "no_args": "No arguments"
     }
   },
   "widgets": {
@@ -280,5 +289,77 @@
     "empty": "No matching documentation pages found.",
     "error": "An error occurred during search.",
     "close": "Close search"
+  },
+  "interface": {
+    "close_dialog": "Close dialog",
+    "toggle_navigation": "Toggle navigation",
+    "main_projects": "Main projects",
+    "documentation_navigation": "Documentation navigation",
+    "color_theme": "Color theme",
+    "table_of_contents": "Table of contents",
+    "open_github": "View project on GitHub",
+    "download_image": "Download image",
+    "breadcrumb": "Breadcrumb",
+    "pagination": "Pagination"
+  },
+  "home_badges": {
+    "os": "OS / Kernel",
+    "boot_rom": "Reset Initializer",
+    "firmware": "Firmware",
+    "software": "Userland / Software"
+  },
+  "psu_labels": {
+    "ram_opt1": "2x SDRAM / DDR2 (10W)",
+    "ram_opt2": "4x DDR2 / DDR3 (20W)"
+  },
+  "artifact_labels": {
+    "ipo_os_raw": {
+      "name": "IPO_OS Bootable Image",
+      "description": "Raw 32-bit bootable image containing the IPO_OS kernel and bootloader."
+    },
+    "ipo_disk_installed": {
+      "name": "IPO_OS Pre-Installed Disk (512 MB)",
+      "description": "Ready-to-use 512 MB IPO_FS disk image with applications, toolchains, runtime libraries, and fonts pre-installed."
+    },
+    "ipo_disk_clean": {
+      "name": "IPO_OS Clean Disk (512 MB)",
+      "description": "Clean 512 MB disk image formatted with IPO_FS, without pre-installed applications."
+    },
+    "ipo_applications": {
+      "name": "IPO_OS Applications Package",
+      "description": "Pre-compiled applications, developer toolchains, runtime libraries, SDK headers, and fonts for IPO_OS."
+    },
+    "ipo_firmware": {
+      "name": "IPO_Firmware",
+      "description": "Compiled IPO_Firmware runtime services ROM binary (firmware.rom)."
+    }
+  },
+  "units": {
+    "byte": {
+      "one": "byte",
+      "other": "bytes"
+    },
+    "byte_short": "B"
+  },
+  "snippets": {
+    "hello-c": "main.c (First IPO_OS Application)",
+    "hello-asm": "hello_asm.asm (Pure Assembly Application)",
+    "socket-tcp-server": "tcp_server.c (POSIX Sockets HTTP Server on IPO_OS)",
+    "opengl-cube": "gl_cube.c (TinyGL 3D Rendering on IPO_OS)",
+    "wm-gui-window": "wm_app.c (Creating GUI Window with Callbacks)",
+    "micropython-script": "test.py (Executing Python on Bare-Metal IPO_OS)",
+    "in-os-tcc": "Compiling C code directly inside IPO_OS",
+    "multitasking-shell-operators": "Shell Multitasking & Workspace Operators",
+    "disk-editor-cmds": "tools/disk_editor.py Complete Command Reference",
+    "makefile-all-targets": "Makefile Target Reference (IPO_OS & IPO_OS_Software)",
+    "tap-networking-setup": "Setting up TAP0 Host Virtual Interface",
+    "qemu-full-stack-run": "Running Complete Vertical Stack in QEMU",
+    "flashrom-spi-cmds": "Physical SPI Flashing with flashrom & CH341A",
+    "syscall-c-wrapper": "applications/lib/libc/sys.c (Syscall Invoker)",
+    "app-linker-script": "applications/app.ld (Application Linker Script)",
+    "app-entry-s": "applications/entry.s (Entrypoint Stub)",
+    "kernel-linker-script": "src/kernel/linker.ld (Kernel Linker Script)",
+    "app-makefile": "Makefile for Custom User Application",
+    "tap-setup-cmds": "Setting up TAP0 Host Virtual Interface"
   }
 }

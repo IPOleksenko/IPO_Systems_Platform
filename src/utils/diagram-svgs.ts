@@ -250,25 +250,25 @@ export function generateDiagramSvg(id: string, labels: Record<string, string>): 
       ${style}
       <g transform="translate(50, 40)">
         <rect x="0" y="0" width="140" height="80" class="box" />
-        <text x="70" y="38" text-anchor="middle" class="text-title">MBR / Pool+WAL</text>
-        <text x="70" y="56" text-anchor="middle" class="text-desc">LBA 0..2047</text>
-        <text x="70" y="70" text-anchor="middle" class="text-desc">(WAL 2030..2039)</text>
+        <text x="70" y="38" text-anchor="middle" class="text-title">${labels.mbr_title || 'MBR / Pool+WAL'}</text>
+        <text x="70" y="56" text-anchor="middle" class="text-desc">${labels.mbr_lba || 'LBA 0..2047'}</text>
+        <text x="70" y="70" text-anchor="middle" class="text-desc">${labels.wal_lba || '(WAL 2030..2039)'}</text>
 
         <rect x="150" y="0" width="140" height="80" class="box-warn" />
-        <text x="220" y="45" text-anchor="middle" class="text-title">Superblock</text>
-        <text x="220" y="65" text-anchor="middle" class="text-desc">LBA 2048</text>
+        <text x="220" y="45" text-anchor="middle" class="text-title">${labels.superblock_title || 'Superblock'}</text>
+        <text x="220" y="65" text-anchor="middle" class="text-desc">${labels.superblock_lba || 'LBA 2048'}</text>
 
         <rect x="300" y="0" width="140" height="80" class="box" />
-        <text x="370" y="45" text-anchor="middle" class="text-title">Bitmaps</text>
-        <text x="370" y="65" text-anchor="middle" class="text-desc">Inodes & Blocks</text>
+        <text x="370" y="45" text-anchor="middle" class="text-title">${labels.bitmap_title || 'Bitmaps'}</text>
+        <text x="370" y="65" text-anchor="middle" class="text-desc">${labels.bitmap_desc || 'Inodes + Blocks'}</text>
 
         <rect x="450" y="0" width="140" height="80" class="box-accent" />
-        <text x="520" y="45" text-anchor="middle" class="text-title">Inode Table</text>
-        <text x="520" y="65" text-anchor="middle" class="text-desc">128B per Inode</text>
+        <text x="520" y="45" text-anchor="middle" class="text-title">${labels.inode_table_title || 'Inode Table'}</text>
+        <text x="520" y="65" text-anchor="middle" class="text-desc">${labels.inode_table_desc || '128B per Inode'}</text>
 
         <rect x="600" y="0" width="140" height="80" class="box-success" />
-        <text x="670" y="45" text-anchor="middle" class="text-title">Data Extents</text>
-        <text x="670" y="65" text-anchor="middle" class="text-desc">Contiguous Blocks</text>
+        <text x="670" y="45" text-anchor="middle" class="text-title">${labels.data_extents_title || 'Data Extents'}</text>
+        <text x="670" y="65" text-anchor="middle" class="text-desc">${labels.contiguous_blocks || 'Contiguous Blocks'}</text>
       </g>
     </svg>`;
   }

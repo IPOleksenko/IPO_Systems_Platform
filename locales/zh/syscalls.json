@@ -1,769 +1,558 @@
 {
   "IPO_SYSCALL_REGISTER": {
-    "description": "Dynamically registers a custom system call handler into the kernel dispatch table.",
-    "return": "0 on success, negative error code on failure",
-    "args": []
+    "description": "在内核分派表中动态注册自定义系统调用处理程序。",
+    "return": "成功时为 0，失败时返回负错误码"
   },
   "IPO_SYSCALL_CALL": {
-    "description": "Indirect invocation mechanism to dispatch a syscall through kernel dispatcher.",
-    "return": "Return value of dispatched syscall",
-    "args": []
+    "description": "通过内核分派器分派系统调用的间接调用机制。",
+    "return": "分派的系统调用的返回值"
   },
   "IPO_SYSCALL_PRINT": {
-    "description": "Outputs text to active VGA console and mirrors to COM1 serial.",
-    "return": "Number of printed characters, or negative error code",
-    "args": []
+    "description": "将文本输出到活动 VGA 控制台并镜像到 COM1 串口。",
+    "return": "打印的字符数，或负错误码"
   },
   "IPO_SYSCALL_WRITE": {
-    "description": "Writes raw byte stream into an open file descriptor or console.",
-    "return": "Bytes written, or negative on failure",
-    "args": []
+    "description": "将原始字节流写入打开的文件描述符或控制台。",
+    "return": "写入的字节数，失败时返回负值"
   },
   "IPO_SYSCALL_FS_CREATE": {
-    "description": "Creates a new empty file or directory in IPO_FS.",
-    "return": "0 on success, negative error code otherwise",
-    "args": []
+    "description": "在 IPO_FS 中创建新的空文件或目录。",
+    "return": "成功时为 0，否则返回负错误码"
   },
   "IPO_SYSCALL_FS_OPEN": {
-    "description": "Opens an existing inode and allocates a process file descriptor.",
-    "return": "Allocated file descriptor index (>= 0), or negative on error",
-    "args": []
+    "description": "打开现有 inode 并分配进程文件描述符。",
+    "return": "分配的文件描述符索引 (>= 0)，出错时返回负值"
   },
   "IPO_SYSCALL_FS_READ": {
-    "description": "Reads data from storage extents into memory buffer.",
-    "return": "Bytes read into buffer, or negative error",
-    "args": []
+    "description": "从存储盘区读取数据到内存缓冲区。",
+    "return": "读取到缓冲区的字节数，出错时返回负错误码"
   },
   "IPO_SYSCALL_FS_WRITE": {
-    "description": "Writes data into file extents, allocating new blocks from bitmap as needed.",
-    "return": "Bytes written to storage, or negative error code",
-    "args": []
+    "description": "将数据写入文件盘区，根据需要从位图中分配新块。",
+    "return": "写入存储的字节数，或负错误码"
   },
   "IPO_SYSCALL_FS_DELETE": {
-    "description": "Deletes file or directory, frees extents in bitmap and clears inode.",
-    "return": "0 on success, negative error code on failure",
-    "args": []
+    "description": "删除文件或目录，释放位图中的盘区并清除 inode。",
+    "return": "成功时为 0，失败时返回负错误码"
   },
   "IPO_SYSCALL_FS_STAT": {
-    "description": "Retrieves metadata of specified path: size, extents, links, protection flags.",
-    "return": "0 on success, negative error code otherwise",
-    "args": []
+    "description": "获取指定路径的元数据：大小、盘区、链接、保护标志。",
+    "return": "成功时为 0，否则返回负错误码"
   },
   "IPO_SYSCALL_FS_LIST": {
-    "description": "Enumerates directory contents into formatted buffer.",
-    "return": "Number of directory entries, or negative on error",
-    "args": []
+    "description": "将目录内容枚举到格式化缓冲区中。",
+    "return": "目录条目数，出错时返回负值"
   },
   "IPO_SYSCALL_FS_RENAME": {
-    "description": "Renames or moves a file or directory within IPO_FS.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "在 IPO_FS 内重命名或移动文件或目录。",
+    "return": "成功时为 0，出错时返回负值"
   },
   "IPO_SYSCALL_FS_CLOSE": {
-    "description": "Closes file descriptor and flushes modified inode metadata.",
-    "return": "0 on success, negative error code on failure",
-    "args": []
+    "description": "关闭文件描述符并刷新修改后的 inode 元数据。",
+    "return": "成功时为 0，失败时返回负错误码"
   },
   "IPO_SYSCALL_FS_SEEK": {
-    "description": "Modifies file read/write cursor offset.",
-    "return": "New absolute byte position, or negative on failure",
-    "args": []
+    "description": "修改文件读/写光标偏移量。",
+    "return": "新的绝对字节位置，失败时返回负值"
   },
   "IPO_SYSCALL_EXEC": {
-    "description": "Loads executable binary into allocated free memory block and dispatches new process.",
-    "return": "PID of spawned process, or negative on error",
-    "args": []
+    "description": "将可执行二进制文件加载到分配的空闲内存块中并分派新进程。",
+    "return": "生成进程的 PID，出错时返回负值"
   },
   "IPO_SYSCALL_READ": {
-    "description": "Reads a line of user input from active terminal keyboard buffer.",
-    "return": "Length of input string, or negative on error",
-    "args": []
+    "description": "从活动终端键盘缓冲区读取一行用户输入。",
+    "return": "输入字符串的长度，出错时返回负值"
   },
   "IPO_SYSCALL_TERMINAL_INPUT": {
-    "description": "Injects keystroke text programmatically into terminal input buffer.",
-    "return": "0 on success, negative error code on failure",
-    "args": []
+    "description": "以编程方式将按键文本注入终端输入缓冲区。",
+    "return": "成功时为 0，失败时返回负错误码"
   },
   "IPO_SYSCALL_PROCESS_YIELD": {
-    "description": "Yields remainder of current CPU time slice to scheduler.",
-    "return": "0 on success",
-    "args": [
-      "None"
-    ]
+    "description": "将当前 CPU 时间片的剩余部分让渡给调度程序。",
+    "return": "成功时为 0"
   },
   "IPO_SYSCALL_PROCESS_IS_FOREGROUND": {
-    "description": "Checks if calling task is currently running in the active foreground.",
-    "return": "1 if process owns terminal display, 0 if background",
-    "args": [
-      "None"
-    ]
+    "description": "检查调用任务当前是否在活动前台运行。",
+    "return": "如果进程拥有终端显示则为 1，如果在后台则为 0"
   },
   "IPO_SYSCALL_GETCWD": {
-    "description": "Gets canonical absolute path of process current working directory.",
-    "return": "String length copied, or negative error code",
-    "args": []
+    "description": "获取进程当前工作目录的规范绝对路径。",
+    "return": "复制的字符串长度，或负错误码"
   },
   "IPO_SYSCALL_CHDIR": {
-    "description": "Changes current working directory of process.",
-    "return": "0 on success, negative error code if path invalid",
-    "args": []
+    "description": "更改进程的当前工作目录。",
+    "return": "成功时为 0，路径无效时返回负错误码"
   },
   "IPO_SYSCALL_GET_EXIT_CODE": {
-    "description": "Returns exit code of last child process for shell piping and scripting.",
-    "return": "Exit code of last executed program",
-    "args": [
-      "None"
-    ]
+    "description": "返回最后一个子进程的退出代码，供 shell 管道和脚本使用。",
+    "return": "最后执行程序的退出代码"
   },
   "IPO_SYSCALL_PROCESS_IS_BATCH_ACTIVE": {
-    "description": "Queries whether multitasking batch mode (run & / &&) is running.",
-    "return": "1 if batch pipeline active, 0 otherwise",
-    "args": [
-      "None"
-    ]
+    "description": "查询多任务批处理模式 (run & / &&) 是否正在运行。",
+    "return": "如果批处理管道处于活动状态则为 1，否则为 0"
   },
   "IPO_SYSCALL_SET_RETURN_VALUE": {
-    "description": "Sets explicit typed return value for the current process to pass through pipelines.",
-    "return": "0 on success, negative error code on failure",
-    "args": []
+    "description": "为当前进程设置显式的类型化返回值，以便通过管道传递。",
+    "return": "成功时为 0，失败时返回负错误码"
   },
   "IPO_SYSCALL_GET_RETURN_VALUE": {
-    "description": "Retrieves formatted return string of the last finished child process.",
-    "return": "Length of return string on success, negative error code on failure",
-    "args": []
+    "description": "检索最后结束的子进程的格式化返回字符串。",
+    "return": "成功时返回字符串长度，失败时返回负错误码"
   },
   "IPO_SYSCALL_ASYNC_START": {
-    "description": "Registers a recurring kernel task with a caller-selected name and interval.",
-    "return": "Task ID handle (>= 0), or negative on failure",
-    "args": []
+    "description": "使用调用方选择的名称和时间间隔注册重复的内核任务。",
+    "return": "任务 ID 句柄 (>= 0)，失败时返回负值"
   },
   "IPO_SYSCALL_ASYNC_STOP": {
-    "description": "Stops and unregisters background async task.",
-    "return": "0 on success, negative error code otherwise",
-    "args": []
+    "description": "停止并注销后台异步任务。",
+    "return": "成功时为 0，否则返回负错误码"
   },
   "IPO_SYSCALL_STACK_GROW": {
-    "description": "Dynamically expands process stack allocation limit.",
-    "return": "0 on success, negative on out of memory",
-    "args": []
+    "description": "动态扩展进程栈分配限制。",
+    "return": "成功时为 0，内存不足时返回负值"
   },
   "IPO_SYSCALL_STACK_SHRINK": {
-    "description": "Reclaims unused process stack memory.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "回收未使用的进程栈内存。",
+    "return": "成功时为 0，出错时返回负值"
   },
   "IPO_SYSCALL_VAR_SET": {
-    "description": "Sets or creates persistent shared kernel system variable.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "设置或创建持久的共享内核系统变量。",
+    "return": "成功时为 0，出错时返回负值"
   },
   "IPO_SYSCALL_VAR_GET": {
-    "description": "Retrieves value of named shared kernel variable.",
-    "return": "Bytes copied, or negative if variable not found",
-    "args": []
+    "description": "检索命名的共享内核变量的值。",
+    "return": "已复制的字节数，如果未找到变量则返回负值"
   },
   "IPO_SYSCALL_VAR_DELETE": {
-    "description": "Deletes shared system variable and reclaims memory.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "删除共享系统变量并回收内存。",
+    "return": "成功时为 0，出错时返回负值"
   },
   "IPO_SYSCALL_SBRK": {
-    "description": "Adjusts process data segment break for userspace malloc/free.",
-    "return": "Previous heap break pointer, or (void*)-1 on out of memory",
-    "args": []
+    "description": "调整进程数据段断点，用于用户空间的 malloc/free。",
+    "return": "先前的堆中断指针，内存不足时返回 (void*)-1"
   },
   "IPO_SYSCALL_TIME": {
-    "description": "Returns system uptime in seconds measured from kernel boot.",
-    "return": "System uptime in seconds",
-    "args": []
+    "description": "返回从内核引导起测量的系统运行时间（秒）。",
+    "return": "系统运行时间（秒）"
   },
   "IPO_SYSCALL_FREE": {
-    "description": "Frees kernel-allocated memory buffer returned to userspace.",
-    "return": "0 on success",
-    "args": []
+    "description": "释放返回给用户空间的内核分配内存缓冲区。",
+    "return": "成功时为 0"
   },
   "IPO_SYSCALL_MILLIS": {
-    "description": "Returns millisecond-resolution system uptime.",
-    "return": "System uptime in milliseconds",
-    "args": [
-      "None"
-    ]
+    "description": "返回毫秒级精度的系统运行时间。",
+    "return": "系统运行时间（毫秒）"
   },
   "IPO_SYSCALL_ELAPSED_MS": {
-    "description": "Returns elapsed time using wrap-safe millisecond arithmetic.",
-    "return": "Elapsed milliseconds since start_ms",
-    "args": []
+    "description": "使用防回绕毫秒算法返回经过的时间。",
+    "return": "自 start_ms 起经过的毫秒数"
   },
   "IPO_SYSCALL_TIMER_AFTER": {
-    "description": "Checks whether the requested interval elapsed since start_ms.",
-    "return": "1 if delay has elapsed, otherwise 0",
-    "args": []
+    "description": "检查自 start_ms 起请求的时间间隔是否已过。",
+    "return": "如果延迟时间已过则为 1，否则为 0"
   },
   "IPO_SYSCALL_KEYMAP_SET": {
-    "description": "Registers dynamic keyboard layout with custom unicode glyphs.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "注册带有自定义 Unicode 字形的动态键盘布局。",
+    "return": "成功时为 0，出错时返回负值"
   },
   "IPO_SYSCALL_KEYMAP_GET": {
-    "description": "Gets identifier of currently active keyboard layout.",
-    "return": "Name length, or negative on error",
-    "args": []
+    "description": "获取当前活动键盘布局的标识符。",
+    "return": "名称长度，出错时返回负值"
   },
   "IPO_SYSCALL_FONT_LOAD": {
-    "description": "Loads custom bitmap font into VGA character generator.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "将自定义点阵字体加载到 VGA 字符生成器中。",
+    "return": "成功时为 0，出错时返回负值"
   },
   "IPO_SYSCALL_KEYMAP_DISABLE": {
-    "description": "Disables keymap from layout switching rotation.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "从布局切换轮换中禁用按键映射。",
+    "return": "成功时为 0，出错时返回负值"
   },
   "IPO_SYSCALL_KEYMAP_ENABLE": {
-    "description": "Enables previously disabled layout in switching rotation.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "在切换轮换中重新启用先前禁用的布局。",
+    "return": "成功时为 0，出错时返回负值"
   },
   "IPO_SYSCALL_KEYMAP_REMOVE": {
-    "description": "Removes and unregisters keymap completely from kernel.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "从内核中完全删除并注销按键映射。",
+    "return": "成功时为 0，出错时返回负值"
   },
   "IPO_SYSCALL_KEYMAP_TRANSLATE": {
-    "description": "Translates hardware scancode via active keymap translation table.",
-    "return": "Translated character codepoint, or 0 if unmapped",
-    "args": []
+    "description": "通过活动按键映射转换表转换硬件扫描码。",
+    "return": "转换后的字符码点，若未映射则为 0"
   },
   "IPO_SYSCALL_KEYMAP_IS_ACTIVE": {
-    "description": "Checks if specified keymap is currently active.",
-    "return": "1 if active, 0 if inactive, negative on error",
-    "args": []
+    "description": "检查指定的按键映射当前是否处于活动状态。",
+    "return": "如果活动则为 1，非活动为 0，出错时返回负值"
   },
   "IPO_SYSCALL_KEYMAP_CYCLE_NEXT": {
-    "description": "Cycles to next active keyboard layout and updates VGA language bar.",
-    "return": "Index of new active layout",
-    "args": [
-      "None"
-    ]
+    "description": "循环切换到下一个活动键盘布局并更新 VGA 语言栏。",
+    "return": "新活动布局的索引"
   },
   "IPO_SYSCALL_KEYMAP_CYCLE_PREV": {
-    "description": "Cycles to previous active keyboard layout and updates VGA language bar.",
-    "return": "Index of new active layout",
-    "args": [
-      "None"
-    ]
+    "description": "循环切换到上一个活动键盘布局并更新 VGA 语言栏。",
+    "return": "新活动布局的索引"
   },
   "IPO_SYSCALL_KEYMAP_GET_NAME": {
-    "description": "Gets active layout abbreviation (EN, RU, UA, ZH).",
-    "return": "Length of layout label string",
-    "args": []
+    "description": "获取活动布局缩写（EN, RU, UA, ZH）。",
+    "return": "布局标签字符串的长度"
   },
   "IPO_SYSCALL_FONT_GET_INFO": {
-    "description": "Queries loaded font family name and count of registered glyphs.",
-    "return": "0 on success, negative error code otherwise",
-    "args": []
+    "description": "查询已加载字体的系列名称和已注册字形计数。",
+    "return": "成功时为 0，否则返回负错误码"
   },
   "IPO_SYSCALL_VGA_GLYPH": {
-    "description": "Renders custom unicode glyph to current screen cursor position.",
-    "return": "0 on success, negative if glyph missing",
-    "args": []
+    "description": "在当前屏幕光标位置渲染自定义 Unicode 字形。",
+    "return": "成功时为 0，如果字形缺失则返回负值"
   },
   "IPO_SYSCALL_VGA_SET_MODE": {
-    "description": "Switches display video mode and reconfigures DAC / Framebuffer.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "切换显示视频模式并重新配置 DAC / 帧缓冲区。",
+    "return": "成功时为 0，出错时返回负值"
   },
   "IPO_SYSCALL_VGA_GET_MODE": {
-    "description": "Queries currently active video display mode.",
-    "return": "Active video mode index (e.g. 0x03, 0x13)",
-    "args": [
-      "None"
-    ]
+    "description": "查询当前活动的视频显示模式。",
+    "return": "活动视频模式索引（例如 0x03, 0x13）"
   },
   "IPO_SYSCALL_SYSTEM_INTERRUPT": {
-    "description": "Performs hardware system control: 8042 reboot, ACPI shutdown, crash dump.",
-    "return": "0 on success, or does not return",
-    "args": []
+    "description": "执行硬件系统控制：8042 重启、ACPI 关机、崩溃转储。",
+    "return": "成功时为 0，或不返回"
   },
   "IPO_SYSCALL_DRIVER_REGISTER": {
-    "description": "Registers runtime device driver and connects its subsystem hooks.",
-    "return": "Registration index (>= 0), or negative on error",
-    "args": []
+    "description": "在运行时注册设备驱动程序并连接其子系统挂钩。",
+    "return": "注册索引 (>= 0)，出错时返回负值"
   },
   "IPO_SYSCALL_DRIVER_UNREGISTER": {
-    "description": "Detaches hooks and unloads dynamic runtime driver.",
-    "return": "0 on success, negative error code otherwise",
-    "args": []
+    "description": "卸载驱动程序，断开 I/O 端口并清理资源。",
+    "return": "成功时为 0，否则返回负错误码"
   },
   "IPO_SYSCALL_DRIVER_LIST": {
-    "description": "Lists all registered device drivers and active subsystem hooks.",
-    "return": "Count of registered drivers",
-    "args": [
-      "None"
-    ]
+    "description": "列出已注册的驱动程序、版本和功能。",
+    "return": "已注册驱动程序的数量"
   },
   "IPO_SYSCALL_DRIVER_SET_DESC": {
-    "description": "Sets descriptive text metadata for registered driver.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "更新设备驱动程序的用户可读描述字符串。",
+    "return": "成功时为 0，出错时返回负值"
   },
   "IPO_SYSCALL_FS_STATVFS": {
-    "description": "Queries mounted IPO_FS storage pool block and inode capacity statistics.",
-    "return": "0 on success, non-zero on error",
-    "args": []
+    "description": "获取文件系统统计信息：总/可用块、inode 健康状态、挂载标志。",
+    "return": "成功时为 0，出错时返回非零值"
   },
   "IPO_SYSCALL_WM_CREATE_WINDOW": {
-    "description": "Creates managed desktop window with titlebar, borders, framebuffer and event callbacks.",
-    "return": "Pointer to allocated wm_window_t, or NULL on error",
-    "args": []
+    "description": "通过合成器创建并分配新的 GUI 窗口。",
+    "return": "指向已分配 wm_window_t 的指针，出错时返回 NULL"
   },
   "IPO_SYSCALL_WM_DESTROY_WINDOW": {
-    "description": "Closes and destroys window, releasing its framebuffer and compositor nodes.",
-    "return": "0 on success",
-    "args": []
+    "description": "销毁窗口，释放后备缓冲区内存并重新聚焦。",
+    "return": "成功时为 0"
   },
   "IPO_SYSCALL_WM_SESSION_START": {
-    "description": "Enters VGA Mode 13h, allocates a backbuffer, and starts the compositor session.",
-    "return": "0 on success",
-    "args": [
-      "None"
-    ]
+    "description": "初始化 GUI 合成器会话并切换到图形模式。",
+    "return": "成功时为 0"
   },
   "IPO_SYSCALL_WM_SESSION_STOP": {
-    "description": "Stops WM compositor task, destroys all open windows and restores text mode.",
-    "return": "0 on success",
-    "args": [
-      "None"
-    ]
+    "description": "终止合成器会话并恢复文本模式控制台。",
+    "return": "成功时为 0"
   },
   "IPO_SYSCALL_WM_SESSION_ACTIVE": {
-    "description": "Checks whether GUI Window Manager desktop session is running.",
-    "return": "1 if GUI session active, 0 if in text mode",
-    "args": [
-      "None"
-    ]
+    "description": "检查 GUI 窗口管理器是否正在活动运行。",
+    "return": "如果 GUI 会话处于活动状态则为 1，在文本模式下为 0"
   },
   "IPO_SYSCALL_WM_GET_COUNT": {
-    "description": "Returns total number of active windows in compositor list.",
-    "return": "Total open windows count",
-    "args": [
-      "None"
-    ]
+    "description": "返回当前打开窗口的总数。",
+    "return": "打开的窗口总数"
   },
   "IPO_SYSCALL_WM_GET_FOCUSED": {
-    "description": "Gets top-level window handle currently possessing user input focus.",
-    "return": "Pointer to focused window, or NULL",
-    "args": [
-      "None"
-    ]
+    "description": "返回指向当前聚焦窗口的指针。",
+    "return": "指向聚焦窗口的指针，或 NULL"
   },
   "IPO_SYSCALL_WM_SET_FOCUS": {
-    "description": "Raises window to top of z-order and sets input focus.",
-    "return": "0 on success",
-    "args": []
+    "description": "将输入焦点设置到指定窗口并将其置于顶层。",
+    "return": "成功时为 0"
   },
   "IPO_SYSCALL_WM_FOCUS_NEXT": {
-    "description": "Cycles focus forward to next window in z-order (Alt+Tab behavior).",
-    "return": "0 on success",
-    "args": [
-      "None"
-    ]
+    "description": "将输入焦点切换到 Z 序中的下一个窗口 (Alt+Tab)。",
+    "return": "成功时为 0"
   },
   "IPO_SYSCALL_WM_FOCUS_PREV": {
-    "description": "Cycles focus backward to previous window in z-order.",
-    "return": "0 on success",
-    "args": [
-      "None"
-    ]
+    "description": "将输入焦点切换到 Z 序中的上一个窗口。",
+    "return": "成功时为 0"
   },
   "IPO_SYSCALL_WM_INVALIDATE": {
-    "description": "Marks window dirty, triggering redraw in next compositor frame.",
-    "return": "0 on success",
-    "args": []
+    "description": "使窗口区域无效，请求在下一帧中重绘。",
+    "return": "成功时为 0"
   },
   "IPO_SYSCALL_WM_IS_VALID": {
-    "description": "Checks whether window handle exists in active compositor list.",
-    "return": "1 if valid and active, 0 otherwise",
-    "args": []
+    "description": "检查窗口句柄是否有效且已被合成器识别。",
+    "return": "如果有效且活动则为 1，否则为 0"
   },
   "IPO_SYSCALL_GETPID": {
-    "description": "Returns unique process ID (PID) of calling task.",
-    "return": "Current process ID (PID)",
-    "args": [
-      "None"
-    ]
+    "description": "返回调用任务的进程标识符 (PID)。",
+    "return": "当前进程 ID (PID)"
   },
   "IPO_SYSCALL_WM_TOGGLE_MAXIMIZE": {
-    "description": "Toggles window between fullscreen maximized and floating geometry.",
-    "return": "0 on success",
-    "args": []
+    "description": "切换窗口的最大化状态。",
+    "return": "成功时为 0"
   },
   "IPO_SYSCALL_WM_RESIZE": {
-    "description": "Resizes window dimensions and reallocates pixel framebuffer.",
-    "return": "1 on success, 0 on memory allocation failure",
-    "args": []
+    "description": "调整窗口尺寸并重新分配后备缓冲区。",
+    "return": "成功时为 1，内存分配失败时为 0"
   },
   "IPO_SYSCALL_WM_GET_LIST": {
-    "description": "Returns pointer to head of active window list.",
-    "return": "Pointer to head of active window list, or NULL if empty",
-    "args": [
-      "None"
-    ]
+    "description": "返回指向合成器活动窗口列表头的指针。",
+    "return": "指向活动窗口列表头的指针，如果为空则返回 NULL"
   },
   "IPO_SYSCALL_PROCESS_SWITCH_FG": {
-    "description": "Switches foreground terminal screen buffer and focus to specified PID.",
-    "return": "0 on success, negative if PID not found",
-    "args": []
+    "description": "将前台输入焦点切换到目标进程。",
+    "return": "成功时为 0，如果未找到 PID 则返回负值"
   },
   "IPO_SYSCALL_WM_INIT": {
-    "description": "Initializes the window list when it is empty.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "初始化窗口管理器的核心结构和显示设置。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_INVALIDATE_ALL": {
-    "description": "Marks every window as needing redraw.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "请求对所有打开的窗口进行全屏重绘。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_SET_FULLSCREEN": {
-    "description": "Enables or disables fullscreen mode for a window.",
-    "return": "0",
-    "args": []
+    "description": "为窗口启用或禁用全屏模式。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_MINIMIZE": {
-    "description": "Minimizes a window.",
-    "return": "0",
-    "args": []
+    "description": "最小化窗口，将其从屏幕中隐藏。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_RESTORE": {
-    "description": "Restores a minimized window.",
-    "return": "0",
-    "args": []
+    "description": "将最小化或最大化的窗口恢复为其正常尺寸。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_MOVE": {
-    "description": "Moves a window to the specified position.",
-    "return": "0",
-    "args": []
+    "description": "移动窗口在屏幕上的位置。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_SET_TITLE": {
-    "description": "Sets a window title.",
-    "return": "0",
-    "args": []
+    "description": "设置窗口标题栏的文本标签。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_SET_SHAPE": {
-    "description": "Sets the window shape mask and its dimensions.",
-    "return": "0",
-    "args": []
+    "description": "配置窗口的边框、阴影和圆角几何属性。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_DISPATCH_KEY": {
-    "description": "Routes a keyboard scancode through the window manager.",
-    "return": "1 if handled, otherwise 0",
-    "args": []
+    "description": "将键盘事件转发到当前聚焦的活动窗口。",
+    "return": "如果已处理则为 1，否则为 0"
   },
   "IPO_SYSCALL_WM_COMPOSE": {
-    "description": "Composes windows and overlays into the supplied backbuffer.",
-    "return": "0",
-    "args": []
+    "description": "将按 Z 序排列的窗口场景和叠加层渲染到提供的后备缓冲区中。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_COMPOSITOR_TICK": {
-    "description": "Runs one window compositor update.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "运行一次窗口合成器更新周期。",
+    "return": "0"
   },
   "IPO_SYSCALL_WM_SESSION_RUN": {
-    "description": "Runs the blocking, animated window-manager session.",
-    "return": "None (returns when session ends)",
-    "args": [
-      "None"
-    ]
+    "description": "运行阻塞式的动画窗口管理器会话。",
+    "return": "无（会话结束时返回）"
   },
   "IPO_SYSCALL_WM_GET_COUNT_PID": {
-    "description": "Returns the number of windows owned by a process.",
-    "return": "Number of windows owned by the process",
-    "args": []
+    "description": "返回由指定进程拥有的窗口数量。",
+    "return": "该进程拥有的窗口数量"
   },
   "IPO_SYSCALL_WM_HAS_WINDOWS_PID": {
-    "description": "Checks whether a process owns any windows.",
-    "return": "1 if the process owns windows, otherwise 0",
-    "args": []
+    "description": "检查指定进程是否拥有任何窗口。",
+    "return": "如果进程拥有窗口则为 1，否则为 0"
   },
   "IPO_SYSCALL_WM_FOCUS_PID": {
-    "description": "Focuses a window owned by the specified process.",
-    "return": "0",
-    "args": []
+    "description": "聚焦由指定进程拥有的窗口。",
+    "return": "0"
   },
   "IPO_SYSCALL_NET_DNS_RESOLVE": {
-    "description": "Resolves a hostname using the configured DNS server.",
-    "return": "1 on success, otherwise 0",
-    "args": []
+    "description": "使用配置的 DNS 服务器解析主机名。",
+    "return": "成功时为 1，否则为 0"
   },
   "IPO_SYSCALL_NET_ICMP_SEND": {
-    "description": "Sends an ICMP echo request.",
-    "return": "ICMP send result, or negative on error",
-    "args": []
+    "description": "发送 ICMP 回显请求。",
+    "return": "ICMP 发送结果，出错时返回负值"
   },
   "IPO_SYSCALL_NET_ICMP_POLL": {
-    "description": "Waits for an ICMP echo reply matching the identifier and sequence.",
-    "return": "1 if a matching reply is received, otherwise 0",
-    "args": []
+    "description": "等待与标识符和序列匹配的 ICMP 回显应答。",
+    "return": "如果收到匹配的应答则为 1，否则为 0"
   },
   "IPO_SYSCALL_NET_SOCKET": {
-    "description": "Creates a kernel-managed network socket.",
-    "return": "Socket descriptor, or negative on error",
-    "args": []
+    "description": "创建内核管理的网络套接字。",
+    "return": "套接字描述符，出错时返回负值"
   },
   "IPO_SYSCALL_NET_BIND": {
-    "description": "Assigns a local address to a socket.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "为套接字分配本地地址。",
+    "return": "成功时为 0，出错时返回负值"
   },
   "IPO_SYSCALL_NET_LISTEN": {
-    "description": "Marks a bound stream socket as listening for connections.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "将绑定的流式套接字标记为侦听传入连接。",
+    "return": "成功时为 0，出错时返回负值"
   },
   "IPO_SYSCALL_NET_ACCEPT": {
-    "description": "Accepts an incoming connection, optionally waiting up to timeout_ms.",
-    "return": "Connected socket descriptor, or negative on error/timeout",
-    "args": []
+    "description": "接受传入连接，可选择最多等待 timeout_ms。",
+    "return": "已连接的套接字描述符，出错或超时返回负值"
   },
   "IPO_SYSCALL_NET_CONNECT": {
-    "description": "Connects a socket to a remote address.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "将套接字连接到远程地址。",
+    "return": "成功时为 0，出错时返回负值"
   },
   "IPO_SYSCALL_NET_SEND": {
-    "description": "Sends data through a connected socket.",
-    "return": "Number of bytes sent, or negative on error",
-    "args": []
+    "description": "通过已连接的套接字发送数据。",
+    "return": "发送的字节数，出错时返回负值"
   },
   "IPO_SYSCALL_NET_RECV": {
-    "description": "Receives data from a connected socket.",
-    "return": "Number of bytes received, or negative on error",
-    "args": []
+    "description": "从已连接的套接字接收数据。",
+    "return": "接收到的字节数，出错时返回负值"
   },
   "IPO_SYSCALL_NET_CLOSE": {
-    "description": "Closes a socket and releases its kernel resources.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "关闭套接字并释放其内核资源。",
+    "return": "成功时为 0，出错时返回负值"
   },
   "IPO_SYSCALL_NET_CONNECT_ENDPOINT": {
-    "description": "Resolves the endpoint if needed and connects the socket.",
-    "return": "0 on success, negative on error",
-    "args": []
+    "description": "根据需要解析端点并连接套接字。",
+    "return": "成功时为 0，出错时返回负值"
   },
   "IPO_SYSCALL_NET_POLL": {
-    "description": "Polls the network device and processes pending network work.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "轮询网络设备并处理挂起的网络工作。",
+    "return": "0"
   },
   "IPO_SYSCALL_NET_GET_INTERFACE": {
-    "description": "Copies network interface configuration and link state to userspace.",
-    "return": "1 on success, 0 on failure (or pointer to cached net_if_t in C API)",
-    "args": []
+    "description": "将网络接口配置和链路状态复制到用户空间。",
+    "return": "成功时为 1，失败时为 0（或 C API 中指向缓存 net_if_t 的指针）"
   },
   "IPO_SYSCALL_NET_INIT": {
-    "description": "Initializes network subsystems using capacities supplied by the caller.",
-    "return": "1 on success, otherwise 0",
-    "args": []
+    "description": "使用调用方提供的容量初始化网络子系统。",
+    "return": "成功时为 1，否则为 0"
   },
   "IPO_SYSCALL_NET_SET_IP": {
-    "description": "Updates the network interface IPv4 configuration.",
-    "return": "0",
-    "args": []
+    "description": "更新网络接口的 IPv4 配置。",
+    "return": "0"
   },
   "IPO_SYSCALL_KBD_GET_SCANCODE": {
-    "description": "Pulls next available raw hardware scancode non-blocking.",
-    "return": "Next scancode from queue or 0 if queue empty",
-    "args": [
-      "None"
-    ]
+    "description": "以非阻塞方式提取下一个可用的原始硬件扫描码。",
+    "return": "队列中的下一个扫描码，队列为空则为 0"
   },
   "IPO_SYSCALL_KBD_WAIT_SCANCODE": {
-    "description": "Blocks calling process until a keyboard scancode is received.",
-    "return": "Scancode of pressed key",
-    "args": [
-      "None"
-    ]
+    "description": "阻塞调用进程，直到接收到键盘扫描码。",
+    "return": "按下的键的扫描码"
   },
   "IPO_SYSCALL_KBD_SET_APP_MODE": {
-    "description": "Switches keyboard focus between terminal shell and raw application mode.",
-    "return": "0",
-    "args": []
+    "description": "在终端 shell 和原始应用程序模式之间切换键盘焦点。",
+    "return": "0"
   },
   "IPO_SYSCALL_KBD_FLUSH": {
-    "description": "Flushes all kernel keyboard queues, 8042 hardware buffers, and modifier states.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "刷新所有内核键盘队列、8042 硬件缓冲区和修饰键状态。",
+    "return": "0"
   },
   "IPO_SYSCALL_KBD_GET_MODIFIERS": {
-    "description": "Returns current state bitmask of keyboard modifier keys.",
-    "return": "Bitmask of active modifier keys (Shift, Ctrl, Alt, CapsLock, NumLock, ScrollLock)",
-    "args": [
-      "None"
-    ]
+    "description": "返回键盘修饰键的当前状态位掩码。",
+    "return": "活动修饰键位掩码（Shift、Ctrl、Alt、CapsLock、NumLock、ScrollLock）"
   },
   "IPO_SYSCALL_KBD_POLL": {
-    "description": "Polls 8042 keyboard controller ports and dispatches pending events.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "轮询 8042 键盘控制器端口并分派待处理事件。",
+    "return": "0"
   },
   "IPO_SYSCALL_KBD_GET_KEY_STRING": {
-    "description": "Resolves human-readable name string for a hardware scancode (e.g. \"Enter\", \"Space\").",
-    "return": "1 on copy to buffer, or kernel string pointer if no buffer provided",
-    "args": []
+    "description": "解析硬件扫描码的用户可读名称字符串（例如 \"Enter\"、\"Space\"）。",
+    "return": "复制到缓冲区时为 1，未提供缓冲区时返回内核字符串指针"
   },
   "IPO_SYSCALL_MOUSE_GET_STATE": {
-    "description": "Retrieves current PS/2 mouse coordinates, button click states, and wheel delta.",
-    "return": "0",
-    "args": []
+    "description": "获取当前 PS/2 鼠标坐标、按键点击状态和滚轮增量。",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_SET_CURSOR": {
-    "description": "Sets hardware CRTC text mode cursor position via ports 0x3D4/0x3D5.",
-    "return": "0",
-    "args": []
+    "description": "通过端口 0x3D4/0x3D5 设置硬件 CRTC 文本模式光标位置。",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_GET_CURSOR": {
-    "description": "Reads hardware text mode cursor position from CRTC registers.",
-    "return": "Current cursor linear offset (row * 80 + col)",
-    "args": [
-      "None"
-    ]
+    "description": "从 CRTC 寄存器读取硬件文本模式光标位置。",
+    "return": "当前光标线性偏移量（行 * 80 + 列）"
   },
   "IPO_SYSCALL_VGA_SHOW_CURSOR": {
-    "description": "Enables and shows the hardware text mode blinking cursor.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "启用并显示硬件文本模式闪烁光标。",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_HIDE_CURSOR": {
-    "description": "Disables and hides the hardware text mode cursor.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "禁用并隐藏硬件文本模式光标。",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_SET_PALETTE": {
-    "description": "Programs 6-bit RGB values into the VGA DAC palette registers (ports 0x3C8/0x3C9).",
-    "return": "0",
-    "args": []
+    "description": "将 6 位 RGB 值编程到 VGA DAC 调色板寄存器（端口 0x3C8/0x3C9）。",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_SET_OVERLAY_FLAGS": {
-    "description": "Sets overlay visibility flags for raw VGA Mode 13h processes (hiding Close button or mouse cursor).",
-    "return": "0",
-    "args": []
+    "description": "为原始 VGA 模式 13h 进程设置叠加层可见性标志（隐藏关闭按钮或鼠标光标）。",
+    "return": "0"
   },
   "IPO_SYSCALL_VGA_GET_OVERLAY_FLAGS": {
-    "description": "Returns current VGA overlay visibility flags for the active process.",
-    "return": "Current overlay flags bitmask",
-    "args": [
-      "None"
-    ]
+    "description": "返回活动进程的当前 VGA 叠加层可见性标志。",
+    "return": "当前叠加层标志位掩码"
   },
   "IPO_SYSCALL_AUDIO_INIT": {
-    "description": "Initializes the Sound Blaster 16 DSP, DMA Channel 5, and software mixer.",
-    "return": "1 if audio hardware initialized, 0 otherwise",
-    "args": [
-      "None"
-    ]
+    "description": "初始化 Sound Blaster 16 DSP、DMA 通道 5 和软件混音器。",
+    "return": "如果音频硬件已初始化则为 1，否则为 0"
   },
   "IPO_SYSCALL_AUDIO_TICK": {
-    "description": "Advances audio playback stream mixer and refills DMA buffers.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "推进音频播放流混音器并重新填充 DMA 缓冲区。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STOP_ALL": {
-    "description": "Stops all active audio playback streams and halts Sound Blaster 16 DMA.",
-    "return": "0",
-    "args": [
-      "None"
-    ]
+    "description": "停止所有活动的音频播放流并暂停 Sound Blaster 16 DMA。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_CREATE": {
-    "description": "Creates a static in-memory audio playback stream.",
-    "return": "Pointer to audio_stream_t handle, or NULL on error",
-    "args": []
+    "description": "创建静态内存中音频播放流。",
+    "return": "指向 audio_stream_t 句柄的指针，出错时返回 NULL"
   },
   "IPO_SYSCALL_AUDIO_STREAM_CREATE_RING": {
-    "description": "Creates a continuous ring-buffered audio stream for dynamic real-time playback.",
-    "return": "Pointer to audio_stream_t handle, or NULL on error",
-    "args": []
+    "description": "创建用于动态实时播放的连续环形缓冲音频流。",
+    "return": "指向 audio_stream_t 句柄的指针，出错时返回 NULL"
   },
   "IPO_SYSCALL_AUDIO_STREAM_DESTROY": {
-    "description": "Stops playback, unlinks, and frees an audio stream handle.",
-    "return": "0",
-    "args": []
+    "description": "停止播放，取消链接并释放音频流句柄。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_PLAY": {
-    "description": "Starts or resumes playback of an audio stream.",
-    "return": "0",
-    "args": []
+    "description": "启动或恢复音频流的播放。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_PAUSE": {
-    "description": "Pauses playback of an audio stream preserving current position.",
-    "return": "0",
-    "args": []
+    "description": "暂停音频流的播放并保留当前位置。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_STOP": {
-    "description": "Stops playback and rewinds audio stream position to beginning.",
-    "return": "0",
-    "args": []
+    "description": "停止播放并将音频流位置重置到开头。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_SEEK": {
-    "description": "Seeks playback position within an audio stream.",
-    "return": "0",
-    "args": []
+    "description": "在音频流中查找播放位置。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_SET_VOL": {
-    "description": "Adjusts individual playback volume of an audio stream.",
-    "return": "0",
-    "args": []
+    "description": "调整音频流的单独播放音量。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_PROGRESS": {
-    "description": "Queries current playback progress of an audio stream.",
-    "return": "0",
-    "args": []
+    "description": "查询音频流的当前播放进度。",
+    "return": "0"
   },
   "IPO_SYSCALL_AUDIO_STREAM_UPDATE": {
-    "description": "Appends or updates buffer data in a streaming ring-buffer.",
-    "return": "0",
-    "args": []
+    "description": "追加或更新流式环形缓冲区中的缓冲区数据。",
+    "return": "0"
   },
   "IPO_SYSCALL_BINFMT_REGISTER": {
-    "description": "Registers dynamic executable binary format handler with signature matching, delegating non-native execution to an interpreter.",
-    "return": "0 on success, or negative error code",
-    "args": []
+    "description": "注册具有签名匹配的动态可执行二进制格式处理程序，将非本机执行委托给解释器。",
+    "return": "成功时为 0，或返回负错误码"
   },
   "IPO_SYSCALL_BINFMT_UNREGISTER": {
-    "description": "Unregisters a previously registered dynamic binary format handler by name.",
-    "return": "0 on success, or negative error code",
-    "args": []
+    "description": "按名称注销先前注册的动态二进制格式处理程序。",
+    "return": "成功时为 0，或返回负错误码"
   },
   "IPO_SYSCALL_BINFMT_LIST": {
-    "description": "Enumerates and lists all currently registered dynamic binary format handlers.",
-    "return": "Count of active registered binary format handlers",
-    "args": [
-      "None"
-    ]
+    "description": "枚举并列出当前注册的所有动态二进制格式处理程序。",
+    "return": "当前注册的活动二进制格式处理程序数量"
   },
   "IPO_SYSCALL_EXIT": {
-    "description": "Terminates calling process, releases memory and switches context.",
-    "return": "Does not return (process context destroyed)",
-    "args": []
+    "description": "终止调用进程，释放内存并切换上下文。",
+    "return": "不返回（进程上下文被销毁）"
   }
 }

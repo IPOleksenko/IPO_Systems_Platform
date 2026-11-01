@@ -19,7 +19,7 @@ Choosing the right motherboard and processor is critical when assembling a physi
 | **Modern Intel (Core i3–i9)** | 1st–14th Gen Core | **Incompatible** | Lacks Intel FSP; Boot Guard blocks SPI | Requires UEFI / AHCI emulation |
 | **AMD Zen (AM4 / AM5)** | Ryzen 1000–9000 | **Incompatible** | Handled by AMD PSP before 复位向量 | Non-PC-AT bootstrap sequence |
 
-<Callout type="warning" lang="en" title="Why Modern Chipsets Cannot Boot Custom Reset ROMs">
+<Callout type="warning" title="Why Modern Chipsets Cannot Boot Custom Reset ROMs">
 Modern Intel and AMD processors do not begin execution directly at `0xFFFFFFF0` in conventional flash. Intel Boot Guard cryptographically authenticates Microcode and Firmware Interface Tables (FIT) before releasing CPU reset. AMD platforms rely on the Platform Security Processor (PSP / ARM core). For bare-metal SPI experiments, choose **Intel i440FX** or **Intel Q35/ICH9** platforms.
 </Callout>
 

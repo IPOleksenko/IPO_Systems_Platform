@@ -16,7 +16,7 @@ This repository contains the documentation site for **IPO Systems Platform**,
 a from-scratch software stack for x86 PCs:
 
 - **IPO_Boot_ROM**: chipset and memory initialization
-- **IPO_Firmware**: BIOS-compatible services
+- **IPO_Firmware**: firmware services
 - **IPO_OS**: kernel, IPO_FS file system, system calls and a runtime for custom programs
 
 ---
@@ -36,6 +36,13 @@ npm run build
 # Preview production build locally
 npm run preview
 ```
+
+## 📥 Download Formats
+
+The downloads page offers ZIP, TAR.GZ, TAR.BZ2, and TAR.XZ archives from a format
+picker. IPO_Boot_ROM archives are available for standard 64 KB, 128 KB, 256 KB,
+512 KB, 1 MB, 2 MB, 4 MB, 8 MB, 16 MB, 32 MB, 64 MB, and 128 MB flash sizes;
+choose the image size and archive format before downloading.
 
 ---
 

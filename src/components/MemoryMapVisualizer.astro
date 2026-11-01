@@ -1,11 +1,11 @@
 ---
-import { getTranslation } from '../utils/i18n';
+import { getTranslation, detectLang } from '../utils/i18n';
 
 interface Props {
-  lang: string;
+  lang?: string;
 }
 
-const { lang } = Astro.props;
+const lang = detectLang(Astro.props.lang, Astro.url, Astro.params);
 
 const memoryRegions = [
   {

@@ -2,8 +2,10 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import LocalizedDiagram from '../../components/LocalizedDiagram.astro';
+import ArchiveDownloadOptions from '../../components/ArchiveDownloadOptions.astro';
 import { siteConfig } from '../../../site.config';
 import { getTranslation } from '../../utils/i18n';
+import { getRealArtifacts, groupArtifacts } from '../../utils/artifacts';
 
 export function getStaticPaths() {
   return Object.keys(siteConfig.languages).map((lang) => ({
@@ -16,6 +18,10 @@ const currentLang = lang || 'en';
 
 const base = siteConfig.base;
 const cleanBase = base.endsWith('/') ? base : `${base}/`;
+const downloadsBase = `${cleanBase}downloads/`;
+const archiveGroups = new Map(
+  groupArtifacts(getRealArtifacts().artifacts).map((group) => [group.id, group.artifacts])
+);
 ---
 
 <BaseLayout currentLang={currentLang}>
@@ -76,8 +82,8 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
         <!-- Card 1: IPO_OS -->
         <div class="project-card">
           <div class="card-header">
-            <span class="card-badge" style="background-color: #eff6ff; color: #2563eb;">OS / Kernel</span>
-            <a href={siteConfig.projects.ipo_os.repoUrl} target="_blank" rel="noopener noreferrer" class="repo-badge">GitHub ↗</a>
+            <span class="card-badge" style="background-color: #eff6ff; color: #2563eb;">{getTranslation(currentLang, 'home_badges.os')}</span>
+            <a href={siteConfig.projects.ipo_os.repoUrl} target="_blank" rel="noopener noreferrer" class="repo-badge" aria-label={getTranslation(currentLang, 'interface.open_github')}>{getTranslation(currentLang, 'nav.github')} ↗</a>
           </div>
           <h3 class="card-title">IPO_OS</h3>
           <p class="card-desc">
@@ -87,7 +93,7 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
             <a href={`${cleanBase}${currentLang}/ipo-os/overview`} class="card-link">
               {getTranslation(currentLang, 'home.os_docs_link')}
             </a>
-            <a href={`${cleanBase}downloads/IPO_OS.img`} download="IPO_OS.img" class="card-download-link" title="Download Image">
+            <a href={`${cleanBase}downloads/IPO_OS.img`} download="IPO_OS.img" class="card-download-link" title={getTranslation(currentLang, 'interface.download_image')}>
               ⬇️ IPO_OS.img
             </a>
           </div>
@@ -96,8 +102,8 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
         <!-- Card 2: IPO_Boot_ROM -->
         <div class="project-card">
           <div class="card-header">
-            <span class="card-badge" style="background-color: #ecfdf5; color: #059669;">Reset Initializer</span>
-            <a href={siteConfig.projects.ipo_boot_rom.repoUrl} target="_blank" rel="noopener noreferrer" class="repo-badge">GitHub ↗</a>
+            <span class="card-badge" style="background-color: #ecfdf5; color: #059669;">{getTranslation(currentLang, 'home_badges.boot_rom')}</span>
+            <a href={siteConfig.projects.ipo_boot_rom.repoUrl} target="_blank" rel="noopener noreferrer" class="repo-badge" aria-label={getTranslation(currentLang, 'interface.open_github')}>{getTranslation(currentLang, 'nav.github')} ↗</a>
           </div>
           <h3 class="card-title">IPO_Boot_ROM</h3>
           <p class="card-desc">
@@ -107,17 +113,20 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
             <a href={`${cleanBase}${currentLang}/ipo-boot-rom/overview`} class="card-link">
               {getTranslation(currentLang, 'home.boot_rom_docs_link')}
             </a>
-            <a href={`${cleanBase}downloads/ipo-boot-rom.zip`} download="ipo-boot-rom.zip" class="card-download-link" title="Download ZIP">
-              ⬇️ {getTranslation(currentLang, 'downloads.download_zip')}
-            </a>
+            <ArchiveDownloadOptions
+              artifacts={archiveGroups.get('ipo-boot-rom') ?? []}
+              lang={currentLang}
+              downloadsBase={downloadsBase}
+              actionText={getTranslation(currentLang, 'downloads.download_btn')}
+            />
           </div>
         </div>
 
         <!-- Card 3: IPO_Firmware -->
         <div class="project-card">
           <div class="card-header">
-            <span class="card-badge" style="background-color: #f5f3ff; color: #7c3aed;">BIOS Service Layer</span>
-            <a href={siteConfig.projects.ipo_firmware.repoUrl} target="_blank" rel="noopener noreferrer" class="repo-badge">GitHub ↗</a>
+            <span class="card-badge" style="background-color: #f5f3ff; color: #7c3aed;">{getTranslation(currentLang, 'home_badges.firmware')}</span>
+            <a href={siteConfig.projects.ipo_firmware.repoUrl} target="_blank" rel="noopener noreferrer" class="repo-badge" aria-label={getTranslation(currentLang, 'interface.open_github')}>{getTranslation(currentLang, 'nav.github')} ↗</a>
           </div>
           <h3 class="card-title">IPO_Firmware</h3>
           <p class="card-desc">
@@ -127,8 +136,8 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
             <a href={`${cleanBase}${currentLang}/ipo-firmware/overview`} class="card-link">
               {getTranslation(currentLang, 'home.firmware_docs_link')}
             </a>
-            <a href={`${cleanBase}downloads/ipo-firmware.zip`} download="ipo-firmware.zip" class="card-download-link" title="Download ZIP">
-              ⬇️ {getTranslation(currentLang, 'downloads.download_zip')}
+            <a href={`${downloadsBase}firmware.rom`} download="firmware.rom" class="card-download-link">
+              ⬇️ {getTranslation(currentLang, 'downloads.download_btn')}
             </a>
           </div>
         </div>
@@ -136,8 +145,8 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
         <!-- Card 4: IPO_OS_Software -->
         <div class="project-card">
           <div class="card-header">
-            <span class="card-badge" style="background-color: #fef3c7; color: #d97706;">Userland / Software</span>
-            <a href={siteConfig.projects.ipo_os_software.repoUrl} target="_blank" rel="noopener noreferrer" class="repo-badge">GitHub ↗</a>
+            <span class="card-badge" style="background-color: #fef3c7; color: #d97706;">{getTranslation(currentLang, 'home_badges.software')}</span>
+            <a href={siteConfig.projects.ipo_os_software.repoUrl} target="_blank" rel="noopener noreferrer" class="repo-badge" aria-label={getTranslation(currentLang, 'interface.open_github')}>{getTranslation(currentLang, 'nav.github')} ↗</a>
           </div>
           <h3 class="card-title">IPO_OS_Software</h3>
           <p class="card-desc">
@@ -147,9 +156,12 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
             <a href={`${cleanBase}${currentLang}/ipo-os-software/overview`} class="card-link">
               {getTranslation(currentLang, 'home.software_docs_link')}
             </a>
-            <a href={`${cleanBase}downloads/applications.zip`} download="applications.zip" class="card-download-link" title="Download applications.zip">
-              ⬇️ applications.zip
-            </a>
+            <ArchiveDownloadOptions
+              artifacts={archiveGroups.get('ipo-applications') ?? []}
+              lang={currentLang}
+              downloadsBase={downloadsBase}
+              actionText={getTranslation(currentLang, 'downloads.download_btn')}
+            />
           </div>
         </div>
       </div>
@@ -358,6 +370,8 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
     background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
     transition: all 0.15s ease;
+    font-family: inherit;
+    cursor: pointer;
   }
 
   .card-download-link:hover {
@@ -474,16 +488,9 @@ const cleanBase = base.endsWith('/') ? base : `${base}/`;
 
   .card-footer {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  @media (max-width: 480px) {
-    .card-footer {
-      flex-wrap: wrap;
-      gap: 0.75rem;
-    }
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
   }
 
   .card-link {

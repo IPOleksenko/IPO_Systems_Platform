@@ -33,7 +33,7 @@ To prepare bootable media for IPO_OS, a raw disk image is created with an MBR pa
 
 The project provides an independent Python utility, `disk_editor.py`, to manipulate files inside the raw disk image without needing root loopback mounts:
 
-<SharedCode id="disk-editor-cmds" lang="pt" />
+<SharedCode id="disk-editor-cmds" />
 
 ### Available Subcommands:
 - `format`: Initializes a fresh `IPO_FS` superblock, zeroing bitmap and inode tables.
@@ -47,7 +47,7 @@ The project provides an independent Python utility, `disk_editor.py`, to manipul
 
 ## ⚡ Writing the Image to Physical Media (`dd`)
 
-<Callout type="caution" lang="pt" title="Triple-Check Your Target Device!">
+<Callout type="caution" title="Triple-Check Your Target Device!">
 Writing to the wrong block device with `dd` will cause **irreversible data loss** on your host computer. Always verify drive identifiers using `lsblk` before proceeding.
 </Callout>
 

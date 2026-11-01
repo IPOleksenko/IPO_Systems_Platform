@@ -12,7 +12,7 @@ Before booting IPO_OS on physical hardware, configure the motherboard CMOS firmw
 ## ⚙️ Essential CMOS Settings
 
 ### 1. SATA Controller Mode Selection
-<Callout type="caution" lang="en" title="Critical Storage Controller Setting">
+<Callout type="caution" title="Critical Storage Controller Setting">
 If using a SATA hard drive or SSD on ICH7/ICH9 motherboards, locate **SATA Configuration** or **On-Chip Serial ATA** and set it to **IDE / Legacy / Compatible Mode**.
 Do NOT select `RAID` or `Native AHCI`, as the IPO_OS base kernel accesses storage through standard ATA ports `0x1F0`–`0x1F7`.
 </Callout>

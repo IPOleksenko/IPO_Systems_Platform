@@ -75,7 +75,7 @@
       "video_ram": "0xA0000 - 0xBFFFF: Video Framebuffer (VGA 0xA0000 & Text 0xB8000)",
       "ebda_rom": "0xC0000 - 0xFFFFF: VBIOS, Shadow RAM & ROM Firmware",
       "user_apps": "0x00800000 - 0x00FFFFFF: Userspace Applications (ELF32 / .bin)",
-      "kernel_heap": "0x01000000 - 0x04FFFFFF+: Kernel kmalloc Pool (64 MB) & PMM / sbrk"
+      "kernel_heap": "0x01000000 - 0x04FFFFFF: Kernel kmalloc Pool (64 MB) & PMM / sbrk"
     }
   },
   "syscall_pipeline": {
@@ -98,7 +98,18 @@
       "superblock": "LBA 2048: Superblock ('IPO_FS\\0\\0', Block Size, Pointers)",
       "inode_bitmap": "Block Bitmap / Inode Bitmap (Allocation Tracking)",
       "inode_table": "Inode Table (128 bytes per inode, 4 inodes / block)",
-      "data_blocks": "Data Extent Pool (Contiguous Multi-Block Extents)"
+      "data_blocks": "Data Extent Pool (Contiguous Multi-Block Extents)",
+      "mbr_title": "MBR / Pool+WAL",
+      "mbr_lba": "LBA 0..2047",
+      "wal_lba": "(WAL 2030..2039)",
+      "superblock_title": "Superblock",
+      "superblock_lba": "LBA 2048",
+      "bitmap_title": "Bitmaps",
+      "bitmap_desc": "Inodes + Blocks",
+      "inode_table_title": "Inode Table",
+      "inode_table_desc": "128 B per inode",
+      "data_extents_title": "Data Extents",
+      "contiguous_blocks": "Contiguous Blocks"
     }
   },
   "pc_assembly_flow": {

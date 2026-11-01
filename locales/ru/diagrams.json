@@ -75,7 +75,7 @@
       "video_ram": "0xA0000 - 0xBFFFF: Видеобуфер (VGA 0xA0000 и текст 0xB8000)",
       "ebda_rom": "0xC0000 - 0xFFFFF: VBIOS, Shadow RAM и ROM прошивки",
       "user_apps": "0x00800000 - 0x00FFFFFF: Пользовательские программы (ELF32 / .bin)",
-      "kernel_heap": "0x01000000 - 0x04FFFFFF+: Куча ядра kmalloc (64 МБ) и PMM / sbrk"
+      "kernel_heap": "0x01000000 - 0x04FFFFFF: Куча ядра kmalloc (64 МБ) и PMM / sbrk"
     }
   },
   "syscall_pipeline": {
@@ -98,7 +98,18 @@
       "superblock": "LBA 2048: Суперблок ('IPO_FS\\0\\0', размер блока, указатели)",
       "inode_bitmap": "Битовая карта блоков и дескрипторов (учёт занятости)",
       "inode_table": "Таблица Inodes (128 байт на inode, 4 дескриптора на блок)",
-      "data_blocks": "Пул блоков данных (непрерывные цепочки экстентов)"
+      "data_blocks": "Пул блоков данных (непрерывные цепочки экстентов)",
+      "mbr_title": "MBR / Pool+WAL",
+      "mbr_lba": "LBA 0..2047",
+      "wal_lba": "(WAL 2030..2039)",
+      "superblock_title": "Суперблок",
+      "superblock_lba": "LBA 2048",
+      "bitmap_title": "Битовые карты",
+      "bitmap_desc": "Inode + блоки",
+      "inode_table_title": "Таблица inode",
+      "inode_table_desc": "128 Б на inode",
+      "data_extents_title": "Экстенты данных",
+      "contiguous_blocks": "Непрерывные блоки"
     }
   },
   "pc_assembly_flow": {

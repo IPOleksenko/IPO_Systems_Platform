@@ -51,7 +51,7 @@ const nextLabel = getTranslation(currentLang, 'nav.next');
       )}
 
       <!-- Breadcrumbs -->
-      <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <nav class="breadcrumbs" aria-label={getTranslation(currentLang, 'interface.breadcrumb')}>
         <a href={`${cleanBase}${currentLang}/`}>{getTranslation(currentLang, 'nav.home')}</a>
         <span class="bc-sep">/</span>
         <span class="bc-current">{title || currentSlug}</span>
@@ -62,7 +62,7 @@ const nextLabel = getTranslation(currentLang, 'nav.next');
       </article>
 
       <!-- Pagination Buttons -->
-      <nav class="doc-pagination" aria-label="Pagination">
+      <nav class="doc-pagination" aria-label={getTranslation(currentLang, 'interface.pagination')}>
         {prev ? (
           <a href={`${cleanBase}${currentLang}/${prev.slug}`} class="page-link prev-link">
             <span class="link-dir">← {prevLabel}</span>

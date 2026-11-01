@@ -14,7 +14,7 @@ import SharedStruct from '../../../../components/SharedStruct.astro';
 
 ## 🗄️ Расположение структур IPO_FS на диске
 
-<LocalizedDiagram id="fs_layout" lang="ru" figureNum={7} />
+<LocalizedDiagram id="fs_layout" figureNum={7} />
 
 ---
 
@@ -22,7 +22,7 @@ import SharedStruct from '../../../../components/SharedStruct.astro';
 
 Файловая система начинается с 64-байтного суперблока, расположенного по смещению LBA 2048:
 
-<SharedStruct id="ipo_superblock" lang="ru" />
+<SharedStruct id="ipo_superblock" />
 
 ---
 
@@ -30,7 +30,7 @@ import SharedStruct from '../../../../components/SharedStruct.astro';
 
 Каждый файл или каталог представлен компактным **128-байтным дескриптором Inode** (по 4 дескриптора в одном 512-байтном блоке):
 
-<SharedStruct id="ipo_inode" lang="ru" />
+<SharedStruct id="ipo_inode" />
 
 ### Принцип работы экстентов (Extents)
 В отличие от классических систем с многоуровневыми косвенными блоками указателей, требующими множества позиционирований головки диска, `IPO_FS` использует непрерывные диапазоны секторов — **экстенты**:
@@ -85,7 +85,7 @@ struct ipo_dir_entry {
 | **`LBA 2031–2038`** | 4 КБ (8 секторов) | `storage_raw_disk_tx_entry_t[64]` | **Журнал предзаписи транзакций (WAL)**: 64 записи по 64 байта (`magic = 0x54584E4C` `'TXNL'`, фазы `INIT` → `PENDING` → `COMMITTED`) |
 | **`LBA 2039`** | 512 Б (1 сектор) | `storage_pool_raw_sb_t` | **Резервный суперблок пула (Backup Superblock)** для автоматического восстановления при повреждении LBA 2030 |
 
-<SharedStruct id="storage_pool_raw_sb" lang="ru" />
+<SharedStruct id="storage_pool_raw_sb" />
 
 ### 2. Журнал транзакций Write-Ahead Logging (WAL) и автовосстановление
 Перед любой записью блоков через `storage_pool_write_blocks()` подсистема фиксирует транзакцию в кольцевом журнале WAL (LBA 2031–2038):
@@ -94,7 +94,7 @@ struct ipo_dir_entry {
 3. Запись в журнале переводится в статус `STORAGE_TX_COMMITTED`, обновляется счётчик `generation` суперблока и вызывается `flush()`.
 4. При загрузке ОС или вызове `storage_pool_recover()` ядро проверяет CRC32 первичного суперблока (при ошибке переключается на резервный в LBA 2039) и сканирует журнал WAL, автоматически откатывая незавершённые (`PENDING`) транзакции.
 
-<SharedStruct id="storage_raw_disk_tx_entry" lang="ru" />
+<SharedStruct id="storage_raw_disk_tx_entry" />
 
 ### 3. Управление пулом из командной оболочки (`storage`) и syscall `statvfs`
 Системный вызов `IPO_SYSCALL_FS_STATVFS` (`0x1064`) возвращает в пространство пользователя полную статистику ёмкости смонтированного тома, а встроенная команда терминала `storage` позволяет управлять пулом на лету:
