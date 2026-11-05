@@ -115,7 +115,10 @@ const pageTitle = getTranslation(currentLang, 'downloads.page_title');
             {group.artifacts.length === 1 && !art.archive_group && (
               <div class="card-meta">
                 <span class="card-size">💾 {art.size_formatted}</span>
-                <span class="card-hash" title={art.sha256}>SHA256: {art.sha256.substring(0, 12)}...</span>
+                <span class="meta-hash" tabindex="0" title={`SHA256: ${art.sha256}`}>
+                  <span class="meta-hash-short">SHA256: {art.sha256.substring(0, 12)}...</span>
+                  <span class="meta-hash-full">{art.sha256}</span>
+                </span>
               </div>
             )}
             <div class="card-footer">
@@ -127,8 +130,13 @@ const pageTitle = getTranslation(currentLang, 'downloads.page_title');
                   actionText={getTranslation(currentLang, 'downloads.download_btn')}
                 />
               ) : (
-                <a href={`${downloadsBase}${art.file}`} download={art.file} class="download-btn secondary format-download">
-                  {getTranslation(currentLang, 'downloads.download_btn')}
+                <a href={`${downloadsBase}${art.file}`} download={art.file} class="btn-download-primary">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span>{getTranslation(currentLang, 'downloads.download_btn')}</span>
                 </a>
               )}
             </div>
@@ -291,7 +299,14 @@ const pageTitle = getTranslation(currentLang, 'downloads.page_title');
   }
 
   .featured-cta {
-    min-width: 11rem;
+    min-width: 18rem;
+    width: min(24rem, 100%);
+  }
+
+  .card-footer .btn-download-primary {
+    width: 100%;
+    min-height: 2.5rem;
+    box-sizing: border-box;
   }
 
   .meta-badge {

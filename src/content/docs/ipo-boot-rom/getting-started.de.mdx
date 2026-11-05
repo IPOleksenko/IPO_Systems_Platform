@@ -38,16 +38,17 @@ make all
 This compiles:
 - `src/reset.asm` (16 bytes placed strictly at `0xFFFFFFF0`)
 - `src/car.asm` (Cache-as-RAM MTRR configuration)
-- `src/mrc_440fx.asm, src/mrc_q35.asm` (DRAM training code)
-- `src/chipset.asm, src/payload_call.asm` (PAM chipset shadowing and Contract 2 handover)
+- `src/host_bridge.asm` (Dynamic CPU & Host Bridge discovery, PAM Shadow RAM configuration and locking)
+- `src/mrc.asm` (DRAM size detection from CMOS extended-memory registers, with a 64 MB fallback, and host-bridge DRAM register configuration)
+- `src/payload_call.asm` (Firmware magic validation & Contract 2 handover)
 
-Outputs: `build/bootrom.bin` (configurable via `FLASH_SIZE`, default 4 MB / 4,194,304 bytes).
+Outputs: `build/bootrom.bin` (configurable via `FLASH_SIZE`, default 4 MB / 4,194,304 bytes) and intermediate binaries in `build/.bin/`.
 
 ---
 
 ## 🧩 Erstellen eines einheitlichen SPI-Flash-Images
 
-Standardmäßig erstellt `make` ein einzelnes einheitliches `build/bootrom.bin`-Image (standardmäßig 4 MB, bereit für physische SPI-Flash-Chips wie W25Q32 oder QEMU). Beliebige Standard- und Nicht-Standard-Größen werden unterstützt (`FLASH_SIZE=256K`, `FLASH_SIZE=4M`, `FLASH_SIZE=8M`). Um eine externe Firmware-Nutzlast einzubetten, übergeben Sie `FIRMWARE=path/to/firmware.bin`:
+Standardmäßig erstellt `make` `build/bootrom.bin` mit einer Flash-Größe von 4 MB. `FLASH_SIZE` muss mindestens 64 KiB groß und ein Vielfaches von 16 Byte sein; die Firmware-Nutzlast ist auf 32 KiB begrenzt. Um eine externe Firmware-Nutzlast einzubetten, übergeben Sie `FIRMWARE=path/to/firmware.bin`:
 
 ```bash
 # 4 MB Boot ROM mit eingebetteter Firmware-Nutzlast erstellen

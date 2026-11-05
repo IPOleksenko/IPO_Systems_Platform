@@ -127,9 +127,27 @@ const otherArtifactGroups = artifactGroups.filter((group) => group.id !== featur
                     actionText={getTranslation(lang, 'downloads.download_btn')}
                   />
                 ) : (
-                  <a href={`${downloadsBase}${art.file}`} download={art.file} class="btn-download secondary">
-                    {getTranslation(lang, 'downloads.download_btn')}
-                  </a>
+                  <div class="archive-options-action">
+                    <div class="archive-options-meta" title={`SHA256: ${art.sha256}`}>
+                      <span class="meta-size">💾 {art.size_formatted}</span>
+                      <span class="meta-hash" tabindex="0" title={`SHA256: ${art.sha256}`}>
+                        <span class="meta-hash-short">SHA256: {art.sha256.slice(0, 12)}...</span>
+                        <span class="meta-hash-full">{art.sha256}</span>
+                      </span>
+                    </div>
+                    <a
+                      href={`${downloadsBase}${art.file}`}
+                      download={art.file}
+                      class="archive-options-download btn-download-primary"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                      </svg>
+                      <span>{getTranslation(lang, 'downloads.download_btn')}</span>
+                    </a>
+                  </div>
                 )}
               </div>
             </div>
@@ -393,16 +411,19 @@ const otherArtifactGroups = artifactGroups.filter((group) => group.id !== featur
   }
 
   .btn-download.secondary {
-    background-color: var(--bg-tertiary);
+    background-color: var(--bg-secondary);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
-    padding: 0.4rem 0.75rem;
-    font-size: 0.8rem;
+    padding: 0.55rem 1rem;
+    font-size: 0.85rem;
+    box-shadow: var(--shadow-sm);
   }
 
   .btn-download.secondary:hover {
-    border-color: var(--accent-primary);
+    background-color: var(--bg-tertiary);
+    border-color: var(--accent-border);
     color: var(--accent-primary);
+    transform: translateY(-1px);
   }
 
   .section-title {

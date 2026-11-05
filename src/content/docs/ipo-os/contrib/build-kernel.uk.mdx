@@ -7,7 +7,7 @@ import Callout from '../../../../components/Callout.astro';
 
 # Збирання IPO_OS з вихідних кодів
 
-This guide explains how to compile the IPO_OS microkernel, build its userland utilities, generate bootable disk images, and run automated targets using GNU Make.
+This guide explains how to compile the IPO_OS kernel and bootloader, generate bootable disk images, and run automated targets using GNU Make. Userland applications and libraries are maintained separately in IPO_OS_Software.
 
 ---
 
@@ -43,20 +43,9 @@ IPO_OS/
     ├── generate_ksyms.py       # Extracts exported kernel symbols for runtime KMOD (.kmd) loader
     └── setup-tap.sh            # Virtual TAP network interface configurator
 
-IPO_OS_Software/                # Standalone userland applications & runtime ecosystem
-├── Makefile                    # Master userland build orchestrator
-├── mk/                         # Modular rules (applications.mk, lib.mk, toolchain.mk, disk.mk)
-├── applications/               # Userland apps: DOOM, TCC, MicroPython, NASM, text editor, 3D demos
-├── lib/                        # Userspace libraries: libc, libm, libstdc++, libapp, TinyGL, CRT stubs
-├── include/                    # Complete C99/POSIX/GL standard library headers
-├── assets/fonts/               # Console font assets and IFNT builders
-├── load_to_disk.sh             # Ready-to-use disk image loader script
-└── tools/
-    ├── load_applications.py    # Automatic disk population & filesystem formatting utility
-    ├── disk_editor.py          # Direct IPO_FS disk partition reader and editor
-    ├── build_font_db.py        # Console font database (.fnt) compiler
-    └── create_live_image.py    # Hybrid Live ISO/USB builder
 ```
+
+The userland ecosystem is a separate project: [IPO_OS_Software](https://github.com/IPOleksenko/IPO_OS_Software). It is not part of the IPO_OS source tree or built by IPO_OS `make all`.
 
 ---
 
@@ -67,21 +56,18 @@ IPO_OS_Software/                # Standalone userland applications & runtime eco
 cd IPO_OS
 make all
 ```
-Performs a two-pass kernel link (generating the `generate_ksyms.py` symbol table), compiles kernel HAL, drivers, and bootloader, and builds the bootable **`build/IPO_OS.img`**.
+The default `make all` target cleans prior outputs, builds the bootloader, kernel, and **`build/IPO_OS.img`**, creates the auxiliary disk images, and launches QEMU. Because the clean step removes `build/disks/`, back up any data stored there before running it.
 
-### 2. Compile Applications & Populate Virtual Disk (`IPO_OS_Software`)
-```bash
-cd ../IPO_OS_Software
-make all
-./load_to_disk.sh ../IPO_OS/build/disks/disk.img --format
-```
-Compiles userland libraries (`libc.a`, `libm.a`, `libstdc++.a`, `libapp.a`), applications (DOOM, editor, 3D demos), in-OS toolchains (TinyCC, Lua, MicroPython, NASM, GNU binutils), font databases, and formats/populates the 512 MB `disk.img` partition with IPO_FS.
+### 2. Userland Applications (separate project)
+
+IPO_OS builds its kernel and bootable image; it does not compile userland applications or populate the auxiliary disk with them. Application binaries, libraries, and disk tools are maintained in the separate [IPO_OS_Software repository](https://github.com/IPOleksenko/IPO_OS_Software).
 
 ### 3. Clean Build Artifacts
 ```bash
 make clean
 ```
-Removes all compiled `.o`, `.bin`, `.elf`, and generated symbol files.
+Removes the build outputs, including `build/IPO_OS.img` and the virtual disks under `build/disks/`. Back up any data stored in those disk images before running this command.
+`make clean-disks` removes `build/disks/` without cleaning the other build outputs.
 
 ---
 

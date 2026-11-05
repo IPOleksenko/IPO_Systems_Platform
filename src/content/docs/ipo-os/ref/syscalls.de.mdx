@@ -340,7 +340,7 @@ Direct hardware text and graphics registers manipulation:
 - **`0x10C2` `IPO_SYSCALL_VGA_SHOW_CURSOR`:** `void ipo_vga_show_cursor(void);` Enables and unhides hardware blinking text cursor.
 - **`0x10C3` `IPO_SYSCALL_VGA_HIDE_CURSOR`:** `void ipo_vga_hide_cursor(void);` Hides hardware text cursor.
 - **`0x10C4` `IPO_SYSCALL_VGA_SET_PALETTE`:** `void ipo_vga_set_palette(uint8_t index, uint8_t r, uint8_t g, uint8_t b);` Programs 6-bit RGB values directly into VGA DAC palette registers (`0x3C8`/`0x3C9`).
-- **`0x10C5` `IPO_SYSCALL_VGA_SET_OVERLAY_FLAGS`:** `void ipo_vga_set_overlay_flags(uint32_t flags);` Setzt Sichtbarkeitsflags für das VGA Mode 13h Overlay (steuert Anzeige der vereinheitlichten Close-Schaltfläche und des Mauszeigers).
+- **`0x10C5` `IPO_SYSCALL_VGA_SET_OVERLAY_FLAGS`:** `void ipo_vga_set_overlay_flags(uint32_t flags);` Setzt Sichtbarkeitsflags für die Close-Schaltfläche und den Software-Mauszeiger im VGA-Modus 13h. Die Flags gelten sowohl für das rohe Grafik-Overlay als auch für Taskleiste und Compositor des Fenstermanagers.
 - **`0x10C6` `IPO_SYSCALL_VGA_GET_OVERLAY_FLAGS`:** `uint32_t ipo_vga_get_overlay_flags(void);` Gibt aktuelle VGA Overlay-Sichtbarkeitsflags zurück.
 
 ---

@@ -36,8 +36,8 @@ The IPO_OS task scheduling subsystem manages application execution through a **h
 
 ## 📋 Process Control Block (`process_t`) & Execution Architecture
 
-Each process in IPO_OS is tracked by a kernel-managed `process_t` structure (`src/include/kernel/process.h`, total size **372 bytes (0x174)** in 32-bit mode) and spawned via `process_spawn()`:
-- **Dynamic Binary Format Registry (`binfmt`):** Evaluates header magic bytes using kernel registered handlers (`g_binfmt_list`). Supported formats (ELF32, Lua, Python, Shell, TinyCC) are dispatched dynamically to userspace runners (such as `/applications/elf_loader` for 32-bit ELF binaries).
+Each process in IPO_OS is tracked by a kernel-managed `process_t` structure (`src/include/kernel/process.h`, total size **372 bytes (0x174)** in 32-bit mode) and spawned via `process_spawn()`. The table below lists selected fields:
+- **Dynamic Binary Format Registry (`binfmt`):** User-space code registers format signatures and runner paths; matching files are dispatched only when a handler is registered. For example, the separate IPO_OS_Software project can provide `/applications/elf_loader` for ELF32. IPO_OS itself does not bundle these user-space runners.
 - **Standard Bare-Metal Loader (`exec_load`):** When no format handler matches, raw machine instructions are loaded directly at `0x00800000` (`PROCESS_HEAP_START`) without file format metadata overhead.
 - **Dynamic Heap Isolation (`process_heap_init`):** Allocates an independent physical heap memory slice (`USER_HEAP_START = 0x08000000`, 256 MB dynamic stride).
 

@@ -1,0 +1,1011 @@
+---
+import { getTranslation } from '../utils/i18n';
+
+interface Props {
+  base: string;
+  lang: string;
+  labels: {
+    title: string;
+    description: string;
+    start: string;
+    restart: string;
+    fullscreen: string;
+    fullscreenExit: string;
+    prepare: string;
+    loading: string;
+    booting: string;
+    ready: string;
+    booted: string;
+    reveal: string;
+    source: string;
+    license: string;
+    unsupported: string;
+    instructions: string;
+    serialPlaceholder?: string;
+    serialSend?: string;
+    splashSubtitle?: string;
+    logsTitle?: string;
+    logsClear?: string;
+    logsCleared?: string;
+    logsCopy?: string;
+    logsCopied?: string;
+    logsAutoscroll?: string;
+    logsEmpty?: string;
+    logsDownload?: string;
+    logsLineCount: string;
+    viewSplit?: string;
+    viewScreen?: string;
+    viewLogs?: string;
+    error: string;
+    viewModeLabel: string;
+    screenLabel: string;
+    sendEnter: string;
+    vgaBiosLicense: string;
+  };
+}
+
+const { base, lang, labels } = Astro.props;
+
+const serialPlaceholder = labels.serialPlaceholder ?? getTranslation(lang, 'home.emulator_serial_placeholder');
+const serialSend = labels.serialSend ?? getTranslation(lang, 'home.emulator_serial_send');
+const splashSubtitle = labels.splashSubtitle ?? getTranslation(lang, 'home.emulator_splash_subtitle');
+const logsTitle = labels.logsTitle ?? getTranslation(lang, 'home.emulator_logs_title');
+const logsClear = labels.logsClear ?? getTranslation(lang, 'home.emulator_logs_clear');
+const logsCleared = labels.logsCleared ?? getTranslation(lang, 'home.emulator_logs_cleared');
+const logsCopy = labels.logsCopy ?? getTranslation(lang, 'home.emulator_logs_copy');
+const logsCopied = labels.logsCopied ?? getTranslation(lang, 'home.emulator_logs_copied');
+const logsAutoscroll = labels.logsAutoscroll ?? getTranslation(lang, 'home.emulator_logs_autoscroll');
+const logsEmpty = labels.logsEmpty ?? getTranslation(lang, 'home.emulator_logs_empty');
+const logsDownload = labels.logsDownload ?? getTranslation(lang, 'home.emulator_logs_download');
+const logsLineCount = labels.logsLineCount.replace('{count}', '0');
+const viewSplit = labels.viewSplit ?? getTranslation(lang, 'home.emulator_view_split');
+const viewScreen = labels.viewScreen ?? getTranslation(lang, 'home.emulator_view_screen');
+const viewLogs = labels.viewLogs ?? getTranslation(lang, 'home.emulator_view_logs');
+---
+
+<section
+  class="browser-v86"
+  aria-labelledby="browser-v86-title"
+  data-v86-emulator
+  data-base={base}
+  data-lang={lang}
+  data-labels={JSON.stringify({
+    downloading: labels.loading,
+    starting: labels.booting,
+    running: labels.ready,
+    booted: labels.booted,
+    error: labels.error,
+    restarting: labels.booting,
+  })}
+  data-prepare={labels.prepare}
+  data-unsupported={labels.unsupported}
+  data-loading={labels.loading}
+  data-booting={labels.booting}
+  data-ready={labels.ready}
+  data-copied={logsCopied}
+  data-logs-empty={logsEmpty}
+  data-logs-cleared={logsCleared}
+>
+  <div class="browser-v86__heading">
+    <div>
+      <span class="browser-v86__eyebrow">v86 → IPO_Boot_ROM → IPO_Firmware → IPO_OS</span>
+      <h2 id="browser-v86-title">{labels.title}</h2>
+      <p>{labels.description}</p>
+    </div>
+    <div class="browser-v86__meta">
+      <a
+        href="https://github.com/copy/v86"
+        target="_blank"
+        rel="noopener noreferrer"
+      >{labels.source}</a>
+      <span class="browser-v86__live"><span></span> v86 WebAssembly</span>
+    </div>
+  </div>
+
+  <script is:inline>
+    window.__ipoSetViewMode = function (root, mode) {
+      if (!root) root = document.querySelector('.browser-v86');
+      if (!root) return;
+      var ws = root.querySelector('[data-workspace]');
+      var screen = root.querySelector('[data-screen-pane]');
+      var logs = root.querySelector('[data-log-pane]');
+      var btns = root.querySelectorAll('[data-view-mode]');
+
+      btns.forEach(function (b) {
+        var active = b.getAttribute('data-view-mode') === mode;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+
+      if (ws) {
+        ws.classList.remove('is-split', 'is-screen', 'is-logs');
+        ws.classList.add('is-' + mode);
+        ws.setAttribute('data-layout', mode);
+        if (mode === 'screen' || mode === 'logs') {
+          ws.style.setProperty('grid-template-columns', '1fr', 'important');
+        } else {
+          ws.style.removeProperty('grid-template-columns');
+        }
+      }
+
+      if (screen) {
+        if (mode === 'logs') {
+          screen.style.setProperty('display', 'none', 'important');
+        } else {
+          screen.style.setProperty('display', 'flex', 'important');
+          if (mode === 'screen') {
+            screen.style.setProperty('width', '100%', 'important');
+            screen.style.setProperty('border-right', 'none', 'important');
+          } else {
+            screen.style.removeProperty('width');
+            screen.style.removeProperty('border-right');
+          }
+        }
+      }
+
+      if (logs) {
+        if (mode === 'screen') {
+          logs.style.setProperty('display', 'none', 'important');
+        } else {
+          logs.style.setProperty('display', 'flex', 'important');
+          if (mode === 'logs') {
+            logs.style.setProperty('width', '100%', 'important');
+          } else {
+            logs.style.removeProperty('width');
+          }
+        }
+      }
+
+      try {
+        localStorage.setItem('ipo_emulator_view_mode', mode);
+      } catch (e) {}
+    };
+
+    (function initLayoutSync() {
+      function syncViews() {
+        document.querySelectorAll('.browser-v86').forEach(function (root) {
+          try {
+            var saved = localStorage.getItem('ipo_emulator_view_mode');
+            if (saved && (saved === 'split' || saved === 'screen' || saved === 'logs')) {
+              window.__ipoSetViewMode(root, saved);
+            }
+          } catch (e) {}
+        });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', syncViews);
+      } else {
+        syncViews();
+      }
+      document.addEventListener('astro:page-load', syncViews);
+    })();
+  </script>
+
+  <div class="browser-v86__frame">
+    <div class="browser-v86__toolbar">
+      <div class="browser-v86__lights" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="browser-v86__view-modes" role="tablist" aria-label={labels.viewModeLabel}>
+        <button type="button" class="browser-v86__view-btn active" data-view-mode="split" title={viewSplit} onclick="window.__ipoSetViewMode&&window.__ipoSetViewMode(this.closest('.browser-v86'),'split')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+          <span>{viewSplit}</span>
+        </button>
+        <button type="button" class="browser-v86__view-btn" data-view-mode="screen" title={viewScreen} onclick="window.__ipoSetViewMode&&window.__ipoSetViewMode(this.closest('.browser-v86'),'screen')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <span>{viewScreen}</span>
+        </button>
+        <button type="button" class="browser-v86__view-btn" data-view-mode="logs" title={viewLogs} onclick="window.__ipoSetViewMode&&window.__ipoSetViewMode(this.closest('.browser-v86'),'logs')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          <span>{viewLogs}</span>
+        </button>
+      </div>
+      <div class="browser-v86__controls">
+        <button type="button" class="browser-v86__control" data-fullscreen disabled>
+          {labels.fullscreen}
+        </button>
+      </div>
+    </div>
+
+    <div class="browser-v86__workspace is-split" data-workspace>
+      <div class="browser-v86__screen-pane" data-screen-pane>
+        <div class="browser-v86__screen" data-v86-screen-viewport>
+          <div id="v86-screen-container" class="browser-v86__canvas" data-v86-screen-container tabindex="0" aria-label={labels.screenLabel}>
+            <div class="browser-v86__text-screen" style="white-space: pre; font: 14px monospace; line-height: 14px"></div>
+            <canvas style="display: none"></canvas>
+          </div>
+          <button type="button" class="browser-v86__fullscreen-exit" data-fullscreen disabled aria-label={labels.fullscreenExit} title={labels.fullscreenExit}>
+            {labels.fullscreenExit}
+          </button>
+          <div class="browser-v86__splash" data-splash>
+            <div class="browser-v86__mark" aria-hidden="true">IPO</div>
+            <strong>{splashSubtitle}</strong>
+            <span data-boot-message>{labels.prepare}</span>
+          </div>
+          <div class="browser-v86__launch-indicator" data-launch-indicator hidden aria-hidden="true">
+            <div class="browser-v86__spinner"></div>
+            <span data-launch-label>{labels.loading}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="browser-v86__log-pane" data-log-pane>
+        <div class="browser-v86__log-header">
+          <div class="browser-v86__log-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            <span>{logsTitle}</span>
+            <span class="browser-v86__log-counter" data-log-count data-line-count-format={labels.logsLineCount}>{logsLineCount}</span>
+          </div>
+          <div class="browser-v86__log-actions">
+            <label class="browser-v86__log-autoscroll-label">
+              <input type="checkbox" data-log-autoscroll checked />
+              <span>{logsAutoscroll}</span>
+            </label>
+            <button type="button" class="browser-v86__log-btn" data-log-copy title={logsCopy}>
+              {logsCopy}
+            </button>
+            <button type="button" class="browser-v86__log-btn" data-log-download title={logsDownload}>
+              {logsDownload}
+            </button>
+            <button type="button" class="browser-v86__log-btn" data-log-clear title={logsClear}>
+              {logsClear}
+            </button>
+          </div>
+        </div>
+        <div class="browser-v86__log-output" data-log-output role="log" aria-live="polite">
+          <div class="browser-v86__log-empty">{logsEmpty}</div>
+        </div>
+        <form class="browser-v86__serial-form" data-serial-form autocomplete="off">
+          <label class="browser-v86__serial-label" for="ipo-serial-input">
+            <span class="browser-v86__serial-prompt">OS &gt;</span>
+          </label>
+          <input
+            id="ipo-serial-input"
+            type="text"
+            class="browser-v86__serial-input"
+            data-serial-input
+            placeholder={serialPlaceholder}
+            aria-label={serialPlaceholder}
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button type="submit" class="browser-v86__serial-send" title={labels.sendEnter}>
+            <span>{serialSend}</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="browser-v86__footer">
+    <div class="browser-v86__status">
+      <span class="browser-v86__status-dot" data-status-dot></span>
+      <span role="status" aria-live="polite" data-status>{labels.prepare}</span>
+    </div>
+    <div class="browser-v86__progress" data-progress-wrap hidden>
+      <progress max="100" value="0" data-progress aria-label={labels.loading}></progress>
+      <span data-progress-label>0%</span>
+    </div>
+    <div class="browser-v86__actions">
+      <button type="button" class="browser-v86__start" data-start>{labels.start}</button>
+      <button type="button" class="browser-v86__restart" data-restart disabled>{labels.restart}</button>
+    </div>
+  </div>
+  <div class="browser-v86__notes">
+    <p class="browser-v86__instructions">{labels.instructions}</p>
+    <a class="browser-v86__license" href={`${base}emulator/COPYING.v86`} target="_blank" rel="noopener noreferrer">
+      {labels.license}
+    </a>
+    <a class="browser-v86__license" href={`${base}emulator/COPYING.LESSER`} target="_blank" rel="noopener noreferrer">
+      {labels.vgaBiosLicense}
+    </a>
+  </div>
+</section>
+
+<script>
+  import '../scripts/browser-v86';
+</script>
+
+<style>
+  .browser-v86 {
+    --v86-accent: #65e6be;
+    margin: 0 auto 4rem;
+    max-width: 90rem;
+    padding: 0 1rem;
+  }
+
+  .browser-v86__heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .browser-v86__eyebrow {
+    color: var(--accent-primary);
+    font: 600 0.78rem/1.4 var(--font-mono);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .browser-v86__heading h2 {
+    margin: 0.5rem 0;
+    border: 0;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+  }
+
+  .browser-v86__heading p {
+    max-width: 48rem;
+    margin: 0;
+    color: var(--text-secondary);
+  }
+
+  .browser-v86__live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 0 0 auto;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    color: var(--text-secondary);
+    font: 600 0.75rem/1 var(--font-mono);
+    white-space: nowrap;
+  }
+
+  .browser-v86__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .browser-v86__meta > a,
+  .browser-v86__license {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+  }
+
+  .browser-v86__live span,
+  .browser-v86__status-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: #9098a8;
+  }
+
+  .browser-v86__frame {
+    overflow: hidden;
+    border: 1px solid #253342;
+    border-radius: var(--radius-lg);
+    background: #101820;
+    box-shadow: 0 1.25rem 3.5rem rgb(4 12 20 / 22%);
+  }
+
+  .browser-v86__toolbar {
+    position: relative;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    align-items: center;
+    min-height: 2.8rem;
+    padding: 0 1rem;
+    border-bottom: 1px solid #253342;
+    color: #b7c3ce;
+    font: 0.76rem/1 var(--font-mono);
+    gap: 0.75rem;
+  }
+
+  .browser-v86__lights {
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .browser-v86__lights i {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: #526170;
+  }
+
+  .browser-v86__lights i:first-child { background: #fc615d; }
+  .browser-v86__lights i:nth-child(2) { background: #fdbc40; }
+  .browser-v86__lights i:nth-child(3) { background: #34c749; }
+
+  .browser-v86__view-modes {
+    position: relative;
+    z-index: 6;
+    display: flex;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+
+  .browser-v86__view-btn {
+    position: relative;
+    z-index: 7;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.65rem;
+    border: 1px solid #344655;
+    border-radius: 0.35rem;
+    background: transparent;
+    color: #8b99a7;
+    font: inherit;
+    font-size: 0.74rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+
+  .browser-v86__view-btn svg,
+  .browser-v86__view-btn span {
+    pointer-events: none;
+  }
+
+  .browser-v86__view-btn:hover {
+    color: #dce8e7;
+    border-color: #4b6377;
+    background: rgb(255 255 255 / 4%);
+  }
+
+  .browser-v86__view-btn.active {
+    color: var(--v86-accent);
+    border-color: var(--v86-accent);
+    background: rgb(101 230 190 / 10%);
+    font-weight: 600;
+  }
+
+  .browser-v86__controls { display: flex; justify-content: flex-end; }
+
+  .browser-v86__control {
+    padding: 0.35rem 0.55rem;
+    border: 1px solid #344655;
+    border-radius: 0.35rem;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  /* Workspace Layouts */
+  .browser-v86__workspace {
+    display: grid;
+    min-height: clamp(18rem, 60vh, 38rem);
+    background: #0d141b;
+  }
+
+  .browser-v86__workspace.is-split,
+  .browser-v86__workspace[data-layout="split"] {
+    grid-template-columns: 1.15fr 0.85fr;
+  }
+
+  .browser-v86__workspace.is-screen,
+  .browser-v86__workspace[data-layout="screen"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .browser-v86__workspace.is-screen .browser-v86__log-pane,
+  .browser-v86__workspace[data-layout="screen"] .browser-v86__log-pane {
+    display: none !important;
+  }
+
+  .browser-v86__workspace.is-screen .browser-v86__screen-pane,
+  .browser-v86__workspace[data-layout="screen"] .browser-v86__screen-pane {
+    display: flex !important;
+    border-right: none !important;
+    width: 100% !important;
+  }
+
+  .browser-v86__workspace.is-logs,
+  .browser-v86__workspace[data-layout="logs"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .browser-v86__workspace.is-logs .browser-v86__screen-pane,
+  .browser-v86__workspace[data-layout="logs"] .browser-v86__screen-pane {
+    display: none !important;
+  }
+
+  .browser-v86__workspace.is-logs .browser-v86__log-pane,
+  .browser-v86__workspace[data-layout="logs"] .browser-v86__log-pane {
+    display: flex !important;
+    width: 100% !important;
+  }
+
+  .browser-v86__screen-pane {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border-right: 1px solid #253342;
+  }
+
+  .browser-v86__workspace.is-screen .browser-v86__screen-pane,
+  .browser-v86__workspace[data-layout="screen"] .browser-v86__screen-pane {
+    border-right: none;
+  }
+
+  .browser-v86__screen {
+    position: relative;
+    display: grid;
+    flex: 1;
+    min-height: 100%;
+    place-items: center;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 50% 45%, rgb(33 71 83 / 55%), transparent 58%),
+      linear-gradient(145deg, #10232b, #101820 72%);
+  }
+
+  .browser-v86__screen canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-height: 75vh;
+    object-fit: contain;
+    outline: none;
+    image-rendering: pixelated;
+  }
+
+  .browser-v86__screen:fullscreen {
+    display: grid;
+    width: 100vw;
+    height: 100vh;
+    min-height: 0;
+    place-items: center;
+    overflow: hidden;
+    background: #101820;
+  }
+
+  .browser-v86__screen:fullscreen .browser-v86__canvas {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    place-items: center;
+    overflow: hidden;
+  }
+
+  .browser-v86__screen:fullscreen .browser-v86__canvas canvas,
+  .browser-v86__screen:fullscreen .browser-v86__text-screen {
+    grid-area: 1 / 1;
+  }
+
+  .browser-v86__screen:fullscreen canvas {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  .browser-v86__fullscreen-exit {
+    display: none;
+  }
+
+  .browser-v86__screen:fullscreen .browser-v86__fullscreen-exit {
+    position: absolute;
+    z-index: 2;
+    top: 1rem;
+    right: 1rem;
+    display: block;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid rgb(255 255 255 / 28%);
+    border-radius: 0.5rem;
+    background: rgb(16 24 32 / 85%);
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .browser-v86__screen:fullscreen .browser-v86__text-screen {
+    max-width: 100%;
+    max-height: 100%;
+    font-size: clamp(14px, min(2.2vw, 3.2vh), 32px) !important;
+    line-height: 1 !important;
+  }
+
+  @supports (height: 100dvh) {
+    .browser-v86__screen:fullscreen {
+      height: 100dvh;
+    }
+  }
+
+  .browser-v86__splash {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    padding: 2rem;
+    background:
+      radial-gradient(ellipse at 50% 45%, rgb(33 71 83 / 62%), transparent 58%),
+      linear-gradient(145deg, #10232b, #101820 72%);
+    color: #dce8e7;
+    text-align: center;
+  }
+
+  .browser-v86__splash[hidden] { display: none; }
+
+  .browser-v86__launch-indicator {
+    position: absolute;
+    bottom: 1.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.45rem 1rem;
+    border: 1px solid rgb(101 230 190 / 30%);
+    border-radius: 999px;
+    background: rgb(16 35 43 / 88%);
+    backdrop-filter: blur(8px);
+    color: var(--v86-accent);
+    font: 600 0.78rem/1 var(--font-mono);
+    box-shadow: 0 4px 16px rgb(0 0 0 / 40%);
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .browser-v86__launch-indicator[hidden] {
+    display: none !important;
+  }
+
+  .browser-v86__mark {
+    display: grid;
+    width: 3.5rem;
+    height: 3.5rem;
+    place-items: center;
+    margin-bottom: 0.35rem;
+    border: 1px solid rgb(101 230 190 / 50%);
+    border-radius: 1rem;
+    color: var(--v86-accent);
+    font: 800 1rem/1 var(--font-mono);
+    box-shadow: 0 0 2.5rem rgb(101 230 190 / 15%);
+  }
+
+  .browser-v86__splash strong { font-size: 1.05rem; }
+  .browser-v86__splash span { color: #aab9bd; font-size: 0.9rem; }
+
+  .browser-v86__spinner {
+    width: 1.15rem;
+    height: 1.15rem;
+    margin: 0;
+    border: 2px solid rgb(101 230 190 / 22%);
+    border-top-color: var(--v86-accent);
+    border-radius: 50%;
+    animation: v86-spin 0.9s linear infinite;
+  }
+
+  @keyframes v86-spin { to { transform: rotate(360deg); } }
+
+  /* Log Console Window */
+  .browser-v86__log-pane {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: #080d12;
+    color: #c5d1de;
+    font-family: var(--font-mono, 'JetBrains Mono', 'Fira Code', monospace);
+    font-size: 0.76rem;
+    line-height: 1.45;
+  }
+
+  .browser-v86__log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.85rem;
+    background: #111a22;
+    border-bottom: 1px solid #1e2c38;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .browser-v86__log-title {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-weight: 600;
+    color: #d8e4f0;
+  }
+
+  .browser-v86__log-counter {
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    background: #1e2c38;
+    color: #8da1b5;
+    font-size: 0.68rem;
+  }
+
+  .browser-v86__log-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .browser-v86__log-autoscroll-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    color: #8da1b5;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .browser-v86__log-autoscroll-label input {
+    accent-color: var(--v86-accent);
+  }
+
+  .browser-v86__log-btn {
+    padding: 0.22rem 0.5rem;
+    border: 1px solid #2a3d4f;
+    border-radius: 0.3rem;
+    background: #16222c;
+    color: #a6b8c9;
+    font: inherit;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .browser-v86__log-btn:hover {
+    color: #ffffff;
+    border-color: #4b6377;
+    background: #20313f;
+  }
+
+  .browser-v86__log-output {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.75rem;
+    max-height: 70vh;
+    min-height: 18rem;
+    background: #080d12;
+    word-break: break-all;
+    white-space: pre-wrap;
+    user-select: text;
+  }
+
+  .browser-v86__log-empty {
+    color: #556777;
+    font-style: italic;
+    padding: 1.5rem 0;
+    text-align: center;
+  }
+
+  /* Live COM1 Serial Terminal Input */
+  .browser-v86__serial-form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: #0d151e;
+    border-top: 1px solid #1e2c38;
+  }
+
+  .browser-v86__serial-label {
+    display: flex;
+    align-items: center;
+  }
+
+  .browser-v86__serial-prompt {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--v86-accent);
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .browser-v86__serial-input {
+    flex: 1;
+    min-width: 0;
+    background: #060a0f;
+    border: 1px solid #233546;
+    border-radius: var(--radius-sm);
+    color: #e2ecf5;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.78rem;
+    padding: 0.35rem 0.6rem;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .browser-v86__serial-input:focus {
+    border-color: var(--v86-accent);
+    box-shadow: 0 0 0 1px var(--v86-accent);
+  }
+
+  .browser-v86__serial-send {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    background: #172635;
+    border: 1px solid #2c4257;
+    border-radius: var(--radius-sm);
+    color: #a8bfd5;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.74rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .browser-v86__serial-send:hover {
+    background: var(--v86-accent);
+    color: #0b141a;
+    border-color: var(--v86-accent);
+  }
+
+  :global(.log-line) {
+    padding: 0.1rem 0;
+    border-left: 2px solid transparent;
+    padding-left: 0.45rem;
+    margin-bottom: 0.15rem;
+  }
+
+  :global(.log-line.tag-bootrom) {
+    border-left-color: #38bdf8;
+    color: #7dd3fc;
+  }
+
+  :global(.log-line.tag-firmware) {
+    border-left-color: #4ade80;
+    color: #86efac;
+  }
+
+  :global(.log-line.tag-os) {
+    border-left-color: #fbbf24;
+    color: #fde68a;
+  }
+
+  :global(.log-line.tag-terminal) {
+    border-left-color: #a78bfa;
+    color: #c4b5fd;
+  }
+
+  :global(.log-line.tag-error) {
+    border-left-color: #f87171;
+    color: #fca5a5;
+    background: rgb(239 68 68 / 8%);
+  }
+
+  :global(.log-line--v86) {
+    color: #94a3b8;
+    font-size: 0.72rem;
+  }
+
+  :global(.log-line--system) {
+    color: var(--v86-accent);
+    font-weight: 600;
+  }
+
+  /* Footer Controls */
+  .browser-v86__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 0 0.5rem;
+  }
+
+  .browser-v86__status {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  .browser-v86__status-dot[data-state="working"] {
+    background: #f3b84b;
+    box-shadow: 0 0 0.7rem rgb(243 184 75 / 45%);
+  }
+
+  .browser-v86__status-dot[data-state="ready"] {
+    background: #25bf83;
+    box-shadow: 0 0 0.7rem rgb(37 191 131 / 40%);
+  }
+
+  .browser-v86__status-dot[data-state="error"] { background: #ec6c70; }
+
+  .browser-v86__progress {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: min(20rem, 35%);
+    color: var(--text-secondary);
+    font: 0.75rem/1 var(--font-mono);
+  }
+
+  .browser-v86__progress[hidden] { display: none; }
+
+  .browser-v86__progress progress {
+    width: 100%;
+    height: 0.45rem;
+    accent-color: #25bf83;
+  }
+
+  .browser-v86__actions { display: flex; gap: 0.55rem; }
+
+  .browser-v86__start,
+  .browser-v86__restart {
+    padding: 0.65rem 1.15rem;
+    border: 1px solid var(--accent-primary);
+    border-radius: var(--radius-md);
+    background: var(--accent-primary);
+    color: #fff;
+    font: inherit;
+    font-size: 0.87rem;
+    font-weight: 650;
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+
+  .browser-v86__restart {
+    padding: 0.65rem 1.15rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.87rem;
+    font-weight: 650;
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .browser-v86__start:hover:not(:disabled),
+  .browser-v86__restart:hover:not(:disabled) { transform: translateY(-1px); }
+
+  .browser-v86 button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .browser-v86__instructions { margin: 0; color: var(--text-secondary); font-size: 0.82rem; }
+  .browser-v86__notes {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+  }
+
+  @media (max-width: 900px) {
+    .browser-v86__workspace.is-split {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto;
+    }
+    .browser-v86__screen-pane {
+      border-right: none;
+      border-bottom: 1px solid #253342;
+    }
+    .browser-v86__log-output {
+      max-height: 18rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .browser-v86 { padding: 0 0.25rem; margin-bottom: 3rem; }
+    .browser-v86__heading { align-items: flex-start; flex-direction: column; gap: 0.8rem; }
+    .browser-v86__meta { align-self: flex-end; }
+    .browser-v86__toolbar {
+      grid-template-columns: auto 1fr;
+    }
+    .browser-v86__lights { display: none; }
+    .browser-v86__notes { align-items: flex-start; flex-direction: column; gap: 0.4rem; }
+    .browser-v86__footer { align-items: stretch; flex-wrap: wrap; }
+    .browser-v86__status { flex-basis: 100%; }
+    .browser-v86__progress { width: 100%; }
+    .browser-v86__actions { width: 100%; }
+    .browser-v86__actions button { flex: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .browser-v86__spinner { animation-duration: 2.5s; }
+    .browser-v86__start,
+    .browser-v86__restart { transition: none; }
+  }
+</style>

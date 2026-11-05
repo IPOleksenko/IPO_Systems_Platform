@@ -58,6 +58,9 @@ if (currentSlug.startsWith('ipo-os-software')) {
       <a href={`${cleanBase}${currentLang}/ipo-firmware/overview`} class={`nav-item ${currentSlug.startsWith('ipo-firmware') ? 'active' : ''}`}>
         IPO_Firmware
       </a>
+      <a href={`${cleanBase}${currentLang}/emulator`} class={`nav-item ${currentSlug === 'emulator' ? 'active' : ''}`}>
+        {getTranslation(currentLang, 'nav.emulator')}
+      </a>
     </nav>
 
     <div class="header-right">

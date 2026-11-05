@@ -7,7 +7,7 @@ import LocalizedDiagram from '../../../../components/LocalizedDiagram.astro';
 
 # Последовательность та таймлайн загрузки
 
-The transition of the system from cold hardware power-on to an interactive userspace shell occurs across several coordinated phases.
+The transition of the system from cold hardware power-on to an interactive kernel shell occurs across several coordinated phases.
 
 ---
 
@@ -26,7 +26,7 @@ The transition of the system from cold hardware power-on to an interactive users
    `CS:IP = 0xF000:0xFFF0` (Physical Address: `0xFFFFFFF0`)
 
 ### 2. Boot ROM & Firmware Initialization (Contracts 2 & 3)
-1. **IPO_Boot_ROM** configures Cache-as-RAM (CAR), detects the host chipset (i440FX or Q35), runs Memory Reference Code (MRC) to train the DRAM controller, locks PAM Shadow RAM, and hands over control to the firmware at `0xF000:0004` (**Contract 2**).
+1. **IPO_Boot_ROM** configures Cache-as-RAM (CAR), reads and reports the raw PCI host-bridge IDs (i440FX and Q35 IDs are examples, not a chipset-validation list), reads the memory size from CMOS with a 64 MiB fallback, configures DRAM controller registers without a DRAM pattern test, configures PAM shadowing, and hands over control to the firmware at `0xF000:0004` (**Contract 2**).
 2. **IPO_Firmware** installs the real-mode Interrupt Vector Table (IVT: INT 10h–1Ah), enables the Fast A20 gate via port `0x92`, queries memory via E820, scans storage buses, and reads LBA 0 (MBR) into DRAM at `0x0000:7C00` (**Contract 3**).
 
 ### 3. MBR Bootloader Execution (`src/boot/boot.asm` at `0x7C00`)
@@ -55,5 +55,5 @@ The transition of the system from cold hardware power-on to an interactive users
    - Installs the 256-gate Interrupt Descriptor Table (`syscall_init()`) with CPU exception handlers (`0x00`–`0x1F`) and system call vector `0x80`.
    - Initializes **Symmetric Multiprocessing (`smp_init()`)**: enables the Local APIC (`0xFEE00000`), parses ACPI MADT / Intel MP tables, installs the AP trampoline at `0x8000`, and wakes Application Processors (APs) via `INIT-SIPI-SIPI`.
    - Initializes the generic block device layer (`block_dev_init()`), ATA PIO driver (`ata_init()`), MBR/GPT partition scanner (`partition_scan()`), and **persistent Multi-Disk Storage Pool (`storage_pool_init()`)** with primary/backup superblock verification (LBA 2030/2039) and Write-Ahead Logging (WAL) recovery (LBA 2031–2038).
-   - Initializes the **Dynamic Kernel Module Loader (`kmod_init()`)** with ~1,560 exported kernel symbols and the **Unified Hardware Device Registry (`device_init()`)** (enumerating PCI, ISA, IDE, USB, CPU, and Memory nodes).
+   - Initializes the **Dynamic Kernel Module Loader (`kmod_init()`)** with ~1,700 exported kernel symbols and the **Unified Hardware Device Registry (`device_init()`)** (enumerating PCI, ISA, IDE, USB, CPU, and Memory nodes).
    - Mounts the root `IPO_FS` filesystem (`ipo_fs_init()`, `ensure_fs_mounted()`), loads fonts and keymaps, initializes the TCP/IP stack (`net_init()`), and enters the main polling loop (`timer_tick()`, `async_scheduler_tick()`, `net_poll()`, `terminal_console()`, and background COM1 serial command execution via `terminal_poll_serial_commands()`).

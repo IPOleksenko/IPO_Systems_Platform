@@ -51,7 +51,7 @@ Applications create and manage graphical windows using the WM API:
 
 ---
 
-## 💻 Interactive Terminal Shell (`terminal.c`, 32 Built-In Commands) & COM1 Serial Console
+## 💻 Interactive Terminal Shell (`terminal.c`, 31 Built-In Commands) & COM1 Serial Console
 
 The built-in kernel shell (`src/kernel/core/terminal.c`) features command history, `Tab` auto-completion, batch execution pipelines (`run`), background interactive command execution over **UART COM1 (`0x3F8`, `terminal_poll_serial_commands()`)** (including while the graphical Window Manager `startwm` is active), and **self-expanding dynamic buffers** (`terminal_cwd`, input line, and history buffers grow automatically via `krealloc` without fixed array length caps):
 
@@ -63,4 +63,3 @@ The built-in kernel shell (`src/kernel/core/terminal.c`) features command histor
 | **Hardware Registry & SMP** | `hardware [overview \| list \| cpu \| memory \| pci \| storage \| network \| usb \| refresh \| info <id> \| status]` |
 | **Memory, Processes & Keymaps** | `free`, `ps`, `kill`, `killall`, `run`, `return`, `keymap` |
 | **Graphics, Networking & System** | `startwm`, `stopwm`, `ifconfig`, `clear`, `help`, `reboot`, `shutdown` |
-

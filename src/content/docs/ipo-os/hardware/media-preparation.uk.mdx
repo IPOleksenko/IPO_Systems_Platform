@@ -1,70 +1,28 @@
 ---
-title: "Підготовка носителя та разметка"
-description: "Створення бинарного образа диска, работа с файлівою системою IPO_FS через disk_editor.py та запис на физический накопитель."
+title: "Підготовка носіїв і образи дисків"
+description: "Результати збирання: завантажувальний образ IPO_OS і окремий допоміжний диск даних."
 ---
 
-# Підготовка носителя та разметка
+# Підготовка носіїв і образи дисків
 
-To prepare bootable media for IPO_OS, a raw disk image is created with an MBR partition table and an **IPO_FS** file system partition starting at **LBA 2048** (the standard 1 MB alignment boundary).
+Поточне збирання IPO_OS створює завантажувальний образ, допоміжний диск даних і порожній RAW-образ CD-ROM як окремі артефакти. Воно не створює об'єднаний Live USB-образ розміром 512 МіБ, описаний у старих інструкціях.
 
----
+## Артефакти збирання
 
-## 💾 Disk Layout & Geometry (`build/IPO_OS.img`)
+| Артефакт | Ціль збирання | Вміст |
+| :--- | :--- | :--- |
+| `build/IPO_OS.img` | `make image` | MBR-завантажувач, образ ядра та доповнення до розміру розділу. За поточної геометрії MBR за замовчуванням образ має розмір щонайменше 128 МіБ; більший мінімальний розмір ядра може збільшити образ. Це окремий файл від диска даних розміром 512 МіБ. |
+| `build/disks/disk.img` | `make disks` | Окремий порожній допоміжний RAW-диск розміром 512 МіБ. IPO_OS не заповнює його програмами. |
+| `build/disks/disk.iso` | `make disks` | Окремий порожній RAW-образ розміром 5 МіБ, який ціль запуску QEMU з Makefile підключає як віртуальний CD-ROM. Це не заповнена файлова система ISO. |
 
-```
-┌───────────────────┬────────────────────────┬───────────────────────────┬───────────────────────────┐
-│ Sector 0 (LBA 0)  │ Sectors 1–2029         │ Sectors 2030–2039         │ Sector 2048 (LBA 2048)... │
-│ MBR + Partition   │ Stage 2 Bootloader     │ Storage Pool + WAL Journal│ IPO_FS Partition          │
-│ Table (0x55AA)    │ & IPO_OS Kernel Image  │ SB (2030/2039), WAL(31-38)│ Superblock, Bitmaps, Files│
-└───────────────────┴────────────────────────┴───────────────────────────┴───────────────────────────┘
-```
+У поточному репозиторії немає цілі `make live-image` та утиліти `tools/create_live_image.py`.
 
-1. **Sector 0 (MBR):** Contains the 512-byte Stage 1 bootloader and standard MBR partition table (Partition 1 points to `IPO_FS` with type `0x83` starting at `LBA 2048`) ending with `0x55AA`.
-2. **Sectors 1–2029:** Stage 2 bootloader and kernel binary payload (packaged into the unified `build/IPO_OS.img` via `make live-image` / `tools/create_live_image.py`).
-3. **Sectors 2030–2039 (Storage Pool Superblocks & WAL Journal):**
-   - **LBA 2030:** Primary Storage Pool Superblock (`storage_pool_raw_sb_t`, magic `'POOL'`, CRC32).
-   - **LBA 2031–2038:** 8-sector Write-Ahead Logging (**WAL**) transaction journal (64 entries of 64 bytes, magic `'TXNL'`).
-   - **LBA 2039:** Backup Storage Pool Superblock for automatic failover and recovery.
-4. **Sector 2048+:** Start of the `IPO_FS` partition. The `IPO_FS` Superblock resides at exact LBA offset 2048.
+## Керування образами дисків
 
----
+У поточному дереві вихідного коду IPO_OS більше немає `disk_editor.py` та інструментів підготовки образів дисків на хості. Див. окремий проєкт [IPO_OS_Software](https://github.com/IPOleksenko/IPO_OS_Software), що містить утиліти для роботи з образами дисків.
 
-## 🛠️ Managing the Filesystem via `disk_editor.py`
+## Фізичні носії
 
-The project provides an independent Python utility, `disk_editor.py`, to manipulate files inside the raw disk image without needing root loopback mounts:
-
-<SharedCode id="disk-editor-cmds" />
-
-### Available Subcommands:
-- `format`: Initializes a fresh `IPO_FS` superblock, zeroing bitmap and inode tables.
-- `ls [path]`: Lists directories and file attributes (inode, size, type).
-- `cat <path>`: Prints text file contents to stdout.
-- `mkdir <path>`: Creates a directory node.
-- `put <src> <dest>`: Copies a host binary or file into the target directory inside the image.
-- `rm <path>`: Removes a file or empty directory.
-
----
-
-## ⚡ Writing the Image to Physical Media (`dd`)
-
-<Callout type="caution" title="Triple-Check Your Target Device!">
-Writing to the wrong block device with `dd` will cause **irreversible data loss** on your host computer. Always verify drive identifiers using `lsblk` before proceeding.
+<Callout type="caution" title="Завантажувальний образ — це не готовий Live USB">
+`build/IPO_OS.img` містить лише завантажувач і ядро; допоміжний диск даних створюється окремо. Не вважайте завантажувальний образ колишнім об'єднаним образом розміром 512 МіБ і не очікуйте, що він міститиме підготовлений том IPO_FS.
 </Callout>
-
-```bash
-# 0. Build the unified 512 MB bootable Live USB image:
-make live-image
-
-# 1. Identify your USB drive or CF card adapter on the Linux host
-lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,MODEL
-
-# 2. Unmount any automatically mounted partitions
-sudo umount /dev/sdX* 2>/dev/null || true
-
-# 3. Write the unified build/IPO_OS.img to the physical device (replace sdX with your drive)
-sudo dd if=build/IPO_OS.img of=/dev/sdX bs=4M status=progress conv=fsync
-
-# 4. Flush kernel write buffers
-sync
-```
-Once `sync` returns, safely remove the USB stick or CompactFlash card and connect it to your physical IPO_OS target computer.

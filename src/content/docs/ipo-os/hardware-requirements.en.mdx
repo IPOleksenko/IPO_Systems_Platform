@@ -22,6 +22,8 @@ IPO_OS runs both on bare-metal physical hardware and in virtualization environme
 | **Audio Subsystem** | Standard PC Speaker | Creative Sound Blaster 16 (ISA/PCI emulation) | QEMU `-device sb16` |
 | **Input Devices** | Standard PS/2 Keyboard (8042 controller) | PS/2 Keyboard + 3-Button PS/2 Mouse | QEMU standard PS/2 controllers |
 
+IPO_Boot_ROM reads and reports the host-bridge IDs at PCI bus 0, device 0, function 0; it does not use a hardcoded chipset whitelist to validate support. The i440FX and Q35 entries above are platform examples, not an exhaustive compatibility guarantee.
+
 ---
 
 ## ⚡ Verified Hardware Platforms

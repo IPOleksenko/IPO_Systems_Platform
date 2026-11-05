@@ -1,0 +1,331 @@
+diff --git a/src/browser/starter.js b/src/browser/starter.js
+index d65bd6ca..f27c618a 100644
+--- a/src/browser/starter.js
++++ b/src/browser/starter.js
+@@ -400,6 +400,9 @@ V86.prototype.continue_init = async function(emulator, options)
+             case "bios":
+                 settings.bios = buffer.buffer;
+                 break;
++            case "bootrom":
++                settings.bootrom = buffer.buffer;
++                break;
+             case "vga_bios":
+                 settings.vga_bios = buffer.buffer;
+                 break;
+@@ -432,7 +435,7 @@ V86.prototype.continue_init = async function(emulator, options)
+             return;
+         }
+ 
+-        if(name === "bios" || name === "vga_bios" ||
++        if(name === "bios" || name === "bootrom" || name === "vga_bios" ||
+             name === "initial_state" || name === "multiboot" ||
+             name === "bzimage" || name === "initrd")
+         {
+@@ -470,6 +473,7 @@ V86.prototype.continue_init = async function(emulator, options)
+     }
+ 
+     add_file("bios", options.bios);
++    add_file("bootrom", options.bootrom);
+     add_file("vga_bios", options.vga_bios);
+     add_file("cdrom", options.cdrom);
+     add_file("hda", options.hda);
+diff --git a/src/cpu.js b/src/cpu.js
+index 61cec324..eef8b4c0 100644
+--- a/src/cpu.js
++++ b/src/cpu.js
+@@ -162,11 +162,12 @@ export function CPU(bus, wm, stop_idling)
+ 
+     /**
+      * @const
+-     * @type {{main: ArrayBuffer, vga: ArrayBuffer}}
++     * @type {{main: ArrayBuffer, vga: ArrayBuffer, bootrom: ArrayBuffer}}
+      */
+     this.bios = {
+         main: null,
+         vga: null,
++        bootrom: null,
+     };
+ 
+     this.instruction_counter = view(Uint32Array, memory, 664, 1);
+@@ -1020,6 +1021,7 @@ CPU.prototype.init = function(settings, device_bus)
+ 
+     this.bios.main = settings.bios;
+     this.bios.vga = settings.vga_bios;
++    this.bios.bootrom = settings.bootrom;
+ 
+     this.load_bios();
+ 
+@@ -1700,6 +1702,7 @@ CPU.prototype.load_bios = function()
+ {
+     var bios = this.bios.main;
+     var vga_bios = this.bios.vga;
++    var bootrom = this.bios.bootrom;
+ 
+     if(!bios)
+     {
+@@ -1749,18 +1752,38 @@ CPU.prototype.load_bios = function()
+         dbg_log("Warning: No VGA BIOS");
+     }
+ 
+-    // seabios expects the bios to be mapped to 0xFFF00000 also
+-    this.io.mmap_register(0xFFF00000, 0x100000,
+-        function(addr)
+-        {
+-            addr &= 0xFFFFF;
+-            return this.mem8[addr];
+-        }.bind(this),
+-        function(addr, value)
+-        {
+-            addr &= 0xFFFFF;
+-            this.mem8[addr] = value;
+-        }.bind(this));
++    if(bootrom)
++    {
++        dbg_assert(bootrom instanceof ArrayBuffer && bootrom.byteLength === 0x100000,
++            "Expected a complete 1 MB IPO_Boot_ROM image");
++
++        var bootrom8 = new Uint8Array(bootrom);
++        this.write_blob(bootrom8.subarray(0xF8000), 0xF8000);
++        this.io.mmap_register(0xFFF00000, 0x100000,
++            function(addr)
++            {
++                return bootrom8[addr & 0xFFFFF];
++            },
++            function()
++            {
++                dbg_assert(false, "Unexpected write to IPO_Boot_ROM");
++            });
++    }
++    else
++    {
++        // seabios expects the bios to be mapped to 0xFFF00000 also
++        this.io.mmap_register(0xFFF00000, 0x100000,
++            function(addr)
++            {
++                addr &= 0xFFFFF;
++                return this.mem8[addr];
++            }.bind(this),
++            function(addr, value)
++            {
++                addr &= 0xFFFFF;
++                this.mem8[addr] = value;
++            }.bind(this));
++    }
+ };
+
+ CPU.prototype.codegen_finalize = function(wasm_table_index, start, state_flags, ptr, len)
+@@ -957,6 +957,17 @@ CPU.prototype.reboot_internal = function()
+     if(this.devices.ps2)
+     {
+         this.devices.ps2.reset();
+     }
++    if(this.devices.ide)
++    {
++        for(const channel of [this.devices.ide.primary, this.devices.ide.secondary])
++        {
++            if(channel)
++            {
++                channel.master.device_reset();
++                channel.slave.device_reset();
++                channel.device_control_reg = 0;
++            }
++        }
++    }
+ 
+     this.load_bios();
+diff --git a/src/ps2.js b/src/ps2.js
+index 6c8d1353..26a4bd9e 100644
+--- a/src/ps2.js
++++ b/src/ps2.js
+@@ -81,7 +81,7 @@ PS2.prototype.reset = function()
+     this.have_keyboard = true;
+ 
+     /** @type {boolean} */
+-    this.enable_keyboard_stream = false;
++    this.enable_keyboard_stream = true;
+ 
+     /** @type {boolean} */
+     this.next_is_mouse_command = false;
+@@ -290,7 +290,7 @@ PS2.prototype.kbd_irq = function()
+ 
+ PS2.prototype.kbd_send_code = function(code)
+ {
+-    if(this.enable_keyboard_stream)
++    if(this.enable_keyboard_stream && !(this.command_register & 0x10))
+     {
+         dbg_log("adding kbd code: " + h(code), LOG_PS2);
+         this.kbd_buffer.push(code);
+diff --git a/src/rust/cpu/cpu.rs b/src/rust/cpu/cpu.rs
+index 7b039753..42cf6b03 100644
+--- a/src/rust/cpu/cpu.rs
++++ b/src/rust/cpu/cpu.rs
+@@ -235,6 +235,10 @@ pub const IA32_PERFEVTSEL0: i32 = 0x186;
+ pub const IA32_PERFEVTSEL1: i32 = 0x187;
+ pub const IA32_MISC_ENABLE: i32 = 0x1A0;
+ pub const IA32_PAT: i32 = 0x277;
++pub const IA32_MTRR_CAP: i32 = 0xFE;
++pub const IA32_MTRR_PHYSBASE0: i32 = 0x200;
++pub const IA32_MTRR_PHYSMASK0: i32 = 0x201;
++pub const IA32_MTRR_DEF_TYPE: i32 = 0x2FF;
+ pub const IA32_RTIT_CTL: i32 = 0x570;
+ pub const MSR_PKG_C2_RESIDENCY: i32 = 0x60D;
+ pub const IA32_KERNEL_GS_BASE: i32 = 0xC0000101u32 as i32;
+@@ -4743,6 +4747,13 @@ pub unsafe fn reset_cpu() {
+ 
+     *pat = 0x0007_0406_0007_0406;
+     *efer = 0;
++    *mtrr_def_type = 0xC06;
++    for i in 0..16 {
++        *mtrr_variable.offset(i) = 0;
++    }
++    for i in 0..11 {
++        *mtrr_fixed.offset(i) = 0x0606_0606_0606_0606;
++    }
+ 
+     set_tsc(0, 0);
+ 
+diff --git a/src/rust/cpu/global_pointers.rs b/src/rust/cpu/global_pointers.rs
+index 0f8a0a5d..c4bf13ba 100644
+--- a/src/rust/cpu/global_pointers.rs
++++ b/src/rust/cpu/global_pointers.rs
+@@ -75,6 +75,9 @@ pub const sse_scratch_register: *mut reg128 = 1136 as *mut reg128;
+ pub const fpu_st: *mut F80 = 1152 as *mut F80;
+ pub const efer: *mut u64 = 1280 as *mut u64;
+ pub const pat: *mut u64 = 1288 as *mut u64;
++pub const mtrr_def_type: *mut u64 = 1296 as *mut u64;
++pub const mtrr_variable: *mut u64 = 1304 as *mut u64;
++pub const mtrr_fixed: *mut u64 = 1432 as *mut u64;
+ 
+ pub fn get_reg32_offset(r: u32) -> u32 {
+     dbg_assert!(r < 8);
+diff --git a/src/rust/cpu/instructions_0f.rs b/src/rust/cpu/instructions_0f.rs
+index f4758724..5d43d596 100644
+--- a/src/rust/cpu/instructions_0f.rs
++++ b/src/rust/cpu/instructions_0f.rs
+@@ -31,6 +31,20 @@ use crate::cpu::misc_instr::{lar, lsl, verr, verw};
+ use crate::cpu::misc_instr::{lss16, lss32};
+ use crate::cpu::sse_instr::*;
+ 
++fn mtrr_memory_type_is_valid(memory_type: u64) -> bool {
++    matches!(memory_type, 0 | 1 | 4 | 5 | 6)
++}
++
++fn mtrr_fixed_index(index: i32) -> Option<isize> {
++    match index {
++        0x250 => Some(0),
++        0x258 => Some(1),
++        0x259 => Some(2),
++        0x268..=0x26F => Some((index - 0x265) as isize),
++        _ => None,
++    }
++}
++
+ #[no_mangle]
+ pub unsafe fn instr16_0F00_0_mem(addr: i32) {
+     // sldt
+@@ -1256,6 +1270,49 @@ pub unsafe fn instr_0F30() {
+             // must retain the guest's selected types.
+             *pat = value;
+         },
++        IA32_MTRR_CAP => {
++            trigger_gp(0);
++        },
++        IA32_MTRR_DEF_TYPE => {
++            let value = ((high as u32 as u64) << 32) | low as u32 as u64;
++            let memory_type = value & 0xFF;
++            if high != 0
++                || value & !0xCFF != 0
++                || !mtrr_memory_type_is_valid(memory_type)
++                || *cr & CR0_CD == 0
++                || *cr & CR0_NW != 0
++            {
++                trigger_gp(0);
++                return;
++            }
++            *mtrr_def_type = value;
++        },
++        IA32_MTRR_PHYSBASE0..=0x20F => {
++            let value = ((high as u32 as u64) << 32) | low as u32 as u64;
++            let is_mask = index & 1 != 0;
++            let valid = if is_mask {
++                high == 0 && value & !0xFFFF_F800 == 0
++            } else {
++                high == 0
++                    && value & !0xFFFF_F0FF == 0
++                    && mtrr_memory_type_is_valid(value & 0xFF)
++            };
++            if !valid || *cr & CR0_CD == 0 || *cr & CR0_NW != 0 {
++                trigger_gp(0);
++                return;
++            }
++            *mtrr_variable.offset((index - IA32_MTRR_PHYSBASE0) as isize) = value;
++        },
++        0x250 | 0x258 | 0x259 | 0x268..=0x26F => {
++            let value = ((high as u32 as u64) << 32) | low as u32 as u64;
++            let valid = high == 0
++                && (0..8).all(|i| mtrr_memory_type_is_valid((value >> (i * 8)) & 0xFF));
++            if !valid || *cr & CR0_CD == 0 || *cr & CR0_NW != 0 {
++                trigger_gp(0);
++                return;
++            }
++            *mtrr_fixed.offset(mtrr_fixed_index(index).unwrap()) = value;
++        },
+         IA32_SPEC_CTRL => {},      // linux 5.19
+         IA32_TSX_CTRL => {},       // linux 5.19
+         MSR_TSX_FORCE_ABORT => {}, // linux 5.19
+@@ -1339,6 +1396,21 @@ pub unsafe fn instr_0F32() {
+             low = *pat as i32;
+             high = (*pat >> 32) as i32;
+         },
++        IA32_MTRR_CAP => low = 0x508, // 8 variable ranges, fixed ranges, and write-combining
++        IA32_MTRR_DEF_TYPE => {
++            low = *mtrr_def_type as i32;
++            high = (*mtrr_def_type >> 32) as i32;
++        },
++        IA32_MTRR_PHYSBASE0..=0x20F => {
++            let value = *mtrr_variable.offset((index - IA32_MTRR_PHYSBASE0) as isize);
++            low = value as i32;
++            high = (value >> 32) as i32;
++        },
++        0x250 | 0x258 | 0x259 | 0x268..=0x26F => {
++            let value = *mtrr_fixed.offset(mtrr_fixed_index(index).unwrap());
++            low = value as i32;
++            high = (value >> 32) as i32;
++        },
+         MSR_PKG_C2_RESIDENCY => {},
+         IA32_SPEC_CTRL => {},      // linux 5.19
+         IA32_TSX_CTRL => {},       // linux 5.19
+@@ -3286,7 +3358,7 @@ pub unsafe fn instr_0FA2() {
+             }; // hypervisor
+             edx = (if true /* have fpu */ { 1 } else { 0 }) |      // fpu
+                 vme | 1 << 3 | 1 << 4 | 1 << 5 | 1 << 6 |  // vme, pse, tsc, msr, pae
+-                1 << 8 | 1 << 11 | 1 << 13 | 1 << 15 | 1 << 16 | 1 << 19 | // cx8, sep, pge, cmov, pat, clflush
++                1 << 8 | 1 << 11 | 1 << 12 | 1 << 13 | 1 << 15 | 1 << 16 | 1 << 19 | // cx8, sep, mtrr, pge, cmov, pat, clflush
+                 1 << 23 | 1 << 24 | 1 << 25 | 1 << 26; // mmx, fxsr, sse1, sse2
+ 
+             if *acpi_enabled
+diff --git a/src/browser/starter.js b/src/browser/starter.js
+--- a/src/browser/starter.js
++++ b/src/browser/starter.js
+@@ -859,2 +859,10 @@ V86.prototype.restart = function()
+     this.v86.restart();
+ };
++
++V86.prototype.set_hda_write_callback = function(callback)
++{
++    const ide = this.v86.cpu.devices.ide;
++    const buffer = ide && ide.primary && ide.primary.master.buffer;
++    if(!buffer) throw new Error("HDA is not available");
++    buffer.onwrite = callback;
++};
+ 
+diff --git a/src/buffer.js b/src/buffer.js
+--- a/src/buffer.js
++++ b/src/buffer.js
+@@ -70,6 +70,7 @@ SyncBuffer.prototype.set = function(start, slice, fn)
+     dbg_assert(start + slice.byteLength <= this.byteLength);
+ 
+     new Uint8Array(this.buffer, start, slice.byteLength).set(slice);
++    this.onwrite && this.onwrite(start, slice.byteLength);
+     fn();
+ };

@@ -24,7 +24,8 @@
       "kernel_dev": "Kernel & Driver Developer",
       "pc_builder": "Hardware Assembler"
     },
-    "downloads": "Downloads"
+    "downloads": "Downloads",
+    "emulator": "Emulator"
   },
   "sections": {
     "ipo_os": {
@@ -176,7 +177,7 @@
     "featured_badge": "⭐ Full Platform Bundle",
     "featured_ribbon": "⭐ Full Platform Bundle",
     "featured_title": "Complete IPO Systems Bundle (All Projects & Disks)",
-    "featured_desc": "Contains all compiled binaries across the platform: Boot ROM (bootrom.bin), Firmware (firmware.rom), IPO_OS kernel image (IPO_OS.img), clean and pre-installed disks (disk-clean.img, disk-installed.img), and pre-compiled applications package (applications.zip). Choose an archive format before downloading.",
+    "featured_desc": "Contains all compiled binaries across the platform: Boot ROM (bootrom.bin), Firmware (firmware.bin), IPO_OS kernel image (IPO_OS.img), clean and pre-installed disks (disk-clean.img, disk-installed.img), and pre-compiled applications package (applications.zip). Choose an archive format before downloading.",
     "download_bundle": "Download Complete Bundle",
     "components_title": "Individual Components & Disk Images",
     "download_btn": "Download",
@@ -195,6 +196,23 @@
   "home": {
     "hero_badge": "🚀 Bare-Metal x86 Systems Architecture",
     "hero_subtitle": "Unified comprehensive documentation of the complete low-level compute stack: from the CPU hardware reset vector to userspace applications.",
+    "emulator_title": "Run the IPO stack",
+    "emulator_description": "Load the complete, separate IPO_Boot_ROM reset image and IPO_Firmware BIOS with IPO_OS using the v86 build with MTRR support.",
+    "emulator_start": "Start full system",
+    "emulator_restart": "Restart VM",
+    "emulator_fullscreen": "Fullscreen",
+    "emulator_exit_fullscreen": "Exit fullscreen",
+    "emulator_prepare": "Ready to start. The virtual machine runs only after you press Start.",
+    "emulator_loading": "Downloading and verifying the v86 runtime and system images…",
+    "emulator_booting": "Starting v86 and booting IPO_OS…",
+    "emulator_firmware": "IPO_Firmware is running; preparing to hand off to IPO_OS…",
+    "emulator_ready": "v86 started. Waiting for the firmware boot sequence.",
+    "emulator_booted": "IPO_OS booted successfully.",
+    "emulator_reveal": "Show display anyway",
+    "emulator_source": "Source",
+    "emulator_license": "v86 license",
+    "emulator_unsupported": "The emulator could not start. See the console output for details.",
+    "emulator_instructions": "The patched v86 runtime and IPO images are downloaded on demand. Keep this page open while testing; click the display to send keyboard and mouse input.",
     "explore_os": "Explore IPO_OS →",
     "explore_boot_rom": "Reset Architecture →",
     "explore_firmware": "Explore Firmware →",
@@ -204,7 +222,7 @@
     "projects_desc": "Each component is self-contained, rigorously documented, and fully independent.",
     "os_desc": "Full bare-metal 32-bit x86 operating system: SMP multi-core protected-mode kernel, VFS with 64-bit IPO_FS over multi-disk Storage Pool with WAL journal, KMOD dynamic relocatable modules, GUI Window Manager, RTL8139 NIC driver, and complete TCP/IP stack with POSIX socket API.",
     "os_docs_link": "IPO_OS Documentation →",
-    "boot_rom_desc": "Hardware reset vector (0xFFFFFFF0) initializer for physical machines and QEMU. Features Cache-as-RAM (CAR), MRC DRAM training for i440FX and Q35, PAM Shadow RAM mirroring, and Contract 2 handover.",
+    "boot_rom_desc": "Hardware reset-vector initializer for physical machines and QEMU. Configures Cache-as-RAM, reports raw host-bridge IDs, configures DRAM controller registers without a pattern test, configures PAM shadowing, and hands over to Contract 2.",
     "boot_rom_docs_link": "Boot ROM Documentation →",
     "firmware_desc": "BIOS-compatible real-mode firmware runtime. Installs IVT interrupt services (INT 10h–1Ah), builds E820 memory map, opens Fast A20, scans storage buses (IDE, AHCI, NVMe, USB), and performs Contract 3 MBR handover.",
     "firmware_docs_link": "Firmware Documentation →",
@@ -223,7 +241,64 @@
     "kernel_dev_link": "Kernel Architecture & Boot →",
     "pc_builder_title": "Hardware Assembler",
     "pc_builder_desc": "Chipset compatibility matrix, PSU sizing, motherboard front panel pinout, and flashing chips via CH341A.",
-    "pc_builder_link": "PC Assembly & Flashing →"
+    "pc_builder_link": "PC Assembly & Flashing →",
+    "emulator_logs_title": "v86 Console & Logs",
+    "emulator_logs_clear": "Clear",
+    "emulator_logs_copy": "Copy Logs",
+    "emulator_logs_copied": "Copied!",
+    "emulator_logs_autoscroll": "Auto-scroll",
+    "emulator_logs_empty": "Waiting for serial output...",
+    "emulator_logs_download": "Download .log",
+    "emulator_view_split": "Split View",
+    "emulator_view_screen": "Screen Only",
+    "emulator_view_logs": "Logs Only",
+    "emulator_page_title": "Online Emulator — IPO Systems Platform",
+    "emulator_page_subtitle": "Run the IPO_Boot_ROM → IPO_Firmware → IPO_OS images in the MTRR-enabled v86 emulator.",
+    "emulator_badge": "WebAssembly v86 · PC/AT Architecture",
+    "emulator_promo_badge": "Interactive Demo",
+    "emulator_promo_title": "Experience IPO Systems in Your Browser",
+    "emulator_promo_desc": "No installation needed. Run the full native boot chain in QEMU WebAssembly with live serial logs and terminal interaction.",
+    "emulator_promo_btn": "Open Online Emulator →",
+    "emulator_promo_serial": "Live Serial Console",
+    "raw_img_512k": "RAW IMG (512K Bootable)",
+    "binary_4m_shadow": "Binary 4 MB (Shadow RAM)",
+    "emulator_reset_disk": "Reset Disk",
+    "emulator_reset_confirm": "Reset virtual disk IDE1 (64 MB) to factory state? All saved files and OS modifications will be erased.",
+    "emulator_saving_disk": "Saving virtual disk before restarting…",
+    "emulator_serial_placeholder": "Type into IPO_OS (e.g. help, sysinfo, ls)...",
+    "emulator_serial_send": "Send",
+    "emulator_splash_subtitle": "Hardware reset → operating system",
+    "emulator_spec_bios": "BIOS / Firmware",
+    "emulator_spec_cpu_ram": "CPU & RAM",
+    "emulator_spec_storage": "Storage",
+    "emulator_spec_audio_ports": "Audio & Ports",
+    "emulator_spec_cpu_value": "32-bit x86 PC · 512 MB RAM",
+    "emulator_spec_storage_value": "disk-installed.img (IDE Primary Master)",
+    "emulator_spec_audio_ports_value": "VGA · PS/2 keyboard · COM1 serial",
+    "emulator_logs_line_count": "Log lines: {count}",
+    "emulator_card_v86_title": "1. v86 x86 PC emulator",
+    "emulator_card_v86_description": "v86 emulates the x86 CPU, memory, VGA display, keyboard, and IDE storage in WebAssembly.",
+    "emulator_card_firmware_title": "2. IPO_Boot_ROM and IPO_Firmware",
+    "emulator_card_firmware_description": "The complete IPO_Boot_ROM image occupies the CPU reset-vector mapping, with its original F000:8000 execution window exposed at the legacy F-segment. The complete standalone IPO_Firmware image is mapped separately as the BIOS; the ROM files are not combined. The patched v86 CPU implements the MTRR registers required by IPO_Boot_ROM.",
+    "emulator_card_os_title": "3. IPO_OS with installed software",
+    "emulator_card_os_description": "disk-installed.img is the single primary disk. It preserves the IPO_OS boot image and contains verified applications, toolchains, fonts, and support files in its IPO_FS partition. Modified disk blocks are saved in this browser profile with IndexedDB for later visits.",
+    "emulator_card_serial_title": "4. Live serial output",
+    "emulator_card_serial_description": "Serial diagnostics from the Boot ROM, IPO_Firmware, and IPO_OS are streamed to the browser console alongside the VGA display.",
+    "emulator_error": "Emulator error",
+    "emulator_view_mode_label": "Layout view mode",
+    "emulator_screen_label": "IPO system running in v86",
+    "emulator_send_enter": "Send (Enter)",
+    "emulator_vga_bios_license": "VGA BIOS LGPL license",
+    "emulator_step1_title": "1. IPO_Boot_ROM Hardware Reset",
+    "emulator_step1_desc": "QEMU loads IPO_Boot_ROM as the system BIOS. The ROM copies the firmware payload to shadow memory at physical 0xF0000 and transfers control at CS:IP 0xF000:0004.",
+    "emulator_step2_title": "2. BIOS POST, IVT & Storage Handover",
+    "emulator_step2_desc": "IPO_Firmware establishes the Interrupt Vector Table (IVT: INT 10h VGA, INT 13h Disk, INT 15h E820 Map, INT 16h Keyboard), discovers ATA/IDE controllers, reads MBR sector 0 into 0x7C00, and hands over execution.",
+    "emulator_step3_title": "3. Multitasking Kernel & Desktop",
+    "emulator_step3_desc": "IPO_OS switches the CPU to 32-bit Protected Mode with two-level paging, mounts the VFS, and initializes the graphical Window Manager with full mouse and keyboard focus.",
+    "emulator_step4_title": "4. Real-time Serial Telemetry",
+    "emulator_step4_desc": "All boot steps and kernel debug prints are mirrored over COM1 (0x3F8) UART and captured directly into the WebAssembly live log window for instant verification and analysis.",
+    "emulator_disk_resetting": "Resetting virtual disk to factory state…",
+    "emulator_logs_cleared": "Logs cleared."
   },
   "tables": {
     "struct": {
@@ -317,6 +392,10 @@
       "name": "IPO_OS Bootable Image",
       "description": "Raw 32-bit bootable image containing the IPO_OS kernel and bootloader."
     },
+    "ipo_disk_blank": {
+      "name": "IPO_OS Blank Raw Disk (512 MiB)",
+      "description": "Unformatted 512 MiB raw disk image with no filesystem or pre-installed applications."
+    },
     "ipo_disk_installed": {
       "name": "IPO_OS Pre-Installed Disk (512 MB)",
       "description": "Ready-to-use 512 MB IPO_FS disk image with applications, toolchains, runtime libraries, and fonts pre-installed."
@@ -331,7 +410,7 @@
     },
     "ipo_firmware": {
       "name": "IPO_Firmware",
-      "description": "Compiled IPO_Firmware runtime services ROM binary (firmware.rom)."
+      "description": "Compiled IPO_Firmware runtime services ROM binary (firmware.bin)."
     }
   },
   "units": {

@@ -38,16 +38,17 @@ make all
 This compiles:
 - `src/reset.asm` (16 bytes placed strictly at `0xFFFFFFF0`)
 - `src/car.asm` (Cache-as-RAM MTRR configuration)
-- `src/mrc_440fx.asm, src/mrc_q35.asm` (DRAM training code)
-- `src/chipset.asm, src/payload_call.asm` (PAM chipset shadowing and Contract 2 handover)
+- `src/host_bridge.asm` (Dynamic CPU & Host Bridge discovery, PAM Shadow RAM configuration and locking)
+- `src/mrc.asm` (DRAM size detection from CMOS extended-memory registers, with a 64 MB fallback, and host-bridge DRAM register configuration)
+- `src/payload_call.asm` (Firmware magic validation & Contract 2 handover)
 
-Outputs: `build/bootrom.bin` (configurable via `FLASH_SIZE`, default 4 MB / 4,194,304 bytes).
+Outputs: `build/bootrom.bin` (configurable via `FLASH_SIZE`, default 4 MB / 4,194,304 bytes) and intermediate binaries in `build/.bin/`.
 
 ---
 
 ## 🧩 创建统一的 SPI Flash 镜像
 
-默认情况下，`make` 会生成一个统一的 `build/bootrom.bin` 二进制镜像（默认 4 MB，适用于 W25Q32 等物理 SPI Flash 芯片或 QEMU）。支持任意标准和非标准闪存大小（例如 `FLASH_SIZE=256K`、`FLASH_SIZE=4M`、`FLASH_SIZE=8M`）。若要嵌入外部固件载荷，请传递 `FIRMWARE=path/to/firmware.bin`：
+默认情况下，`make` 会生成闪存大小为 4 MB 的 `build/bootrom.bin`。`FLASH_SIZE` 必须至少为 64 KiB 且是 16 字节的倍数；固件载荷上限为 32 KiB。若要嵌入外部固件载荷，请传递 `FIRMWARE=path/to/firmware.bin`：
 
 ```bash
 # 构建嵌入固件有效载荷的 4 MB Boot ROM

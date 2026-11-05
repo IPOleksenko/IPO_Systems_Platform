@@ -7,7 +7,7 @@ import Callout from '../../../components/Callout.astro';
 
 # Діагностика та аппаратные сбои
 
-При запуске та налагодженні **IPO_Boot_ROM** на реальных материнських платах типичные проблемы проявляются чёрным экраном або застыванием шестнадцатеричного кода на POST-индикаторе.
+На реальних материнських платах збої можуть проявлятися чорним екраном або зупиненням завантаження. Поточний код виводить як звичайні маркери поступу через порт `0x80` лише `0x12` і `0x13`; перелічені нижче константи помилок не обов'язково виводяться.
 
 ---
 
@@ -15,10 +15,10 @@ import Callout from '../../../components/Callout.astro';
 
 | Hex-код | Обозначення | Причина та способ устранения |
 | :--- | :--- | :--- |
-| **`0x2E`** | `ERR_NO_MTRR` | Процесор не поддерживает регістры MTRR (старее Pentium Pro / i686) либо произошёл сбой запису в MSR. В виртуальных машинах убедитесь в параметрах `-cpu host` або `-cpu qemu32,+mtrr`. |
-| **`0x3E`** | `ERR_UNKNOWN_CHIPSET` | Идентификатор моста PCI Host Bridge в портух `0xCF8`/`0xCFC` не совпадает с i440FX (`0x1237`) або Q35 (`0x29C0`). Проверьте модель используемого чипсета. |
-| **`0x4E`** | `ERR_DRAM_FAIL` | Тест чередования бит (`0x55AA55AA` / `0xAA55AA55`) выявил сбой ячеек пам'яті. Очистите контакты планок DDR спиртом, проверьте установку модулей в первом слоте DIMM. |
-| **`0x7E`** | `ERR_MAGIC_MISMATCH` | Образ прошивки за адресиу `0xF000:0000` не містить сигнатуры `'IPOF'` (`0x464F5049`). Збирання комбинированного SPI-образа выполнена с неверным смещением або розміром заполнения. |
+| **`0x2E`** | `POST_ERR_NO_CAR` | Defined CAR setup failure code; this does not establish that the current code performs an MTRR capability check. |
+| **`0x3E`** | `POST_ERR_UNKNOWN_CS` | Defined constant; current code reports raw PCI host-bridge IDs and does not reject unknown IDs. |
+| **`0x4E`** | `POST_ERR_DRAM_FAIL` | Defined constant; current MRC configures DRAM controller registers and does not run a pattern test. |
+| **`0x7E`** | `POST_ERR_FW_MAGIC` | Defined constant; current mismatch handling reports a diagnostic and halts without emitting POST code `0x7E`; check the payload at `0xF000:0000`. |
 
 ---
 

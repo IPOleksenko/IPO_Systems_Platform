@@ -37,22 +37,22 @@ make all
 
 Компилируются следующие модули:
 - `src/entry.asm` (точка входа по Контракту 2 по адресу `0xF000:0004`)
-- `src/ivt.asm (Real-mode interrupt vector table handlers)
-- `src/pci_scan.asm, src/ahci.asm, src/nvme.asm (Multi-bus storage discovery)
-- `src/chainload.asm (Sector 0 reading and Contract 3 handover)
+- `src/ivt.asm` (обработчики таблицы векторов прерываний реального режима)
+- `src/pci_scan.asm`, `src/ahci.asm`, `src/nvme.asm` (многошинный поиск накопителей)
+- `src/chainload.asm` (чтение сектора 0 и передача управления по Контракту 3)
 
-Цель `make` по умолчанию (`all`) создает `build/firmware.rom` (готовый загрузочный ROM-образ для чипов SPI Flash или QEMU, по умолчанию 256 КБ) и промежуточный бинарный файл `build/.bin/firmware.bin`.
+Цель `make` по умолчанию (`all`) создает временный payload Contract 2 размером менее 32 КБ в `build/.bin/firmware.bin` и упаковывает его в `build/firmware.bin`. Payload встраивается во внешний образ IPO_Boot_ROM только если задан `ROM_BIN` (например, через `make run BOOTROM=path/to/bootrom.bin`); иначе он служит только промежуточным входным файлом для самостоятельного образа BIOS. Размер самостоятельного образа — 256 КБ, а упакованный образ сохраняет размер переданного Boot ROM. Размер образа IPO_Firmware не задается параметром `FLASH_SIZE` из IPO_Boot_ROM.
 
 ---
 
 ## 🖥️ Запуск IPO_Firmware в QEMU
 
-Для запуска IPO_Firmware автономно или с образом операционной системы передайте загрузочный образ `build/firmware.rom` в параметр `-bios` (или используйте `make run`):
+Для запуска IPO_Firmware автономно или с образом операционной системы передайте загрузочный образ `build/firmware.bin` в параметр `-bios` (или используйте `make run`):
 
 ### 1. Загрузка с классическим накопителем ATA IDE
 ```bash
 qemu-system-i386 \
-    -bios build/firmware.rom \
+    -bios build/firmware.bin \
     -drive file=path/to/IPO_OS.img,format=raw,if=ide,index=0 \
     -serial stdio
 ```
@@ -64,7 +64,7 @@ make run OS=path/to/IPO_OS.img
 ### 2. Загрузка через контроллер AHCI SATA
 ```bash
 qemu-system-i386 \
-    -bios build/firmware.rom \
+    -bios build/firmware.bin \
     -device ahci,id=ahci0 \
     -drive file=path/to/IPO_OS.img,format=raw,if=none,id=disk0 \
     -device ide-hd,bus=ahci0.0,drive=disk0 \
@@ -74,7 +74,7 @@ qemu-system-i386 \
 ### 3. Загрузка с современного накопителя NVMe
 ```bash
 qemu-system-i386 \
-    -bios build/firmware.rom \
+    -bios build/firmware.bin \
     -drive file=path/to/IPO_OS.img,format=raw,if=none,id=nvm0 \
     -device nvme,serial=IPO_NVME0,drive=nvm0 \
     -serial stdio

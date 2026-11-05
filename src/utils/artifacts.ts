@@ -26,6 +26,7 @@ export interface ArtifactGroup {
 
 const artifactTranslationKeys: Record<string, string> = {
   'ipo-os-raw': 'artifact_labels.ipo_os_raw',
+  'ipo-disk-blank': 'artifact_labels.ipo_disk_blank',
   'ipo-disk-installed': 'artifact_labels.ipo_disk_installed',
   'ipo-disk-clean': 'artifact_labels.ipo_disk_clean',
   'ipo-applications': 'artifact_labels.ipo_applications',
@@ -107,7 +108,7 @@ export function getRealArtifacts(): { artifacts: Artifact[]; buildDate: string }
         archive_group: 'ipo-system-bundle',
         archive_format: 'ZIP',
         featured: true,
-        description: 'All compiled binaries across the platform: Boot ROM (bootrom.bin), Firmware (firmware.rom), IPO_OS kernel image (IPO_OS.img), clean and pre-installed disks (disk-clean.img, disk-installed.img), and pre-compiled applications package (applications.zip).',
+        description: 'All compiled binaries across the platform: Boot ROM (bootrom.bin), Firmware (firmware.bin), IPO_OS kernel image (IPO_OS.img), clean and pre-installed disks (disk-clean.img, disk-installed.img), and pre-compiled applications package (applications.zip).',
         size_formatted: '0 B',
         sha256: 'Pre-compiled release'
       },
@@ -117,6 +118,15 @@ export function getRealArtifacts(): { artifacts: Artifact[]; buildDate: string }
         name: 'IPO_OS Kernel Bootable Image',
         category: 'os',
         description: 'Raw 32-bit bootable image containing IPO_OS kernel (LBA 0 bootloader + kernel binary).',
+        size_formatted: '0 B',
+        sha256: 'Pre-compiled release'
+      },
+      {
+        id: 'ipo-disk-blank',
+        file: 'disk.img',
+        name: 'IPO_OS Blank Raw Disk (512 MiB)',
+        category: 'os',
+        description: 'Unformatted 512 MiB raw disk image with no filesystem or pre-installed applications.',
         size_formatted: '0 B',
         sha256: 'Pre-compiled release'
       },
@@ -164,10 +174,10 @@ export function getRealArtifacts(): { artifacts: Artifact[]; buildDate: string }
       })),
       {
         id: 'ipo-firmware',
-        file: 'firmware.rom',
+        file: 'firmware.bin',
         name: 'IPO_Firmware',
         category: 'firmware',
-        description: 'Compiled IPO_Firmware runtime services ROM binary (firmware.rom).',
+        description: 'Compiled IPO_Firmware runtime services binary (firmware.bin).',
         size_formatted: '0 B',
         sha256: 'Pre-compiled release'
       }

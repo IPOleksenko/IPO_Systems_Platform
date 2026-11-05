@@ -24,7 +24,8 @@
       "kernel_dev": "Розробник ядра та драйверів",
       "pc_builder": "Збирач ПК"
     },
-    "downloads": "Завантажити"
+    "downloads": "Завантажити",
+    "emulator": "Емулятор"
   },
   "sections": {
     "ipo_os": {
@@ -176,7 +177,7 @@
     "featured_badge": "⭐ Повний комплект платформи",
     "featured_ribbon": "⭐ Повний комплект платформи",
     "featured_title": "Повний комплект IPO Systems (Всі проекти та диски)",
-    "featured_desc": "Містить усі скомпільовані бінарні файли платформи: Boot ROM (bootrom.bin), Firmware (firmware.rom), образ ядра IPO_OS (IPO_OS.img), чистий та передвстановлений диски (disk-clean.img, disk-installed.img) та пакет скомпільованих програм (applications.zip).",
+    "featured_desc": "Містить усі скомпільовані бінарні файли платформи: Boot ROM (bootrom.bin), Firmware (firmware.bin), образ ядра IPO_OS (IPO_OS.img), чистий та передвстановлений диски (disk-clean.img, disk-installed.img) та пакет скомпільованих програм (applications.zip).",
     "download_bundle": "Завантажити повний комплект",
     "components_title": "Окремі компоненти та образи дисків",
     "download_btn": "Завантажити",
@@ -204,7 +205,7 @@
     "projects_desc": "Кожен компонент автономний, суворо документований і не залежить від зовнішніх вихідних текстів при вивченні.",
     "os_desc": "Повноцінна 32-бітна x86 операційна система: монолітне ядро, менеджер пам'яті, VFS із власною 64-бітною FS (IPO_FS), віконний менеджер (WM), драйвери ATA/PS-2/RTL8139 та вбудований TCP/IP стек із POSIX-сокетами.",
     "os_docs_link": "Документація IPO_OS →",
-    "boot_rom_desc": "Апаратний ініціалізатор вектора скидання 0xFFFFFFF0 для фізичного заліза та QEMU. Реалізує режим Cache-as-RAM (CAR), тренування пам'яті MRC для чипсетів i440FX та Q35, перенесення в Shadow RAM і передачу в прошивку за Контрактом 2.",
+    "boot_rom_desc": "Ініціалізатор апаратного вектора скидання для фізичних систем і QEMU. Налаштовує CAR, виводить сирі ID Host Bridge, налаштовує регістри контролера DRAM без тесту шаблонами, налаштовує тіньову PAM-пам'ять і передає керування за Контрактом 2.",
     "boot_rom_docs_link": "Документація Boot ROM →",
     "firmware_desc": "BIOS-сумісний сервісний шар реального режиму. Встановлює таблицю IVT (INT 10h–1Ah), будує карту E820, активує Fast A20, виконує багатошинний автопошук дисків (IDE/AHCI/NVMe/USB) та завантажує MBR за Контрактом 3.",
     "firmware_docs_link": "Документація Firmware →",
@@ -223,7 +224,80 @@
     "kernel_dev_link": "Архітектура ядра та завантаження →",
     "pc_builder_title": "Складальник фізичного ПК",
     "pc_builder_desc": "Підбір материнських плат (i440FX/Q35), калькулятор потужності БЖ, розпіновка JFP1, прошивка SPI через CH341A.",
-    "pc_builder_link": "Інструкція зі складання ПК →"
+    "pc_builder_link": "Інструкція зі складання ПК →",
+    "emulator_title": "Запустити всю систему IPO",
+    "emulator_description": "Віртуальний ПК запускає повні окремі образи IPO_Boot_ROM, IPO_Firmware (BIOS) та IPO_OS безпосередньо у вашому браузері.",
+    "emulator_start": "Запустити систему",
+    "emulator_restart": "Перезапустити ВМ",
+    "emulator_fullscreen": "На весь екран",
+    "emulator_exit_fullscreen": "Вийти з повноекранного режиму",
+    "emulator_prepare": "Готово до запуску. Віртуальна машина почне роботу після натискання кнопки.",
+    "emulator_loading": "Завантаження та перевірка QEMU й образів системи…",
+    "emulator_booting": "Виконується апаратне скидання, прошивка та завантаження операційної системи…",
+    "emulator_firmware": "Працює IPO_Firmware; виконується передача керування ОС…",
+    "emulator_ready": "IPO_OS готова. Натисніть на екран, щоб використовувати клавіатуру та мишу.",
+    "emulator_reveal": "Показати екран",
+    "emulator_source": "Вихідний код",
+    "emulator_license": "Ліцензія QEMU",
+    "emulator_unsupported": "Браузер не зміг увімкнути ізоляцію між джерелами, необхідну для багатопотокового QEMU. Спробуйте сучасний настільний браузер з увімкненими Service Worker.",
+    "emulator_instructions": "Емулятор QEMU та повні образи системи завантажуються за вимогою. Ця браузерна ВМ працює офлайн, а зміни на диску не зберігаються після перезавантаження. Не закривайте вкладку під час роботи; натисніть на екран для введення з клавіатури та миші.",
+    "emulator_logs_title": "Консоль та логи QEMU",
+    "emulator_logs_clear": "Очистити",
+    "emulator_logs_copy": "Копіювати логи",
+    "emulator_logs_copied": "Скопійовано!",
+    "emulator_logs_autoscroll": "Автопрокручування",
+    "emulator_logs_empty": "Очікування виводу QEMU...",
+    "emulator_logs_download": "Завантажити .log",
+    "emulator_view_split": "Розділений вигляд",
+    "emulator_view_screen": "Тільки екран",
+    "emulator_view_logs": "Тільки логи",
+    "emulator_page_title": "Онлайн-емулятор — Платформа IPO Systems",
+    "emulator_page_subtitle": "Запустіть повний стек завантаження реального заліза (IPO_Boot_ROM → IPO_Firmware → IPO_OS) прямо у браузері з живим апаратним скиданням та послідовною діагностикою.",
+    "emulator_badge": "WebAssembly QEMU · Архітектура PC/AT",
+    "emulator_promo_badge": "Інтерактивне демо",
+    "emulator_promo_title": "Запустіть IPO Systems прямо у браузері",
+    "emulator_promo_desc": "Встановлення не потрібне. Запустіть повний ланцюжок завантаження у QEMU WebAssembly з живими логами послідовного порту та терміналом.",
+    "emulator_promo_btn": "Відкрити онлайн-емулятор →",
+    "emulator_promo_serial": "Послідовна консоль",
+    "raw_img_512k": "RAW IMG (512 КБ завантажувальний)",
+    "binary_4m_shadow": "Бінарний образ 4 МБ (Shadow RAM)",
+    "emulator_reset_disk": "Скинути диск",
+    "emulator_reset_confirm": "Скинути віртуальний диск IDE1 (64 MB) до початкового заводського стану? Усі збережені файли та зміни в ОС будуть видалені.",
+    "emulator_saving_disk": "Збереження віртуального диска перед перезапуском…",
+    "emulator_serial_placeholder": "Введіть команду в IPO_OS (наприклад: help, sysinfo, ls)...",
+    "emulator_serial_send": "Надіслати",
+    "emulator_splash_subtitle": "Апаратне скидання → операційна система",
+    "emulator_spec_bios": "BIOS / Прошивка",
+    "emulator_spec_cpu_ram": "Процесор та ОЗП",
+    "emulator_spec_storage": "Накопичувач",
+    "emulator_spec_audio_ports": "Звук та порти",
+    "emulator_spec_cpu_value": "32-бітний ПК x86 · 512 МБ ОЗП",
+    "emulator_spec_storage_value": "disk-installed.img (IDE Primary Master)",
+    "emulator_spec_audio_ports_value": "VGA · клавіатура PS/2 · послідовний порт COM1",
+    "emulator_logs_line_count": "Рядків у журналі: {count}",
+    "emulator_card_v86_title": "1. Емулятор ПК x86 v86",
+    "emulator_card_v86_description": "v86 емулює у WebAssembly процесор x86, пам'ять, відеосистему VGA, клавіатуру та IDE-накопичувач.",
+    "emulator_card_firmware_title": "2. Оригінальні IPO_Boot_ROM та IPO_Firmware",
+    "emulator_card_firmware_description": "Повний образ IPO_Boot_ROM займає область відображення вектора скидання процесора; його початкове вікно виконання F000:8000 відображається у традиційному F-сегменті. Повний автономний образ IPO_Firmware окремо відображається як BIOS; образи ПЗП не об'єднуються. Модифікований процесор v86 реалізує регістри MTRR, потрібні IPO_Boot_ROM.",
+    "emulator_card_os_title": "3. IPO_OS зі встановленим програмним забезпеченням",
+    "emulator_card_os_description": "disk-installed.img — єдиний основний диск. Він зберігає оригінальний завантажувальний образ IPO_OS і містить перевірені програми, інструментарій, шрифти та допоміжні файли у розділі IPO_FS. Змінені блоки диска зберігаються за допомогою IndexedDB у профілі цього браузера для наступних відвідувань.",
+    "emulator_card_serial_title": "4. Виведення послідовного порту в реальному часі",
+    "emulator_card_serial_description": "Діагностичні повідомлення оригінальних Boot ROM, IPO_Firmware та IPO_OS передаються до консолі браузера разом із зображенням VGA.",
+    "emulator_error": "Помилка емулятора",
+    "emulator_view_mode_label": "Режим відображення",
+    "emulator_screen_label": "Система IPO, запущена у v86",
+    "emulator_send_enter": "Надіслати (Enter)",
+    "emulator_vga_bios_license": "Ліцензія LGPL для VGA BIOS",
+    "emulator_step1_title": "1. Апаратне скидання IPO_Boot_ROM",
+    "emulator_step1_desc": "QEMU завантажує IPO_Boot_ROM як системний BIOS. ROM копіює корисне навантаження прошивки в тіньову пам'ять за фізичною адресою 0xF0000 і передає керування за CS:IP 0xF000:0004.",
+    "emulator_step2_title": "2. POST прошивки, IVT та передача диска",
+    "emulator_step2_desc": "IPO_Firmware розгортає таблицю векторів переривань (IVT: INT 10h VGA, INT 13h диск, INT 15h карта E820, INT 16h клавіатура), сканує контролери ATA/IDE, зчитує сектор 0 MBR за адресою 0x7C00 і передає керування.",
+    "emulator_step3_title": "3. Багатозадачне ядро та робочий стіл",
+    "emulator_step3_desc": "IPO_OS перемикає процесор у 32-бітний захищений режим із дворівневою розбивкою на сторінки, монтує VFS та ініціалізує графічний віконний менеджер із фокусом миші та клавіатури.",
+    "emulator_step4_title": "4. Телеметрія послідовного порту",
+    "emulator_step4_desc": "Усі кроки завантаження та налагоджувальні логи ядра дублюються через UART COM1 (0x3F8) і виводяться у вікно логів WebAssembly для миттєвого аналізу та інтерактивного введення команд.",
+    "emulator_disk_resetting": "Очищення диска та скидання до заводського стану…",
+    "emulator_logs_cleared": "Логи очищено."
   },
   "tables": {
     "struct": {
@@ -317,9 +391,9 @@
   },
   "home_badges": {
     "os": "ОС / ядро",
-    "boot_rom": "Ініціалізатор скидання",
+    "boot_rom": "Ініціалізатор CAR",
     "firmware": "Прошивка",
-    "software": "Користувацькі програми"
+    "software": "Користувацьке ПЗ"
   },
   "psu_labels": {
     "ram_opt1": "2 модулі SDRAM / DDR2 (10 Вт)",
@@ -329,6 +403,10 @@
     "ipo_os_raw": {
       "name": "Завантажувальний образ IPO_OS",
       "description": "Необроблений 32-бітний завантажувальний образ із ядром IPO_OS і завантажувачем."
+    },
+    "ipo_disk_blank": {
+      "name": "Порожній RAW-диск IPO_OS (512 МіБ)",
+      "description": "Неформатований RAW-образ диска обсягом 512 МіБ без файлової системи та попередньо встановлених програм."
     },
     "ipo_disk_installed": {
       "name": "Диск IPO_OS із встановленими програмами (512 МБ)",
@@ -344,7 +422,7 @@
     },
     "ipo_firmware": {
       "name": "IPO_Firmware",
-      "description": "Скомпільований бінарний образ служб часу виконання IPO_Firmware (firmware.rom)."
+      "description": "Скомпільований бінарний образ служб часу виконання IPO_Firmware (firmware.bin)."
     }
   },
   "units": {

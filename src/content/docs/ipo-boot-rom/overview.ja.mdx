@@ -42,9 +42,9 @@ Top of 4 GB Memory Space
 
 ## 🎯 Primary Responsibilities
 
-1. **CPU Early Self-Test:** Read CPUID, verify architecture compatibility, clear flags.
+1. **CPU Identification:** Read and report the CPU brand using CPUID; the current code does not perform an architecture-compatibility check.
 2. **Cache-as-RAM (CAR):** Configure CPU MTRRs to establish an execution stack in L1/L2 cache without requiring DRAM.
-3. **Chipset Identification:** Probe Host-to-PCI Bridge (`0xCF8`/`0xCFC`) to identify chipset (e.g. Intel i440FX `0x8086:0x1237` or Q35 `0x8086:0x29C0`).
-4. **Memory 技術リファレンス Code (MRC):** Initialize DRAM controller registers and perform read/write bit-pattern training.
+3. **Dynamic CPU and Host Bridge Identification:** Report the CPU brand from CPUID and read the Host Bridge vendor, device, and revision from PCI Bus 0, Device 0, Function 0 (`0xCF8`/`0xCFC`). Detection uses runtime values rather than a hardcoded ID list; i440FX (`0x8086:0x1237`) and Q35 (`0x8086:0x29C0`) are examples.
+4. **Memory 技術リファレンス Code (MRC):** Read the memory size from CMOS extended-memory registers (falling back to 64 MB when unavailable) and configure the host bridge's DRAM registers. The current implementation does not perform memory pattern training.
 5. **シャドウRAM Configuration:** Unlock Programmable Attribute Map (PAM) registers, copy firmware payload to `0xF0000`..`0xFFFFF`, lock as read-only.
-6. **Contract 2 Handover:** Verify firmware magic signature `'IPOF'` (`0x464F5049`) and jump to `0xF000:0004`.
+6. **Contract 2 Handover:** Verify firmware magic signature `'IPO'` (`0x004F5049`) and jump to `0xF000:0004`.

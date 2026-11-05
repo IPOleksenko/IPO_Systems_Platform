@@ -57,16 +57,25 @@ const initialOption = options.find((option) =>
       )}
     </div>
     <div class="archive-options-action">
-      <span class="archive-options-meta" data-option-meta title={`SHA256: ${initialOption.sha256}`}>
-        {initialOption.size} · SHA256: {initialOption.sha256.slice(0, 12)}...
-      </span>
+      <div class="archive-options-meta" data-option-meta title={`SHA256: ${initialOption.sha256}`}>
+        <span class="meta-size">💾 {initialOption.size}</span>
+        <span class="meta-hash" tabindex="0" title={`SHA256: ${initialOption.sha256}`}>
+          <span class="meta-hash-short">SHA256: {initialOption.sha256.slice(0, 12)}...</span>
+          <span class="meta-hash-full">{initialOption.sha256}</span>
+        </span>
+      </div>
       <a
-        class="archive-options-download"
+        class="archive-options-download btn-download-primary"
         data-option-download
         href={`${downloadsBase}${encodeURIComponent(initialOption.file)}`}
         download={initialOption.file}
       >
-        {actionText ?? getTranslation(lang, 'downloads.download_selected')}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>{actionText ?? getTranslation(lang, 'downloads.download_selected')}</span>
       </a>
     </div>
   </div>
@@ -117,59 +126,74 @@ const initialOption = options.find((option) =>
 
   .archive-options-action {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    flex-direction: column;
+    gap: 0.55rem;
+    width: 100%;
     min-width: 0;
   }
 
   .archive-options-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
     min-width: 0;
-    flex: 1;
     color: var(--text-muted);
-    font-size: 0.72rem;
+    font-size: 0.78rem;
+    font-family: var(--font-mono, monospace);
     line-height: 1.4;
-    overflow-wrap: anywhere;
+    white-space: nowrap;
+    overflow: visible;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+
+  .archive-options-meta .meta-size {
+    font-weight: 600;
+    color: var(--accent-primary);
+    flex-shrink: 0;
+  }
+
+  .archive-options-meta .meta-hash {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    overflow: visible;
+    white-space: nowrap;
+    color: var(--text-muted);
+    cursor: pointer;
   }
 
   .archive-options-download {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex: 0 0 auto;
-    min-height: 2.45rem;
-    padding: 0.55rem 0.9rem;
-    border: 1px solid transparent;
+    width: 100%;
+    min-height: 2.5rem;
+    padding: 0.55rem 1rem;
+    border: 1px solid var(--accent-primary);
     border-radius: var(--radius-md);
     background: var(--accent-primary);
-    color: #fff;
-    font-size: 0.82rem;
-    font-weight: 700;
+    color: #fff !important;
+    font-size: 0.85rem;
+    font-weight: 600;
     line-height: 1.25;
     text-align: center;
     text-decoration: none;
+    box-sizing: border-box;
     transition: background-color 0.15s ease, transform 0.15s ease;
   }
 
   .archive-options-download:hover {
     background: var(--accent-primary-hover);
+    border-color: var(--accent-primary-hover);
+    color: #fff !important;
     transform: translateY(-1px);
   }
 
   .archive-options-download[aria-disabled='true'] {
     opacity: 0.55;
     pointer-events: none;
-  }
-
-  @media (max-width: 420px) {
-    .archive-options-action {
-      align-items: stretch;
-      flex-direction: column;
-      gap: 0.45rem;
-    }
-
-    .archive-options-download {
-      width: 100%;
-    }
   }
 </style>
 
@@ -220,7 +244,7 @@ const initialOption = options.find((option) =>
     download.href = `${downloadsBase}${encodeURIComponent(selected.file)}`;
     download.download = selected.file;
     download.removeAttribute('aria-disabled');
-    meta.textContent = `${selected.size} · SHA256: ${selected.sha256.slice(0, 12)}...`;
+    meta.innerHTML = `<span class="meta-size">💾 ${selected.size}</span><span class="meta-hash" tabindex="0" title="SHA256: ${selected.sha256}"><span class="meta-hash-short">SHA256: ${selected.sha256.slice(0, 12)}...</span><span class="meta-hash-full">${selected.sha256}</span></span>`;
     meta.title = `SHA256: ${selected.sha256}`;
   });
 </script>

@@ -8,9 +8,13 @@ dist/
 # Environment and caches
 .cache/
 .temp/
+__pycache__/
+*.py[cod]
 *.log
 .DS_Store
 
 # Generated search indexes and downloads
 public/pagefind/
 public/downloads/
+public/emulator-engine/
+public/emulator/

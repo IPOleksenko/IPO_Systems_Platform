@@ -16,13 +16,13 @@ A hardware gate line (controlled via keyboard controller port `0x64` or Fast Por
 A 256-byte data structure located at physical address `0x00000400`..`0x000004FF` containing low-level hardware state initialized by the BIOS (COM ports, LPT ports, keyboard buffer, video mode).
 
 ### CAR (Cache-as-RAM)
-A boot technique where the CPU's internal L1/L2 caches are configured as temporary read-write RAM via MTRRs before physical DRAM has been initialized. Enables executing C code and maintaining a stack before DRAM training.
+A boot technique where the CPU's internal L1/L2 caches are configured as temporary read-write RAM via MTRRs before physical DRAM has been initialized. Enables executing C code and maintaining a stack before DRAM initialization.
 
 ### Contract 1
 The inter-layer interface contract defining handover from hardware reset (`0xFFFFFFF0`) to the Boot ROM entry point.
 
 ### Contract 2
-The binary handover contract where **IPO_Boot_ROM** transfers control to **IPO_Firmware** at physical address `0xF000:0004` after DRAM training and PAM shadowing. Validated via the magic signature `'IPOF'` (`0x464F5049`).
+The binary handover contract where **IPO_Boot_ROM** transfers control to **IPO_Firmware** at physical address `0xF000:0004` after DRAM initialization and PAM shadowing. The firmware header uses the magic signature `'IPO'` (`0x004F5049`).
 
 ### Contract 3
 The classic PC BIOS boot contract where **IPO_Firmware** transfers control to the operating system bootloader by loading sector 0 (MBR) to `0x0000:7C00` with register `DL` set to the boot drive ID and verifying magic `0x55AA`.
@@ -52,7 +52,7 @@ A linear addressing scheme where disk sectors are numbered sequentially starting
 A continuous physical memory aperture mapped into CPU address space allowing direct 32-bit ARGB pixel writing without bank switching.
 
 ### MRC (Memory Reference Code)
-Low-level silicon initialization code responsible for discovering, configuring, and training DDR DRAM timing registers and memory controllers.
+Boot-stage code that reads extended-memory size from CMOS (using a 64 MiB fallback when unavailable) and configures host-bridge DRAM registers. It does not read SPD or run a DRAM pattern test.
 
 ### MTRR (Memory Type Range Register)
 Model-specific CPU registers that define cacheability attributes (Write-Back, Write-Combining, Uncacheable) for designated physical address ranges.
@@ -70,7 +70,7 @@ Legacy x86 hardware task structure. In IPO_OS's flat protected mode model, conte
 The kernel subsystem that manages page directories and page tables, providing isolated linear 4 GB address spaces for each process.
 
 ### KMOD (Relocatable Kernel Module)
-IPO_OS's runtime-loadable kernel module and driver binary format (`.kmd`, magic `'IKMD'` `0x444D4B49`, ABI `0x0100`). Supports runtime symbol resolution against ~1,560 exported kernel symbols (`generate_ksyms.py`) and 32-bit `ABS32`/`REL32` code relocations.
+IPO_OS's runtime-loadable kernel module and driver binary format (`.kmd`, magic `'IKMD'` `0x444D4B49`, ABI `0x0100`). Supports runtime symbol resolution against ~1,700 exported kernel symbols (`generate_ksyms.py`) and 32-bit `ABS32`/`REL32` code relocations.
 
 ### SMP & Local APIC (Symmetric Multiprocessing)
 Multi-core x86 execution architecture where the Bootstrap Processor (BSP) discovers Application Processors (APs) via ACPI MADT / Intel MP tables and wakes them using `INIT-SIPI-SIPI` commands over the Local APIC MMIO controller (`0xFEE00000`) and the physical trampoline at `0x8000`.

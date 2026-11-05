@@ -41,6 +41,24 @@ const dir = siteConfig.languages[currentLang]?.dir || 'ltr';
       } else {
         document.documentElement.removeAttribute('data-theme');
       }
+
+      // Universal click-to-copy for SHA256 hashes
+      document.addEventListener('click', (e) => {
+        const hashEl = e.target.closest ? e.target.closest('.meta-hash') : null;
+        if (!hashEl) return;
+        const fullSpan = hashEl.querySelector('.meta-hash-full');
+        const hashText = fullSpan ? fullSpan.textContent.trim() : (hashEl.getAttribute('title') || '').replace(/^SHA256:\s*/i, '').trim();
+        if (hashText && navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(hashText).then(() => {
+            const shortSpan = hashEl.querySelector('.meta-hash-short');
+            if (shortSpan) {
+              const orig = shortSpan.textContent;
+              shortSpan.textContent = '✓ Copied!';
+              setTimeout(() => { shortSpan.textContent = orig; }, 1500);
+            }
+          }).catch(() => {});
+        }
+      });
     </script>
   </head>
   <body>

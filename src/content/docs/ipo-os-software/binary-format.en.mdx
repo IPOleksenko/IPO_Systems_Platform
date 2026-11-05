@@ -81,7 +81,7 @@ Interpreted scripts are intercepted at process creation via the `binfmt` subsyst
 ### 5. Dynamic Kernel Modules (`.kmd`, Ring 0)
 Loaded dynamically by `kmod_load_file()` in `src/kernel/core/kmod.c`:
 - **Format:** `kmod_raw_header_t` with magic `'KMOD'` (`0x444F4D4B`), ABI version verification, and CRC32 payload checksum validation.
-- **Dynamic Symbol Binding:** Resolves unresolved symbol references against the exported kernel symbol table (`ksymtab`, ~1,560 symbols) using binary search.
+- **Dynamic Symbol Binding:** Resolves unresolved symbol references against the exported kernel symbol table (`ksymtab`, ~1,700 symbols) using binary search.
 - **Relocations:** Fixes up absolute (`KMOD_RELOC_ABSOLUTE`) and PC-relative (`KMOD_RELOC_PCREL`) addresses.
 - **Lifecycle:** Invokes the module's `init()` and `cleanup()` entrypoints.
 

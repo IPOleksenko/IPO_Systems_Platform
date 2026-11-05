@@ -15,19 +15,19 @@
   },
   "boot_rom_flow": {
     "title": "IPO_Boot_ROM Low-Level Execution Sequence",
-    "caption": "Step-by-step progression of the hardware reset vector through Cache-as-RAM, memory training, and firmware handover.",
+    "caption": "Ablauf vom Hardware-Resetvektor über Cache-as-RAM und DRAM-Controllerkonfiguration bis zur Firmware-Übergabe.",
     "labels": {
       "reset_vector": "CPU Reset Vector (0xFFFFFFF0 / F000:FFF0)",
       "jump_base": "Jump to ROM Base (0xF000:8000)",
       "car_setup": "Phase 1: Cache-as-RAM Setup (MTRRs, Stack at 0x7000:8000)",
-      "chipset_probe": "Phase 2: PCI Chipset Probing (i440FX vs Q35)",
-      "mrc_training": "Phase 3: Memory Reference Code (MRC DRAM Training)",
-      "car_teardown": "Phase 4: CAR Teardown & DRAM Stack (0x0000:7000)",
+      "chipset_probe": "Rohe PCI-Host-Bridge-IDs lesen und melden",
+      "mrc_training": "MRC: DRAM-Controllerkonfiguration",
+      "car_teardown": "CAR-Abbau; Übergabestack SS:SP=0000:7C00",
       "pic_pit": "Phase 5: Cascaded 8259 PIC & 8254 PIT Setup",
       "uart_init": "Phase 6: COM1 UART Init (115200 8N1)",
       "shadow_ram": "Phase 7: PAM Copy to Shadow RAM (0xF0000..0xFFFFF)",
       "pam_lock": "Phase 8: PAM Read-Only Lock",
-      "magic_check": "Phase 9: Validate 'IPOF' Magic (0x464F5049)",
+      "magic_check": "Phase 9: Validate 'IPO' Magic (0x004F5049)",
       "handover": "Transfer to Firmware: jmp 0xF000:0004"
     }
   },

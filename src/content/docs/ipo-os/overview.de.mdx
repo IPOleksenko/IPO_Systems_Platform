@@ -27,7 +27,7 @@ Modern operating systems often hide hardware interactions behind millions of lin
 4. **Symmetric Multiprocessing (SMP):**
    Full multi-core x86 initialization via Local APIC (`0xFEE00000`), dynamic ACPI RSDP/RSDT/MADT and Intel MP table discovery, Application Processor (AP) boot via `INIT-SIPI-SIPI` at physical trampoline `0x8000`, atomic `spinlock_t` synchronization, and cross-core IPIs (`0xE0`).
 5. **Relocatable Kernel Modules (KMOD) & Dynamic Buffers:**
-   Runtime loading of relocatable `.kmd` kernel modules (`IKMD` magic) linked against ~1,560 exported kernel symbols (`generate_ksyms.py`), a Unified Hardware Device Registry (`device.c`), and kernel-wide elimination of fixed-size array limits in favor of self-expanding heap buffers (`krealloc`).
+   Runtime loading of relocatable `.kmd` kernel modules (`IKMD` magic) linked against ~1,700 exported kernel symbols (`generate_ksyms.py`), a Unified Hardware Device Registry (`device.c`), and kernel-wide elimination of fixed-size array limits in favor of self-expanding heap buffers (`krealloc`).
 6. **Autonomous Bare-Metal Networking:**
    Includes a native, self-contained **TCP/IP stack** with a full RFC 793/RFC 9293 state machine, RTL8139 PCI NIC driver (with dynamically expanding `rx_packet_buf`), and a BSD-like Socket API.
 7. **Integrated Graphical and Console Environment:**
@@ -51,7 +51,7 @@ IPO_OS represents the top execution layer of the three-tier **IPO Systems Platfo
 <LocalizedDiagram id="global_stack" figureNum={1} />
 
 - **Layer 1: Physical Hardware** — CPU, DRAM, Chipset, Storage, and Peripherals.
-- **Layer 2: IPO_Boot_ROM** — Reset vector code, Cache-as-RAM, and DRAM training.
+- **Layer 2: IPO_Boot_ROM** — Reset vector code, Cache-as-RAM, and DRAM initialization.
 - **Layer 3: IPO_Firmware** — BIOS runtime services, IVT, and storage scanning.
 - **Layer 4: IPO_OS Kernel** — Resource virtualization and subsystem arbitration.
 - **Layer 5: Userspace Applications** — Sandboxed programs running at physical address `0x800000`.

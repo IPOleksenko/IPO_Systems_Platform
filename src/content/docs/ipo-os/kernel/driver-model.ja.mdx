@@ -68,6 +68,9 @@ Userland applications can inspect or manage drivers via dedicated system calls:
 - **8042 Controller:** Ports `0x60` (Data) and `0x64` (Status/Command).
 - **Dynamic Unlimited Buffers:** The scancode event queue, keymap tables, and `key_state` pressed-key bitmap in `keyboard.c` grow dynamically on the heap (removing the fixed `NUM_KEYS = 128` limit). Supports runtime layout switching via `IPO_SYSCALL_KEYMAP_CYCLE_NEXT` (`0x1058`).
 
+#### Mouse coordinate and region helpers
+- **Kernel API (`src/include/driver/input/mouse.h`):** `mouse_set_bounds()` / `mouse_set_bounds_from_display()` and `mouse_get_bounds()` set and retrieve screen bounds; `mouse_get_position()` retrieves cursor coordinates. `mouse_is_in_region()` tests a half-open rectangle `[x, x + w) × [y, y + h)`; `mouse_is_clicked_in_region()` checks whether a specified button is pressed there, and `mouse_check_click()` is its left-button convenience helper.
+
 ### 4. Audio: Sound Blaster 16 & PC Speaker
 - **Sound Blaster 16:** DSP base port `0x220`. Communicates via DSP Read/Write buffer ports `0x22C`/`0x22A`.
 - **PC Speaker:** Programmable Interval Timer Channel 2 connected to speaker gate port `0x61` (Bits 0 & 1).
@@ -78,7 +81,7 @@ Userland applications can inspect or manage drivers via dedicated system calls:
 
 The **KMOD** subsystem (`src/kernel/core/kmod.c`, `src/include/kernel/kmod.h`) enables runtime loading and unloading of compiled relocatable kernel modules and drivers (`.kmd`) directly from the `IPO_FS` filesystem:
 - **`.kmd` Binary Format (`kmod_raw_header_t` / `kmod_header_t`):** Header identified by magic **`0x444D4B49` (`"IKMD"`)** and ABI version **`0x0100`**, specifying `init_offset`, `exit_offset`, symbol tables, and relocation entries. In RAM, module metadata strings (`name`, `description`, `author`, `version`) are stored in dynamically sized heap buffers.
-- **Two-Pass Kernel Symbol Table (`tools/generate_ksyms.py`):** During the kernel build, `generate_ksyms.py` extracts all global symbols from `nm` and generates `s_kernel_syms` (**~1,560 exported kernel symbols**), which `kmod_resolve_symbol()` uses for runtime linking.
+- **Two-Pass Kernel Symbol Table (`tools/generate_ksyms.py`):** During the kernel build, `generate_ksyms.py` extracts all global symbols from `nm` and generates `s_kernel_syms` (**~1,700 exported kernel symbols**), which `kmod_resolve_symbol()` uses for runtime linking.
 - **Relocations:** `kmod_load()` allocates aligned memory for `.text/.data` and `.bss`, resolves external kernel symbols, and applies 32-bit absolute (`KMOD_RELOC_ABS32`) and PC-relative (`KMOD_RELOC_REL32`) relocations before invoking the module's `init()` entry point.
 
 <SharedStruct id="kmod_header" />
@@ -101,7 +104,7 @@ drivers unload <id|name>        # Invoke exit() and unload a kernel module from 
 drivers info <id|name>          # Inspect detailed driver/module metadata and hooks
 drivers status                  # Display driver, module, and kernel symbol counts
 drivers symbols                 # Print the kernel symbol table (also: symbols / ksyms)
-symbols [filter]                # Search the ~1,560 exported kernel symbols (alias: ksyms)
+symbols [filter]                # Search the ~1,700 exported kernel symbols (alias: ksyms)
 hardware overview               # Display summary of CPUs, RAM, buses, and active devices
 hardware list                   # List all registered hardware devices across all buses
 hardware cpu | memory           # Detailed SMP per-core status / E820 & heap statistics
@@ -110,4 +113,3 @@ hardware info <id>              # Detailed hardware passport for a specific devi
 hardware status                 # Show device counts by operational state and category
 hardware refresh                # Trigger a live rescan across all hardware buses
 ```
-

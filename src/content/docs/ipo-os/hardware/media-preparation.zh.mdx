@@ -1,70 +1,30 @@
 ---
-title: "Storage Preparation & Partitioning"
-description: "Creating raw OS disk images, managing IPO_FS via disk_editor.py, and writing to physical media."
+title: "Storage Preparation & Disk Images"
+description: "Build outputs for the IPO_OS boot image and separate auxiliary data disk."
 ---
 
-# Storage Preparation & Partitioning
+# Storage Preparation & Disk Images
 
-To prepare bootable media for IPO_OS, a raw disk image is created with an MBR partition table and an **IPO_FS** file system partition starting at **LBA 2048** (the standard 1 MB alignment boundary).
+The current IPO_OS build creates a boot image, an auxiliary data disk, and a blank raw CD-ROM image as separate artifacts. It does not create the combined 512 MiB Live USB image described in older instructions.
 
----
+## Build Artifacts
 
-## 💾 Disk Layout & Geometry (`build/IPO_OS.img`)
+| Artifact | Build target | Contents |
+| :--- | :--- | :--- |
+| `build/IPO_OS.img` | `make image` | MBR bootloader, kernel image, and padding. With the current default MBR geometry it is at least 128 MiB; a larger kernel-sector requirement can increase the size. It is separate from the 512 MiB data disk. |
+| `build/disks/disk.img` | `make disks` | Separate, blank 512 MiB auxiliary raw disk. IPO_OS does not pre-populate it with applications. |
+| `build/disks/disk.iso` | `make disks` | Separate, blank 5 MiB raw image attached as a virtual CD-ROM by the Makefile's QEMU run target. It is not a populated ISO filesystem. |
 
-```
-┌───────────────────┬────────────────────────┬───────────────────────────┬───────────────────────────┐
-│ Sector 0 (LBA 0)  │ Sectors 1–2029         │ Sectors 2030–2039         │ Sector 2048 (LBA 2048)... │
-│ MBR + Partition   │ Stage 2 Bootloader     │ Storage Pool + WAL Journal│ IPO_FS Partition          │
-│ Table (0x55AA)    │ & IPO_OS Kernel Image  │ SB (2030/2039), WAL(31-38)│ Superblock, Bitmaps, Files│
-└───────────────────┴────────────────────────┴───────────────────────────┴───────────────────────────┘
-```
 
-1. **Sector 0 (MBR):** Contains the 512-byte Stage 1 bootloader and standard MBR partition table (Partition 1 points to `IPO_FS` with type `0x83` starting at `LBA 2048`) ending with `0x55AA`.
-2. **Sectors 1–2029:** Stage 2 bootloader and kernel binary payload (packaged into the unified `build/IPO_OS.img` via `make live-image` / `tools/create_live_image.py`).
-3. **Sectors 2030–2039 (Storage Pool Superblocks & WAL Journal):**
-   - **LBA 2030:** Primary Storage Pool Superblock (`storage_pool_raw_sb_t`, magic `'POOL'`, CRC32).
-   - **LBA 2031–2038:** 8-sector Write-Ahead Logging (**WAL**) transaction journal (64 entries of 64 bytes, magic `'TXNL'`).
-   - **LBA 2039:** Backup Storage Pool Superblock for automatic failover and recovery.
-4. **Sector 2048+:** Start of the `IPO_FS` partition. The `IPO_FS` Superblock resides at exact LBA offset 2048.
 
----
+The current repository has no `make live-image` target or `tools/create_live_image.py` utility.
 
-## 🛠️ Managing the Filesystem via `disk_editor.py`
+## Managing Disk Images
 
-The project provides an independent Python utility, `disk_editor.py`, to manipulate files inside the raw disk image without needing root loopback mounts:
+The current IPO_OS source tree no longer includes `disk_editor.py` or host-side disk-image preparation tools. See the separate [IPO_OS_Software project](https://github.com/IPOleksenko/IPO_OS_Software) for its disk-image utilities.
 
-<SharedCode id="disk-editor-cmds" />
+## Physical Media
 
-### Available Subcommands:
-- `format`: Initializes a fresh `IPO_FS` superblock, zeroing bitmap and inode tables.
-- `ls [path]`: Lists directories and file attributes (inode, size, type).
-- `cat <path>`: Prints text file contents to stdout.
-- `mkdir <path>`: Creates a directory node.
-- `put <src> <dest>`: Copies a host binary or file into the target directory inside the image.
-- `rm <path>`: Removes a file or empty directory.
-
----
-
-## ⚡ Writing the Image to Physical Media (`dd`)
-
-<Callout type="caution" title="Triple-Check Your Target Device!">
-Writing to the wrong block device with `dd` will cause **irreversible data loss** on your host computer. Always verify drive identifiers using `lsblk` before proceeding.
+<Callout type="caution" title="The boot image is not a complete Live USB">
+`build/IPO_OS.img` contains the bootloader and kernel only; the auxiliary data disk is a separate artifact. Do not treat the boot image as the former combined 512 MiB image or expect it to contain a prepared IPO_FS volume.
 </Callout>
-
-```bash
-# 0. Build the unified 512 MB bootable Live USB image:
-make live-image
-
-# 1. Identify your USB drive or CF card adapter on the Linux host
-lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,MODEL
-
-# 2. Unmount any automatically mounted partitions
-sudo umount /dev/sdX* 2>/dev/null || true
-
-# 3. Write the unified build/IPO_OS.img to the physical device (replace sdX with your drive)
-sudo dd if=build/IPO_OS.img of=/dev/sdX bs=4M status=progress conv=fsync
-
-# 4. Flush kernel write buffers
-sync
-```
-Once `sync` returns, safely remove the USB stick or CompactFlash card and connect it to your physical IPO_OS target computer.

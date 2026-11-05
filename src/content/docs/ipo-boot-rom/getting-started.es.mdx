@@ -38,16 +38,17 @@ make all
 This compiles:
 - `src/reset.asm` (16 bytes placed strictly at `0xFFFFFFF0`)
 - `src/car.asm` (Cache-as-RAM MTRR configuration)
-- `src/mrc_440fx.asm, src/mrc_q35.asm` (DRAM training code)
-- `src/chipset.asm, src/payload_call.asm` (PAM chipset shadowing and Contract 2 handover)
+- `src/host_bridge.asm` (Dynamic CPU & Host Bridge discovery, PAM Shadow RAM configuration and locking)
+- `src/mrc.asm` (DRAM size detection from CMOS extended-memory registers, with a 64 MB fallback, and host-bridge DRAM register configuration)
+- `src/payload_call.asm` (Firmware magic validation & Contract 2 handover)
 
-Outputs: `build/bootrom.bin` (configurable via `FLASH_SIZE`, default 4 MB / 4,194,304 bytes).
+Outputs: `build/bootrom.bin` (configurable via `FLASH_SIZE`, default 4 MB / 4,194,304 bytes) and intermediate binaries in `build/.bin/`.
 
 ---
 
 ## 🧩 Creación de una imagen SPI Flash unificada
 
-De forma predeterminada, `make` compila una única imagen unificada `build/bootrom.bin` (por defecto de 4 MB, lista para chips SPI Flash físicos como W25Q32 o QEMU). Se admiten tamaños estándar y no estándar (`FLASH_SIZE=256K`, `FLASH_SIZE=4M`, `FLASH_SIZE=8M`). Para incrustar un payload de firmware externo, pase `FIRMWARE=path/to/firmware.bin`:
+De forma predeterminada, `make` genera `build/bootrom.bin` con un tamaño de flash de 4 MB. `FLASH_SIZE` debe ser de al menos 64 KiB y múltiplo de 16 bytes; el payload de firmware está limitado a 32 KiB. Para incrustar un payload de firmware externo, pase `FIRMWARE=path/to/firmware.bin`:
 
 ```bash
 # Compilar Boot ROM de 4 MB con payload de firmware integrado

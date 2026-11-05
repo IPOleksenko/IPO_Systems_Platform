@@ -338,7 +338,7 @@ make run NET_MODE=tap AUDIODEV=pa
 make run NET_MODE=user DRIVE_TYPE=ide
 
 # Cleanups:
-make clean        # Removes build directory (except disks)
+make clean        # Removes build outputs, including build/disks
 make clean-lib    # Cleans kernel library artifacts
 make clean-disks  # Removes build/disks directory
 
@@ -860,7 +860,7 @@ export const sharedStructTables: StructTable[] = [
       { offset: '0x17', size: '1 byte', type: 'Progress', name: 'POST_DRAM_TEST_PASS' },
       { offset: '0x18', size: '1 byte', type: 'Progress', name: 'POST_CAR_TEARDOWN' },
       { offset: '0x1C', size: '1 byte', type: 'Progress', name: 'POST_PAM_LOCKED' },
-      { offset: '0x1D', size: '1 byte', type: 'Progress', name: 'POST_MAGIC_VALID' },
+      { offset: '0x1D', size: '1 byte', type: 'Progress', name: 'POST_FW_VALIDATE' },
       { offset: '0x1E', size: '1 byte', type: 'Progress', name: 'POST_HANDOVER' },
       { offset: '0x2E', size: '1 byte', type: 'Error', name: 'ERR_NO_MTRR' },
       { offset: '0x3E', size: '1 byte', type: 'Error', name: 'ERR_UNKNOWN_CHIPSET' },

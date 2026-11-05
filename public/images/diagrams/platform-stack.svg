@@ -80,7 +80,7 @@
   <path d="M 450 445 L 450 475" stroke="#34d399" stroke-width="2.5" stroke-dasharray="4,4"/>
   <polygon points="445,475 450,485 455,475" fill="#34d399"/>
   <rect x="290" y="453" width="320" height="20" rx="4" fill="#0f172a" stroke="#34d399" stroke-width="1"/>
-  <text x="450" y="467" font-family="monospace" font-size="10.5" fill="#6ee7b7" font-weight="600" text-anchor="middle">Contract 2: Handover (0xF000:0004, 'IPOF')</text>
+  <text x="450" y="467" font-family="monospace" font-size="10.5" fill="#6ee7b7" font-weight="600" text-anchor="middle">Contract 2: Handover (0xF000:0004, 'IPO')</text>
 
   <!-- Layer 2: IPO_Boot_ROM -->
   <g filter="url(#shadow)">

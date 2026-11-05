@@ -33,6 +33,13 @@ npm run dev
 # Build static production bundle and generate Pagefind search index
 npm run build
 
+# Build only the Astro site after emulator assets have already been prepared
+npm run build:site
+
+# Prepare the v86 emulator runtime and IPO boot images
+npm run build:artifacts
+npm run build:emulator
+
 # Preview production build locally
 npm run preview
 ```

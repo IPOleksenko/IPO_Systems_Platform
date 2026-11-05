@@ -38,16 +38,17 @@ make all
 This compiles:
 - `src/reset.asm` (16 bytes placed strictly at `0xFFFFFFF0`)
 - `src/car.asm` (Cache-as-RAM MTRR configuration)
-- `src/mrc_440fx.asm, src/mrc_q35.asm` (DRAM training code)
-- `src/chipset.asm, src/payload_call.asm` (PAM chipset shadowing and Contract 2 handover)
+- `src/host_bridge.asm` (Dynamic CPU & Host Bridge discovery, PAM Shadow RAM configuration and locking)
+- `src/mrc.asm` (DRAM size detection from CMOS extended-memory registers, with a 64 MB fallback, and host-bridge DRAM register configuration)
+- `src/payload_call.asm` (Firmware magic validation & Contract 2 handover)
 
-Outputs: `build/bootrom.bin` (configurable via `FLASH_SIZE`, default 4 MB / 4,194,304 bytes).
+Outputs: `build/bootrom.bin` (configurable via `FLASH_SIZE`, default 4 MB / 4,194,304 bytes) and intermediate binaries in `build/.bin/`.
 
 ---
 
 ## 🧩 Tworzenie jednolitego obrazu SPI Flash
 
-Domyślnie polecenie `make` generuje jednolity obraz `build/bootrom.bin` (domyślnie 4 MB, gotowy do programowania fizycznych układów SPI Flash, np. W25Q32, lub dla QEMU). Obsługiwane są dowolne rozmiary pamięci (`FLASH_SIZE=256K`, `FLASH_SIZE=4M`, `FLASH_SIZE=8M`). Aby osadzić zewnętrzny ładunek firmware, przekaż `FIRMWARE=path/to/firmware.bin`:
+Domyślnie polecenie `make` generuje `build/bootrom.bin` z rozmiarem pamięci Flash 4 MB. `FLASH_SIZE` musi mieć co najmniej 64 KiB i być wielokrotnością 16 bajtów; ładunek firmware jest ograniczony do 32 KiB. Aby osadzić zewnętrzny ładunek firmware, przekaż `FIRMWARE=path/to/firmware.bin`:
 
 ```bash
 # Budowanie 4 MB Boot ROM z osadzonym ładunkiem firmware

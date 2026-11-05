@@ -38,16 +38,17 @@ make all
 This compiles:
 - `src/reset.asm` (16 bytes placed strictly at `0xFFFFFFF0`)
 - `src/car.asm` (Cache-as-RAM MTRR configuration)
-- `src/mrc_440fx.asm, src/mrc_q35.asm` (DRAM training code)
-- `src/chipset.asm, src/payload_call.asm` (PAM chipset shadowing and Contract 2 handover)
+- `src/host_bridge.asm` (Dynamic CPU & Host Bridge discovery, PAM Shadow RAM configuration and locking)
+- `src/mrc.asm` (DRAM size detection from CMOS extended-memory registers, with a 64 MB fallback, and host-bridge DRAM register configuration)
+- `src/payload_call.asm` (Firmware magic validation & Contract 2 handover)
 
-Outputs: `build/bootrom.bin` (configurable via `FLASH_SIZE`, default 4 MB / 4,194,304 bytes).
+Outputs: `build/bootrom.bin` (configurable via `FLASH_SIZE`, default 4 MB / 4,194,304 bytes) and intermediate binaries in `build/.bin/`.
 
 ---
 
 ## 🧩 統合SPIフラッシュイメージの作成
 
-デフォルトでは、`make` は単一の統合 `build/bootrom.bin` イメージを生成します (デフォルト 4 MB、W25Q32 などの物理 SPI フラッシュチップまたは QEMU 用)。任意の標準および非標準サイズがサポートされています (`FLASH_SIZE=256K`、`FLASH_SIZE=4M`、`FLASH_SIZE=8M`)。外部ファームウェアペイロードを埋め込むには、`FIRMWARE=path/to/firmware.bin` を渡します:
+デフォルトでは、`make` はフラッシュサイズ 4 MB の `build/bootrom.bin` を生成します。`FLASH_SIZE` は 64 KiB 以上かつ 16 バイトの倍数である必要があり、ファームウェアペイロードの上限は 32 KiB です。外部ファームウェアペイロードを埋め込むには、`FIRMWARE=path/to/firmware.bin` を渡します:
 
 ```bash
 # ファームウェアペイロードを組み込んだ 4 MB Boot ROM をビルド

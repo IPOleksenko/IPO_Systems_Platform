@@ -1,6 +1,6 @@
 ---
 title: "Contract 2 & Port 0x80 Codes"
-description: "Specification of Contract 2 handover to IPO_Firmware and complete diagnostic POST codes output to hardware Port 0x80."
+description: "Contract 2 handover state and defined IPO_Boot_ROM POST code constants for port 0x80."
 ---
 
 import SharedStruct from '../../../components/SharedStruct.astro';
@@ -14,7 +14,7 @@ This reference specifies the binary handover contract between **IPO_Boot_ROM** a
 
 ## 📋 Port 0x80 POST Diagnostic Codes
 
-Throughout initialization, IPO_Boot_ROM outputs single-byte progress and error codes to port `0x80`. These can be read using an LPC/PCI diagnostic card or in QEMU:
+`contract.inc` defines these codes. Current boot stages emit only `0x12` (CAR start) and `0x13` (CAR OK) as normal progress; many other milestone constants are defined but not emitted. Treat this as a reference to defined codes, not a runtime trace:
 
 <SharedStruct id="bootrom_post_codes" />
 
@@ -29,7 +29,7 @@ The firmware payload must reside at segment `0xF000` with this exact 16-byte hea
 
 ```
 Address         Offset   Field          Value
-0x000F0000      0x00     magic          0x464F5049 ("IPOF" in ASCII)
+0x000F0000      0x00     magic          0x004F5049 ("IPO" in ASCII)
 0x000F0004      0x04     entry_point    Firmware initialization code begins directly here
 ```
 
@@ -38,10 +38,10 @@ Address         Offset   Field          Value
 | Register | Expected State at Entry |
 | :--- | :--- |
 | **`CS:IP`** | `0xF000:0x0004` (实模式 segment addressing) |
-| **`EAX`** | Detected Chipset ID (`0x1237` for i440FX, `0x29C0` for Q35) |
-| **`EBX`** | Total verified physical DRAM size in Kilobytes |
-| **`ESP`** | `0x00007C00` (Stack located safely in conventional low DRAM) |
+| **`EAX`** | Unspecified by the Contract 2 handover. |
+| **`EBX`** | Unspecified by the Contract 2 handover. |
+| **`SS:SP`** | `0x0000:0x7C00` |
 | **`SS`** | `0x0000` |
-| **`DS`, `ES`** | `0x0000` or `0xF000` |
-| **`EFLAGS`** | `0x00000002` (Interrupts disabled, `IF = 0`) |
-| **PAM State** | PAM0 register locked read-only (`RE = 1, WE = 0`) |
+| **`DS`, `ES`** | `0x0000` |
+| **`EFLAGS`** | `IF` is cleared; other flag bits are not specified by the handover. |
+| **PAM State** | PAM0 is configured with `WE = 0`, `RE = 1`; the register is not read back for verification. |

@@ -1,0 +1,260 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import BrowserV86 from '../../components/BrowserV86.astro';
+import { siteConfig } from '../../../site.config';
+import { getTranslation } from '../../utils/i18n';
+
+export function getStaticPaths() {
+  return Object.keys(siteConfig.languages).map((lang) => ({
+    params: { lang }
+  }));
+}
+
+const { lang } = Astro.params;
+const currentLang = lang || 'en';
+
+const base = siteConfig.base;
+const cleanBase = base.endsWith('/') ? base : `${base}/`;
+const pageTitle = getTranslation(currentLang, 'home.emulator_page_title');
+
+const emulatorLabels = {
+  title: getTranslation(currentLang, 'home.emulator_title'),
+  description: getTranslation(currentLang, 'home.emulator_description'),
+  start: getTranslation(currentLang, 'home.emulator_start'),
+  restart: getTranslation(currentLang, 'home.emulator_restart'),
+  fullscreen: getTranslation(currentLang, 'home.emulator_fullscreen'),
+  fullscreenExit: getTranslation(currentLang, 'home.emulator_exit_fullscreen'),
+  prepare: getTranslation(currentLang, 'home.emulator_prepare'),
+  loading: getTranslation(currentLang, 'home.emulator_loading'),
+  booting: getTranslation(currentLang, 'home.emulator_booting'),
+  ready: getTranslation(currentLang, 'home.emulator_ready'),
+  booted: getTranslation(currentLang, 'home.emulator_booted'),
+  reveal: getTranslation(currentLang, 'home.emulator_reveal'),
+  source: getTranslation(currentLang, 'home.emulator_source'),
+  license: getTranslation(currentLang, 'home.emulator_license'),
+  unsupported: getTranslation(currentLang, 'home.emulator_unsupported'),
+  instructions: getTranslation(currentLang, 'home.emulator_instructions'),
+  logsTitle: getTranslation(currentLang, 'home.emulator_logs_title'),
+  logsClear: getTranslation(currentLang, 'home.emulator_logs_clear'),
+  logsCleared: getTranslation(currentLang, 'home.emulator_logs_cleared'),
+  logsCopy: getTranslation(currentLang, 'home.emulator_logs_copy'),
+  logsCopied: getTranslation(currentLang, 'home.emulator_logs_copied'),
+  logsAutoscroll: getTranslation(currentLang, 'home.emulator_logs_autoscroll'),
+  logsEmpty: getTranslation(currentLang, 'home.emulator_logs_empty'),
+  logsDownload: getTranslation(currentLang, 'home.emulator_logs_download'),
+  logsLineCount: getTranslation(currentLang, 'home.emulator_logs_line_count'),
+  viewSplit: getTranslation(currentLang, 'home.emulator_view_split'),
+  viewScreen: getTranslation(currentLang, 'home.emulator_view_screen'),
+  viewLogs: getTranslation(currentLang, 'home.emulator_view_logs'),
+  serialPlaceholder: getTranslation(currentLang, 'home.emulator_serial_placeholder'),
+  serialSend: getTranslation(currentLang, 'home.emulator_serial_send'),
+  splashSubtitle: getTranslation(currentLang, 'home.emulator_splash_subtitle'),
+  error: getTranslation(currentLang, 'home.emulator_error'),
+  viewModeLabel: getTranslation(currentLang, 'home.emulator_view_mode_label'),
+  screenLabel: getTranslation(currentLang, 'home.emulator_screen_label'),
+  sendEnter: getTranslation(currentLang, 'home.emulator_send_enter'),
+  vgaBiosLicense: getTranslation(currentLang, 'home.emulator_vga_bios_license'),
+};
+---
+
+<BaseLayout title={pageTitle} currentLang={currentLang}>
+  <Header currentLang={currentLang} currentSlug="emulator" />
+
+  <main class="emulator-page-main">
+    <div class="emulator-hero">
+      <div class="hero-badge">
+        <span>⚡ {getTranslation(currentLang, 'home.emulator_badge')}</span>
+      </div>
+      <h1 class="page-title">{pageTitle}</h1>
+      <p class="page-subtitle">
+        {getTranslation(currentLang, 'home.emulator_page_subtitle')}
+      </p>
+
+      <div class="specs-ribbon">
+        <div class="spec-item">
+          <span class="spec-label">{getTranslation(currentLang, 'home.emulator_spec_bios')}</span>
+          <span class="spec-value">IPO_Boot_ROM → IPO_Firmware → IPO_OS</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">{getTranslation(currentLang, 'home.emulator_spec_cpu_ram')}</span>
+          <span class="spec-value">{getTranslation(currentLang, 'home.emulator_spec_cpu_value')}</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">{getTranslation(currentLang, 'home.emulator_spec_storage')}</span>
+          <span class="spec-value">{getTranslation(currentLang, 'home.emulator_spec_storage_value')}</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">{getTranslation(currentLang, 'home.emulator_spec_audio_ports')}</span>
+          <span class="spec-value">{getTranslation(currentLang, 'home.emulator_spec_audio_ports_value')}</span>
+        </div>
+      </div>
+    </div>
+
+    <BrowserV86 base={cleanBase} lang={currentLang} labels={emulatorLabels} />
+
+    <section class="tech-breakdown-section">
+      <div class="breakdown-grid">
+        <div class="breakdown-card">
+          <div class="breakdown-card__icon">🔌</div>
+          <h3>{getTranslation(currentLang, 'home.emulator_card_v86_title')}</h3>
+          <p>{getTranslation(currentLang, 'home.emulator_card_v86_description')}</p>
+        </div>
+        <div class="breakdown-card">
+          <div class="breakdown-card__icon">⚙️</div>
+          <h3>{getTranslation(currentLang, 'home.emulator_card_firmware_title')}</h3>
+          <p>{getTranslation(currentLang, 'home.emulator_card_firmware_description')}</p>
+        </div>
+        <div class="breakdown-card">
+          <div class="breakdown-card__icon">🖥️</div>
+          <h3>{getTranslation(currentLang, 'home.emulator_card_os_title')}</h3>
+          <p>{getTranslation(currentLang, 'home.emulator_card_os_description')}</p>
+        </div>
+        <div class="breakdown-card">
+          <div class="breakdown-card__icon">📡</div>
+          <h3>{getTranslation(currentLang, 'home.emulator_card_serial_title')}</h3>
+          <p>{getTranslation(currentLang, 'home.emulator_card_serial_description')}</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .emulator-page-main {
+    max-width: 90rem;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+  }
+
+  .emulator-hero {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.85rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--accent-primary);
+    margin-bottom: 1.25rem;
+  }
+
+  .page-title {
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 0 0 1rem;
+    color: var(--text-primary);
+  }
+
+  .page-subtitle {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    max-width: 52rem;
+    margin: 0 auto 2rem;
+  }
+
+  .specs-ribbon {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    max-width: 65rem;
+    margin: 0 auto;
+  }
+
+  .spec-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.85rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 0.82rem;
+  }
+
+  .spec-label {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--accent-primary);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+  }
+
+  .spec-value {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* Technical Breakdown */
+  .tech-breakdown-section {
+    margin-top: 3rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .breakdown-card {
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .breakdown-card__icon {
+    font-size: 1.5rem;
+  }
+
+  .breakdown-card h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .breakdown-card p {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: var(--text-secondary);
+  }
+
+  .breakdown-card code {
+    font-size: 0.82rem;
+    padding: 0.15rem 0.35rem;
+    background: var(--bg-primary);
+    border-radius: 0.25rem;
+  }
+
+  @media (max-width: 768px) {
+    .emulator-page-main {
+      padding: 1.5rem 1rem 3rem;
+    }
+
+    .specs-ribbon {
+      gap: 0.5rem;
+    }
+
+    .spec-item {
+      padding: 0.3rem 0.65rem;
+      font-size: 0.78rem;
+    }
+  }
+</style>

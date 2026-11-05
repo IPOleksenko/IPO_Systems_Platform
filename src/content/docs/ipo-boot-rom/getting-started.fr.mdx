@@ -38,16 +38,17 @@ make all
 This compiles:
 - `src/reset.asm` (16 bytes placed strictly at `0xFFFFFFF0`)
 - `src/car.asm` (Cache-as-RAM MTRR configuration)
-- `src/mrc_440fx.asm, src/mrc_q35.asm` (DRAM training code)
-- `src/chipset.asm, src/payload_call.asm` (PAM chipset shadowing and Contract 2 handover)
+- `src/host_bridge.asm` (Dynamic CPU & Host Bridge discovery, PAM Shadow RAM configuration and locking)
+- `src/mrc.asm` (DRAM size detection from CMOS extended-memory registers, with a 64 MB fallback, and host-bridge DRAM register configuration)
+- `src/payload_call.asm` (Firmware magic validation & Contract 2 handover)
 
-Outputs: `build/bootrom.bin` (configurable via `FLASH_SIZE`, default 4 MB / 4,194,304 bytes).
+Outputs: `build/bootrom.bin` (configurable via `FLASH_SIZE`, default 4 MB / 4,194,304 bytes) and intermediate binaries in `build/.bin/`.
 
 ---
 
 ## 🧩 Création d'une image SPI Flash unifiée
 
-Par défaut, `make` compile une image binaire unifiée `build/bootrom.bin` (par défaut 4 Mo, prête pour les puces SPI Flash physiques comme W25Q32 ou QEMU). Les tailles standard et non standard sont prises en charge (`FLASH_SIZE=256K`, `FLASH_SIZE=4M`, `FLASH_SIZE=8M`). Pour intégrer une charge utile de micrologiciel externe, passez `FIRMWARE=path/to/firmware.bin` :
+Par défaut, `make` génère `build/bootrom.bin` avec une taille de flash de 4 Mo. `FLASH_SIZE` doit être d'au moins 64 Kio et un multiple de 16 octets ; la charge utile du micrologiciel est limitée à 32 Kio. Pour intégrer une charge utile de micrologiciel externe, passez `FIRMWARE=path/to/firmware.bin` :
 
 ```bash
 # Compiler la Boot ROM 4 Mo avec charge utile firmware intégrée

@@ -7,7 +7,7 @@ import Callout from '../../../components/Callout.astro';
 
 # Diagnostics & Hardware Failures
 
-When porting or booting **IPO_Boot_ROM** on physical motherboard hardware, issues typically manifest as a completely black screen or a specific freeze code on your diagnostic POST display.
+On physical motherboards, failures may appear as a black screen or a halted boot. The current code emits only `0x12` and `0x13` as normal Port `0x80` progress markers; the error constants listed below are not necessarily emitted.
 
 ---
 
@@ -15,10 +15,10 @@ When porting or booting **IPO_Boot_ROM** on physical motherboard hardware, issue
 
 | Hex Code | Meaning | Root Cause & Resolution |
 | :--- | :--- | :--- |
-| **`0x2E`** | `ERR_NO_MTRR` | The processor does not support Memory Type Range Registers (e.g. CPU older than Pentium Pro / i686) or MTRR MSR writes faulted. In virtual machines, ensure CPU model is `-cpu host` or `-cpu qemu32,+mtrr`. |
-| **`0x3E`** | `ERR_UNKNOWN_CHIPSET` | The PCI Host Bridge Vendor/Device ID read from `0xCF8`/`0xCFC` did not match i440FX (`0x1237`) or Q35 (`0x29C0`). Check motherboard chipset compatibility. |
-| **`0x4E`** | `ERR_DRAM_FAIL` | The alternating bit pattern (`0x55AA55AA` / `0xAA55AA55`) test failed. Remove and reseat DDR RAM modules, clean DIMM gold contacts with isopropyl alcohol, or test with a single stick in Slot 1. |
-| **`0x7E`** | `ERR_MAGIC_MISMATCH` | The firmware payload at `0xF000:0000` does not begin with the `'IPOF'` magic signature (`0x464F5049`). The SPI flash image was assembled with incorrect offsets or firmware padding. |
+| **`0x2E`** | `POST_ERR_NO_CAR` | Defined CAR setup failure code; this does not establish that the current code performs an MTRR capability check. |
+| **`0x3E`** | `POST_ERR_UNKNOWN_CS` | Defined constant; current code reports raw PCI host-bridge IDs and does not reject unknown IDs. |
+| **`0x4E`** | `POST_ERR_DRAM_FAIL` | Defined constant; current MRC configures DRAM controller registers and does not run a pattern test. |
+| **`0x7E`** | `POST_ERR_FW_MAGIC` | Defined constant; current mismatch handling reports a diagnostic and halts without emitting POST code `0x7E`; check the payload at `0xF000:0000`. |
 
 ---
 
