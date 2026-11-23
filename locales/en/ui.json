@@ -177,7 +177,7 @@
     "featured_badge": "⭐ Full Platform Bundle",
     "featured_ribbon": "⭐ Full Platform Bundle",
     "featured_title": "Complete IPO Systems Bundle (All Projects & Disks)",
-    "featured_desc": "Contains all compiled binaries across the platform: Boot ROM (bootrom.bin), Firmware (firmware.bin), IPO_OS kernel image (IPO_OS.img), clean and pre-installed disks (disk-clean.img, disk-installed.img), and pre-compiled applications package (applications.zip). Choose an archive format before downloading.",
+    "featured_desc": "Contains all compiled binaries across the platform: Boot ROM (bootrom.bin), Firmware (firmware.bin), IPO_OS kernel binary (IPO_OS.bin), clean and pre-installed disks (disk-clean.img, disk-installed.img), and pre-compiled applications, drivers, headers, and assets package (applications.zip). Choose an archive format before downloading.",
     "download_bundle": "Download Complete Bundle",
     "components_title": "Individual Components & Disk Images",
     "download_btn": "Download",
@@ -220,13 +220,13 @@
     "stack_desc": "All three projects integrate seamlessly as a unified bare-metal computing platform with strictly defined handover contracts.",
     "projects_title": "Platform Projects",
     "projects_desc": "Each component is self-contained, rigorously documented, and fully independent.",
-    "os_desc": "Full bare-metal 32-bit x86 operating system: SMP multi-core protected-mode kernel, VFS with 64-bit IPO_FS over multi-disk Storage Pool with WAL journal, KMOD dynamic relocatable modules, GUI Window Manager, RTL8139 NIC driver, and complete TCP/IP stack with POSIX socket API.",
+    "os_desc": "Full bare-metal x86-64 / x86 operating system: x86-64 Long Mode (4-level PML4 / 5-level LA57) with 32-bit Protected Paged fallback, all-core SMP scheduler with IPI 0xE0, VFS with 64-bit dynamic IPO_FS over multi-disk Storage Pool with WAL journal, .kmd and /drivers/* modules (TCP/IP/DNS/DHCP, touchpad, gamepad), infinite-resolution RGBA64F HDR Window Manager with VirtIO-GPU VirGL 3D, HDA/AC97/SB16/VirtIO audio, 305 syscalls, pthreads/signals/futex/mmap.",
     "os_docs_link": "IPO_OS Documentation →",
-    "boot_rom_desc": "Hardware reset-vector initializer for physical machines and QEMU. Configures Cache-as-RAM, reports raw host-bridge IDs, configures DRAM controller registers without a pattern test, configures PAM shadowing, and hands over to Contract 2.",
+    "boot_rom_desc": "Hardware reset-vector initializer (bootblock at 0xFE000 / F000:E000) for physical machines and QEMU. Configures 32 KiB Cache-as-RAM at 0x70000..0x77FFF (with .car_bypass fallback), runs XIP C romstage with SMBus SPD & DRAM configuration, configures PAM shadow RAM, and jumps to Firmware at 0xF000:000C.",
     "boot_rom_docs_link": "Boot ROM Documentation →",
-    "firmware_desc": "BIOS-compatible real-mode firmware runtime. Installs IVT interrupt services (INT 10h–1Ah), builds E820 memory map, opens Fast A20, scans storage buses (IDE, AHCI, NVMe, USB), and performs Contract 3 MBR handover.",
+    "firmware_desc": "BIOS-compatible 16-bit real-mode firmware runtime (56 KiB at 0xF0000..0xFDFFF). Installs IVT interrupt services (INT 10h–1Ah), builds dynamic E820 & ACPI 1.0 tables, opens Fast A20, scans PCI buses 0..7 and storage (ATA PIO, AHCI, NVMe, USB EHCI), brings up APs dynamically, and performs Contract 3 MBR handover.",
     "firmware_docs_link": "Firmware Documentation →",
-    "software_desc": "Userland software ecosystem for IPO_OS: standard C runtime library (libc, libm, libstdc++), TinyGL 3D graphics, windowing APIs, in-OS compilers (TinyCC, Lua, MicroPython, NASM, GNU binutils), ported applications including DOOM, and IPO_FS virtual disk utilities.",
+    "software_desc": "Userland software ecosystem for IPO_OS: C/C++ runtime (libc, libm, libstdc++), custom OpenGL & GPU/HDR/audio libraries, windowing APIs, in-OS compilers (GCC, G++, TinyCC, Lua, MicroPython, NASM, GNU binutils), userland drivers, DOOM/SENSE/Links, and IPO_FS disk utilities.",
     "software_docs_link": "Software Ecosystem Docs →",
     "roles_title": "Where to Start (Reader Profiles)",
     "roles_desc": "Select your pathway for tailored step-by-step guidance:",
@@ -234,7 +234,7 @@
     "user_role_desc": "Running in QEMU, shell command-line usage, dynamic networking via ifconfig, and hosting services.",
     "user_role_link": "Quick Start in QEMU →",
     "app_dev_title": "Application Developer",
-    "app_dev_desc": "Writing userland C/ASM code, invoking int 0x80 syscalls, linking at 0x800000, and deploying via disk_editor.py.",
+    "app_dev_desc": "Writing userland C/C++/ASM code, invoking int 0x80 (305 syscalls), linking at 0x800000 with dynamic heaps at 0x10000000+, and deploying via disk_editor.py.",
     "app_dev_link": "Write Hello, World App →",
     "kernel_dev_title": "Kernel Engineer",
     "kernel_dev_desc": "Kernel memory layout, IDT traps, device driver models, TCP/IP state machine, and panic analysis.",
@@ -260,10 +260,10 @@
     "emulator_promo_desc": "No installation needed. Run the full native boot chain in QEMU WebAssembly with live serial logs and terminal interaction.",
     "emulator_promo_btn": "Open Online Emulator →",
     "emulator_promo_serial": "Live Serial Console",
-    "raw_img_512k": "RAW IMG (512K Bootable)",
-    "binary_4m_shadow": "Binary 4 MB (Shadow RAM)",
+    "raw_img_512k": "RAW BIN (Bootable Kernel)",
+    "binary_4m_shadow": "ROM BIN (Shadow + XIP Flash)",
     "emulator_reset_disk": "Reset Disk",
-    "emulator_reset_confirm": "Reset virtual disk IDE1 (64 MB) to factory state? All saved files and OS modifications will be erased.",
+    "emulator_reset_confirm": "Reset virtual disk IDE1 (512 MiB) to factory state? All saved files and OS modifications will be erased.",
     "emulator_saving_disk": "Saving virtual disk before restarting…",
     "emulator_serial_placeholder": "Type into IPO_OS (e.g. help, sysinfo, ls)...",
     "emulator_serial_send": "Send",
@@ -279,9 +279,9 @@
     "emulator_card_v86_title": "1. v86 x86 PC emulator",
     "emulator_card_v86_description": "v86 emulates the x86 CPU, memory, VGA display, keyboard, and IDE storage in WebAssembly.",
     "emulator_card_firmware_title": "2. IPO_Boot_ROM and IPO_Firmware",
-    "emulator_card_firmware_description": "The complete IPO_Boot_ROM image occupies the CPU reset-vector mapping, with its original F000:8000 execution window exposed at the legacy F-segment. The complete standalone IPO_Firmware image is mapped separately as the BIOS; the ROM files are not combined. The patched v86 CPU implements the MTRR registers required by IPO_Boot_ROM.",
+    "emulator_card_firmware_description": "The complete IPO_Boot_ROM image occupies the CPU reset-vector mapping, with its 8 KiB bootblock window (F000:E000 / 0xFE000..0xFFFFF) exposed at the top of the F-segment and XIP romstage in high flash. The standalone 56 KiB IPO_Firmware image maps at 0xF0000..0xFDFFF as the BIOS; the ROM files are kept separate. The patched v86 CPU implements the MTRR registers used by IPO_Boot_ROM (plus CAR bypass fallback).",
     "emulator_card_os_title": "3. IPO_OS with installed software",
-    "emulator_card_os_description": "disk-installed.img is the single primary disk. It preserves the IPO_OS boot image and contains verified applications, toolchains, fonts, and support files in its IPO_FS partition. Modified disk blocks are saved in this browser profile with IndexedDB for later visits.",
+    "emulator_card_os_description": "disk-installed.img is the single primary disk (512 MiB). It preserves the IPO_OS boot image and contains verified applications, drivers (/drivers/*), toolchains, data assets, SDK headers, and fonts in its IPO_FS partition. Modified disk blocks are saved in this browser profile with IndexedDB for later visits.",
     "emulator_card_serial_title": "4. Live serial output",
     "emulator_card_serial_description": "Serial diagnostics from the Boot ROM, IPO_Firmware, and IPO_OS are streamed to the browser console alongside the VGA display.",
     "emulator_error": "Emulator error",
@@ -290,11 +290,11 @@
     "emulator_send_enter": "Send (Enter)",
     "emulator_vga_bios_license": "VGA BIOS LGPL license",
     "emulator_step1_title": "1. IPO_Boot_ROM Hardware Reset",
-    "emulator_step1_desc": "QEMU loads IPO_Boot_ROM as the system BIOS. The ROM copies the firmware payload to shadow memory at physical 0xF0000 and transfers control at CS:IP 0xF000:0004.",
+    "emulator_step1_desc": "QEMU/v86 loads IPO_Boot_ROM at reset vector 0xFFFFFFF0 (F000:E000). The ROM runs CAR & XIP C romstage, copies Firmware to shadow memory at physical 0xF0000, and transfers control at CS:IP 0xF000:000C.",
     "emulator_step2_title": "2. BIOS POST, IVT & Storage Handover",
     "emulator_step2_desc": "IPO_Firmware establishes the Interrupt Vector Table (IVT: INT 10h VGA, INT 13h Disk, INT 15h E820 Map, INT 16h Keyboard), discovers ATA/IDE controllers, reads MBR sector 0 into 0x7C00, and hands over execution.",
     "emulator_step3_title": "3. Multitasking Kernel & Desktop",
-    "emulator_step3_desc": "IPO_OS switches the CPU to 32-bit Protected Mode with two-level paging, mounts the VFS, and initializes the graphical Window Manager with full mouse and keyboard focus.",
+    "emulator_step3_desc": "IPO_OS switches the CPU into 64-bit Long Mode (PML4/LA57) or 32-bit Protected Paged Mode fallback, mounts VFS/IPO_FS, loads /drivers/* and compositor, and launches the interactive shell & Window Manager.",
     "emulator_step4_title": "4. Real-time Serial Telemetry",
     "emulator_step4_desc": "All boot steps and kernel debug prints are mirrored over COM1 (0x3F8) UART and captured directly into the WebAssembly live log window for instant verification and analysis.",
     "emulator_disk_resetting": "Resetting virtual disk to factory state…",
@@ -332,7 +332,7 @@
       "storage_opt2": "1x 3.5\" HDD + 1x SSD (25W)",
       "storage_opt3": "2x 3.5\" HDD + IDE Optical (45W)",
       "pci_label": "Expansion Cards (PCI / NIC):",
-      "pci_opt1": "RTL8139 NIC + SB16 Audio (15W)",
+      "pci_opt1": "PCI/PCIe NIC + HDA/AC97 Audio (15W)",
       "pci_opt2": "Discrete PCI Video + NIC + Audio (40W)",
       "peak_label": "Estimated Peak Load:",
       "rec_label": "Recommended PSU Rating (+30% Headroom):",
@@ -348,12 +348,15 @@
       "regions": {
         "ivt": "Real Mode Interrupt Vector Table (256 vectors * 4 bytes CS:IP).",
         "bda": "BIOS Data Area: COM/LPT base ports, keyboard buffer, timer ticks at 0x46C.",
-        "mbr": "BIOS E820 entry array (0x6000), MBR Bootloader & Partition Table (0x7C00), SMP AP 16->32-bit Trampoline (0x8000, mailbox 0x80F0–0x80FC), and E820 Header (0x8FE0–0x8FF7).",
-        "kernel": "Protected Mode 32-bit Kernel core (.text, .rodata, .data, .bss up to 0x7FFFF).",
-        "vga": "VGA Mode 12h/13h planar/linear VRAM (0xA0000) and Mode 03h text buffer (0xB8000).",
-        "shadow": "VBIOS Option ROM at 0xC0000, IPO_Boot_ROM and IPO_Firmware in Shadow RAM.",
-        "heap": "64 MB Kernel Heap kmalloc() pool (0x01000000–0x04FFFFFF), dynamic memory_map_alloc() blocks (0x05000000+), and per-process sbrk() heaps (0x08000000+).",
-        "userspace": "Userspace execution window for ELF32 and flat binary applications (0x00800000 base, initial stack at 0x00A00000)."
+        "mbr": "Boot & SMP Low Memory: E820 entry array (0x6000), MBR (0x7C00), Stage2 Loader (0x7E00), and Dynamic SMP AP Boot Mailbox & Trampoline (0x8000..0x8FFF (mailbox 0x8180–0x81A7)).",
+        "vga": "VGA planar/linear VRAM (0xA0000) and Mode 03h text buffer (0xB8000) supporting arbitrary CRTC dimensions.",
+        "shadow": "VBIOS Option ROM (0xC0000), 56 KiB IPO_Firmware (0xF0000..0xFDFFF, entry 0xF000:000C), and 8 KiB IPO_Boot_ROM bootblock (0xFE000..0xFFFFF, reset 0xFFFFFFF0).",
+        "kernel": "IPO_OS Kernel Core mapped at 1 MiB (0x00100000): .text, .rodata, .data, .bss, dynamic IDT & page tables (PML4/PDPT/PD).",
+        "userspace": "Userspace execution window for ELF64/ELF32 and flat binary applications (0x00800000 base) plus demand-grown thread stacks.",
+        "heap": "Dynamic Kernel Heap kmalloc() primary arena (0x04000000–0x07FFFFFF, 64 MiB) + auto-expanded PMM overflow arenas.",
+        "pmm": "Physical Memory Manager free page pool and kernel VMM page tables (0x08000000–0x0FFFFFFF, or compact above 144 MiB on <=256 MiB RAM).",
+        "user_heap": "USER_HEAP_START at 256 MiB (0x10000000+; 0x09000000 on <=256 MiB RAM): isolated auto-expanding per-process sbrk() heap chunks.",
+        "high_sys": "High Virtual & MMIO Window (0xC0000000+): user mmap() / IPC SHM (0xD0000000+), .kmd arenas, PCI 64-bit BARs, and VirGL/LFB framebuffers."
       }
     }
   },
@@ -389,28 +392,28 @@
   },
   "artifact_labels": {
     "ipo_os_raw": {
-      "name": "IPO_OS Bootable Image",
-      "description": "Raw 32-bit bootable image containing the IPO_OS kernel and bootloader."
+      "name": "IPO_OS Bootable Binary (IPO_OS.bin)",
+      "description": "Raw bootable binary containing MBR bootloaders and the IPO_OS kernel (linked at 0x100000)."
     },
     "ipo_disk_blank": {
       "name": "IPO_OS Blank Raw Disk (512 MiB)",
       "description": "Unformatted 512 MiB raw disk image with no filesystem or pre-installed applications."
     },
     "ipo_disk_installed": {
-      "name": "IPO_OS Pre-Installed Disk (512 MB)",
-      "description": "Ready-to-use 512 MB IPO_FS disk image with applications, toolchains, runtime libraries, and fonts pre-installed."
+      "name": "IPO_OS Pre-Installed Disk (512 MiB)",
+      "description": "Ready-to-use 512 MiB IPO_FS disk image with applications, drivers, toolchains, runtime libraries, headers, data assets, and fonts pre-installed."
     },
     "ipo_disk_clean": {
-      "name": "IPO_OS Clean Disk (512 MB)",
-      "description": "Clean 512 MB disk image formatted with IPO_FS, without pre-installed applications."
+      "name": "IPO_OS Clean Disk (512 MiB)",
+      "description": "Clean 512 MiB disk image formatted with 64-bit dynamic IPO_FS, without pre-installed applications."
     },
     "ipo_applications": {
-      "name": "IPO_OS Applications Package",
-      "description": "Pre-compiled applications, developer toolchains, runtime libraries, SDK headers, and fonts for IPO_OS."
+      "name": "IPO_OS Applications & Software Package",
+      "description": "Pre-compiled applications, executable/kernel drivers, developer toolchains, C/C++ libraries, recursive SDK headers, data assets, and fonts for IPO_OS."
     },
     "ipo_firmware": {
       "name": "IPO_Firmware",
-      "description": "Compiled IPO_Firmware runtime services ROM binary (firmware.bin)."
+      "description": "Compiled 56 KiB IPO_Firmware runtime services ROM binary (firmware.bin)."
     }
   },
   "units": {
@@ -424,7 +427,7 @@
     "hello-c": "main.c (First IPO_OS Application)",
     "hello-asm": "hello_asm.asm (Pure Assembly Application)",
     "socket-tcp-server": "tcp_server.c (POSIX Sockets HTTP Server on IPO_OS)",
-    "opengl-cube": "gl_cube.c (TinyGL 3D Rendering on IPO_OS)",
+    "opengl-cube": "gl_cube.c (Hardware VirGL / OpenGL 3D Rendering on IPO_OS)",
     "wm-gui-window": "wm_app.c (Creating GUI Window with Callbacks)",
     "micropython-script": "test.py (Executing Python on Bare-Metal IPO_OS)",
     "in-os-tcc": "Compiling C code directly inside IPO_OS",

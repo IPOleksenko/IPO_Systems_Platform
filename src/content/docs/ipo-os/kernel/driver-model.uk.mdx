@@ -32,8 +32,8 @@ typedef struct driver {
     char (*on_char_output)(char c);                             /* intercept / transform stdout chars */
 
     /* Custom device I/O */
-    int (*read)(void *buffer, size_t size, uint32_t offset);
-    int (*write)(const void *buffer, size_t size, uint32_t offset);
+    int (*read)(void *buffer, size_t size, uint64_t offset);
+    int (*write)(const void *buffer, size_t size, uint64_t offset);
     int (*ioctl)(uint32_t cmd, void *arg);
 
     void *owner;                                                /* owner process_t pointer (for user-space drivers) */

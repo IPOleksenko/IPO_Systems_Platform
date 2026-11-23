@@ -18,7 +18,7 @@ EXPECTED_FILESYSTEM_LBA = 2048
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build a bootable IPO_OS disk with applications installed.")
     parser.add_argument("--output", type=Path, default=BASE_DIR / "public" / "emulator")
-    parser.add_argument("--os-image", type=Path, default=BASE_DIR / "public" / "downloads" / "IPO_OS.img")
+    parser.add_argument("--os-image", type=Path, default=BASE_DIR / "public" / "downloads" / "IPO_OS.bin")
     parser.add_argument("--application-manifest", type=Path, default=BASE_DIR / ".cache" / "applications.json")
     args = parser.parse_args()
 

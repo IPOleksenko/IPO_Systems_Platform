@@ -52,6 +52,6 @@ IPO_Firmware выводит байтовые коды прогресса та з
 0x0008      1 Б     checksum            8-бітна контрольна сума RSDP
 0x0009      6 Б     oem_id              "IPO   "
 0x000F      1 Б     revision            0 (ACPI 1.0)
-0x0010      4 Б     rsdt_address        Фізична адреса таблиці RSDT (0x0009FC40)
+0x0010      4 Б     rsdt_address        Фізична адреса таблиці RSDT (SCRATCH_ACPI_BASE (below TOLUD))
 0x0014      44 Б    reserved            Черги драйверів контролерів накопичувачів
 ```

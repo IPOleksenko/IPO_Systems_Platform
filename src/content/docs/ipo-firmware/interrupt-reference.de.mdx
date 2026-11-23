@@ -22,10 +22,6 @@ Outputs a single ASCII character to the active display page, advancing the curso
 - **Input:** `AH = 00h`, `AL = Mode Number` (`03h` = 80x25 16-color VGA text mode).
 - **Output:** Display reinitialized and cleared.
 
-### `AX = 4F02h` — VESA VBE Set Video Mode
-- **Input:** `AX = 4F02h`, `BX = VBE Mode Number | 0x4000` (bit 14 sets Linear Framebuffer).
-- **Output:** `AX = 004Fh` on success.
-
 ---
 
 ## 💾 INT 13h — Disk Storage Services
@@ -68,7 +64,7 @@ The fundamental method for Betriebssystems to discover physical RAM ranges:
 - **Input:**
   - `EAX = 0x0000E820`
   - `EBX = Continuation token` (starts at `0`)
-  - `ES:DI = Pointer to 24-byte E820 buffer`
+  - `ES:DI = Pointer to 20-byte E820 buffer`
   - `ECX = Buffer size` (`20` or `24` bytes)
   - `EDX = 0x534D4150` (`'SMAP'` magic)
 - **Output:**

@@ -1,5 +1,5 @@
 diff --git a/src/browser/starter.js b/src/browser/starter.js
-index d65bd6ca..f27c618a 100644
+index d65bd6ca..3ee1b555 100644
 --- a/src/browser/starter.js
 +++ b/src/browser/starter.js
 @@ -400,6 +400,9 @@ V86.prototype.continue_init = async function(emulator, options)
@@ -29,8 +29,35 @@ index d65bd6ca..f27c618a 100644
      add_file("vga_bios", options.vga_bios);
      add_file("cdrom", options.cdrom);
      add_file("hda", options.hda);
+@@ -859,6 +863,14 @@ V86.prototype.restart = function()
+     this.v86.restart();
+ };
+ 
++V86.prototype.set_hda_write_callback = function(callback)
++{
++    const ide = this.v86.cpu.devices.ide;
++    const buffer = ide && ide.primary && ide.primary.master.buffer;
++    if(!buffer) throw new Error("HDA is not available");
++    buffer.onwrite = callback;
++};
++
+ /**
+  * Add an event listener (the emulator is an event emitter).
+  *
+diff --git a/src/buffer.js b/src/buffer.js
+index 828797f1..14a614ad 100644
+--- a/src/buffer.js
++++ b/src/buffer.js
+@@ -72,6 +72,7 @@ SyncBuffer.prototype.set = function(start, slice, fn)
+     dbg_assert(start + slice.byteLength <= this.byteLength);
+ 
+     new Uint8Array(this.buffer, start, slice.byteLength).set(slice);
++    this.onwrite && this.onwrite(start, slice.byteLength);
+     fn();
+ };
+ 
 diff --git a/src/cpu.js b/src/cpu.js
-index 61cec324..eef8b4c0 100644
+index 61cec324..705130fc 100644
 --- a/src/cpu.js
 +++ b/src/cpu.js
 @@ -162,11 +162,12 @@ export function CPU(bus, wm, stop_idling)
@@ -47,7 +74,26 @@ index 61cec324..eef8b4c0 100644
      };
  
      this.instruction_counter = view(Uint32Array, memory, 664, 1);
-@@ -1020,6 +1021,7 @@ CPU.prototype.init = function(settings, device_bus)
+@@ -958,6 +959,18 @@ CPU.prototype.reboot_internal = function()
+     {
+         this.devices.ps2.reset();
+     }
++    if(this.devices.ide)
++    {
++        for(const channel of [this.devices.ide.primary, this.devices.ide.secondary])
++        {
++            if(channel)
++            {
++                channel.master.device_reset();
++                channel.slave.device_reset();
++                channel.device_control_reg = 0;
++            }
++        }
++    }
+ 
+     this.load_bios();
+ };
+@@ -1020,6 +1033,7 @@ CPU.prototype.init = function(settings, device_bus)
  
      this.bios.main = settings.bios;
      this.bios.vga = settings.vga_bios;
@@ -55,7 +101,7 @@ index 61cec324..eef8b4c0 100644
  
      this.load_bios();
  
-@@ -1700,6 +1702,7 @@ CPU.prototype.load_bios = function()
+@@ -1700,6 +1714,7 @@ CPU.prototype.load_bios = function()
  {
      var bios = this.bios.main;
      var vga_bios = this.bios.vga;
@@ -63,7 +109,7 @@ index 61cec324..eef8b4c0 100644
  
      if(!bios)
      {
-@@ -1749,18 +1752,38 @@ CPU.prototype.load_bios = function()
+@@ -1749,18 +1764,38 @@ CPU.prototype.load_bios = function()
          dbg_log("Warning: No VGA BIOS");
      }
  
@@ -85,7 +131,7 @@ index 61cec324..eef8b4c0 100644
 +            "Expected a complete 1 MB IPO_Boot_ROM image");
 +
 +        var bootrom8 = new Uint8Array(bootrom);
-+        this.write_blob(bootrom8.subarray(0xF8000), 0xF8000);
++        this.write_blob(bootrom8.subarray(0xFE000), 0xFE000);
 +        this.io.mmap_register(0xFFF00000, 0x100000,
 +            function(addr)
 +            {
@@ -112,27 +158,50 @@ index 61cec324..eef8b4c0 100644
 +            }.bind(this));
 +    }
  };
-
- CPU.prototype.codegen_finalize = function(wasm_table_index, start, state_flags, ptr, len)
-@@ -957,6 +957,17 @@ CPU.prototype.reboot_internal = function()
-     if(this.devices.ps2)
-     {
-         this.devices.ps2.reset();
-     }
-+    if(this.devices.ide)
-+    {
-+        for(const channel of [this.devices.ide.primary, this.devices.ide.secondary])
-+        {
-+            if(channel)
-+            {
-+                channel.master.device_reset();
-+                channel.slave.device_reset();
-+                channel.device_control_reg = 0;
-+            }
-+        }
-+    }
  
-     this.load_bios();
+ CPU.prototype.codegen_finalize = function(wasm_table_index, start, state_flags, ptr, len)
+diff --git a/src/pci.js b/src/pci.js
+index b3534f98..16507657 100644
+--- a/src/pci.js
++++ b/src/pci.js
+@@ -326,14 +326,16 @@ PCI.prototype.pci_write8 = function(address, written)
+     var bdf = address >> 8 & 0xFFFF;
+     var addr = address & 0xFF;
+ 
+-    var space = new Uint8Array(this.device_spaces[bdf].buffer);
++    var raw_space = this.device_spaces[bdf];
+     var device = this.devices[bdf];
+ 
+-    if(!space)
++    if(!raw_space || addr >= raw_space.byteLength)
+     {
+         return;
+     }
+ 
++    var space = new Uint8Array(raw_space.buffer);
++
+     dbg_assert(!(addr >= 0x10 && addr < 0x2C || addr >= 0x30 && addr < 0x34),
+                "PCI: Expected 32-bit write, got 8-bit (addr: " + h(addr) + ")");
+ 
+@@ -350,14 +352,16 @@ PCI.prototype.pci_write16 = function(address, written)
+     var bdf = address >> 8 & 0xFFFF;
+     var addr = address & 0xFF;
+ 
+-    var space = new Uint16Array(this.device_spaces[bdf].buffer);
++    var raw_space = this.device_spaces[bdf];
+     var device = this.devices[bdf];
+ 
+-    if(!space)
++    if(!raw_space || addr >= raw_space.byteLength)
+     {
+         return;
+     }
+ 
++    var space = new Uint16Array(raw_space.buffer);
++
+     if(addr >= 0x10 && addr < 0x2C)
+     {
+         // Bochs bios
 diff --git a/src/ps2.js b/src/ps2.js
 index 6c8d1353..26a4bd9e 100644
 --- a/src/ps2.js
@@ -156,7 +225,7 @@ index 6c8d1353..26a4bd9e 100644
          dbg_log("adding kbd code: " + h(code), LOG_PS2);
          this.kbd_buffer.push(code);
 diff --git a/src/rust/cpu/cpu.rs b/src/rust/cpu/cpu.rs
-index 7b039753..42cf6b03 100644
+index 7b039753..1d98efea 100644
 --- a/src/rust/cpu/cpu.rs
 +++ b/src/rust/cpu/cpu.rs
 @@ -235,6 +235,10 @@ pub const IA32_PERFEVTSEL0: i32 = 0x186;
@@ -170,7 +239,86 @@ index 7b039753..42cf6b03 100644
  pub const IA32_RTIT_CTL: i32 = 0x570;
  pub const MSR_PKG_C2_RESIDENCY: i32 = 0x60D;
  pub const IA32_KERNEL_GS_BASE: i32 = 0xC0000101u32 as i32;
-@@ -4743,6 +4747,13 @@ pub unsafe fn reset_cpu() {
+@@ -2581,15 +2585,31 @@ pub fn check_tlb_invariants() {
+ 
+ pub const DISABLE_EIP_TRANSLATION_OPTIMISATION: bool = false;
+ 
++#[inline(always)]
++unsafe fn advance_eip_1(eip: i32) -> i32 {
++    if (*cr & CR0_PE) == 0 && !*is_32 {
++        let cs_base = get_seg_cs();
++        cs_base + ((eip + 1 - cs_base) & 0xFFFF)
++    }
++    else {
++        eip + 1
++    }
++}
++
+ pub unsafe fn read_imm8() -> OrPageFault<i32> {
+     let eip = *instruction_pointer;
+     if DISABLE_EIP_TRANSLATION_OPTIMISATION || 0 != eip & !0xFFF ^ *last_virt_eip {
+         *eip_phys = (translate_address_fetch(eip)? ^ eip as u32) as i32;
+         *last_virt_eip = eip & !0xFFF
+     }
+-    dbg_assert!(!memory::in_mapped_range((*eip_phys ^ eip) as u32));
+-    let data8 = *memory::mem8.offset((*eip_phys ^ eip) as isize) as i32;
+-    *instruction_pointer = eip + 1;
++    let phys = (*eip_phys ^ eip) as u32;
++    let data8 = if memory::in_mapped_range(phys) {
++        memory::read8(phys)
++    }
++    else {
++        *memory::mem8.offset(phys as isize) as i32
++    };
++    *instruction_pointer = advance_eip_1(eip);
+     return Ok(data8);
+ }
+ 
+@@ -3291,14 +3311,11 @@ pub unsafe fn get_phys_eip() -> OrPageFault<u32> {
+         *eip_phys = (translate_address_fetch(eip)? ^ eip as u32) as i32;
+         *last_virt_eip = eip & !0xFFF
+     }
+-    let phys_addr = (*eip_phys ^ eip) as u32;
+-    dbg_assert!(!memory::in_mapped_range(phys_addr));
+-    return Ok(phys_addr);
++    return Ok((*eip_phys ^ eip) as u32);
+ }
+ 
+ unsafe fn jit_run_interpreted(mut phys_addr: u32) {
+     profiler::stat_increment(stat::RUN_INTERPRETED);
+-    dbg_assert!(!memory::in_mapped_range(phys_addr));
+ 
+     jit_block_boundary = false;
+     let mut i = 0;
+@@ -3315,8 +3332,13 @@ unsafe fn jit_run_interpreted(mut phys_addr: u32) {
+ 
+         i += 1;
+         let start_eip = *instruction_pointer;
+-        let opcode = *memory::mem8.offset(phys_addr as isize) as i32;
+-        *instruction_pointer += 1;
++        let opcode = if memory::in_mapped_range(phys_addr) {
++            memory::read8(phys_addr)
++        }
++        else {
++            *memory::mem8.offset(phys_addr as isize) as i32
++        };
++        *instruction_pointer = advance_eip_1(start_eip);
+         dbg_assert!(*prefixes == 0);
+         run_instruction(opcode | (*is_32 as i32) << 8);
+         dbg_assert!(*prefixes == 0);
+@@ -3773,7 +3795,10 @@ pub unsafe fn get_phys_eip_slow_jit(addr: i32) -> i32 {
+     match translate_address_fetch_jit(addr) {
+         Err(()) => 1,
+         Ok(addr_low) => {
+-            dbg_assert!(!memory::in_mapped_range(addr_low as u32)); // same assumption as in read_imm8
++            if memory::in_mapped_range(addr_low as u32) {
++                jit_exit_reason = JitExitReason::SelfModifyingCodeBail;
++                return 1;
++            }
+             ((addr_low as i32 + memory::mem8 as i32) ^ addr) & !0xFFF
+         },
+     }
+@@ -4743,6 +4768,13 @@ pub unsafe fn reset_cpu() {
  
      *pat = 0x0007_0406_0007_0406;
      *efer = 0;
@@ -304,28 +452,16 @@ index f4758724..5d43d596 100644
                  1 << 23 | 1 << 24 | 1 << 25 | 1 << 26; // mmx, fxsr, sse1, sse2
  
              if *acpi_enabled
-diff --git a/src/browser/starter.js b/src/browser/starter.js
---- a/src/browser/starter.js
-+++ b/src/browser/starter.js
-@@ -859,2 +859,10 @@ V86.prototype.restart = function()
-     this.v86.restart();
- };
-+
-+V86.prototype.set_hda_write_callback = function(callback)
-+{
-+    const ide = this.v86.cpu.devices.ide;
-+    const buffer = ide && ide.primary && ide.primary.master.buffer;
-+    if(!buffer) throw new Error("HDA is not available");
-+    buffer.onwrite = callback;
-+};
+diff --git a/src/rust/jit.rs b/src/rust/jit.rs
+index 574a78ac..8d4cde1c 100644
+--- a/src/rust/jit.rs
++++ b/src/rust/jit.rs
+@@ -2157,7 +2157,7 @@ pub fn jit_increase_hotness_and_maybe_compile(
+     state_flags: CachedStateFlags,
+     heat: u32,
+ ) {
+-    if unsafe { JIT_DISABLED } {
++    if unsafe { JIT_DISABLED } || memory::in_mapped_range(phys_address) {
+         return;
+     }
  
-diff --git a/src/buffer.js b/src/buffer.js
---- a/src/buffer.js
-+++ b/src/buffer.js
-@@ -70,6 +70,7 @@ SyncBuffer.prototype.set = function(start, slice, fn)
-     dbg_assert(start + slice.byteLength <= this.byteLength);
- 
-     new Uint8Array(this.buffer, start, slice.byteLength).set(slice);
-+    this.onwrite && this.onwrite(start, slice.byteLength);
-     fn();
- };

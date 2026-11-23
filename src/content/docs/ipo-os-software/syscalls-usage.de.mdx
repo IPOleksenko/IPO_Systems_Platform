@@ -123,10 +123,18 @@ int main(int argc, char **argv) {
     opt.w = 140;
     opt.h = 60;
     opt.title = "App Window";
-    opt.draw_cb = draw_my_window;
+    // Event-driven loop via wm_poll_event(&win, &ev) (draw directly onto win->framebuf)
 
     wm_window_t *win = wm_create_window(&opt);
-    return win ? 0 : 1;
+    if (!win) return 1;
+    draw_my_window(win);
+    wm_invalidate(win);
+    wm_event_t ev;
+    while (1) {
+        while (wm_poll_event(win, &ev)) {
+            if (ev.type == WM_EVENT_CLOSE) { wm_destroy_window(win); return 0; }
+        }
+    }
 }
 ```
 

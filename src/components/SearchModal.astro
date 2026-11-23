@@ -231,6 +231,8 @@ const searchClose = getTranslation(lang, 'search.close');
 </style>
 
 <script>
+  import { bindDialogBackdropClose } from '../utils/dialog';
+
   const dialog = document.getElementById('search-dialog') as HTMLDialogElement;
   const openBtn = document.getElementById('open-search-btn');
   const closeBtn = document.getElementById('close-search-btn');
@@ -274,17 +276,9 @@ const searchClose = getTranslation(lang, 'search.close');
   openBtn?.addEventListener('click', openModal);
   closeBtn?.addEventListener('click', () => dialog?.close());
 
-  dialog?.addEventListener('click', (e) => {
-    const rect = dialog.getBoundingClientRect();
-    if (
-      e.clientX < rect.left ||
-      e.clientX > rect.right ||
-      e.clientY < rect.top ||
-      e.clientY > rect.bottom
-    ) {
-      dialog.close();
-    }
-  });
+  if (dialog) {
+    bindDialogBackdropClose(dialog);
+  }
 
   resultsContainer?.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;

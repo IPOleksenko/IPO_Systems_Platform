@@ -177,7 +177,7 @@
     "featured_badge": "⭐ 完整平台软件包",
     "featured_ribbon": "⭐ 完整平台软件包",
     "featured_title": "IPO Systems 完整捆绑包（所有项目与磁盘）",
-    "featured_desc": "包含整个平台的所有已编译二进制文件：Boot ROM (bootrom.bin)、Firmware (firmware.bin)、IPO_OS 内核镜像 (IPO_OS.img)、纯净与预安装磁盘 (disk-clean.img, disk-installed.img) 以及预编译应用程序包 (applications.zip)。",
+    "featured_desc": "包含平台所有已编译二进制文件：Boot ROM (bootrom.bin)、Firmware (firmware.bin)、IPO_OS 内核镜像 (IPO_OS.bin)、空白和预装磁盘 (disk-clean.img, disk-installed.img) 以及预编译应用程序、驱动、头文件和资源包 (applications.zip)。",
     "download_bundle": "下载完整软件包",
     "components_title": "独立组件与磁盘镜像",
     "download_btn": "下载",
@@ -203,13 +203,13 @@
     "stack_desc": "三个项目无缝协同，构成具有严格交接协议的统一计算平台。",
     "projects_title": "平台项目",
     "projects_desc": "每个组件均独立自足、经过严谨论证且完全独立。",
-    "os_desc": "完整的 32 位 x86 操作系统：保护模式内核、原生 64 位 IPO_FS 的 VFS、GUI 窗口管理器及完整 TCP/IP 协议栈。",
+    "os_desc": "完整裸机 x86-64 / x86 操作系统：64 位 Long Mode（PML4 / LA57）及 32 位分页模式回退、全核 SMP 调度器（IPI 0xE0）、支持 64 位动态 IPO_FS 与 WAL 日志的 VFS、.kmd 与 /drivers/* 模块（TCP/IP/DNS/DHCP、触摸板、手柄）、支持 VirGL 3D 的 RGBA64F HDR 窗口管理器、HDA/AC97/SB16/VirtIO 音频、305 个系统调用以及 pthread/信号/futex/mmap。",
     "os_docs_link": "IPO_OS 文档 →",
-    "boot_rom_desc": "用于物理机器和 QEMU 的硬件复位向量初始化程序。配置 CAR，报告原始 host bridge ID，在不执行模式测试的情况下配置 DRAM 控制器寄存器，配置 PAM shadowing，并通过 Contract 2 移交控制权。",
+    "boot_rom_desc": "用于物理机和 QEMU 的复位向量初始化器（bootblock 位于 0xFE000 / F000:E000）。配置 32 KiB Cache-as-RAM（0x70000..0x77FFF，含 .car_bypass 0x2E 回退），运行带 SPD/DRAM 配置的 C XIP romstage，设置 PAM 影内存并跳转至 0xF000:000C。",
     "boot_rom_docs_link": "Boot ROM 文档 →",
-    "firmware_desc": "实模式 BIOS 兼容固件层，提供 IVT 中断服务、E820 内存映射和 Fast A20。",
+    "firmware_desc": "兼容 BIOS 的 16 位实模式固件（56 KiB，0xF0000..0xFDFFF）。安装 IVT 中断服务（INT 10h–1Ah）、动态 E820 与 ACPI 1.0 表、开启 Fast A20、扫描 PCI 总线 0..7 与存储控制器（ATA PIO、AHCI、NVMe、USB EHCI）、动态拉起 AP 核心并移交控制权。",
     "firmware_docs_link": "Firmware 文档 →",
-    "software_desc": "IPO_OS 用户空间软件生态：C标准运行库（libc, libm, libstdc++）、TinyGL 3D图形、窗口管理API、系统内编译器（TinyCC, Lua, MicroPython, NASM, GNU binutils）、包含 DOOM 在内的移植程序及 IPO_FS 磁盘工具。",
+    "software_desc": "IPO_OS 用户态软件生态：C/C++ 运行库（libc、libm、libstdc++）、OpenGL/GPU/HDR/音频库、窗口管理器 API、内置编译器（GCC、G++、TinyCC、Lua、MicroPython、NASM、GNU binutils）、外部驱动、DOOM/SENSE/Links 与 IPO_FS 工具。",
     "software_docs_link": "软件生态文档 →",
     "roles_title": "从何处开始（读者路径）",
     "roles_desc": "选择您的专业背景以获取定制化的入门指南：",
@@ -217,7 +217,7 @@
     "user_role_desc": "在 QEMU 中运行、shell 命令行操作及网络配置。",
     "user_role_link": "QEMU 快速开始 →",
     "app_dev_title": "应用开发者",
-    "app_dev_desc": "编写 C/ASM 用户态程序，调用 int 0x80 系统调用并通过 disk_editor.py 部署。",
+    "app_dev_desc": "使用 C/C++/ASM 编写用户程序并调用 int 0x80（305 个系统调用），链接至 0x800000，动态堆始于 0x10000000+，并通过 disk_editor.py 部署。",
     "app_dev_link": "编写 Hello, World 应用 →",
     "kernel_dev_title": "内核工程师",
     "kernel_dev_desc": "内存布局、IDT 中断、设备驱动及 TCP/IP 状态机。",
@@ -259,10 +259,10 @@
     "emulator_promo_desc": "无需安装。在 QEMU WebAssembly 中直接运行完整的原生引导链，提供实时串口日志与终端交互。",
     "emulator_promo_btn": "打开在线模拟器 →",
     "emulator_promo_serial": "实时串口控制台",
-    "raw_img_512k": "RAW IMG (512K 可引导)",
-    "binary_4m_shadow": "二进制镜像 4 MB (Shadow RAM)",
+    "raw_img_512k": "RAW BIN（可启动内核）",
+    "binary_4m_shadow": "ROM BIN（Shadow + XIP 闪存）",
     "emulator_reset_disk": "重置磁盘",
-    "emulator_reset_confirm": "将虚拟磁盘 IDE1 (64 MB) 重置为出厂初始状态？所有保存的文件和操作系统更改都将被清除。",
+    "emulator_reset_confirm": "将虚拟磁盘 IDE1（512 MiB）恢复为出厂状态？所有已保存的文件和系统修改都将被清除。",
     "emulator_saving_disk": "重启前正在保存虚拟磁盘…",
     "emulator_serial_placeholder": "在 IPO_OS 中输入 (例如 help、sysinfo、ls)...",
     "emulator_serial_send": "发送",
@@ -278,9 +278,9 @@
     "emulator_card_v86_title": "1. v86 x86 PC 模拟器",
     "emulator_card_v86_description": "v86 使用 WebAssembly 模拟 x86 CPU、内存、VGA 显示器、键盘和 IDE 存储设备。",
     "emulator_card_firmware_title": "2. 原始 IPO_Boot_ROM 和 IPO_Firmware",
-    "emulator_card_firmware_description": "完整的 IPO_Boot_ROM 映像占用 CPU 复位向量映射区域，其原始 F000:8000 执行窗口映射到传统 F 段。完整且独立的 IPO_Firmware 映像另行映射为 BIOS；两个 ROM 映像不会合并。修改后的 v86 CPU 实现了 IPO_Boot_ROM 所需的 MTRR 寄存器。",
+    "emulator_card_firmware_description": "完整 IPO_Boot_ROM 占据 CPU 复位向量映射，其 8 KiB bootblock（F000:E000 / 0xFE000..0xFFFFF）暴露在 F 段顶部且 XIP romstage 驻留在闪存中。独立的 56 KiB IPO_Firmware 映射于 0xF0000..0xFDFFF。修补版 v86 CPU 支持 MTRR 及 CAR 回退机制。",
     "emulator_card_os_title": "3. 已安装软件的 IPO_OS",
-    "emulator_card_os_description": "disk-installed.img 是唯一的主磁盘。它保留原始 IPO_OS 启动映像，并在 IPO_FS 分区中包含经过验证的应用程序、工具链、字体和支持文件。修改过的磁盘块通过 IndexedDB 保存在此浏览器配置文件中，供以后访问时继续使用。",
+    "emulator_card_os_description": "disk-installed.img 是主磁盘（512 MiB），保留 IPO_OS 启动镜像并在 IPO_FS 分区中预装了应用、驱动（/drivers/*）、编译器、数据资源、SDK 头文件与字体，修改将保存在浏览器 IndexedDB 中。",
     "emulator_card_serial_title": "4. 实时串行输出",
     "emulator_card_serial_description": "原始 Boot ROM、IPO_Firmware 和 IPO_OS 的串行诊断信息与 VGA 显示内容一同传输到浏览器控制台。",
     "emulator_error": "模拟器错误",
@@ -289,15 +289,16 @@
     "emulator_send_enter": "发送 (Enter)",
     "emulator_vga_bios_license": "VGA BIOS LGPL 许可证",
     "emulator_step1_title": "1. IPO_Boot_ROM 硬件复位",
-    "emulator_step1_desc": "QEMU 将 IPO_Boot_ROM 作为系统 BIOS 加载。ROM 将固件载荷复制到物理地址 0xF0000 的 shadow memory，并在 CS:IP 0xF000:0004 移交控制权。",
+    "emulator_step1_desc": "QEMU/v86 在复位向量 0xFFFFFFF0 (F000:E000) 加载 IPO_Boot_ROM。ROM 运行 CAR 与 C XIP romstage，将 Firmware 复制到 0xF0000 并转交控制权至 CS:IP 0xF000:000C。",
     "emulator_step2_title": "2. BIOS POST、IVT 与存储交接",
     "emulator_step2_desc": "IPO_Firmware 建立中断向量表 (IVT: INT 10h VGA, INT 13h 磁盘, INT 15h E820 内存映射, INT 16h 键盘)，探测 ATA/IDE 控制器，将 MBR 扇区 0 读取到 0x7C00 并交接执行权。",
     "emulator_step3_title": "3. 多任务内核与桌面",
-    "emulator_step3_desc": "IPO_OS 将 CPU 切换到具有两级分页的 32 位保护模式，挂载 VFS，并初始化具有完整鼠标和键盘焦点的图形窗口管理器。",
+    "emulator_step3_desc": "IPO_OS 将 CPU 切换至 64 位 Long Mode（PML4/LA57）或 32 位分页模式，挂载 VFS/IPO_FS，加载 /drivers/* 并启动终端与窗口管理器。",
     "emulator_step4_title": "4. 实时串口遥测",
     "emulator_step4_desc": "所有启动步骤和内核调试信息都通过 COM1 (0x3F8) UART 镜像输出，并直接捕获到 WebAssembly 实时日志窗口中，以便进行即时分析和交互式命令输入。",
     "emulator_disk_resetting": "正在将虚拟磁盘恢复为出厂状态…",
-    "emulator_logs_cleared": "日志已清除。"
+    "emulator_logs_cleared": "日志已清除。",
+    "emulator_booted": "IPO_OS 已成功启动。"
   },
   "tables": {
     "struct": {
@@ -331,7 +332,7 @@
       "storage_opt2": "1 个 3.5 英寸 HDD + 1 个 SSD (25 W)",
       "storage_opt3": "2 个 3.5 英寸 HDD + IDE 光驱 (45 W)",
       "pci_label": "扩展卡 (PCI / NIC)：",
-      "pci_opt1": "RTL8139 网卡 + SB16 音频 (15 W)",
+      "pci_opt1": "PCI/PCIe 网卡 + HDA/AC97 音频卡 (15W)",
       "pci_opt2": "独立 PCI 显卡 + 网卡 + 音频 (40 W)",
       "peak_label": "Estimated Peak Load:",
       "rec_label": "建议电源额定功率 (+30% 余量)：",
@@ -345,14 +346,17 @@
       "size": "Size:",
       "initial_desc": "实模式中断向量表（256 个向量 × 4 字节 CS:IP）。",
       "regions": {
-        "ivt": "实模式中断向量表（256 个向量 * 4 字节 CS:IP）。",
-        "bda": "BIOS 数据区：COM/LPT 基地址端口、键盘缓冲区、0x46C 定时器计数值。",
-        "mbr": "BIOS 加载 LBA 0 的常规 DRAM 目标区（契约 3 交接）。",
-        "kernel": "32 位保护模式内核核心（.text、.rodata、.data、.bss）。",
-        "vga": "0xB8000 处的 VGA 模式 03h 文本模式屏幕内存（80x25 字符）。",
-        "shadow": "0xC0000 处的 VBIOS Option ROM，Shadow RAM 中的 IPO_Boot_ROM 和 IPO_Firmware。",
-        "heap": "kmalloc() 和页帧分配使用的扩展内存堆。",
-        "userspace": "原始 ELF/二进制用户空间应用程序物理加载基地址（使用 app.ld 链接）。"
+        "ivt": "实模式中断向量表 IVT（256 个向量 × 4 字节 CS:IP）。",
+        "bda": "BIOS 数据区（BDA）：COM/LPT 基端口、键盘缓冲区及 0x46C 定时器计数。",
+        "mbr": "引导与 SMP 低端内存：E820 数组（0x6000）、MBR（0x7C00）、Stage2（0x7E00）与动态 SMP 跳板（0x8000..0x8FFF (mailbox 0x8180–0x81A7)）。",
+        "vga": "VGA 显存（0xA0000）及支持任意 CRTC 分辨率的文本缓冲区 0xB8000。",
+        "shadow": "VBIOS（0xC0000）、56 KiB IPO_Firmware（0xF0000..0xFDFFF）与 8 KiB bootblock（0xFE000..0xFFFFF）。",
+        "kernel": "1 MiB 处的 IPO_OS 内核（0x00100000）：代码、数据、动态 IDT 与页表（PML4/PDPT/PD）。",
+        "userspace": "用户态 ELF64/ELF32 执行窗口（0x00800000 起）及按需扩展的线程栈。",
+        "heap": "64 MiB 起（0x04000000–0x07FFFFFF）的内核动态堆 kmalloc() 主区及 PMM 自动扩展区。",
+        "pmm": "128 MiB 起（0x08000000–0x0FFFFFFF）的物理内存管理器（PMM）与内核 VMM 页表池。",
+        "user_heap": "256 MiB 处 USER_HEAP_START（0x10000000+，<=256 MiB RAM 时为 0x09000000）：自动扩展的 sbrk() 用户堆。",
+        "high_sys": "高端虚拟内存与 MMIO（0xC0000000+）：mmap() / SHM（0xD0000000+）、.kmd 模块、64 位 PCI BAR 与 VirGL/LFB。"
       }
     }
   },
@@ -360,7 +364,7 @@
     "hello-c": "main.c（IPO_OS 的第一个应用程序）",
     "hello-asm": "hello_asm.asm（纯汇编应用程序）",
     "socket-tcp-server": "tcp_server.c（IPO_OS 上基于 POSIX 套接字的 HTTP 服务器）",
-    "opengl-cube": "gl_cube.c（IPO_OS 上的 TinyGL 3D 渲染）",
+    "opengl-cube": "gl_cube.c（IPO_OS 硬件 VirGL / OpenGL 3D 渲染）",
     "wm-gui-window": "wm_app.c（使用回调创建 GUI 窗口）",
     "micropython-script": "test.py（在裸机 IPO_OS 上运行 Python）",
     "in-os-tcc": "直接在 IPO_OS 中编译 C 代码",
@@ -401,28 +405,28 @@
   },
   "artifact_labels": {
     "ipo_os_raw": {
-      "name": "IPO_OS 可启动镜像",
-      "description": "包含 IPO_OS 内核和引导程序的原始 32 位可启动镜像。"
+      "name": "IPO_OS 可启动二进制 (IPO_OS.bin)",
+      "description": "包含 MBR 引导与 IPO_OS 内核的原始启动二进制（链接于 0x100000）。"
     },
     "ipo_disk_blank": {
-      "name": "IPO_OS 空白 RAW 磁盘 (512 MiB)",
-      "description": "未经格式化的 512 MiB RAW 磁盘镜像，不含文件系统或预装应用。"
+      "name": "IPO_OS 空白磁盘镜像 (512 MiB)",
+      "description": "未格式化的 512 MiB 原始磁盘镜像。"
     },
     "ipo_disk_installed": {
-      "name": "已预装应用的 IPO_OS 磁盘 (512 MB)",
-      "description": "可直接使用的 512 MB IPO_FS 磁盘镜像，已预装应用、开发工具、运行库和字体。"
+      "name": "IPO_OS 预装系统磁盘 (512 MiB)",
+      "description": "包含应用、驱动、编译器、SDK 头文件、数据与字体的 512 MiB IPO_FS 磁盘。"
     },
     "ipo_disk_clean": {
-      "name": "空白 IPO_OS 磁盘 (512 MB)",
-      "description": "已格式化为 IPO_FS 的 512 MB 空白磁盘镜像，不含预装应用。"
+      "name": "IPO_OS 纯净磁盘 (512 MiB)",
+      "description": "已格式化为 64 位动态 IPO_FS 的 512 MiB 纯净磁盘镜像。"
     },
     "ipo_applications": {
-      "name": "IPO_OS 应用程序包",
-      "description": "适用于 IPO_OS 的预编译应用、开发工具、运行库、SDK 头文件和字体。"
+      "name": "IPO_OS 应用与驱动软件包",
+      "description": "预编译应用、驱动、工具链、C/C++ 库、递归 SDK 头文件、数据资源与字体。"
     },
     "ipo_firmware": {
-      "name": "IPO_Firmware",
-      "description": "已编译的 IPO_Firmware 运行时服务 ROM 二进制文件 (firmware.bin)。"
+      "name": "IPO_Firmware 固件",
+      "description": "已编译的 56 KiB 实模式 BIOS 服务 ROM（firmware.bin）。"
     }
   },
   "units": {

@@ -34,7 +34,7 @@ IPO_OS/
 ├── src/
 │   ├── boot/                   # Stage 1/2 bootloader, E820 probe (0x8FE0), Protected Mode entry
 │   ├── kernel/                 # Kernel core (SMP, scheduler, E820/kmalloc, KMOD, device registry, syscalls)
-│   ├── drivers/                # Drivers (Storage Pool + WAL, block_dev, partition, ATA, RTL8139, VBE, SB16)
+│   ├── drivers/                # Drivers (Storage Pool + WAL, block_dev, partition, Storage Pool + WAL, block_dev, partition, AHCI, VirtIO-Blk, ATA, VirtIO-GPU/VirGL, BGA, HDA/AC97/SB16/VirtIO-Sound)
 │   ├── fs/                     # 64-bit extent-based IPO_FS kernel implementation
 │   ├── net/                    # Bare-metal TCP/IP stack with dynamic rx_packet_buf & POSIX sockets
 │   ├── graphics/               # Window manager and TinyGL rendering core
@@ -57,7 +57,7 @@ The userland ecosystem is a separate project: [IPO_OS_Software](https://github.c
 cd IPO_OS
 make all
 ```
-The default `make all` target cleans prior outputs, builds the bootloader, kernel, and **`build/IPO_OS.img`**, creates the auxiliary disk images, and launches QEMU. Because the clean step removes `build/disks/`, back up any data stored there before running it.
+The default `make all` target cleans prior outputs, builds the bootloader, kernel, and **`build/IPO_OS.bin`** and `build/disks/disk.img`, creates the auxiliary disk images, and launches QEMU. Because the clean step removes `build/disks/`, back up any data stored there before running it.
 
 ### 2. Userland Applications (separate project)
 
@@ -67,7 +67,7 @@ IPO_OS builds its kernel and bootable image; it does not compile userland applic
 ```bash
 make clean
 ```
-Removes the build outputs, including `build/IPO_OS.img` and the virtual disks under `build/disks/`. Back up any data stored in those disk images before running this command.
+Removes the build outputs, including `build/disks/disk.img` and the virtual disks under `build/disks/`. Back up any data stored in those disk images before running this command.
 The `make clean-disks` target removes `build/disks/` without cleaning the other build outputs.
 
 ---

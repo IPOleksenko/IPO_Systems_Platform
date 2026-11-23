@@ -52,17 +52,17 @@ De forma predeterminada, `make` genera `build/bootrom.bin` con un tamaño de fla
 
 ```bash
 # Compilar Boot ROM de 4 MB con payload de firmware integrado
-make FIRMWARE=../IPO_Firmware/build/.bin/firmware.bin FLASH_SIZE=4M
+make FIRMWARE=../IPO_Firmware/build/.bin/firmware.bin FLASH_SIZE=4MiBiB
 ```
 
 ```
 4 MB SPI Flash Memory Layout (bootrom.bin):
 0x00000000 +---------------------------------------------------+
-           | Free / Reserved Flash Storage (3968 KB)           |
+           | 32-bit XIP romstage (phys 4 GiB - FLASH_SIZE) & Free Flash           |
 0x003F0000 +---------------------------------------------------+
-           | IPO_Firmware Payload Slot (32 KB, offset -64 KB)  |
-0x003F8000 +---------------------------------------------------+
-           | IPO_Boot_ROM Init Code (32 KB, offset -32 KB)     |
+           | IPO_Firmware Bank Slot (56 KiB, offset -64 KiB)   |
+0x003FE000 +---------------------------------------------------+ +---------------------------------------------------+
+           | IPO_Boot_ROM Init Code (8 KiB bootblock, offset -8 KiB)     |
 0x003FFFF0 | Reset Vector JMP (16 bytes, offset -16 B)         |
 0x00400000 +---------------------------------------------------+
 ```
@@ -75,7 +75,7 @@ You can test IPO_Boot_ROM directly using QEMU's `-bios` parameter:
 
 ```bash
 # Test standalone Boot ROM
-qemu-system-i386 -bios build/bootrom.bin -serial stdio
+qemu-system-x86_64 -bios build/bootrom.bin -serial stdio
 ```
 
 ### Running the Entire Vertical Stack (Boot ROM + Firmware + IPO_OS):

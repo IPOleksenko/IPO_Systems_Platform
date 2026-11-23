@@ -1,196 +1,353 @@
 {
   "global_stack": {
-    "title": "IPO Systems Platform Vertical Stack",
-    "caption": "Complete execution hierarchy from power-on hardware reset vector to userspace graphical/console applications.",
+    "title": "Вертикальний стек платформи IPO Systems",
+    "caption": "Повна ієрархія виконання від вектора скидання (0xFE000 / F000:E000) та XIP romstage через Firmware до IPO_OS та програм.",
     "labels": {
-      "hardware": "Physical Hardware (CPU x86, RAM, Chipset, Storage)",
-      "boot_rom": "IPO_Boot_ROM (Reset Vector 0xFFFFFFF0, CAR, MRC, PAM)",
-      "contract_2": "Contract 2 Handover (CS:IP 0xF000:0004, Shadow RAM)",
-      "firmware": "IPO_Firmware (IVT, A20, Storage Discovery, MBR Load)",
-      "contract_3": "Contract 3 Handover (CS:IP 0x0000:7C00, DL=Drive ID)",
-      "kernel": "IPO_OS Kernel (PMM, VFS, Sched, Drivers, TCP/IP)",
-      "syscall_gate": "Syscall Gate (int 0x80, EAX=num, EBX=argc, ECX=argv)",
-      "userland": "Userspace Applications (0x800000, LibC, Shell, GUI WM)"
+      "hardware": "Апаратна платформа (CPU x86-64/x86, RAM, чипсет, PCI, накопичувачі)",
+      "boot_rom": "IPO_Boot_ROM (Bootblock 0xFE000 / F000:E000, 32 КіБ CAR, XIP romstage, PAM)",
+      "contract_2": "Контракт 2 (CS:IP 0xF000:000C, 56 КіБ Shadow RAM + 0x2000:0000)",
+      "firmware": "IPO_Firmware (Динамічний AP SMP, IVT, ACPI, PCI 0..7, шини зберігання)",
+      "contract_3": "Контракт 3 (CS:IP 0x0000:7C00, DL=ID диска)",
+      "kernel": "Ядро IPO_OS (Long Mode + 32-bit fallback, SMP, VFS/IPO_FS, VirGL/HDR)",
+      "syscall_gate": "Шлюз системних викликів (int 0x80, 305 викликів ОС та мережі)",
+      "userland": "Простір користувача (0x800000 ELF, кучі 0x10000000+, /drivers/*, WM)"
     }
   },
   "boot_rom_flow": {
-    "title": "IPO_Boot_ROM Low-Level Execution Sequence",
-    "caption": "Виконання від апаратного вектора скидання через Cache-as-RAM і налаштування контролера DRAM до передачі керування прошивці.",
+    "title": "Послідовність запуску IPO_Boot_ROM та XIP romstage",
+    "caption": "Виконання з 8 КіБ bootblock (0xFE000) через 32 КіБ CAR (або .car_bypass 0x2E) і C XIP romstage до переходу на 0xF000:000C.",
     "labels": {
-      "reset_vector": "CPU Reset Vector (0xFFFFFFF0 / F000:FFF0)",
-      "jump_base": "Jump to ROM Base (0xF000:8000)",
-      "car_setup": "Phase 1: Cache-as-RAM Setup (MTRRs, Stack at 0x7000:8000)",
-      "chipset_probe": "Зчитування та виведення сирих PCI ID Host Bridge",
-      "mrc_training": "MRC: налаштування контролера DRAM",
-      "car_teardown": "Завершення CAR; стек передачі SS:SP=0000:7C00",
-      "pic_pit": "Phase 5: Cascaded 8259 PIC & 8254 PIT Setup",
-      "uart_init": "Phase 6: COM1 UART Init (115200 8N1)",
-      "shadow_ram": "Phase 7: PAM Copy to Shadow RAM (0xF0000..0xFFFFF)",
-      "pam_lock": "Phase 8: PAM Read-Only Lock",
-      "magic_check": "Phase 9: Validate 'IPO' Magic (0x004F5049)",
-      "handover": "Transfer to Firmware: jmp 0xF000:0004"
+      "reset_vector": "Вектор скидання CPU (0xFFFFFFF0 -> F000:E000 Bootblock)",
+      "jump_base": "Старт 8 КіБ Bootblock (POST 0x12, MTRR / .car_bypass 0x2E)",
+      "car_setup": "Стек Cache-as-RAM 32 КіБ (0x70000..0x77FFF, POST 0x13)",
+      "chipset_probe": "32-бітний C XIP romstage (POST 0x15, опитування моста)",
+      "mrc_training": "Читання SMBus SPD (POST 0x1F) та налаштування DRAM MRC",
+      "car_teardown": "Очищення CAR і вихід з romstage (POST 0x16 ROMSTAGE_OK)",
+      "pic_pit": "Каскад 8259 PIC, 8254 PIT та COM1 UART (115200 8N1)",
+      "shadow_ram": "PAM-копіювання: 56 КіБ Firmware -> 0xF0000..0xFDFFF і блокування",
+      "handover": "Перевірка 'IPO_Firmware' та дальній перехід 0xF000:000C"
     }
   },
   "firmware_flow": {
-    "title": "IPO_Firmware Service Setup & Storage Discovery",
-    "caption": "Execution pipeline from Boot ROM handover through BIOS interrupts installation to storage drive discovery and OS handover.",
+    "title": "Ініціалізація IPO_Firmware, SMP та пошук накопичувачів",
+    "caption": "Виконання в реальному режимі від 0xF000:000C, запуск AP, IVT/ACPI, PCI 0..7 і завантаження MBR.",
     "labels": {
-      "entry": "Firmware Entry Point (0xF000:0004)",
-      "ivt_setup": "Register IVT: INT 10h, 12h, 13h, 15h, 16h, 1Ah",
-      "bda_ebda": "Init BDA (0x400) & EBDA / ACPI 1.0 (0x9FC00)",
-      "pci_enum": "PCI Bus Enumeration (VGA, Storage, USB Controllers)",
-      "video_init": "Video Subsystem (VBIOS Option ROM or Text Mode 03h)",
-      "a20_gate": "Fast A20 Gate Activation (Port 0x92)",
-      "memory_detect": "E820 / E801 Memory Map Construction",
-      "storage_probe": "Multi-Bus Storage Scan: ATA (0x1F0), AHCI, NVMe, USB",
-      "mbr_load": "Read LBA 0 to 0x0000:7C00 via INT 13h AH=42h",
-      "validate_mbr": "Check MBR Signature 0x55AA",
-      "os_handover": "OS Handover: DL=0x80..0x82, jmp 0x0000:7C00"
+      "entry": "Точка входу Firmware (CS:IP 0xF000:000C, 'IPO_Firmware')",
+      "ivt_setup": "Реєстрація IVT (INT 10h–1Ah) та Fast A20 (0x92)",
+      "bda_ebda": "BDA (0x400), E820, RSDP (EBDA) та ACPI 1.0 нижче TOLUD",
+      "pci_enum": "Сканування PCI 0..7, BARs (0xFE800000/0xC000) і старт AP SIPI",
+      "a20_gate": "COM1, PS/2 8042 клавіатура/миша та відеорежим Mode 03h",
+      "storage_probe": "Опитування дисків (POST 0x29): ATA PIO, AHCI, NVMe, USB EHCI",
+      "mbr_load": "Читання MBR (LBA 0) через INT 13h AH=42h -> 0x0000:7C00",
+      "os_handover": "Перевірка 0x55AA і перехід на 0x0000:7C00 (DL=Диск)"
     }
   },
   "kernel_boot": {
-    "title": "IPO_OS Kernel Initialization Pipeline",
-    "caption": "Transition from MBR bootloader through Protected Mode to the running kernel, filesystem mount, and interactive shell.",
+    "title": "Конвеєр ініціалізації ядра IPO_OS",
+    "caption": "Старт від MBR Bootloader до Long Mode (PML4/LA57) або 32-бітного відкату на 0x100000, SMP та IPO_FS.",
     "labels": {
-      "mbr_stage1": "Завантажувач першого етапу (сектор MBR 0x7C00)",
-      "stage2_load": "Завантаження другого етапу завантажувача з диска",
-      "prot_mode": "Перехід у 32-бітний захищений режим (GDT завантажено, CR0 PE=1)",
-      "kernel_load": "Завантаження ядра ELF32 за фізичною адресою 0x10000",
-      "kernel_entry": "Точка входу ядра (_start у linker.ld)",
-      "mm_init": "Карта пам'яті E820 і купа ядра 64 МБ (kmalloc: 0x01000000–0x04FFFFFF)",
-      "idt_init": "IDT, PIC/APIC, виявлення SMP і шлюз системних викликів (0x80)",
-      "fs_mount": "Монтування кореневої файлової системи (розділ IPO_FS з LBA 2048)",
-      "drivers_init": "Блоковий рівень, ATA, Storage Pool + WAL, KMOD, реєстр пристроїв",
-      "launch_shell": "Запуск інтерактивного термінала та послідовної консолі"
+      "mbr_stage1": "Завантажувач Stage 1 MBR (0x7C00 -> Bootloader)",
+      "stage2_load": "Bootloader E820/A20 -> A20, E820 -> 0x6000, IPO_OS.bin",
+      "prot_mode": "Перехід у 64-бітний Long Mode (PML4/LA57) або 32-біт Paged",
+      "kernel_load": "Ядро на фізичному 1 МіБ (0x00100000, 'IPO_OS')",
+      "mm_init": "PMM (0x08000000+), динамічний kmalloc (0x04000000+) і кучі (0x10000000+)",
+      "fs_mount": "IDT, APIC/IOAPIC, SMP на всіх ядрах (0x8000/0x8180 / IPI 0xE0) та IPO_FS",
+      "drivers_init": "Storage Pool + WAL, вбудовані PCI/Audio/VirGL і /drivers/*",
+      "launch_shell": "Запуск динамічного термінала, RGBA64F HDR WM та стільниці"
     }
   },
   "memory_map": {
-    "title": "IPO_OS Physical & Virtual Memory Layout",
-    "caption": "Карта областей пам’яті: застарілі таблиці реального режиму, ядро за адресою 64 КБ, програми користувача за адресою 8 МБ (0x00800000) і купа ядра обсягом 64 МБ від 16 МБ (0x01000000).",
+    "title": "Карта фізичної та віртуальної пам'яті IPO_OS",
+    "caption": "Розподіл зон: IVT/BDA, ядро на 1 МіБ (0x00100000), програми на 8 МіБ, куча kmalloc 64 МіБ (0x04000000), PMM 128 МіБ та кучі 256 МіБ+.",
     "labels": {
-      "ivt_bda": "0x00000 - 0x004FF: IVT (1 KB) & BDA (256 B)",
-      "free_conv": "0x00500 - 0x07BFF: Scratch RAM & Stacks",
-      "boot_mbr": "0x07C00 - 0x07DFF: Bootloader MBR Buffer (512 B)",
-      "kernel_bin": "0x10000 - 0x7FFFF: IPO_OS Kernel Core (.text, .data, .bss)",
-      "video_ram": "0xA0000 - 0xBFFFF: Video Framebuffer (VGA Text 0xB8000)",
-      "ebda_rom": "0xC0000 - 0xFFFFF: VBIOS, Shadow RAM & ROM Firmware",
-      "kernel_heap": "0x01000000 - 0x04FFFFFF: купа kmalloc ядра (64 МБ) і PMM / sbrk",
-      "user_apps": "0x800000+: Userspace Applications (Entry at 0x800000)"
+      "ivt_bda": "0x00000–0x004FF: Таблиця IVT (1 КіБ) і BDA (256 Б)",
+      "boot_mbr": "0x06000–0x08FFF: E820, MBR (0x7C00), Bounce (0x10000), SMP (0x8000/0x8180)",
+      "video_ram": "0xA0000–0xBFFFF: Відеопам'ять VGA і текстова VRAM 0xB8000",
+      "ebda_rom": "0xC0000–0xFFFFF: VBIOS, 56 КіБ Firmware (0xF0000), 8 КіБ BootROM (0xFE000)",
+      "kernel_bin": "0x00100000–0x007FFFFF: Ядро IPO_OS, таблиці сторінок і стеки SMP",
+      "user_apps": "0x00800000–0x03FFFFFF: Програми ELF та автозростаючі стеки потоків",
+      "kernel_heap": "0x04000000–0x07FFFFFF: Куча ядра kmalloc() (+ арени PMM)",
+      "user_heaps": "0x08000000+ / 0x10000000+: PMM, кучі sbrk(), mmap/SHM (0xD0000000+)"
     }
   },
   "syscall_pipeline": {
-    "title": "System Call Dispatch Pipeline (int 0x80)",
-    "caption": "Flow of control and argument passing when a userspace application requests an operating system service.",
+    "title": "Конвеєр системних викликів (int 0x80)",
+    "caption": "Перехід Ring 3 -> Ring 0 для 305 системних викликів ОС та мережевого KMD.",
     "labels": {
-      "app_call": "Application executes ipo_syscall(num, argc, argv)",
-      "trap_gate": "Assembly 'int 0x80' triggers CPU Software Interrupt Gate",
-      "ring_switch": "Hardware CPU Switch: Ring 3 (User) -> Ring 0 (Kernel)",
-      "dispatcher": "Kernel Syscall Dispatcher validates number & arguments",
-      "handler_exec": "Target Subsystem Handler executes (FS, Process, Net, WM)",
-      "return_ring": "Result placed in EAX, 'iret' returns to Ring 3"
+      "app_call": "Програма викликає C-обгортку (libc / libapp_api)",
+      "trap_gate": "Інструкція 'int 0x80' спрацьовує через шлюз DPL=3",
+      "ring_switch": "Апаратний перехід Ring 3 -> Ring 0 зі збереженням регістрів",
+      "dispatcher": "Диспетчер перевіряє 305 зареєстрованих/динамічних викликів",
+      "return_ring": "Виконання підсистеми / KMD, повернення EAX/RAX через iret"
     }
   },
   "fs_layout": {
-    "title": "IPO_FS 64-bit Extent-Based On-Disk Structure",
-    "caption": "Partition layout showing 512-byte blocks, 64-bit extents, and 128-byte inode organization.",
+    "title": "Дискова структура 64-бітної динамічної IPO_FS",
+    "caption": "Розмітка пулу з WAL (LBA 2030..2039), 104 Б суперблоком (LBA 2048), картами та деревом чанків інодів.",
     "labels": {
-      "mbr_reserved": "Sector 0..2047: MBR and Reserved Boot Sectors",
-      "superblock": "LBA 2048: Superblock ('IPO_FS\\0\\0', Block Size, Pointers)",
-      "inode_bitmap": "Block Bitmap / Inode Bitmap (Allocation Tracking)",
-      "inode_table": "Inode Table (128 bytes per inode, 4 inodes / block)",
-      "data_blocks": "Data Extent Pool (Contiguous Multi-Block Extents)",
-      "mbr_title": "MBR / Pool+WAL",
+      "mbr_title": "MBR / Ядро + WAL",
       "mbr_lba": "LBA 0..2047",
-      "wal_lba": "(WAL 2030..2039)",
+      "wal_lba": "Pool SB 2030/2039, WAL 2031..2038",
       "superblock_title": "Суперблок",
-      "superblock_lba": "LBA 2048",
+      "superblock_lba": "LBA 2048 (104 Б)",
       "bitmap_title": "Бітові карти",
-      "bitmap_desc": "Inode + блоки",
-      "inode_table_title": "Таблиця inode",
-      "inode_table_desc": "128 Б на inode",
+      "bitmap_desc": "Іноди + Блоки",
+      "inode_table_title": "Таблиця інодів",
+      "inode_table_desc": "128 Б + Чанки",
       "data_extents_title": "Екстенти даних",
-      "contiguous_blocks": "Суміжні блоки"
+      "contiguous_blocks": "64-бітні неперервні блоки"
     }
   },
   "pc_assembly_flow": {
-    "title": "Hardware Assembly & Safety Progression",
-    "caption": "Order of physical assembly from workbench ESD safety preparation to power-on self test.",
+    "title": "Послідовність збирання ПК і безпеки",
+    "caption": "Порядок робіт від ESD-захисту й монтажу ЦП до роз'єму JFP1 і перевірки POST 0x80.",
     "labels": {
-      "esd_prep": "Step 1: ESD Protection & Workstation Preparation",
-      "cpu_install": "Step 2: CPU Socket Installation & Thermal Compound",
-      "cooler_mount": "Step 3: CPU Cooler & Retention Bracket",
-      "ram_install": "Step 4: Dual-Channel DDR/SDRAM Insertion",
-      "case_mb": "Step 5: Standoff Alignment & Motherboard Mounting",
-      "psu_cabling": "Step 6: Power Supply (24-pin ATX, 8-pin EPS)",
-      "storage_conn": "Step 7: Storage Drives & SATA/IDE Data Cables",
-      "front_panel": "Step 8: Front Panel Pinout (Power SW, Reset SW, LEDs)",
-      "post_test": "Step 9: Bench POST Self-Test & Diagnostic Speaker Check"
+      "esd_prep": "1. Антистатичний захист і робоче місце",
+      "cpu_install": "2. Встановлення ЦП у сокет і термопаста",
+      "cooler_mount": "3. Кріплення кулера та CPU_FAN",
+      "ram_install": "4. Монтаж модулів пам'яті DRAM",
+      "case_mb": "5. Стійки корпусу та кріплення плати",
+      "psu_cabling": "6. Живлення ATX 24-pin, EPS 8-pin і PCIe",
+      "front_panel": "7. Диски SATA/AHCI і конектор JFP1",
+      "post_test": "8. Пробний запуск, COM1 лог і POST 0x80"
     }
   },
   "front_panel_pinout": {
-    "title": "Standard Motherboard Front Panel Header Pinout",
-    "caption": "Pin layout and polarity guidelines for power button, reset button, and status LEDs.",
+    "title": "Розпіновка передньої панелі материнської плати (JFP1)",
+    "caption": "Схема контактів: HDD LED (+ Конт. 1 / - Конт. 3), Power LED (+ Конт. 2 / - Конт. 4), Reset (5/7), Power (6/8).",
     "labels": {
-      "pwr_led": "Індикатор живлення (+ до Pin 1, - до Pin 3)",
-      "hdd_led": "Індикатор диска (+ до Pin 2, - до Pin 4)",
-      "reset_sw": "Кнопка скидання (замикання, без полярності)",
-      "pwr_sw": "Кнопка увімкнення (замикання, без полярності)"
+      "jfp1_title": "JFP1 / F_PANEL (Крок 2.54 мм, 2×5 конт.)",
+      "jfp1_subtitle": "Нижній ряд = непарні (1,3,5,7,9) · Верхній ряд = парні (2,4,6,8,10 ключ)",
+      "hdd_led": "Індикатор диска HDD LED (+)",
+      "hdd_led_pins": "Конт. 1 (+) / 3 (-)",
+      "hdd_led_short": "HDD+ / HDD-",
+      "pwr_led": "Індикатор живлення Power LED (+)",
+      "pwr_led_pins": "Конт. 2 (+) / 4 (-)",
+      "pwr_led_short": "PLED+ / PLED-",
+      "reset_sw": "Кнопка скидання Reset SW",
+      "reset_sw_pins": "Конт. 5 / 7 (без полярності)",
+      "reset_sw_short": "RESET SW",
+      "pwr_sw": "Кнопка живлення Power SW",
+      "pwr_sw_pins": "Конт. 6 / 8 (без полярності)",
+      "pwr_sw_short": "POWER SW",
+      "pin9_key": "Конт. 9: Резерв / NC",
+      "pin10_nc": "Конт. 10: Ключ (заглушка)"
     }
   },
   "net_stack": {
-    "title": "IPO_OS Bare-Metal TCP/IP Protocol Stack",
-    "caption": "Network packet processing hierarchy from physical RTL8139 PCI NIC to BSD-like Socket API.",
+    "title": "Модульний мережевий стек IPO_OS (/drivers/rtl8139 KMD)",
+    "caption": "Стек від RTL8139 / E1000 / VirtIO-Net через Ethernet/ARP/IPv4/ICMP/UDP/TCP/DHCP/DNS до BSD-сокетів (0x12000+).",
     "labels": {
-      "nic_driver": "RTL8139 PCI NIC Driver (Ring Buffers, RX/TX Packets)",
-      "ethernet_l2": "Ethernet II Framing & MAC Filtering",
-      "arp_layer": "ARP Cache & Address Resolution Protocol",
-      "ipv4_l3": "IPv4 Layer (Routing Table, Checksum, Fragmentation)",
-      "transport_l4": "Transport Layer: UDP & TCP RFC 793/9293 State Machine",
-      "socket_api": "Socket Layer: socket(), bind(), connect(), listen(), accept(), send(), recv()"
+      "nic_driver": "Мульти-NIC драйвер (RTL8139 / Intel E1000 / VirtIO-Net DMA)",
+      "ethernet_l2": "Кадри Ethernet II L2 та універсальний хаб каналів (eth0)",
+      "arp_layer": "Динамічний кеш ARP і визначення MAC-адрес",
+      "ipv4_l3": "Рівень IPv4, маршрутизація, контрольні суми та ICMP Ping",
+      "transport_l4": "UDP, автомат TCP RFC 793/9293, клієнти DHCP і DNS",
+      "socket_api": "Сумісний BSD Socket API (виклики 0x12000–0x1200F)"
     }
   },
   "vertical_platform_stack": {
-    "title": "Вертикальний стек платформи IPO Systems Platform",
-    "caption": "Повна ієрархія виконання системи від апаратного вектора скидання живлення до графічних і консольних додатків."
+    "title": "Вертикальний стек платформи IPO Systems",
+    "caption": "Повна ієрархія виконання від вектора скидання (0xFE000 / F000:E000) та XIP romstage через Firmware до IPO_OS та програм.",
+    "labels": {
+      "hardware": "Апаратна платформа (CPU x86-64/x86, RAM, чипсет, PCI, накопичувачі)",
+      "boot_rom": "IPO_Boot_ROM (Bootblock 0xFE000 / F000:E000, 32 КіБ CAR, XIP romstage, PAM)",
+      "contract_2": "Контракт 2 (CS:IP 0xF000:000C, 56 КіБ Shadow RAM + 0x2000:0000)",
+      "firmware": "IPO_Firmware (Динамічний AP SMP, IVT, ACPI, PCI 0..7, шини зберігання)",
+      "contract_3": "Контракт 3 (CS:IP 0x0000:7C00, DL=ID диска)",
+      "kernel": "Ядро IPO_OS (Long Mode + 32-bit fallback, SMP, VFS/IPO_FS, VirGL/HDR)",
+      "syscall_gate": "Шлюз системних викликів (int 0x80, 305 викликів ОС та мережі)",
+      "userland": "Простір користувача (0x800000 ELF, кучі 0x10000000+, /drivers/*, WM)"
+    }
   },
   "spi_flashing_pinout": {
-    "title": "Розпіновка програматора CH341A та чипа SOIC-8 SPI Flash",
-    "caption": "Схема підключення контактів кліпси програматора CH341A до мікросхеми SPI Flash (W25Q64 / MX25L6405)."
+    "title": "Розпіновка програматора CH341A до SOIC-8 SPI Flash",
+    "caption": "Підключення 3.3 В SPI NOR Flash (128 КіБ – 16 МіБ) до CH341A.",
+    "labels": {
+      "prog_title": "CH341A (мод 3.3 В)",
+      "chip_title": "SOIC-8 SPI Flash",
+      "pin1_cs": "Конт. 1: /CS (Вибір чипа)",
+      "pin2_miso": "Конт. 2: DO / MISO",
+      "pin3_wp": "Конт. 3: /WP (Підтяжка 3.3 В)",
+      "pin4_gnd": "Конт. 4: GND (Земля)",
+      "pin5_mosi": "Конт. 5: DI / MOSI",
+      "pin6_clk": "Конт. 6: CLK (Такт)",
+      "pin7_hold": "Конт. 7: /HOLD (Підтяжка 3.3 В)",
+      "pin8_vcc": "Конт. 8: VCC (+3.3 В лише)"
+    }
   },
   "process_scheduler": {
-    "title": "Життєвий цикл процесів та скінченний автомат планувальника",
-    "caption": "Переходи між станами: CREATED, READY (черга готовності), RUNNING (виконання), WAITING/BLOCKED (очікування вводу/сну) та TERMINATED."
+    "title": "Скінченний автомат планувальника процесів та потоків",
+    "caption": "Багатоядерний SMP-планувальник з авторостом стеків та IPI 0xE0.",
+    "labels": {
+      "state_created": "CREATED (ELF + PCB)",
+      "state_ready": "READY (Черга)",
+      "state_running": "RUNNING (Core 0..N)",
+      "state_blocked": "BLOCKED (Futex / I/O)",
+      "state_terminated": "TERMINATED (Завершено)",
+      "tr_schedule": "запуск / старт",
+      "tr_preempt": "квант PIT / LAPIC",
+      "tr_block": "sleep / futex / I/O",
+      "tr_wakeup": "IRQ / IPI 0xE0",
+      "tr_exit": "exit / SIGKILL"
+    }
   },
   "window_manager": {
-    "title": "Конвеєр композитингу віконного менеджера та відеопам'ять VBE",
-    "caption": "Відмальовування клієнтських буферів додатків, відсікання перекриттів та копіювання в лінійний кадровий буфер VBE."
+    "title": "Конвеєр композитора WM, RGBA64F HDR та VirGL 3D",
+    "caption": "Композитор довільної роздільної здатності з HDR та апаратним 3D VirGL.",
+    "labels": {
+      "wm_client1": "Вікно клієнта 1",
+      "wm_client1_desc": "Програмний буфер (довільні W×H)",
+      "wm_client2": "Вікно клієнта 2",
+      "wm_client2_desc": "Поверхня RGBA64F HDR + тональна компресія",
+      "wm_client3": "Вікно клієнта 3",
+      "wm_client3_desc": "Апаратний контекст VirGL 3D",
+      "wm_comp": "Композитор WM ядра та маршрутизатор вводу",
+      "wm_comp_desc1": "Відстеження змін, Z-порядок і динамічний курсор",
+      "wm_comp_desc2": "Будь-яка роздільність + синхронізація сітки термінала",
+      "wm_comp_desc3": "Подвійна буферизація, дизеринг і wm_poll_event()",
+      "wm_hw": "Апаратні бекенди дисплея",
+      "wm_hw_d1": "VirtIO-GPU 2D/VirGL 3D",
+      "wm_hw_d2": "Bochs BGA / Лінійний LFB",
+      "wm_hw_sub": "Без обмежень роздільності · Вивід (0x11E0–0x11F7)"
+    }
   },
   "car_memory_layout": {
-    "title": "Карта пам'яті режиму Cache-as-RAM (CAR) та налаштування MTRR",
-    "caption": "Організація 64 КБ кешу L1/L2 процесора як тимчасового SRAM-стека до ініціалізації контролера DRAM."
+    "title": "Карта пам'яті 32 КіБ CAR та обхід .car_bypass",
+    "caption": "Вікно кешу 32 КіБ (0x70000..0x77FFF) для C XIP romstage перед ініціалізацією DRAM.",
+    "labels": {
+      "car_range": "Вікно CAR 32 КіБ (0x70000..0x77FFF)",
+      "mtrr_config": "Налаштування MTRR WB (або .car_bypass 0x2E)",
+      "cache_lines": "Закріплені лінії кешу L1/L2 без DRAM",
+      "c_runtime": "32-бітний стек C і змінні XIP romstage",
+      "mrc_zone": "SMBus SPD буфер і параметри чипсета",
+      "post_logs": "COM1 (115200 8N1) та порт POST 0x80",
+      "stack_top": "Верх стека (0x77FFF росте вниз)",
+      "teardown_phase": "Вихід у DRAM і очистка CAR (POST 0x16)",
+      "teardown_desc": "Скидання кешу -> 16-біт -> Firmware 0xF000:000C"
+    }
   },
   "chipset_init_flow": {
-    "title": "Опитування чипсета та тіньова пам'ять PAM (Shadow RAM)",
-    "caption": "Виявлення Host Bridge (i440FX vs Q35), блокування SMRAM, відкриття регістрів PAM0-PAM6 та перенесення прошивки."
+    "title": "Опитування чипсета та блокування Shadow RAM (PAM)",
+    "caption": "Визначення мосту, SMRAM, DRAM і програмування тіньової пам'яті PAM.",
+    "labels": {
+      "probe_bridge": "1. Опит Host Bridge (00:00.0) і вивід PCI ID",
+      "smram_ctrl": "2. Налаштування SMRAM і маршрутизації пам'яті",
+      "piix_routing": "3. Ініціалізація PIIX/ICH, SMBus SPD і 8259/8254",
+      "pam_config": "4. Налаштування PAM (WE=1) і копіювання 56 КіБ -> 0xF0000",
+      "lock_pam": "5. Блокування PAM Read-Only (WE=0, RE=1) -> 0xF000:000C"
+    }
   },
   "pci_bus_topology": {
-    "title": "Ієрархія шини PCI та опитування пристроїв",
-    "caption": "Рекурсивне сканування шин, пристроїв та функцій через порти введення-виведення 0xCF8 (CONFIG_ADDRESS) та 0xCFC (CONFIG_DATA)."
+    "title": "Топологія шин PCI 0..7 та 64-бітні BAR",
+    "caption": "Рекурсивне сканування шин PCI 0..7 з динамічним виділенням MMIO та I/O.",
+    "labels": {
+      "host_bridge": "PCI Host Bridge (00:00.0) та мости PCI-to-PCI",
+      "pci_ports": "Порти конфігурації 0xCF8 / 0xCFC",
+      "bus_scan_title": "Динамічний сканер шин PCI 0..7",
+      "bus_scan_desc": "Firmware і ядро сканують усі шини з розширюваними масивами 64-бітних BAR",
+      "dev_storage": "Контролери дисків",
+      "dev_storage_sub": "ATA IDE / AHCI SATA / VirtIO-Blk",
+      "dev_storage_io": "BARs / DMA / Bus Master",
+      "dev_nic": "Мережеві адаптери",
+      "dev_nic_sub": "RTL8139 / Intel E1000 / VirtIO-Net",
+      "dev_nic_io": "Динам. MMIO/I/O + /drivers/*",
+      "dev_gpu": "Графіка й 3D",
+      "dev_gpu_sub": "VirtIO-GPU (VirGL) / Bochs BGA",
+      "dev_gpu_io": "Лінійний FB + черги 3D",
+      "dev_usb_audio": "Аудіо і USB",
+      "dev_usb_audio_sub": "HDA / AC97 / SB16 / VirtIO-Sound",
+      "dev_usb_audio_io": "Кільця DMA + MSI/IRQ"
+    }
   },
   "storage_transfer_flow": {
-    "title": "Пайплайн передачі секторів у режимі ATA PIO",
-    "caption": "Опитування бітів BSY/DRQ порту 0x1F7, подача команди 0x20 READ SECTORS та читання 512 байт через rep insw з порту 0x1F0."
+    "title": "Конвеєр дискового вводу-виводу та WAL-журналу",
+    "caption": "64-бітний шлях вводу-виводу через VFS, IPO_FS, WAL та AHCI/VirtIO-Blk/ATA.",
+    "labels": {
+      "st_step1": "1. VFS / системний виклик (64-бітне зміщення)",
+      "st_step2": "2. Кеш IPO_FS і динамічні чанки/екстенти інодів",
+      "st_step3": "3. Транслятор Storage Pool та WAL-журнал",
+      "st_step3_desc": "Страйпінг 64 сектори (32 КіБ) + CRC запису TXNL",
+      "st_step4": "4. Планувальник блоків (AHCI DMA / VirtIO-Blk / ATA PIO)",
+      "st_step5": "5. Передача DMA або порт 0x1F0/0x170 + IRQ",
+      "st_step5_desc": "Без жорстких лімітів · Відновлення пулу при старті"
+    }
   },
   "interrupt_routing": {
-    "title": "Таблиця векторів IDT та маршрутизація апаратних IRQ",
-    "caption": "Маршрутизація апаратних переривань через каскад PIC 8259 (0x20..0x2F), винятків CPU (0x00..0x1F) та шлюзу int 0x80."
+    "title": "Вектори IDT, PIC/APIC IRQ та IPI 0xE0",
+    "caption": "Маршрутизація винятків ЦП, IRQ та IPI 0xE0 і шлюзу int 0x80.",
+    "labels": {
+      "idt_title": "Ядерна IDT (32-біт 8Б / 64-біт 16Б)",
+      "idt_desc1": "0x00–0x1F: Винятки CPU (#DE, #GP, #PF ріст стека)",
+      "idt_desc2": "0x20–0x2F: Апаратні IRQ (8259 PIC / IOAPIC)",
+      "idt_desc3": "0x80: Шлюз системних викликів (DPL=3)",
+      "idt_desc4": "0xE0: Між'ядерний SMP IPI",
+      "idt_desc5": "Таймер APIC і вектор 0xFF",
+      "irq_hw_title": "Джерела переривань",
+      "irq_0": "IRQ 0: Таймер PIT / LAPIC",
+      "irq_1": "IRQ 1 / 12: PS/2 клавіатура та миша",
+      "irq_5": "Лінії PCI (HDA аудіо, мережа, VirtIO)",
+      "irq_12": "IRQ 14/15: ATA / AHCI / VirtIO-Blk",
+      "irq_ipi": "LAPIC IPI 0xE0 (Усі ядра)",
+      "traps_title": "Системні виклики",
+      "trap_80": "int 0x80 (305 викликів)",
+      "ring0_handlers": "Диспетчер Ring 0 + підписки драйверів (0x1160..0x1165)",
+      "eoi_text": "EOI (PIC 0x20 / LAPIC 0xB0)",
+      "iret_text": "iret / iretq у контекст потоку"
+    }
   },
   "driver_architecture": {
-    "title": "Архітектура драйверів ядра та зв'язування з VFS",
-    "caption": "Таблиця операцій struct device_ops, що ізолює віртуальні вузли /dev від прямих портів введення-виведення та MMIO."
+    "title": "Гібридна модель драйверів (ядро, .kmd і /drivers/*)",
+    "caption": "Єдиний реєстр пристроїв для вбудованих драйверів, модулів .kmd і драйверів користувача.",
+    "labels": {
+      "drv_layer1": "Програми Ring 3 та зовнішні драйвери /drivers/*",
+      "drv_layer1_desc": "BSD-сокети, хаб вводу, MMIO/DMA виклики (0x1140–0x1183)",
+      "drv_layer2": "Єдиний реєстр пристроїв і модулі розширень",
+      "drv_layer2_desc": "device_node_t (64-біт BAR), 64-біт ops, .kmd та канали",
+      "drv_hw": "Вбудовані драйвери ядра й шини",
+      "drv_hw_desc": "Прямий доступ Ring 0 до портів, BAR, DMA та IRQ",
+      "drv_storage": "Стек зберігання",
+      "drv_storage_1": "AHCI SATA (DMA/NCQ)",
+      "drv_storage_2": "VirtIO-Blk Modern/Legacy",
+      "drv_storage_3": "ATA/ATAPI PIO + WAL",
+      "drv_net": "Мережа / KMD",
+      "drv_net_1": "/drivers/rtl8139 (KMD)",
+      "drv_net_2": "RTL8139 / E1000 / VirtIO-Net",
+      "drv_net_3": "Універсальні канали кадрів",
+      "drv_av": "Графіка й звук",
+      "drv_av_1": "VirtIO-GPU / VirGL 3D",
+      "drv_av_2": "Bochs BGA / RGBA64F HDR",
+      "drv_av_3": "HDA / AC97 / SB16 / VirtIO",
+      "drv_input": "Ввід і драйвери",
+      "drv_input_1": "PS/2 Клавіатура та миша",
+      "drv_input_2": "/drivers/touchpad + gamepad",
+      "drv_input_3": "/drivers/custom_proto демо"
+    }
   },
   "ipc_architecture": {
-    "title": "Підсистема міжпроцесної взаємодії (IPC)",
-    "caption": "Черги повідомлень (256 байт), анонімні канали pipe (4 КБ), асинхронні сигнали та спільна пам'ять."
+    "title": "Саморозширюваний IPC, SHM, канали та сигнали POSIX",
+    "caption": "Іменовані черги, саморозширювані канали, SHM 0xD0000000+ і сигнали POSIX.",
+    "labels": {
+      "proc_a": "Процес A (Ring 3 Клієнт / Джерело)",
+      "proc_a_sub1": "Клієнт черги повідомлень",
+      "proc_a_sub2": "Запис у pipe / kill()",
+      "proc_a_sub3": "Запис сторінок SHM",
+      "proc_a_sub4": "Асинхронні сповіщення",
+      "proc_b": "Процес B (Ring 3 Сервіс / Одержувач)",
+      "proc_b_sub1": "Приймач точки IPC",
+      "proc_b_sub2": "Читання pipe / sigaction",
+      "proc_b_sub3": "Zero-Copy читання SHM",
+      "proc_b_sub4": "Очікування сповіщень",
+      "ring3_user": "Ізольовані простори Ring 3 (вікно SHM 0xD0000000+)",
+      "ipc_core": "Ядерна підсистема динамічного IPC і сигналів (Ring 0)",
+      "ipc_msg": "Кінцеві точки (0x10F0–0x10F5)",
+      "ipc_msg_desc": "Динам. черга + права доступу",
+      "ipc_pipes": "Саморозширювані канали (0x10F6–0x10FE)",
+      "ipc_pipes_desc": "Автозростаючі кільцеві буфери",
+      "ipc_shm": "Спільна пам'ять SHM (0x1100–0x1104)",
+      "ipc_shm_desc": "Zero-Copy фізичні сторінки",
+      "ipc_sig": "Сповіщення й сигнали (0x1110–0x1113)",
+      "ipc_sig_desc": "kill(), sigaction, Notify"
+    }
   }
 }

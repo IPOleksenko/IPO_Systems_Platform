@@ -17,7 +17,7 @@ import Callout from '../../../components/Callout.astro';
 - **NASM 2.14+** (ассемблер Netwide Assembler)
 - **Python 3.8+** (для упаковки ROM через `tools/build_rom.py`)
 - **GNU Make 4.0+**
-- **QEMU** (`qemu-system-i386`)
+- **QEMU** (`qemu-system-x86_64`)
 
 ```bash
 # Ubuntu / Debian
@@ -36,7 +36,7 @@ make all
 ```
 
 Компилируются следующие модули:
-- `src/entry.asm` (точка входа по Контракту 2 по адресу `0xF000:0004`)
+- `src/entry.asm` (точка входа по Контракту 2 по адресу `0xF000:000C`)
 - `src/ivt.asm` (обработчики таблицы векторов прерываний реального режима)
 - `src/pci_scan.asm`, `src/ahci.asm`, `src/nvme.asm` (многошинный поиск накопителей)
 - `src/chainload.asm` (чтение сектора 0 и передача управления по Контракту 3)
@@ -51,31 +51,31 @@ make all
 
 ### 1. Загрузка с классическим накопителем ATA IDE
 ```bash
-qemu-system-i386 \
+qemu-system-x86_64 \
     -bios build/firmware.bin \
-    -drive file=path/to/IPO_OS.img,format=raw,if=ide,index=0 \
+    -drive file=path/to/disk.img,format=raw,if=ide,index=0 \
     -serial stdio
 ```
 Или напрямую через Makefile проекта:
 ```bash
-make run OS=path/to/IPO_OS.img
+make run OS=path/to/disk.img
 ```
 
 ### 2. Загрузка через контроллер AHCI SATA
 ```bash
-qemu-system-i386 \
+qemu-system-x86_64 \
     -bios build/firmware.bin \
     -device ahci,id=ahci0 \
-    -drive file=path/to/IPO_OS.img,format=raw,if=none,id=disk0 \
+    -drive file=path/to/disk.img,format=raw,if=none,id=disk0 \
     -device ide-hd,bus=ahci0.0,drive=disk0 \
     -serial stdio
 ```
 
 ### 3. Загрузка с современного накопителя NVMe
 ```bash
-qemu-system-i386 \
+qemu-system-x86_64 \
     -bios build/firmware.bin \
-    -drive file=path/to/IPO_OS.img,format=raw,if=none,id=nvm0 \
+    -drive file=path/to/disk.img,format=raw,if=none,id=nvm0 \
     -device nvme,serial=IPO_NVME0,drive=nvm0 \
     -serial stdio
 ```

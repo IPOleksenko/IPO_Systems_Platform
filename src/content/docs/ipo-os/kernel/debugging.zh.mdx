@@ -61,10 +61,10 @@ The `serial_printf(const char *format, ...)` facility (`src/include/stdio.h`) pr
 ### Running QEMU with Serial Redirection:
 ```bash
 # Stream kernel logs directly to host terminal
-qemu-system-i386 -hda build/IPO_OS.img -serial stdio
+qemu-system-x86_64 -hda build/disks/disk.img -serial stdio
 
 # Save logs to file
-qemu-system-i386 -hda build/IPO_OS.img -serial file:kernel.log
+qemu-system-x86_64 -hda build/disks/disk.img -serial file:kernel.log
 ```
 
 ---
@@ -75,7 +75,7 @@ For step-by-step kernel debugging with loaded ELF symbols:
 
 ```bash
 # 1. Start QEMU and wait for GDB connection on localhost:1234
-qemu-system-i386 -hda build/IPO_OS.img -serial stdio -s -S
+qemu-system-x86_64 -hda build/disks/disk.img -serial stdio -s -S
 
 # 2. Attach GDB with kernel ELF symbols
 gdb build/kernel/kernel.elf
@@ -86,6 +86,6 @@ Inside GDB:
 (gdb) target remote localhost:1234
 (gdb) break kmain
 (gdb) continue
-(gdb) x/16xw 0x10000
+(gdb) x/16xw 0x100000
 (gdb) next
 ```

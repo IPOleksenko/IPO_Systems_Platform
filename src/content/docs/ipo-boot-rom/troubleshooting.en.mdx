@@ -11,16 +11,16 @@ On physical motherboards, failures may appear as a black screen or a halted boot
 
 ---
 
-## 🛑 Decoding Port 0x80 Error Codes
+## 🛑 Understanding Port 0x80 Diagnostic & Warning Codes
 
-| Hex Code | Meaning | Root Cause & Resolution |
+| Hex Code | Constant | Behavior & Resolution |
 | :--- | :--- | :--- |
-| **`0x2E`** | `POST_ERR_NO_CAR` | Defined CAR setup failure code; this does not establish that the current code performs an MTRR capability check. |
-| **`0x3E`** | `POST_ERR_UNKNOWN_CS` | Defined constant; current code reports raw PCI host-bridge IDs and does not reject unknown IDs. |
-| **`0x4E`** | `POST_ERR_DRAM_FAIL` | Defined constant; current MRC configures DRAM controller registers and does not run a pattern test. |
-| **`0x7E`** | `POST_ERR_FW_MAGIC` | Defined constant; current mismatch handling reports a diagnostic and halts without emitting POST code `0x7E`; check the payload at `0xF000:0000`. |
+| **`0x12` / `0x13`** | `POST_CAR_START` / `POST_CAR_OK` | Normal CAR entry and completion for `0x70000`..`0x77FFF`. |
+| **`0x15` / `0x16`** | `POST_ROMSTAGE_START` / `POST_ROMSTAGE_OK` | 32-bit Flash-XIP C `romstage` execution and shadow handoff readiness. |
+| **`0x1F`** | `POST_WARN_SPD_FAIL` | Non-fatal SMBus SPD warning; falls back to safe DRAM timings. |
+| **`0x2E`** | `POST_NOMTRR_BYPASS` | Non-fatal CAR bypass when emulator/host lacks MTRR support (e.g. v86). |
 
----
+If a firmware magic mismatch occurs at `0xF000:0000` (missing `"IPO_Firmware"`), Boot ROM prints a serial COM1 diagnostic and halts cleanly.
 
 ## ⚡ Hardware Troubleshooting Scenarios
 

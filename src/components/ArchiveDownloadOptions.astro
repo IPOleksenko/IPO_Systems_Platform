@@ -25,7 +25,7 @@ const sizes = [...new Map(
     .map((option) => [option.romSize!, { label: option.romSize!, bytes: option.romSizeBytes ?? 0 }])
 ).values()].sort((a, b) => a.bytes - b.bytes);
 const formats = [...new Set(options.map((option) => option.format))];
-const defaultSize = sizes.find((size) => size.label === '4 MB')?.label ?? sizes[0]?.label;
+const defaultSize = sizes.find((size) => size.label === '4 MiB' || size.label === '4 MB')?.label ?? sizes[0]?.label;
 const defaultFormat = formats.includes('ZIP') ? 'ZIP' : formats[0] ?? '';
 const initialOption = options.find((option) =>
   option.format === defaultFormat && (!option.romSize || option.romSize === defaultSize)
@@ -34,28 +34,30 @@ const initialOption = options.find((option) =>
 
 {initialOption && (
   <div class="archive-options" data-options={JSON.stringify(options)} data-downloads-base={downloadsBase}>
-    <div class="archive-options-fields">
-      {sizes.length > 0 && (
-        <label class="archive-options-field">
-          <span>{getTranslation(lang, 'downloads.choose_rom_size')}</span>
-          <select data-rom-size>
-            {sizes.map((size) => (
-              <option value={size.label} selected={size.label === defaultSize}>{size.label}</option>
-            ))}
-          </select>
-        </label>
-      )}
-      {formats.length > 1 && (
-        <label class="archive-options-field">
-          <span>{getTranslation(lang, 'downloads.choose_archive')}</span>
-          <select data-archive-format>
-            {formats.map((format) => (
-              <option value={format} selected={format === defaultFormat}>{format}</option>
-            ))}
-          </select>
-        </label>
-      )}
-    </div>
+    {(sizes.length > 1 || formats.length > 1) && (
+      <div class="archive-options-fields">
+        {sizes.length > 1 && (
+          <label class="archive-options-field">
+            <span>{getTranslation(lang, 'downloads.choose_rom_size')}</span>
+            <select data-rom-size>
+              {sizes.map((size) => (
+                <option value={size.label} selected={size.label === defaultSize}>{size.label}</option>
+              ))}
+            </select>
+          </label>
+        )}
+        {formats.length > 1 && (
+          <label class="archive-options-field">
+            <span>{getTranslation(lang, 'downloads.choose_archive')}</span>
+            <select data-archive-format>
+              {formats.map((format) => (
+                <option value={format} selected={format === defaultFormat}>{format}</option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
+    )}
     <div class="archive-options-action">
       <div class="archive-options-meta" data-option-meta title={`SHA256: ${initialOption.sha256}`}>
         <span class="meta-size">💾 {initialOption.size}</span>
@@ -220,8 +222,9 @@ const initialOption = options.find((option) =>
     if (!meta || !download) return;
 
     const size = sizeSelect?.value;
+    const matchesSize = (option: ArchiveOption) => !sizeSelect || !option.romSize || option.romSize === size;
     const availableFormats = [...new Set(options
-      .filter((option) => !option.romSize || option.romSize === size)
+      .filter(matchesSize)
       .map((option) => option.format))];
     if (formatSelect && !availableFormats.includes(formatSelect.value)) {
       formatSelect.value = availableFormats[0] ?? '';
@@ -229,7 +232,7 @@ const initialOption = options.find((option) =>
     const format = formatSelect?.value ?? availableFormats[0] ?? '';
 
     const selected = options.find((option) =>
-      option.format === format && (!option.romSize || option.romSize === size)
+      option.format === format && matchesSize(option)
     );
     if (!selected) {
       download.removeAttribute('href');

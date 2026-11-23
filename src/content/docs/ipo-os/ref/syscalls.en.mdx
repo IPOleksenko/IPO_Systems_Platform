@@ -1,6 +1,6 @@
 ---
 title: "Complete System Calls Reference"
-description: "Exhaustive reference of all 139 system calls in IPO_OS: call numbers, C signatures, x86 int 0x80 ABI registers, parameters, and error codes."
+description: "Exhaustive reference of all 305 system calls in IPO_OS: call numbers, C signatures, x86 int 0x80 ABI registers, parameters, and error codes."
 ---
 
 import SharedSyscallTable from '../../../../components/SharedSyscallTable.astro';
@@ -37,7 +37,7 @@ When `int 0x80` is triggered, the CPU transfers execution to IDT gate `0x80` (`s
 
 ## 📋 Comprehensive System Calls Table
 
-Below is the complete interactive list of all 139 registered system calls:
+Below is the complete interactive list of all 305 registered system calls:
 
 <SharedSyscallTable />
 
@@ -248,7 +248,7 @@ Inter-process lightweight state sharing:
 - **`0x105A` `IPO_SYSCALL_KEYMAP_GET_NAME`:** Gets layout abbreviation ("EN", "RU", "UA", "ZH").
 - **`0x105B` `IPO_SYSCALL_FONT_GET_INFO`:** Returns font name and glyph count.
 - **`0x105C` `IPO_SYSCALL_VGA_GLYPH`:** Renders custom glyph to screen.
-- **`0x105D` `IPO_SYSCALL_VGA_SET_MODE`:** Switches video mode (0x03=Text, 0x13=VGA 320x200, 0x118=VBE).
+- **`0x105D` `IPO_SYSCALL_VGA_SET_MODE`:** Switches video mode (0x03=Text, 0x13=VGA 320x200, arbitrary LFB/VirGL resolution).
 - **`0x105E` `IPO_SYSCALL_VGA_GET_MODE`:** Queries active video mode.
 
 ---
@@ -349,7 +349,7 @@ Direct hardware text and graphics registers manipulation:
 
 Sound Blaster 16 DSP hardware control and double-buffered audio streaming:
 
-- **`0x10D0` `IPO_SYSCALL_AUDIO_INIT`:** `bool ipo_audio_init(void);` Initializes Sound Blaster 16 DSP, 16-bit DMA Channel 5, and kernel mixer.
+- **`0x10D0` `IPO_SYSCALL_AUDIO_INIT`:** `bool ipo_audio_init(void);` Initializes Audio v2 backends (Intel HDA, AC97, Sound Blaster 16, VirtIO-Sound), and kernel mixer.
 - **`0x10D1` `IPO_SYSCALL_AUDIO_TICK`:** `void ipo_audio_tick(void);` Advances audio playback stream mixer and refills DMA buffers.
 - **`0x10D2` `IPO_SYSCALL_AUDIO_STOP_ALL`:** `void ipo_audio_stop_all(void);` Halts all playing audio streams and stops Sound Blaster 16 DMA.
 - **`0x10D3` `IPO_SYSCALL_AUDIO_STREAM_CREATE`:** `audio_stream_t *ipo_audio_stream_create(int format, int channels, uint32_t sample_rate, const void *data, size_t size);` Creates static memory audio stream.
@@ -378,3 +378,15 @@ Kernel executable registration and binary format dispatch (`binfmt`):
 ## 🛑 Group 16: Process Termination Syscall
 
 - **`0xFFFF` `IPO_SYSCALL_EXIT`:** `void ipo_exit(int status);` Terminates the calling process, releases memory pages, closes open file descriptors, and returns status code to parent.
+
+---
+
+## 🚀 Extended Syscall Subsystems (`0x10F0`–`0x1208` & Net KMD `0x12000`–`0x1200F`)
+
+All 305 active calls are searchable in the interactive table above, covering:
+- **Capability IPC, Pipes & SHM (`0x10F0`–`0x1104`):** Named endpoints, auto-growing unidirectional pipes, async notify events, zero-copy `0xD0000000+` shared memory.
+- **POSIX Signals & Pthreads/Sync (`0x1110`–`0x1130`, `0x1200`–`0x1208`):** `sigaction`, `sigprocmask`, `kill`, `sigaltstack`, kernel-scheduled threads, TLS, `futex`, `clock_gettime`, `nanosleep`, `mmap`/`munmap`/`mprotect`.
+- **Input Hub, PS/2 Hooks, IRQ, MMIO/DMA & PCI (`0x1140`–`0x1183`):** Extended multi-byte keys, custom shortcuts, virtual input devices, raw PS/2 byte hooks, IRQ subscriptions/callbacks, DMA allocation, 64-bit PCI config/BAR access, and Device Registry.
+- **WM Cursor Scale, KMOD/Extensions, SMP & DynMod (`0x1190`–`0x11C8`):** Arbitrary WM cursor sizing, runtime `.kmd` / channel hooks, all-core SMP task submit/wait, live kernel patching (`dynmod`).
+- **Audio v2, HDR GFX & VirGL GPU 3D (`0x11D0`–`0x11F7`):** Multi-backend audio handles/clocks (HDA/AC97/SB16/VirtIO), RGBA64F HDR surface presentation, and VirGL 3D contexts/resources/batches.
+- **Modular Network KMD (`0x12000`–`0x1200F`):** Dynamic socket/TCP/UDP/ICMP/DNS/DHCP syscalls provided by `/drivers/rtl8139`.

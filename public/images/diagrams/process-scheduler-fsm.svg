@@ -7,8 +7,8 @@
   </defs>
 
   <rect width="860" height="480" fill="url(#bgSched)" rx="12"/>
-  <text x="430" y="38" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="#f8fafc" text-anchor="middle">IPO_OS Process Lifecycle &amp; Task Scheduler FSM</text>
-  <text x="430" y="60" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">Round-Robin scheduling • Foreground / Background swapping • VRAM preservation</text>
+  <text x="430" y="38" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="#f8fafc" text-anchor="middle">IPO_OS All-Core SMP Scheduler &amp; Thread FSM</text>
+  <text x="430" y="60" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">SMP scheduling (LAPIC IPI 0xE0) • pthreads/Futex • #PF demand stack • Console buffer isolation</text>
 
   <!-- State: CREATED -->
   <g transform="translate(60, 180)">

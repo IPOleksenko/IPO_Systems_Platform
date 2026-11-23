@@ -19,8 +19,21 @@ jobs:
     name: Build & Verify Documentation
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout main repository
         uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 1
+
+      - name: Configure private repository access
+        env:
+          TOKEN: ${{ secrets.SENSE_THE_GAME_REPO_TOKEN }}
+        run: |
+          if [ -n "$TOKEN" ]; then
+            git config --global \
+              url."https://x-access-token:${TOKEN}@github.com/IPOleksenko/SENSE-The-Game".insteadOf \
+              "https://github.com/IPOleksenko/SENSE-The-Game"
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -31,10 +44,11 @@ jobs:
       - name: Setup Rust WebAssembly target
         uses: dtolnay/rust-toolchain@stable
         with:
+          components: rust-src
           targets: wasm32-unknown-unknown
 
       - name: Install emulator build tools
-        run: sudo apt-get update && sudo apt-get install -y clang make nasm gcc-multilib g++-multilib
+        run: sudo apt-get update && sudo apt-get install -y clang make nasm gcc-multilib g++-multilib default-jre-headless
 
       - name: Install Dependencies
         run: npm ci || npm install
@@ -43,9 +57,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: ${{ runner.os }}-ipo-cache-repos-${{ hashFiles('scripts/build-artifacts.py', 'scripts/prepare-v86.mjs', 'scripts/project_repositories.py', 'patches/v86-mtrr.patch') }}
+          key: ${{ runner.os }}-ipo-cache-${{ hashFiles('.gitmodules', 'scripts/build-artifacts.py', 'scripts/prepare-v86.mjs', 'scripts/project_repositories.py', 'patches/v86-mtrr.patch') }}
           restore-keys: |
-            ${{ runner.os }}-ipo-cache-repos-
+            ${{ runner.os }}-ipo-cache-
 
       - name: Build Astro Site & Search Index
         run: npm run build

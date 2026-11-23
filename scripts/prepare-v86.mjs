@@ -30,13 +30,14 @@ runProjectPythonScript('prepare-installed-disk.py', [
   '--output',
   output,
   '--os-image',
-  path.join(downloads, 'IPO_OS.img'),
+  path.join(downloads, 'IPO_OS.bin'),
   '--application-manifest',
   applicationManifest,
 ]);
 await rm(path.join(output, 'applications.json'), { force: true });
 await rm(path.join(output, 'application-assets'), { recursive: true, force: true });
 await rm(path.join(output, 'IPO_OS.img'), { force: true });
+await rm(path.join(output, 'IPO_OS.bin'), { force: true });
 
 const cachedPatchPath = path.join(root, '.cache', 'v86-mtrr.patch');
 await mkdir(path.dirname(cachedPatchPath), { recursive: true });
@@ -207,13 +208,13 @@ for (const [filename, expectedSize] of [
     throw new Error(`${imagePath} has ${data.length} bytes; expected the complete ${expectedSize}-byte ROM image.`);
   }
   if (filename === 'ipo-boot-rom-1m.bin') {
-    if (!data.subarray(0xF0000, 0xF8000).every((byte) => byte === 0xFF)) {
+    if (!data.subarray(0xF0000, 0xFE000).every((byte) => byte === 0xFF)) {
       throw new Error(`${imagePath} contains a firmware payload; Boot ROM and firmware must remain separate.`);
     }
-    if (!data.subarray(0xFFFF0, 0xFFFF5).equals(Buffer.from([0xEA, 0x00, 0x80, 0x00, 0xF0]))) {
+    if (!data.subarray(0xFFFF0, 0xFFFF5).equals(Buffer.from([0xEA, 0x00, 0xE0, 0x00, 0xF0]))) {
       throw new Error(`${imagePath} has an unexpected IPO_Boot_ROM reset vector.`);
     }
-  } else if (!data.subarray(0x30000, 0x30003).equals(Buffer.from('IPO'))) {
+  } else if (!data.subarray(0x30000, 0x3000C).equals(Buffer.from('IPO_Firmware'))) {
     throw new Error(`${imagePath} is not a complete standalone IPO_Firmware ROM image.`);
   }
   files[filename] = {
@@ -222,7 +223,7 @@ for (const [filename, expectedSize] of [
   };
 }
 
-const osPath = path.join(downloads, 'IPO_OS.img');
+const osPath = path.join(downloads, 'IPO_OS.bin');
 const osDisk = await readFile(osPath);
 if (osDisk[510] !== 0x55 || osDisk[511] !== 0xAA) {
   throw new Error(`${osPath} is not a bootable IPO_OS image.`);

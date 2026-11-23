@@ -14,13 +14,13 @@ Emulators provide instant iteration cycles and cycle-accurate hardware introspec
 
 ## 🚀 Running in QEMU (Primary Development Platform)
 
-QEMU (`qemu-system-i386`) is the reference emulator used during active development.
+QEMU (`qemu-system-x86_64`) is the reference emulator used during active development.
 
 ### Full Command Line Configuration:
 <SharedCode id="qemu-full-stack-run" />
 
 ### Storage Architecture in QEMU:
-- **Drive 0 (`build/IPO_OS.img`):** Contains the MBR bootloader and concatenated kernel binary.
+- **Drive 0 (`build/disks/disk.img`):** Contains the MBR bootloader and concatenated kernel binary.
 - **Drive 1 (`build/disks/disk.img`):** Optional 512 MB raw auxiliary disk image. A newly created image is blank; IPO_OS does not pre-populate it with applications.
 
 ### Networking Options: TAP vs. User Mode
@@ -39,7 +39,7 @@ megs: 2048
 romimage: file=/usr/share/bochs/BIOS-bochs-latest
 vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest
 ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
-ata0-master: type=disk, path="build/IPO_OS.img", mode=flat, cylinders=1024, heads=16, spt=63
+ata0-master: type=disk, path="build/disks/disk.img", mode=flat, cylinders=1024, heads=16, spt=63
 ata0-slave:  type=disk, path="build/disks/disk.img", mode=flat
 pci: enabled=1, chipset=i440fx
 pnic: enabled=1, mac=52:54:00:12:34:56, ethmod=tuntap, ethdev=tap0
@@ -59,7 +59,7 @@ mouse: enabled=1, type=ps2
    - Add **IDE Controller** (PIIX4).
    - Convert raw image to VDI:
      ```bash
-     VBoxManage convertfromraw build/IPO_OS.img build/IPO_OS.vdi --format VDI
+     VBoxManage convertfromraw build/disks/disk.img build/IPO_OS.vdi --format VDI
      ```
    - Attach `IPO_OS.vdi` as Primary Master.
 3. **Мережевий адаптер:**

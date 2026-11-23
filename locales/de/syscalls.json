@@ -55,9 +55,29 @@
     "description": "Ändert den Lese-/Schreib-Cursor-Offset der Datei.",
     "return": "Neue absolute Byte-Position oder negativ bei Fehlschlag"
   },
+  "IPO_SYSCALL_FS_TRUNCATE": {
+    "description": "Kürzt oder erweitert eine Datei auf eine 64-Bit-Bytegröße.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_FS_FTRUNCATE": {
+    "description": "Kürzt oder erweitert einen offenen Dateideskriptor auf eine 64-Bit-Bytegröße.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_FS_MKDIR": {
+    "description": "Erstellt ein neues Verzeichnis auf dem eingehängten IPO_FS-Volume.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_FS_RMDIR": {
+    "description": "Entfernt ein leeres Verzeichnis aus IPO_FS.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_FS_LSEEK64": {
+    "description": "Verschiebt den 64-Bit-Dateioffset von einen offenen Dateideskriptor.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
   "IPO_SYSCALL_EXEC": {
-    "description": "Lädt die ausführbare Binärdatei in einen freien Speicherblock und startet den neuen Prozess.",
-    "return": "PID des erzeugten Prozesses oder negativ bei Fehler"
+    "description": "Führt aus: ELF64/ELF32/flat binary or script from IPO_FS in a new child/sub-process.",
+    "return": "Exit-Code des Programms oder negativer Fehlercode"
   },
   "IPO_SYSCALL_READ": {
     "description": "Liest eine Zeile Benutzereingabe aus dem aktiven Terminal-Tastaturpuffer.",
@@ -151,6 +171,26 @@
     "description": "Prüft, ob das angeforderte Intervall seit start_ms abgelaufen ist.",
     "return": "1 falls Verzögerung abgelaufen, andernfalls 0"
   },
+  "IPO_SYSCALL_RTC_GET_STR": {
+    "description": "Formatiert die aktuelle RTC-Zeit using fmt in out_buf.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_RTC_SET_STR": {
+    "description": "Sets RTC time or date fields from string spec.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_RTC_GET_FORMAT": {
+    "description": "Liest das aktive RTC- time display format string.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_RTC_SET_FORMAT": {
+    "description": "Setzt das Standard-RTC- time display format string.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_RTC_ADD_STR": {
+    "description": "Applies relative offset adjustment to RTC clock/alarm.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
   "IPO_SYSCALL_KEYMAP_SET": {
     "description": "Registriert ein dynamisches Tastaturlayout mit benutzerdefinierten Unicode-Glyphen.",
     "return": "0 bei Erfolg, negativ bei Fehler"
@@ -234,6 +274,50 @@
   "IPO_SYSCALL_FS_STATVFS": {
     "description": "Ruft Dateisystemstatistiken ab: Gesamtzahl/freie Blöcke, Inode-Zustand, Einhänge-Flags.",
     "return": "0 bei Erfolg, ungleich null bei Fehler"
+  },
+  "IPO_SYSCALL_VGA_GET_BOUNDS": {
+    "description": "Fragt ab: physical graphics screen resolution bounds in pixels.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_PORT_IN8": {
+    "description": "Liest einen 8-Bit-Wert vom x86-E/A-Port.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_PORT_OUT8": {
+    "description": "Schreibt einen 8-Bit-Wert in den x86-E/A-Port.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_PORT_IN16": {
+    "description": "Liest einen 16-Bit-Wert vom x86-E/A-Port.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_PORT_OUT16": {
+    "description": "Schreibt einen 16-Bit-Wert in den x86-E/A-Port.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_PORT_IN32": {
+    "description": "Liest einen 32-Bit-Wert vom x86-E/A-Port.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_PORT_OUT32": {
+    "description": "Schreibt einen 32-Bit-Wert in den x86-E/A-Port.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_RTC_GET_DATE_FORMAT": {
+    "description": "Liest das aktive RTC- date format string.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_RTC_SET_DATE_FORMAT": {
+    "description": "Sets RTC date formatting pattern.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_RTC_GET_DATE_STR": {
+    "description": "Formats current RTC date in out_buf.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_RTC_GET_STATUS": {
+    "description": "Liest formatted RTC status summary string.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
   },
   "IPO_SYSCALL_WM_CREATE_WINDOW": {
     "description": "Erstellt und ordnet ein neues GUI-Fenster über den Compositor zu.",
@@ -335,21 +419,13 @@
     "description": "Konfiguriert die Rand-, Schatten- und Eckgeometrie des Fensters.",
     "return": "0"
   },
-  "IPO_SYSCALL_WM_DISPATCH_KEY": {
-    "description": "Leitet Tastaturereignisse an das aktive fokussierte Fenster weiter.",
-    "return": "1 falls verarbeitet, andernfalls 0"
-  },
-  "IPO_SYSCALL_WM_COMPOSE": {
-    "description": "Rendert die Z-geordnete Fensterszene und Overlays in den bereitgestellten Backbuffer.",
-    "return": "0"
+  "IPO_SYSCALL_WM_POLL_EVENT": {
+    "description": "Holt das nächste ausstehende keyboard, mouse, resize, or close Ereignis für ein WM-Fenster.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
   },
   "IPO_SYSCALL_WM_COMPOSITOR_TICK": {
     "description": "Führt einen Aktualisierungszyklus des Fensters-Compositors aus.",
     "return": "0"
-  },
-  "IPO_SYSCALL_WM_SESSION_RUN": {
-    "description": "Führt die blockierende, animierte Fenstermanager-Sitzung aus.",
-    "return": "Keine (kehrt zurück, wenn Sitzung endet)"
   },
   "IPO_SYSCALL_WM_GET_COUNT_PID": {
     "description": "Gibt die Anzahl der Fenster im Besitz eines Prozesses zurück.",
@@ -459,6 +535,10 @@
     "description": "Ruft aktuelle PS/2-Mauskoordinaten, Tasten-Klickzustände und Rad-Delta ab.",
     "return": "0"
   },
+  "IPO_SYSCALL_MOUSE_GET_MOTION": {
+    "description": "Liest accumulated 64-bit mouse delta motion since process attach.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
   "IPO_SYSCALL_VGA_SET_CURSOR": {
     "description": "Setzt die Hardware-CRTC-Textmodus-Cursorposition über die Ports 0x3D4/0x3D5.",
     "return": "0"
@@ -487,9 +567,13 @@
     "description": "Gibt aktuelle VGA-Overlay-Sichtbarkeitsflags für den aktiven Prozess zurück.",
     "return": "Aktuelle Overlay-Flags-Bitmaske"
   },
+  "IPO_SYSCALL_VGA_GET_TEXT_INFO": {
+    "description": "Fragt ab: Hardware- text-mode dimensions (columns/rows) and text VRAM address.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
   "IPO_SYSCALL_AUDIO_INIT": {
-    "description": "Initialisiert den Sound Blaster 16 DSP, DMA-Kanal 5 und den Software-Mixer.",
-    "return": "1 falls Audio-Hardware initialisiert, andernfalls 0"
+    "description": "Initialisiert kernel audio backends (Intel HDA, AC97, Sound Blaster 16, VirtIO-Sound) and software DSP mixer.",
+    "return": "1 wenn Audio-Hardware initialisiert wurde, sonst 0"
   },
   "IPO_SYSCALL_AUDIO_TICK": {
     "description": "Führt Audiowiedergabe-Stream-Mischung fort und füllt DMA-Puffer nach.",
@@ -539,6 +623,18 @@
     "description": "Hängt Pufferdaten in einem Streaming-Ringpuffer an oder aktualisiert sie.",
     "return": "0"
   },
+  "IPO_SYSCALL_AUDIO_SET_FP_CONFIG": {
+    "description": "Configures kernel floating-point audio DSP mixer parameters.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_AUDIO_GET_FP_CONFIG": {
+    "description": "Ruft ab: active floating-point audio DSP configuration.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_AUDIO_GET_STATS": {
+    "description": "Liest audio subsystem buffer, underrun, and Hardware- playback stats.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
   "IPO_SYSCALL_BINFMT_REGISTER": {
     "description": "Registriert dynamischen Handler für Binärformate mit Signaturabgleich und delegiert die Ausführung an einen Interpreter.",
     "return": "0 bei Erfolg oder negativer Fehlercode"
@@ -550,6 +646,574 @@
   "IPO_SYSCALL_BINFMT_LIST": {
     "description": "Listet alle aktuell registrierten dynamischen Binärformat-Handler auf.",
     "return": "Anzahl der aktiven registrierten Binärformat-Handler"
+  },
+  "IPO_SYSCALL_IPC_CREATE": {
+    "description": "Erstellt named IPC message endpoint with capability rights.",
+    "return": "Nicht-negatives Handle bei Erfolg, sonst negativer Fehlercode"
+  },
+  "IPO_SYSCALL_IPC_OPEN": {
+    "description": "Öffnet named IPC-Endpunkt requesting specific access rights.",
+    "return": "Nicht-negatives Handle bei Erfolg, sonst negativer Fehlercode"
+  },
+  "IPO_SYSCALL_IPC_CLOSE": {
+    "description": "Schließt caller process handle to an IPC-Endpunkt.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_IPC_DESTROY": {
+    "description": "Zerstört a named IPC-Endpunkt owned by the caller.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_IPC_SEND": {
+    "description": "Sendet a variable-length IPC message to an endpoint.",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_IPC_RECEIVE": {
+    "description": "Empfängt next message from an IPC-Endpunkt along with sender PID.",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_IPC_PIPE_CREATE": {
+    "description": "Erstellt named or anonymous self-expanding unidirectional IPC-Pipe.",
+    "return": "Nicht-negatives Handle bei Erfolg, sonst negativer Fehlercode"
+  },
+  "IPO_SYSCALL_IPC_PIPE_OPEN": {
+    "description": "Öffnet ein bestehendes named IPC-Pipe with requested read/write rights.",
+    "return": "Nicht-negatives Handle bei Erfolg, sonst negativer Fehlercode"
+  },
+  "IPO_SYSCALL_IPC_PIPE_CLOSE": {
+    "description": "Schließt specified handle rights on an IPC-Pipe.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_IPC_PIPE_DESTROY": {
+    "description": "Zerstört an IPC-Pipe and frees its dynamic ring buffer.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_IPC_PIPE_READ": {
+    "description": "Liest bytes from an IPC-Pipe (blocking or non-blocking).",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_IPC_PIPE_WRITE": {
+    "description": "Schreibt bytes into an IPC-Pipe, growing buffer dynamically as needed.",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_IPC_NOTIFY_SEND": {
+    "description": "Delivers an asynchronous lightweight event notification to target PID.",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_IPC_NOTIFY_WAIT": {
+    "description": "Waits for or polls pending asynchronous IPC notifications.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_IPC_PIPE_POLL": {
+    "description": "Fragt ab: readable bytes and readiness flags on an IPC-Pipe.",
+    "return": "Bereite Bytes / Statusbitmaske oder negativer Wert"
+  },
+  "IPO_SYSCALL_SHM_CREATE": {
+    "description": "Erstellt named Shared-Memory region backed by physical frames.",
+    "return": "Nicht-negatives Handle bei Erfolg, sonst negativer Fehlercode"
+  },
+  "IPO_SYSCALL_SHM_OPEN": {
+    "description": "Öffnet ein bestehendes named Shared-Memory object.",
+    "return": "Nicht-negatives Handle bei Erfolg, sonst negativer Fehlercode"
+  },
+  "IPO_SYSCALL_SHM_ATTACH": {
+    "description": "Bildet ab: Shared-Memory object into process virtual space (0xD0000000+).",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_SHM_DETACH": {
+    "description": "Hebt Abbildung auf für Shared-Memory pages from current process address space.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_SHM_DESTROY": {
+    "description": "Zerstört Shared-Memory region once all attachments are released.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_SIGACTION": {
+    "description": "Installs or queries POSIX-Signal handler and mask for signum.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_SIGPROCMASK": {
+    "description": "Examines or modifies blocked signal mask for the calling thread.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_KILL": {
+    "description": "Sendet POSIX-Signal sig to process pid.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_SIGALTSTACK": {
+    "description": "Configures alternate signal handler stack for the calling thread.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_THREAD_CREATE": {
+    "description": "Spawns a new kernel-scheduled POSIX-Thread sharing process address space.",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_THREAD_EXIT": {
+    "description": "Terminates calling thread and stores join return value.",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_THREAD_JOIN": {
+    "description": "Blocks until target thread tid exits and retrieves its return value.",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_THREAD_SELF": {
+    "description": "Gibt zurück: kernel thread ID (TID) of calling thread.",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_THREAD_SYNC": {
+    "description": "Führt aus: kernel-backed synchronization primitive (mutex, condvar, semaphore, rwlock, barrier).",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_INPUT_POLL_KEY_EXT": {
+    "description": "Polls extended multi-byte/UTF keyboard event record.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_INPUT_GET_KEY_STATE": {
+    "description": "Fragt ab: real-time pressed state of keycode.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_INPUT_GET_MODIFIERS": {
+    "description": "Gibt zurück: unified modifier bitmask (Shift, Ctrl, Alt, Super, Locks).",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_SHORTCUT_REGISTER": {
+    "description": "Registriert a global or app-scoped custom hotkey combination.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_SHORTCUT_UNREGISTER": {
+    "description": "Hebt Registrierung auf für a previously registered shortcut ID.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_SHORTCUT_POLL": {
+    "description": "Polls triggered custom shortcut events for caller PID.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_INPUT_DEV_REGISTER": {
+    "description": "Registriert a custom input Gerät (touchpad, gamepad, tablet) in input hub.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_INPUT_DEV_UNREGISTER": {
+    "description": "Hebt Registrierung auf für an input Gerät by ID.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_INPUT_DEV_EMIT": {
+    "description": "Injects a Hardware-/virtual input event from a driver into OS event queue.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_INPUT_DEV_LIST": {
+    "description": "Enumerates registered input Geräts and capabilities.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_INPUT_DEV_POLL_EVENT": {
+    "description": "Polls queued events for all or filtered input Gerät ID.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_INPUT_DEV_GET_STATE": {
+    "description": "Liest current axis/button value for a registered input Gerät.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_MOUSE_INJECT": {
+    "description": "Injects synthetic or HID mouse delta/absolute pointer coordinates.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_INPUT_SET_HOTKEY_MODE": {
+    "description": "Configures per-process hotkey interception policy (default vs pass-through).",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_INPUT_GET_HOTKEY_MODE": {
+    "description": "Gibt zurück: active hotkey interception mode flags for current process.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_PS2_HOOK_REGISTER": {
+    "description": "Registriert low-level PS/2 channel byte observer hook for external drivers.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_PS2_HOOK_UNREGISTER": {
+    "description": "Removes a PS/2 byte hook by handle.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_PS2_HOOK_POLL": {
+    "description": "Drains captured PS/2 controller bytes from hook queue.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_PS2_TRANSACT": {
+    "description": "Führt aus: atomic PS/2 AUX/keyboard controller command transaction.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_IRQ_SUBSCRIBE": {
+    "description": "Abonniert a process/driver to poll notification on Hardware- IRQ line.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_IRQ_UNSUBSCRIBE": {
+    "description": "Kündigt Abonnement für from a Hardware- IRQ subscription handle.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_IRQ_POLL": {
+    "description": "Polls Hardware- IRQ firing count and last timestamp.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_IRQ_GET_COUNT": {
+    "description": "Gibt zurück: total interrupt count observed on IRQ line.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_IRQ_REGISTER_CB": {
+    "description": "Registriert a callback IRQ handler with kernel IRQ dispatcher.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_IRQ_UNREGISTER_CB": {
+    "description": "Hebt Registrierung auf für a callback IRQ handler.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_HW_MAP_MMIO": {
+    "description": "Bildet ab: physical PCI/MMIO Gerät registers into caller virtual space.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_HW_UNMAP_MMIO": {
+    "description": "Hebt Abbildung auf für previously mapped Gerät MMIO aperture.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_HW_ALLOC_DMA": {
+    "description": "Allokiert physically contiguous aligned DMA buffer and returns physical address.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_HW_FREE_DMA": {
+    "description": "Gibt frei: a DMA buffer allocated via ipo_hw_alloc_dma.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_HW_VIRT_TO_PHYS": {
+    "description": "Übersetzt virtual buffer address to physical RAM address for DMA descriptors.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_PCI_GET_COUNT": {
+    "description": "Gibt zurück: total number of discovered PCI Geräts.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_PCI_GET_DEVICE": {
+    "description": "Liest PCI Gerät coordinates, IDs, IRQ, and dynamic BAR list by index.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_PCI_CONFIG_READ": {
+    "description": "Liest 8/16/32-bit PCI configuration space register.",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_PCI_CONFIG_WRITE": {
+    "description": "Schreibt 8/16/32-bit PCI configuration space register.",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_PCI_ENABLE_BUS_MASTER": {
+    "description": "Aktiviert PCI Command Bus Master & Memory/I/O decode bits for DMA.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_DEV_GET_COUNT": {
+    "description": "Gibt zurück: total nodes registered in unified Device Registry.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_DEV_GET_INFO": {
+    "description": "Ruft ab: metadata, resources, and driver binding for Gerät index.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_DEV_REGISTER": {
+    "description": "Registriert a new Gerät node from external driver.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_DEV_UNREGISTER": {
+    "description": "Hebt Registrierung auf für a user-owned Gerät node by ID.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_WM_SET_CURSOR_VISIBLE": {
+    "description": "Shows or hides WM software mouse cursor when win is focused.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_WM_GET_CURSOR_VISIBLE": {
+    "description": "Fragt ab: cursor visibility flag for window win.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_WM_GET_SCREEN_BOUNDS": {
+    "description": "Gibt zurück: active Window Manager physical desktop dimensions in pixels.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_WM_SET_CURSOR_SCALE": {
+    "description": "Sets global WM pixel cursor width and height (arbitrary pixel scale).",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_WM_GET_CURSOR_SCALE": {
+    "description": "Liest current global WM cursor dimensions in pixels.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_KMOD_LOAD": {
+    "description": "Lädt bare-metal .kmd kernel module from IPO_FS path into Ring 0.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_KMOD_UNLOAD": {
+    "description": "Runs module cleanup() and unloads loaded .kmd by name.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_KMOD_COUNT": {
+    "description": "Gibt zurück: number of currently loaded kernel modules.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_KMOD_LOAD_MEM": {
+    "description": "Lädt bare-metal .kmd module directly from memory buffer into kernel.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_EXT_REGISTER": {
+    "description": "Registriert a hot-swappable kernel/userland extension service.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_EXT_UNREGISTER": {
+    "description": "Hebt Registrierung auf für an extension service by ID.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_EXT_CALL": {
+    "description": "Invokes operation op on registered extension by name.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_EXT_LIST": {
+    "description": "Listet auf: active registered extensions.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_CHAN_LIST": {
+    "description": "Listet auf: universal raw data channels (e.g. 'eth0') and TX/RX stats.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_CHAN_TX": {
+    "description": "Transmits raw frame directly over registered channel chan_id.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_CHAN_RX": {
+    "description": "Polls next matching EtherType frame from channel subscription.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_CHAN_SUB": {
+    "description": "Abonniert to frames matching ethertype on channel chan_id.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_CHAN_UNSUB": {
+    "description": "Kündigt Abonnement für from universal data channel subscription.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_EXT_UPDATE": {
+    "description": "Hot-swaps ops/version of an active registered extension.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_SMP_GET_COUNT": {
+    "description": "Gibt zurück: total ACPI MADT CPU count and optional online core count.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_SMP_GET_INFO": {
+    "description": "Liest per-CPU SMP metrics (LAPIC ID, ticks, tasks executed/queued).",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_SMP_SUBMIT": {
+    "description": "Dispatches parallel work item to target CPU or SMP_CPU_ANY via LAPIC IPI.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_SMP_WAIT": {
+    "description": "Waits for SMP worker task completion and collects result.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_SMP_CURRENT": {
+    "description": "Gibt zurück: logical CPU ID (and optional LAPIC ID) running caller.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_DYNMOD_AUTH": {
+    "description": "Authorizes caller PID for runtime kernel symbol/patch introspection.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_DYNMOD_RESOLVE": {
+    "description": "Resolves live kernel symbol address from ksyms table.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_DYNMOD_READ": {
+    "description": "Liest kernel memory range under dynmod authorization.",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_DYNMOD_WRITE_VAR": {
+    "description": "Modifies authorized kernel variable with rollback patch tracking.",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_DYNMOD_HOOK_FUNC": {
+    "description": "Installs live trampoline hook onto a kernel function.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_DYNMOD_HOOK_SYSCALL": {
+    "description": "Hooks active syscall dispatcher entry dynamically.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_DYNMOD_RESTORE": {
+    "description": "Reverts a dynamic kernel patch or trampoline hook by ID.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_DYNMOD_LIST": {
+    "description": "Listet auf: active dynamic kernel hooks and patches.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_DYNMOD_COMPUTE_DEMO": {
+    "description": "Invokes live-patchable reference computation function for dynmod testing.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_AUDIO_API_VERSION": {
+    "description": "Gibt zurück: IPO Audio v2 ABI version.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_AUDIO_GET_DEV_COUNT": {
+    "description": "Gibt zurück: count of active Hardware-/virtual audio Geräts.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_AUDIO_GET_DEV_INFO": {
+    "description": "Fragt ab: audio backend capabilities (HDA, AC97, SB16, VirtIO-Sound).",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_AUDIO_OPEN": {
+    "description": "Öffnet PCM/float audio playback or capture stream handle.",
+    "return": "Nicht-negatives Handle bei Erfolg, sonst negativer Fehlercode"
+  },
+  "IPO_SYSCALL_AUDIO_CLOSE": {
+    "description": "Schließt open audio handle and releases Hardware- buffers.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_AUDIO_WRITE": {
+    "description": "Schreibt PCM samples into audio handle playback ring.",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_AUDIO_READ": {
+    "description": "Captures PCM samples from input audio handle.",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_AUDIO_HANDLE_PAUSE": {
+    "description": "Pauses or resumes playback on audio handle.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_AUDIO_HANDLE_SET_VOL": {
+    "description": "Sets per-handle linear gain volume (0.0..1.0+).",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_AUDIO_HANDLE_CLOCK": {
+    "description": "Fragt ab: sample-accurate A/V sync playback clock for handle.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_AUDIO_STREAM_CLOCK": {
+    "description": "Fragt ab: monotonic frame clock on legacy audio_stream_t.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_AUDIO_SET_MASTER_VOL": {
+    "description": "Sets left/right master mixer Hardware- volume.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_AUDIO_GET_MASTER_VOL": {
+    "description": "Liest left/right master mixer volume.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GFX_API_VERSION": {
+    "description": "Gibt zurück: IPO GFX RGBA64F/HDR pipeline API version.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GFX_GET_CAPS": {
+    "description": "Fragt ab: display Hardware- capabilities, LFB geometry, and HDR formats.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GFX_ENUM_MODES": {
+    "description": "Enumerates supported display resolutions and pixel formats.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GFX_SET_MODE": {
+    "description": "Switches physical linear framebuffer video mode (arbitrary resolution).",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GFX_GET_MODE": {
+    "description": "Gibt zurück: active display mode dimensions, pitch, and color encoding.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GFX_SELECT_FORMAT": {
+    "description": "Negotiates optimal render and Hardware- pixel formats.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GFX_PRESENT_WINDOW": {
+    "description": "Blits/tone-maps RGBA64F/32-bit surface directly into a WM window.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GFX_PRESENT_SCREEN": {
+    "description": "Presents a full-screen surface with dithering/format conversion.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GFX_GET_STATS": {
+    "description": "Ruft ab: frame presentation counts and conversion stats.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GFX_GET_PALETTE32": {
+    "description": "Synchronizes 256-entry XRGB8888 palette with kernel compositor.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GFX_BGA_OP": {
+    "description": "Fragt ab: Bochs/QEMU BGA display adapter state and LFB base.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GPU_GET_INFO": {
+    "description": "Fragt ab: VirtIO-GPU / VirGL 3D backend capabilities and limits.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GPU_SET_MODE": {
+    "description": "Toggles between Hardware- VirGL 3D and software 3D fallback.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GPU_CTX_CREATE": {
+    "description": "Erstellt Hardware- 3D VirGL rendering context.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GPU_CTX_DESTROY": {
+    "description": "Zerstört a VirGL rendering context owned by caller.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GPU_RES_CREATE": {
+    "description": "Creates GPU vertex/index/uniform buffer, 2D texture, or render target.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GPU_RES_UPLOAD": {
+    "description": "Uploads buffer/texture pixel data into GPU resource memory.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GPU_RES_DESTROY": {
+    "description": "Zerstört GPU resource object and frees backing allocation.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_GPU_SUBMIT_BATCH": {
+    "description": "Submits Hardware- 3D command batch (draw, blit, clear, present) to VirGL.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_THREAD_DETACH": {
+    "description": "Detaches thread so resources reclaim automatically upon exit.",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_THREAD_SET_TLS": {
+    "description": "Sets Thread-Local Storage base pointer (FS/GS or TCB register).",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_THREAD_GET_TLS": {
+    "description": "Gibt zurück: Thread-Local Storage base pointer for calling thread.",
+    "return": "Übertragene Bytes/Elemente (>= 0) oder negativer Fehlercode"
+  },
+  "IPO_SYSCALL_CLOCK_GETTIME": {
+    "description": "Liest realtime or monotonic nanosecond-resolution kernel clock.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_NANOSLEEP": {
+    "description": "Pausiert den aufrufenden Thread for specified seconds + nanoseconds.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_FUTEX": {
+    "description": "Performs fast userspace mutex FUTEX_WAIT / FUTEX_WAKE operation.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_MMAP": {
+    "description": "Bildet ab: anonymous virtuelle Seiten with READ/WRITE/EXEC protections.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_MUNMAP": {
+    "description": "Hebt Abbildung auf für virtual memory range created by ipo_mmap().",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
+  },
+  "IPO_SYSCALL_MPROTECT": {
+    "description": "Changes page protection flags (PROT_READ/WRITE/EXEC) on mapped range.",
+    "return": "0 bei Erfolg, negativer Fehlercode bei Fehlschlag"
   },
   "IPO_SYSCALL_EXIT": {
     "description": "Beendet den aufrufenden Prozess, gibt Speicher frei und führt Kontextwechsel durch.",

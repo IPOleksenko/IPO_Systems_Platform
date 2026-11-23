@@ -11,9 +11,9 @@ The current IPO_OS build creates a boot image, an auxiliary data disk, and a bla
 
 | Artifact | Build target | Contents |
 | :--- | :--- | :--- |
-| `build/IPO_OS.img` | `make image` | MBR bootloader, kernel image, and padding. With the current default MBR geometry it is at least 128 MiB; a larger kernel-sector requirement can increase the size. It is separate from the 512 MiB data disk. |
+| `build/disks/disk.img` | `make image` | MBR bootloader, kernel image, and padding. With the current default MBR geometry it is at least 128 MiB; a larger kernel-sector requirement can increase the size. It is separate from the 512 MiB data disk. |
 | `build/disks/disk.img` | `make disks` | Separate, blank 512 MiB auxiliary raw disk. IPO_OS does not pre-populate it with applications. |
-| `build/disks/disk.iso` | `make disks` | Separate, blank 5 MiB raw image attached as a virtual CD-ROM by the Makefile's QEMU run target. It is not a populated ISO filesystem. |
+| `build/disks/disk.img` | `make disks` | Separate, blank 5 MiB raw image attached as a virtual CD-ROM by the Makefile's QEMU run target. It is not a populated ISO filesystem. |
 
 
 
@@ -26,5 +26,5 @@ The current IPO_OS source tree no longer includes `disk_editor.py` or host-side 
 ## Physical Media
 
 <Callout type="caution" title="The boot image is not a complete Live USB">
-`build/IPO_OS.img` contains the bootloader and kernel only; the auxiliary data disk is a separate artifact. Do not treat the boot image as the former combined 512 MiB image or expect it to contain a prepared IPO_FS volume.
+`build/disks/disk.img` contains the bootloader and kernel only; the auxiliary data disk is a separate artifact. Do not treat the boot image as the former combined 512 MiB image or expect it to contain a prepared IPO_FS volume.
 </Callout>

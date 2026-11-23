@@ -89,15 +89,14 @@ export function getRealArtifacts(): { artifacts: Artifact[]; buildDate: string }
   // Base fallback structure if manifest does not exist
   if (artifacts.length === 0) {
     const bootromSizes = [
-      ['64k', '64 KB', 64 * 1024],
-      ['128k', '128 KB', 128 * 1024],
-      ['256k', '256 KB', 256 * 1024],
-      ['512k', '512 KB', 512 * 1024],
-      ['1m', '1 MB', 1024 * 1024],
-      ['2m', '2 MB', 2 * 1024 * 1024],
-      ['4m', '4 MB', 4 * 1024 * 1024],
-      ['8m', '8 MB', 8 * 1024 * 1024],
-      ['16m', '16 MB', 16 * 1024 * 1024]
+      ['128k', '128 KiB', 128 * 1024],
+      ['256k', '256 KiB', 256 * 1024],
+      ['512k', '512 KiB', 512 * 1024],
+      ['1m', '1 MiB', 1024 * 1024],
+      ['2m', '2 MiB', 2 * 1024 * 1024],
+      ['4m', '4 MiB', 4 * 1024 * 1024],
+      ['8m', '8 MiB', 8 * 1024 * 1024],
+      ['16m', '16 MiB', 16 * 1024 * 1024]
     ] as const;
     artifacts = [
       {
@@ -108,16 +107,16 @@ export function getRealArtifacts(): { artifacts: Artifact[]; buildDate: string }
         archive_group: 'ipo-system-bundle',
         archive_format: 'ZIP',
         featured: true,
-        description: 'All compiled binaries across the platform: Boot ROM (bootrom.bin), Firmware (firmware.bin), IPO_OS kernel image (IPO_OS.img), clean and pre-installed disks (disk-clean.img, disk-installed.img), and pre-compiled applications package (applications.zip).',
+        description: 'All compiled binaries across the platform: Boot ROM (bootrom.bin), Firmware (firmware.bin), IPO_OS kernel binary (IPO_OS.bin), clean and pre-installed disks (disk-clean.img, disk-installed.img), and pre-compiled applications, drivers, headers, and assets package (applications.zip).',
         size_formatted: '0 B',
         sha256: 'Pre-compiled release'
       },
       {
         id: 'ipo-os-raw',
-        file: 'IPO_OS.img',
-        name: 'IPO_OS Kernel Bootable Image',
+        file: 'IPO_OS.bin',
+        name: 'IPO_OS Kernel Bootable Binary',
         category: 'os',
-        description: 'Raw 32-bit bootable image containing IPO_OS kernel (LBA 0 bootloader + kernel binary).',
+        description: 'Raw bootable binary containing the Stage1/MBR bootloader and IPO_OS kernel (linked at 0x100000).',
         size_formatted: '0 B',
         sha256: 'Pre-compiled release'
       },

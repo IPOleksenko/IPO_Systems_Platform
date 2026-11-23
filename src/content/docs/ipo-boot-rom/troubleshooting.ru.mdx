@@ -11,16 +11,16 @@ import Callout from '../../../components/Callout.astro';
 
 ---
 
-## 🛑 Расшифровка кодов ошибок порта 0x80
+## 🛑 Коды диагностики и предупреждений порта 0x80
 
-| Hex-код | Обозначение | Причина и способ устранения |
+| Hex-код | Константа | Назначение и поведение |
 | :--- | :--- | :--- |
-| **`0x2E`** | `POST_ERR_NO_CAR` | Defined CAR setup failure code; this does not establish that the current code performs an MTRR capability check. |
-| **`0x3E`** | `POST_ERR_UNKNOWN_CS` | Defined constant; current code reports raw PCI host-bridge IDs and does not reject unknown IDs. |
-| **`0x4E`** | `POST_ERR_DRAM_FAIL` | Defined constant; current MRC configures DRAM controller registers and does not run a pattern test. |
-| **`0x7E`** | `POST_ERR_FW_MAGIC` | Defined constant; current mismatch handling reports a diagnostic and halts without emitting POST code `0x7E`; check the payload at `0xF000:0000`. |
+| **`0x12` / `0x13`** | `POST_CAR_START` / `POST_CAR_OK` | Старт и готовность стека 32 КиБ CAR (`0x70000`..`0x77FFF`). |
+| **`0x15` / `0x16`** | `POST_ROMSTAGE_START` / `POST_ROMSTAGE_OK` | Вход и завершение 32-битного Flash-XIP C этапа `romstage`. |
+| **`0x1F`** | `POST_WARN_SPD_FAIL` | Нефатальное предупреждение SMBus SPD: применяются безопасные тайминги. |
+| **`0x2E`** | `POST_NOMTRR_BYPASS` | Безопасный обход CAR при отсутствии аппаратных MTRR (например, v86). |
 
----
+При несовпадении 12-байтной сигнатуры `"IPO_Firmware"` по адресу `0xF000:0000` Boot ROM выводит сообщение в COM1 и останавливается.
 
 ## ⚡ Аппаратные сценарии диагностики
 

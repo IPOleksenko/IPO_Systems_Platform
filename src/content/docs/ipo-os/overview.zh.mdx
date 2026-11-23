@@ -38,7 +38,7 @@ Modern operating systems often hide hardware interactions behind millions of lin
 ## 🚫 Non-Goals and Explicit Scope Limitations
 
 To preserve architectural clarity and stability, IPO_OS intentionally avoids:
-- **64-bit Long Mode:** The system is explicitly targeted at 32-bit protected mode.
+- **Full Hardware Parity (x86-64 / x86):** Supports 64-bit Long Mode (PML4/LA57) with 32-bit fallback. The system is explicitly targeted at 32-bit protected mode.
 - **Complex Multi-User Trees:** Focuses on single-operator workstation and embedded controller environments.
 - **Microkernel Message Passing:** Avoids IPC messaging overhead in core driver loops.
 

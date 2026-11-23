@@ -8,7 +8,7 @@ import Callout from '../../../components/Callout.astro';
 
 # System Overview & Philosophy
 
-**IPO_OS** is an independent, bare-metal operating system engineered for the **x86 32-bit (IA-32 / i386 / i686)** processor architecture. Built entirely from scratch, it targets PC-AT compatible personal computers, embedded hardware platforms, and virtual machines without reliance on third-party kernel code or bloated abstraction runtimes.
+**IPO_OS** is an independent, bare-metal operating system supporting **64-bit x86-64 Long Mode (4-level PML4 / 5-level LA57 paging)** with automatic **32-bit Protected Paged Mode fallback**. Built entirely from scratch, it targets PC-AT compatible personal computers, embedded hardware platforms, and virtual machines without reliance on third-party kernel code or bloated abstraction runtimes.
 
 <Callout type="beginners" title="Why build a bare-metal OS?">
 Modern operating systems often hide hardware interactions behind millions of lines of legacy abstractions. IPO_OS strips away opacity: every hardware interrupt, memory block, disk extent, and network frame has an explicit, traceable path from silicon to screen.
@@ -25,22 +25,21 @@ Modern operating systems often hide hardware interactions behind millions of lin
 3. **Multi-Disk Storage Pool with WAL & Extent-Based Filesystem:**
    Rather than relying on legacy FAT12/16 filesystems, IPO_OS introduces **IPO_FS** — a 64-bit extent-based file system backed by a persistent multi-disk **Storage Pool** (`storage_pool_t`) with redundant primary/backup superblocks (LBA 2030 & 2039, CRC32) and an 8-sector **Write-Ahead Logging (WAL)** transaction journal (LBA 2031–2038).
 4. **Symmetric Multiprocessing (SMP):**
-   Full multi-core x86 initialization via Local APIC (`0xFEE00000`), dynamic ACPI RSDP/RSDT/MADT and Intel MP table discovery, Application Processor (AP) boot via `INIT-SIPI-SIPI` at physical trampoline `0x8000`, atomic `spinlock_t` synchronization, and cross-core IPIs (`0xE0`).
+   Full multi-core x86 initialization via Local APIC (`0xFEE00000`), dynamic ACPI RSDP/RSDT/MADT and Intel MP table discovery, Application Processor (AP) boot via `INIT-SIPI-SIPI` at physical trampoline `0x8000` (mailbox `0x8180`–`0x81A7`), `spinlock_t` synchronization, and all-core scheduler broadcast IPIs (`0xE0`).
 5. **Relocatable Kernel Modules (KMOD) & Dynamic Buffers:**
    Runtime loading of relocatable `.kmd` kernel modules (`IKMD` magic) linked against ~1,700 exported kernel symbols (`generate_ksyms.py`), a Unified Hardware Device Registry (`device.c`), and kernel-wide elimination of fixed-size array limits in favor of self-expanding heap buffers (`krealloc`).
 6. **Autonomous Bare-Metal Networking:**
-   Includes a native, self-contained **TCP/IP stack** with a full RFC 793/RFC 9293 state machine, RTL8139 PCI NIC driver (with dynamically expanding `rx_packet_buf`), and a BSD-like Socket API.
+   Includes a native, self-contained **TCP/IP stack** with a full RFC 793/RFC 9293 state machine, modular network driver `/drivers/rtl8139` supporting RTL8139, Intel E1000, and VirtIO-Net over Ethernet/ARP/IPv4/ICMP/TCP/UDP/DHCP/DNS and 16 Net KMD syscalls (`0x12000`–`0x1200F`).
 7. **Integrated Graphical and Console Environment:**
-   Provides both an 80x25 VGA teletype console with Cyrillic font loading and a managed Window Manager (WM) with Bochs VBE/BGA graphics acceleration and TinyGL 3D rasterization.
+   Provides an arbitrary-resolution CRTC console (`cols×rows` from hardware, unlimited glyph sizing via `malloc`) and an RGBA64F HDR Window Manager (WM) with VirtIO-GPU VirGL hardware 3D acceleration, Bochs BGA LFB, and Audio v2 (Intel HDA, AC97, Sound Blaster 16, VirtIO-Sound).
 
 ---
 
 ## 🚫 Non-Goals and Explicit Scope Limitations
 
 To preserve architectural clarity and stability, IPO_OS intentionally avoids:
-- **64-bit Long Mode:** The system is explicitly targeted at 32-bit protected mode.
 - **Complex Multi-User Trees:** Focuses on single-operator workstation and embedded controller environments.
-- **Microkernel Message Passing:** Avoids IPC messaging overhead in core driver loops.
+- **Heavyweight Linux Compatibility Emulation:** Focuses on clean native/POSIX abstractions (305 syscalls including IPC, SHM, pipes, signals, pthreads, futex, and mmap) without legacy Linux bloat.
 
 ---
 

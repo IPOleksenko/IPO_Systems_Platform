@@ -39,7 +39,7 @@
   <g filter="url(#shadow)">
     <rect x="70" y="100" width="760" height="75" rx="8" fill="url(#appGrad)" stroke="#fcd34d" stroke-width="1.5"/>
     <text x="100" y="132" font-family="system-ui, sans-serif" font-size="17" font-weight="700" fill="#ffffff">Userspace Applications (Ring 3)</text>
-    <text x="100" y="156" font-family="system-ui, sans-serif" font-size="13" fill="#fef3c7">Base: 0x800000 • ELF32 • LibC • Shell • Window Manager (WM) GUI • DOOM • MicroPython • Sockets</text>
+    <text x="100" y="156" font-family="system-ui, sans-serif" font-size="13" fill="#fef3c7">Heap: 0x10000000+ • C/C++20 • LibC • WM GUI • Links • VirGL 3D • GCC/TCC • Python/Lua • /drivers/*</text>
     <rect x="720" y="115" width="90" height="26" rx="4" fill="#78350f"/>
     <text x="765" y="132" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#fef3c7" text-anchor="middle">USER MODE</text>
   </g>
@@ -47,17 +47,17 @@
   <!-- Contract Arrow: Syscalls -->
   <path d="M 450 175 L 450 205" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="4,4"/>
   <polygon points="445,205 450,215 455,205" fill="#38bdf8"/>
-  <rect x="360" y="183" width="180" height="20" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1"/>
-  <text x="450" y="197" font-family="monospace" font-size="10.5" fill="#38bdf8" font-weight="600" text-anchor="middle">INT 0x80 (Syscall Gate)</text>
+  <rect x="330" y="183" width="240" height="20" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1"/>
+  <text x="450" y="197" font-family="monospace" font-size="10.5" fill="#38bdf8" font-weight="600" text-anchor="middle">INT 0x80 (305 Syscalls)</text>
 
   <!-- Layer 4: IPO_OS Kernel -->
   <g filter="url(#shadow)">
     <rect x="70" y="215" width="760" height="100" rx="8" fill="url(#osGrad)" stroke="#60a5fa" stroke-width="1.5"/>
-    <text x="100" y="247" font-family="system-ui, sans-serif" font-size="17" font-weight="700" fill="#ffffff">IPO_OS 32-bit Monolithic Kernel (Ring 0)</text>
-    <text x="100" y="271" font-family="system-ui, sans-serif" font-size="13" fill="#dbeafe">Entry: 0x10000 • Stack: 0x500000 • Physical Memory Manager • Round-Robin Scheduler</text>
-    <text x="100" y="293" font-family="system-ui, sans-serif" font-size="13" fill="#bfdbfe">VFS Extent Engine (IPO_FS) • ATA PIO • RTL8139 PCI NIC • TCP/IP IPv4 Stack • VGA/VBE</text>
+    <text x="100" y="247" font-family="system-ui, sans-serif" font-size="17" font-weight="700" fill="#ffffff">IPO_OS Hybrid Kernel (Ring 0 — Long Mode / 32-bit Fallback)</text>
+    <text x="100" y="271" font-family="system-ui, sans-serif" font-size="13" fill="#dbeafe">Entry: 0x100000 • LA57/PML4 + PAE • All-Core SMP (0xE0 IPI) • pthreads/Signals/Futex/IPC</text>
+    <text x="100" y="293" font-family="system-ui, sans-serif" font-size="13" fill="#bfdbfe">IPO_FS + WAL • ATA/AHCI/VirtIO-Blk • Bare-Metal .kmd • VirtIO-GPU/VirGL 3D • Audio</text>
     <rect x="720" y="230" width="90" height="26" rx="4" fill="#1e3a8a"/>
-    <text x="765" y="247" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#93c5fd" text-anchor="middle">PROTECTED</text>
+    <text x="765" y="247" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#93c5fd" text-anchor="middle">HYBRID 64/32</text>
   </g>
 
   <!-- Contract 3 Arrow: MBR Handover -->
@@ -70,8 +70,8 @@
   <g filter="url(#shadow)">
     <rect x="70" y="355" width="760" height="90" rx="8" fill="url(#fwGrad)" stroke="#c084fc" stroke-width="1.5"/>
     <text x="100" y="387" font-family="system-ui, sans-serif" font-size="17" font-weight="700" fill="#ffffff">IPO_Firmware (BIOS Compatibility Runtime)</text>
-    <text x="100" y="411" font-family="system-ui, sans-serif" font-size="13" fill="#ede9fe">Execution: Shadow RAM 0xF000:0004 • Real Mode 16-bit • IVT (INT 10h–1Ah) • BDA (0x400) • EBDA</text>
-    <text x="100" y="431" font-family="system-ui, sans-serif" font-size="13" fill="#ddd6fe">Fast A20 Gate (0x92) • E820 SMAP • Multi-bus Storage Probing (ATA, AHCI, NVMe, USB EHCI)</text>
+    <text x="100" y="411" font-family="system-ui, sans-serif" font-size="13" fill="#ede9fe">Shadow RAM 0xF000:000C • IVT (INT 10h–1Ah) • BDA (0x400) • Dynamic ACPI 1.0 (RSDP/MADT)</text>
+    <text x="100" y="431" font-family="system-ui, sans-serif" font-size="13" fill="#ddd6fe">SMP INIT-SIPI-SIPI • Dynamic E820 • PCI BARs (0..7) • ATA / AHCI / NVMe / USB EHCI</text>
     <rect x="720" y="370" width="90" height="26" rx="4" fill="#4c1d95"/>
     <text x="765" y="387" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#c4b5fd" text-anchor="middle">REAL MODE</text>
   </g>
@@ -79,15 +79,15 @@
   <!-- Contract 2 Arrow: Boot ROM Handover -->
   <path d="M 450 445 L 450 475" stroke="#34d399" stroke-width="2.5" stroke-dasharray="4,4"/>
   <polygon points="445,475 450,485 455,475" fill="#34d399"/>
-  <rect x="290" y="453" width="320" height="20" rx="4" fill="#0f172a" stroke="#34d399" stroke-width="1"/>
-  <text x="450" y="467" font-family="monospace" font-size="10.5" fill="#6ee7b7" font-weight="600" text-anchor="middle">Contract 2: Handover (0xF000:0004, 'IPO')</text>
+  <rect x="275" y="453" width="350" height="20" rx="4" fill="#0f172a" stroke="#34d399" stroke-width="1"/>
+  <text x="450" y="467" font-family="monospace" font-size="10.5" fill="#6ee7b7" font-weight="600" text-anchor="middle">Contract 2: Handover (0xF000:000C, 'IPO_Firmware')</text>
 
   <!-- Layer 2: IPO_Boot_ROM -->
   <g filter="url(#shadow)">
     <rect x="70" y="485" width="760" height="85" rx="8" fill="url(#romGrad)" stroke="#34d399" stroke-width="1.5"/>
     <text x="100" y="517" font-family="system-ui, sans-serif" font-size="17" font-weight="700" fill="#ffffff">IPO_Boot_ROM (Cold Silicon Reset Initializer)</text>
-    <text x="100" y="541" font-family="system-ui, sans-serif" font-size="13" fill="#d1fae5">Reset Vector: 0xFFFFFFF0 • Cache-as-RAM (MTRR NEM) • Chipset Probe (i440FX vs Q35)</text>
-    <text x="100" y="559" font-family="system-ui, sans-serif" font-size="13" fill="#a7f3d0">MRC DRAM Controller Training • 8259 PIC / 8254 PIT • PAM Shadow RAM Copy & Lock (RO)</text>
+    <text x="100" y="541" font-family="system-ui, sans-serif" font-size="13" fill="#d1fae5">Reset 0xFFFFFFF0 -&gt; 0xF000:E000 • 32 KiB CAR (0x70000..0x77FFF) • .car_bypass (0x2E)</text>
+    <text x="100" y="559" font-family="system-ui, sans-serif" font-size="13" fill="#a7f3d0">32-bit Flash-XIP C romstage + SPD DRAM • 56 KiB Bank Copy + PAM0 Read-Only Lock</text>
     <rect x="720" y="500" width="90" height="26" rx="4" fill="#064e3b"/>
     <text x="765" y="517" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#6ee7b7" text-anchor="middle">SPI FLASH</text>
   </g>

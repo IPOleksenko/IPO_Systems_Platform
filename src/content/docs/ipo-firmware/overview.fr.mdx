@@ -8,7 +8,7 @@ import Callout from '../../../components/Callout.astro';
 
 # Vue d'ensemble & Architecture
 
-**IPO_Firmware** is an independent, bare-metal x86 System BIOS implementation. Operating in the traditional 64 KB motherboard shadow memory space (`0xF0000`..`0xFFFFF`), it bridges low-level hardware initialization and the système d'exploitation bootloader.
+**IPO_Firmware** is an independent, bare-metal x86 System BIOS implementation. Operating in the traditional 56 KiB Firmware bank (`0xF0000`..`0xFDFFF`, keeping the 8 KiB Boot ROM bootblock at `0xFE000`..`0xFFFFF`, plus dynamic ACPI tables below TOLUD), it bridges low-level hardware initialization and the système d'exploitation bootloader.
 
 ---
 
@@ -20,7 +20,7 @@ import Callout from '../../../components/Callout.astro';
 
 ## 🚪 Entry Point & Contract 2 Interface
 
-IPO_Firmware is entered from **IPO_Boot_ROM** at physical address `0xF000:0004` (Contract 2) after the DRAM controller has been trained and PAM shadow memory has been locked read-only.
+IPO_Firmware is entered from **IPO_Boot_ROM** at physical address `0xF000:000C` (Contract 2) after the DRAM controller has been trained and PAM shadow memory has been locked read-only.
 
 At entry:
 - Processor executes in **16-bit Mode réel**.

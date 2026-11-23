@@ -235,14 +235,6 @@ kbd {
   box-sizing: border-box;
 }
 
-.archive-options-select-static {
-  opacity: 1 !important;
-  color: var(--text-primary) !important;
-  cursor: default !important;
-  background-color: var(--bg-secondary) !important;
-  border: 1px solid var(--border-color) !important;
-}
-
 .card-badge {
   white-space: nowrap !important;
   flex-shrink: 0 !important;

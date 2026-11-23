@@ -15,10 +15,10 @@ import Callout from '../../../components/Callout.astro';
 
 | Hex-код | Обозначення | Причина та способ устранения |
 | :--- | :--- | :--- |
-| **`0x2E`** | `POST_ERR_NO_CAR` | Defined CAR setup failure code; this does not establish that the current code performs an MTRR capability check. |
-| **`0x3E`** | `POST_ERR_UNKNOWN_CS` | Defined constant; current code reports raw PCI host-bridge IDs and does not reject unknown IDs. |
-| **`0x4E`** | `POST_ERR_DRAM_FAIL` | Defined constant; current MRC configures DRAM controller registers and does not run a pattern test. |
-| **`0x7E`** | `POST_ERR_FW_MAGIC` | Defined constant; current mismatch handling reports a diagnostic and halts without emitting POST code `0x7E`; check the payload at `0xF000:0000`. |
+| **`0x2E`** | `POST_NOMTRR_BYPASS` (non-fatal CAR bypass) | Defined CAR setup failure code; this does not establish that the current code performs an MTRR capability check. |
+| **`0x15`** | `POST_ROMSTAGE_START` | Defined constant; current code reports raw PCI host-bridge IDs and does not reject unknown IDs. |
+| **`0x16`** | `POST_ROMSTAGE_OK` | Defined constant; current MRC configures DRAM controller registers and does not run a pattern test. |
+| **`0x1F`** | `POST_WARN_SPD_FAIL` | Defined constant; current mismatch handling reports a diagnostic and halts without emitting POST code `0x1F`; check the payload at `0xF000:0000`. |
 
 ---
 

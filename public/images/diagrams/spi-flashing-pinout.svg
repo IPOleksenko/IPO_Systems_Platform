@@ -8,7 +8,7 @@
 
   <rect width="840" height="500" fill="url(#bgSpi)" rx="12"/>
   <text x="420" y="38" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="#f8fafc" text-anchor="middle">SPI Flash SOIC-8 / DIP-8 Pinout &amp; CH341A Wiring</text>
-  <text x="420" y="60" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">Hardware flashing hookup for 256KB Boot ROM images (W25Q32 / W25Q64)</text>
+  <text x="420" y="60" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">Hardware flashing hookup for Boot ROM images (default 4 MiB, IEC W25Q32 / W25Q64)</text>
 
   <!-- Chip Body -->
   <g transform="translate(300, 100)">
@@ -16,7 +16,7 @@
     <circle cx="120" cy="30" r="14" fill="#0f172a" stroke="#475569"/>
     <text x="120" y="160" font-family="monospace" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">SPI FLASH</text>
     <text x="120" y="185" font-family="sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">SOIC-8 / 208mil</text>
-    <text x="120" y="205" font-family="monospace" font-size="11" fill="#38bdf8" text-anchor="middle">256 KB - 16 MB</text>
+    <text x="120" y="205" font-family="monospace" font-size="11" fill="#38bdf8" text-anchor="middle">128 KiB - 16 MiB</text>
 
     <!-- Dot for Pin 1 -->
     <circle cx="30" cy="40" r="5" fill="#f59e0b"/>

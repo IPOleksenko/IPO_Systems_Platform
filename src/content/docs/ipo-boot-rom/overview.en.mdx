@@ -31,7 +31,7 @@ When an x86 processor comes out of reset (RESET# pin de-asserted):
 Top of 4 GB Memory Space
 0xFFFFFFFF +------------------------------------------+
            | 16-byte Reset Vector Area                |
-0xFFFFFFF0 |  -> jmp bootrom_cold_entry (0xFFFF8000)  |  <- CPU starts here
+0xFFFFFFF0 |  -> jmp 0xF000:E000 (8 KiB bootblock)  |  <- CPU starts here
            +------------------------------------------+
            | Physical SPI Flash ROM Contents          |
            | (IPO_Boot_ROM binary payload)            |
@@ -43,8 +43,8 @@ Top of 4 GB Memory Space
 ## 🎯 Primary Responsibilities
 
 1. **CPU Identification:** Read and report the CPU brand using CPUID; the current code does not perform an architecture-compatibility check.
-2. **Cache-as-RAM (CAR):** Configure CPU MTRRs to establish an execution stack in L1/L2 cache without requiring DRAM.
+2. **32 KiB Cache-as-RAM (CAR) & XIP C `romstage`:** Configures MTRRs for a 32 KiB CAR window (`0x70000`..`0x77FFF`, or triggers non-halting `.car_bypass` `0x2E` on emulators without MTRRs) and enters the 32-bit Flash-XIP C `romstage` (`POST 0x15`..`0x16`).
 3. **Dynamic CPU and Host Bridge Identification:** Report the CPU brand from CPUID and read the Host Bridge vendor, device, and revision from PCI Bus 0, Device 0, Function 0 (`0xCF8`/`0xCFC`). Detection uses runtime values rather than a hardcoded ID list; i440FX (`0x8086:0x1237`) and Q35 (`0x8086:0x29C0`) are examples.
-4. **Memory Reference Code (MRC):** Read the memory size from CMOS extended-memory registers (falling back to 64 MB when unavailable) and configure the host bridge's DRAM registers. The current implementation does not perform memory pattern training.
-5. **Shadow RAM Configuration:** Unlock Programmable Attribute Map (PAM) registers, copy firmware payload to `0xF0000`..`0xFFFFF`, lock as read-only.
-6. **Contract 2 Handover:** Verify firmware magic signature `'IPO'` (`0x004F5049`) and jump to `0xF000:0004`.
+4. **Memory Reference Code (MRC):** Read the memory size from CMOS extended-memory registers (falling back to 64 MB when unavailable) and configure the host bridge's DRAM registers. SMBus SPD detection logs a non-fatal warning (`POST 0x1F`) if absent and applies safe timings without a destructive pattern test.
+5. **Shadow RAM Configuration:** Unlock Programmable Attribute Map (PAM) registers, copy firmware payload to `0xF0000`..`0xFDFFF`, lock as read-only.
+6. **Contract 2 Handover:** Verify firmware magic signature `'IPO_Firmware'` (`0x4F504920 ('IPO_Firmware' 12B)`) and jump to `0xF000:000C`.

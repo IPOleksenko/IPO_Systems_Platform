@@ -520,6 +520,8 @@ const otherArtifactGroups = artifactGroups.filter((group) => group.id !== featur
 </style>
 
 <script>
+  import { bindDialogBackdropClose } from '../utils/dialog';
+
   function setupDownloadModal() {
     const dialog = document.getElementById('downloads-dialog') as HTMLDialogElement | null;
     const openBtns = document.querySelectorAll('.open-downloads-btn, #open-downloads-btn, .open-download-modal-btn');
@@ -528,28 +530,23 @@ const otherArtifactGroups = artifactGroups.filter((group) => group.id !== featur
     if (!dialog) return;
 
     openBtns.forEach((btn) => {
-      btn.addEventListener('click', (e) => {
+      const el = btn as HTMLElement;
+      if (el.dataset.downloadOpenBound === 'true') return;
+      el.dataset.downloadOpenBound = 'true';
+      el.addEventListener('click', (e) => {
         e.preventDefault();
         dialog.showModal();
       });
     });
 
-    closeBtn?.addEventListener('click', () => {
-      dialog.close();
-    });
-
-    dialog.addEventListener('click', (e) => {
-      const rect = dialog.getBoundingClientRect();
-      const isInDialog = (
-        rect.top <= e.clientY &&
-        e.clientY <= rect.top + rect.height &&
-        rect.left <= e.clientX &&
-        e.clientX <= rect.left + rect.width
-      );
-      if (!isInDialog) {
+    if (closeBtn && closeBtn.dataset.downloadCloseBound !== 'true') {
+      closeBtn.dataset.downloadCloseBound = 'true';
+      closeBtn.addEventListener('click', () => {
         dialog.close();
-      }
-    });
+      });
+    }
+
+    bindDialogBackdropClose(dialog);
   }
 
   setupDownloadModal();

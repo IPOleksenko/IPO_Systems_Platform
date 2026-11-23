@@ -31,7 +31,7 @@ When an x86 processor comes out of reset (RESET# pin de-asserted):
 Top of 4 GB Memory Space
 0xFFFFFFFF +------------------------------------------+
            | 16-byte Reset Vector Area                |
-0xFFFFFFF0 |  -> jmp bootrom_cold_entry (0xFFFF8000)  |  <- CPU starts here
+0xFFFFFFF0 |  -> jmp bootrom_cold_entry (0xF000:E000)  |  <- CPU starts here
            +------------------------------------------+
            | Physical SPI Flash ROM Contents          |
            | (IPO_Boot_ROM binary payload)            |
@@ -46,5 +46,5 @@ Top of 4 GB Memory Space
 2. **Cache-as-RAM (CAR):** Configure CPU MTRRs to establish an execution stack in L1/L2 cache without requiring DRAM.
 3. **Dynamic CPU and Host Bridge Identification:** Report the CPU brand from CPUID and read the Host Bridge vendor, device, and revision from PCI Bus 0, Device 0, Function 0 (`0xCF8`/`0xCFC`). Detection uses runtime values rather than a hardcoded ID list; i440FX (`0x8086:0x1237`) and Q35 (`0x8086:0x29C0`) are examples.
 4. **Memory 技術リファレンス Code (MRC):** Read the memory size from CMOS extended-memory registers (falling back to 64 MB when unavailable) and configure the host bridge's DRAM registers. The current implementation does not perform memory pattern training.
-5. **シャドウRAM Configuration:** Unlock Programmable Attribute Map (PAM) registers, copy firmware payload to `0xF0000`..`0xFFFFF`, lock as read-only.
-6. **Contract 2 Handover:** Verify firmware magic signature `'IPO'` (`0x004F5049`) and jump to `0xF000:0004`.
+5. **シャドウRAM Configuration:** Unlock Programmable Attribute Map (PAM) registers, copy firmware payload to `0xF0000`..`0xFDFFF`, lock as read-only.
+6. **Contract 2 Handover:** Verify firmware magic signature `'IPO_Firmware'` (`0x4F504920 ('IPO_Firmware' 12B)`) and jump to `0xF000:000C`.

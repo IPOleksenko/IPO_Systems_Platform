@@ -29,8 +29,8 @@
   <g transform="translate(350, 60)">
     <rect width="240" height="70" rx="6" fill="#065f46" stroke="#10b981" stroke-width="1.5"/>
     <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#6ee7b7">PHASE 2: CACHE-AS-RAM</text>
-    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">MTRR NEM Configuration</text>
-    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#a7f3d0">Stack at 0x7000:8000</text>
+    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">MTRR NEM / Bypass (0x2E)</text>
+    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#a7f3d0">32 KiB CAR: 0x70000..0x77FFF</text>
   </g>
 
   <!-- Arrow -->
@@ -40,9 +40,9 @@
   <!-- Step 3 -->
   <g transform="translate(640, 60)">
     <rect width="230" height="70" rx="6" fill="#065f46" stroke="#10b981" stroke-width="1.5"/>
-    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#6ee7b7">PHASE 3: MRC TRAINING</text>
-    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">i440FX / Q35 PCI Probing</text>
-    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#a7f3d0">DRAM Pattern: 0x55AA55AA</text>
+    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#6ee7b7">PHASE 3: XIP ROMSTAGE</text>
+    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">i440FX / Q35 + SMBus SPD</text>
+    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#a7f3d0">Cold DRAM Probe &amp; R/W Test</text>
   </g>
 
   <!-- Downward Arrow -->
@@ -53,8 +53,8 @@
   <g transform="translate(60, 208)">
     <rect width="240" height="70" rx="6" fill="#4c1d95" stroke="#8b5cf6" stroke-width="1.5"/>
     <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#c4b5fd">CONTRACT 2: FIRMWARE</text>
-    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">jmp 0xF000:0004</text>
-    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#ddd6fe">PAM Shadow RAM (Read-Only)</text>
+    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">jmp 0xF000:000C</text>
+    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#ddd6fe">56 KiB Bank Shadow Copy + PAM RO</text>
   </g>
 
   <!-- Arrow -->
@@ -64,9 +64,9 @@
   <!-- Step 5 -->
   <g transform="translate(350, 208)">
     <rect width="240" height="70" rx="6" fill="#4c1d95" stroke="#8b5cf6" stroke-width="1.5"/>
-    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#c4b5fd">BIOS SERVICES &amp; A20</text>
-    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">IVT INT 10h-1Ah • BDA 0x400</text>
-    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#ddd6fe">Fast A20 Gate Port 0x92</text>
+    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#c4b5fd">ACPI 1.0, SMP &amp; BIOS</text>
+    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">IVT • BDA • RSDP + MADT</text>
+    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#ddd6fe">Fast A20 (0x92) • PCI BAR Alloc</text>
   </g>
 
   <!-- Arrow -->
@@ -77,7 +77,7 @@
   <g transform="translate(640, 208)">
     <rect width="230" height="70" rx="6" fill="#4c1d95" stroke="#8b5cf6" stroke-width="1.5"/>
     <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#c4b5fd">MULTI-BUS DISCOVERY</text>
-    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">ATA • AHCI • NVMe • USB</text>
+    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">ATA • AHCI • NVMe • EHCI</text>
     <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#ddd6fe">INT 13h AH=42h LBA 0 Read</text>
   </g>
 
@@ -100,9 +100,9 @@
   <!-- Step 8 -->
   <g transform="translate(350, 356)">
     <rect width="240" height="70" rx="6" fill="#1e3a8a" stroke="#3b82f6" stroke-width="1.5"/>
-    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#93c5fd">STAGE 2 &amp; PROTECTED MODE</text>
+    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#93c5fd">STAGE 2 &amp; MODE SWITCH</text>
     <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">Load GDT • CR0 |= 1</text>
-    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#bfdbfe">DAP read to Phys 0x10000</text>
+    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#bfdbfe">DAP read to Phys 0x100000</text>
   </g>
 
   <!-- Arrow -->
@@ -112,9 +112,9 @@
   <!-- Step 9 -->
   <g transform="translate(640, 356)">
     <rect width="230" height="70" rx="6" fill="#1e3a8a" stroke="#3b82f6" stroke-width="1.5"/>
-    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#93c5fd">KERNEL32.C INITIALIZATION</text>
-    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">kmain() at 0x10000</text>
-    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#bfdbfe">Stack: 0x500000 (5 MB)</text>
+    <text x="12" y="24" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#93c5fd">KERNEL INITIALIZATION</text>
+    <text x="12" y="44" font-family="monospace" font-size="11" fill="#f8fafc">kmain() at 0x100000</text>
+    <text x="12" y="58" font-family="sans-serif" font-size="11" fill="#bfdbfe">x86-64 LA57 / 32-bit + All-Core SMP</text>
   </g>
 
   <!-- Downward Arrow -->
@@ -122,10 +122,10 @@
   <polygon points="456,496 460,504 464,496" fill="#f59e0b"/>
 
   <!-- Final Step -->
-  <g transform="translate(200, 504)">
-    <rect width="520" height="85" rx="8" fill="#78350f" stroke="#f59e0b" stroke-width="1.5"/>
-    <text x="260" y="28" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#fef3c7" text-anchor="middle">IPO_OS OPERATIONAL STATE</text>
-    <text x="260" y="50" font-family="system-ui, sans-serif" font-size="12" fill="#ffffff" text-anchor="middle">IPO_FS Mounted at LBA 2048 • RTL8139 TCP/IP Ready • Audio Startup Chord (C6-E6-G6-C7)</text>
-    <text x="260" y="70" font-family="monospace" font-size="11" fill="#fde68a" text-anchor="middle">Interactive Shell / GUI WM Running • Apps loaded at 0x800000</text>
+  <g transform="translate(180, 504)">
+    <rect width="560" height="85" rx="8" fill="#78350f" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="280" y="28" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#fef3c7" text-anchor="middle">IPO_OS OPERATIONAL STATE</text>
+    <text x="280" y="50" font-family="system-ui, sans-serif" font-size="12" fill="#ffffff" text-anchor="middle">IPO_FS + Storage Pool/WAL • External /drivers/* (.kmd) • VirtIO-GPU &amp; VirGL 3D • Audio</text>
+    <text x="280" y="70" font-family="monospace" font-size="11" fill="#fde68a" text-anchor="middle">Shell (33 Built-ins) • Dynamic WM Compositor • Apps Heap 0x10000000+</text>
   </g>
 </svg>

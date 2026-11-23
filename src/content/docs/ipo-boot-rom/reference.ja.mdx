@@ -14,7 +14,7 @@ This reference specifies the binary handover contract between **IPO_Boot_ROM** a
 
 ## 📋 Port 0x80 POST Diagnostic Codes
 
-`contract.inc` defines these codes. Current boot stages emit only `0x12` (CAR start) and `0x13` (CAR OK) as normal progress; many other milestone constants are defined but not emitted. Treat this as a reference to defined codes, not a runtime trace:
+`contract.inc` defines these codes. Current boot stages emit `0x12` (CAR start), `0x13` (32 KiB CAR ready), `0x15` (XIP C romstage entry), `0x16` (romstage OK), `0x1F` (SMBus SPD warning), and `0x2E` (MTRR absent — `.car_bypass` fallback) as normal progress; many other milestone constants are defined but not emitted. Treat this as a reference to defined codes, not a runtime trace:
 
 <SharedStruct id="bootrom_post_codes" />
 
@@ -29,15 +29,15 @@ The firmware payload must reside at segment `0xF000` with this exact 16-byte hea
 
 ```
 Address         Offset   Field          Value
-0x000F0000      0x00     magic          0x004F5049 ("IPO" in ASCII)
-0x000F0004      0x04     entry_point    Firmware initialization code begins directly here
+0x000F0000      0x00     magic          0x4F504920 ('IPO_Firmware' 12B) ("IPO" in ASCII)
+0x000F000C      0x04     entry_point    Firmware initialization code begins directly here
 ```
 
-### 2. CPU State at Handover Jump (`0xF000:0004`)
+### 2. CPU State at Handover Jump (`0xF000:000C`)
 
 | Register | Expected State at Entry |
 | :--- | :--- |
-| **`CS:IP`** | `0xF000:0x0004` (リアルモード segment addressing) |
+| **`CS:IP`** | `0xF000:0x000C` (リアルモード segment addressing) |
 | **`EAX`** | Unspecified by the Contract 2 handover. |
 | **`EBX`** | Unspecified by the Contract 2 handover. |
 | **`SS:SP`** | `0x0000:0x7C00` |

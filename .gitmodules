@@ -1,0 +1,12 @@
+[submodule "repos/IPO_Firmware"]
+	path = repos/IPO_Firmware
+	url = https://github.com/IPOleksenko/IPO_Firmware.git
+[submodule "repos/IPO_Boot_ROM"]
+	path = repos/IPO_Boot_ROM
+	url = https://github.com/IPOleksenko/IPO_Boot_ROM.git
+[submodule "repos/IPO_OS"]
+	path = repos/IPO_OS
+	url = https://github.com/IPOleksenko/IPO_OS.git
+[submodule "repos/IPO_OS_Software"]
+	path = repos/IPO_OS_Software
+	url = https://github.com/IPOleksenko/IPO_OS_Software.git

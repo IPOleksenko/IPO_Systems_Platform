@@ -52,6 +52,6 @@ Offset      Size    Field               Content
 0x0008      1 B     checksum            Additive 8-bit checksum for RSDP
 0x0009      6 B     oem_id              "IPO   "
 0x000F      1 B     revision            0 (ACPI 1.0)
-0x0010      4 B     rsdt_address        Physical pointer to RSDT table (0x0009FC40)
+0x0010      4 B     rsdt_address        Physical pointer to RSDT table (SCRATCH_ACPI_BASE (below TOLUD))
 0x0014      44 B    reserved            Internal storage driver queues
 ```

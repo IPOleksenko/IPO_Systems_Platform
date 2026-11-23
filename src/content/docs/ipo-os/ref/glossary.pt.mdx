@@ -22,7 +22,7 @@ A boot technique where the CPU's internal L1/L2 caches are configured as tempora
 The inter-layer interface contract defining handover from hardware reset (`0xFFFFFFF0`) to the Boot ROM entry point.
 
 ### Contract 2
-The binary handover contract where **IPO_Boot_ROM** transfers control to **IPO_Firmware** at physical address `0xF000:0004` after DRAM initialization and PAM shadowing. The firmware header uses the magic signature `'IPO'` (`0x004F5049`).
+The binary handover contract where **IPO_Boot_ROM** transfers control to **IPO_Firmware** at physical address `0xF000:000C` after DRAM initialization and PAM shadowing. The firmware header uses the magic signature `'IPO_Firmware'` (`0x4F504920 ('IPO_Firmware' 12B)`).
 
 ### Contract 3
 The classic PC BIOS boot contract where **IPO_Firmware** transfers control to the operating system bootloader by loading sector 0 (MBR) to `0x0000:7C00` with register `DL` set to the boot drive ID and verifying magic `0x55AA`.
@@ -61,7 +61,7 @@ Model-specific CPU registers that define cacheability attributes (Write-Back, Wr
 Chipset registers controlling read and write permissions to the shadow BIOS memory region (`0x000C0000`..`0x000FFFFF`).
 
 ### PMM (Physical Memory Manager)
-Memory allocation architecture in IPO_OS: BIOS E820 descriptors are passed at `0x6000` with an `e820_map_header_t` header at `0x8FE0` (`'E820'`), the kernel heap is managed via `kmalloc` (64 MB at `0x01000000`–`0x04FFFFFF`), page frames (`memory_map_alloc`) start at `0x05000000+`, and dynamic process heaps (`sbrk`) are partitioned into isolated physical slots starting at `0x08000000` (`USER_HEAP_START`) with 256 MB dynamic stride.
+Memory allocation architecture in IPO_OS: BIOS E820 descriptors are passed at `0x6000` with an `e820_map_header_t` header at `0x8FE0` (`'E820'`), the kernel heap is managed via `kmalloc` (64 MB at `0x04000000`–`0x07FFFFFF`), page frames (`memory_map_alloc`) start at `0x08000000+`, and dynamic process heaps (`sbrk`) are partitioned into isolated physical slots starting at `0x10000000` (`USER_HEAP_START`) with 256 MB dynamic stride.
 
 ### TSS (Task State Segment)
 Legacy x86 hardware task structure. In IPO_OS's flat protected mode model, context switching and system call dispatch are implemented in software routines without hardware TSS stack switching.

@@ -55,9 +55,29 @@
     "description": "修改文件读/写光标偏移量。",
     "return": "新的绝对字节位置，失败时返回负值"
   },
+  "IPO_SYSCALL_FS_TRUNCATE": {
+    "description": "截断或扩展 a file at path to a 64-bit byte size.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_FS_FTRUNCATE": {
+    "description": "截断或扩展 an open file descriptor to a 64-bit byte size.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_FS_MKDIR": {
+    "description": "在挂载的 IPO_FS 卷上创建新目录。 on the mounted IPO_FS volume.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_FS_RMDIR": {
+    "description": "从 IPO_FS 删除空目录。 from IPO_FS.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_FS_LSEEK64": {
+    "description": "Repositions the 64-bit file offset of an open file descriptor.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
   "IPO_SYSCALL_EXEC": {
-    "description": "将可执行二进制文件加载到分配的空闲内存块中并分派新进程。",
-    "return": "生成进程的 PID，出错时返回负值"
+    "description": "执行 ELF64/ELF32/flat binary or script from IPO_FS in a new child/sub-process.",
+    "return": "程序退出码或负错误码"
   },
   "IPO_SYSCALL_READ": {
     "description": "从活动终端键盘缓冲区读取一行用户输入。",
@@ -151,6 +171,26 @@
     "description": "检查自 start_ms 起请求的时间间隔是否已过。",
     "return": "如果延迟时间已过则为 1，否则为 0"
   },
+  "IPO_SYSCALL_RTC_GET_STR": {
+    "description": "Formats current RTC time using fmt into out_buf.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_RTC_SET_STR": {
+    "description": "设置 RTC time or date fields from string spec.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_RTC_GET_FORMAT": {
+    "description": "读取 active RTC time display format string.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_RTC_SET_FORMAT": {
+    "description": "设置 default RTC time display format string.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_RTC_ADD_STR": {
+    "description": "Applies relative offset adjustment to RTC clock/alarm.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
   "IPO_SYSCALL_KEYMAP_SET": {
     "description": "注册带有自定义 Unicode 字形的动态键盘布局。",
     "return": "成功时为 0，出错时返回负值"
@@ -234,6 +274,50 @@
   "IPO_SYSCALL_FS_STATVFS": {
     "description": "获取文件系统统计信息：总/可用块、inode 健康状态、挂载标志。",
     "return": "成功时为 0，出错时返回非零值"
+  },
+  "IPO_SYSCALL_VGA_GET_BOUNDS": {
+    "description": "查询 physical graphics screen resolution bounds in pixels.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_PORT_IN8": {
+    "description": "读取 an 8-bit value from x86 I/O port.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_PORT_OUT8": {
+    "description": "写入 an 8-bit value to x86 I/O port.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_PORT_IN16": {
+    "description": "读取 a 16-bit value from x86 I/O port.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_PORT_OUT16": {
+    "description": "写入 a 16-bit value to x86 I/O port.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_PORT_IN32": {
+    "description": "读取 a 32-bit value from x86 I/O port.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_PORT_OUT32": {
+    "description": "写入 a 32-bit value to x86 I/O port.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_RTC_GET_DATE_FORMAT": {
+    "description": "读取 active RTC date format string.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_RTC_SET_DATE_FORMAT": {
+    "description": "设置 RTC date formatting pattern.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_RTC_GET_DATE_STR": {
+    "description": "Formats current RTC date into out_buf.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_RTC_GET_STATUS": {
+    "description": "读取 formatted RTC status summary string.",
+    "return": "成功返回 0，失败返回负错误码"
   },
   "IPO_SYSCALL_WM_CREATE_WINDOW": {
     "description": "通过合成器创建并分配新的 GUI 窗口。",
@@ -335,21 +419,13 @@
     "description": "配置窗口的边框、阴影和圆角几何属性。",
     "return": "0"
   },
-  "IPO_SYSCALL_WM_DISPATCH_KEY": {
-    "description": "将键盘事件转发到当前聚焦的活动窗口。",
-    "return": "如果已处理则为 1，否则为 0"
-  },
-  "IPO_SYSCALL_WM_COMPOSE": {
-    "description": "将按 Z 序排列的窗口场景和叠加层渲染到提供的后备缓冲区中。",
-    "return": "0"
+  "IPO_SYSCALL_WM_POLL_EVENT": {
+    "description": "Pops next pending keyboard, mouse, resize, or close event for a WM window.",
+    "return": "成功返回 0，失败返回负错误码"
   },
   "IPO_SYSCALL_WM_COMPOSITOR_TICK": {
     "description": "运行一次窗口合成器更新周期。",
     "return": "0"
-  },
-  "IPO_SYSCALL_WM_SESSION_RUN": {
-    "description": "运行阻塞式的动画窗口管理器会话。",
-    "return": "无（会话结束时返回）"
   },
   "IPO_SYSCALL_WM_GET_COUNT_PID": {
     "description": "返回由指定进程拥有的窗口数量。",
@@ -459,6 +535,10 @@
     "description": "获取当前 PS/2 鼠标坐标、按键点击状态和滚轮增量。",
     "return": "0"
   },
+  "IPO_SYSCALL_MOUSE_GET_MOTION": {
+    "description": "读取 accumulated 64-bit mouse delta motion since process attach.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
   "IPO_SYSCALL_VGA_SET_CURSOR": {
     "description": "通过端口 0x3D4/0x3D5 设置硬件 CRTC 文本模式光标位置。",
     "return": "0"
@@ -487,9 +567,13 @@
     "description": "返回活动进程的当前 VGA 叠加层可见性标志。",
     "return": "当前叠加层标志位掩码"
   },
+  "IPO_SYSCALL_VGA_GET_TEXT_INFO": {
+    "description": "查询 硬件 text-mode dimensions (columns/rows) and text VRAM address.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
   "IPO_SYSCALL_AUDIO_INIT": {
-    "description": "初始化 Sound Blaster 16 DSP、DMA 通道 5 和软件混音器。",
-    "return": "如果音频硬件已初始化则为 1，否则为 0"
+    "description": "初始化 kernel audio backends (Intel HDA, AC97, Sound Blaster 16, VirtIO-Sound) and software DSP mixer.",
+    "return": "音频硬件初始化成功返回 1，否则返回 0"
   },
   "IPO_SYSCALL_AUDIO_TICK": {
     "description": "推进音频播放流混音器并重新填充 DMA 缓冲区。",
@@ -539,6 +623,18 @@
     "description": "追加或更新流式环形缓冲区中的缓冲区数据。",
     "return": "0"
   },
+  "IPO_SYSCALL_AUDIO_SET_FP_CONFIG": {
+    "description": "Configures kernel floating-point audio DSP mixer parameters.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_AUDIO_GET_FP_CONFIG": {
+    "description": "Retrieves active floating-point audio DSP configuration.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_AUDIO_GET_STATS": {
+    "description": "读取 audio subsystem buffer, underrun, and 硬件 playback stats.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
   "IPO_SYSCALL_BINFMT_REGISTER": {
     "description": "注册具有签名匹配的动态可执行二进制格式处理程序，将非本机执行委托给解释器。",
     "return": "成功时为 0，或返回负错误码"
@@ -550,6 +646,574 @@
   "IPO_SYSCALL_BINFMT_LIST": {
     "description": "枚举并列出当前注册的所有动态二进制格式处理程序。",
     "return": "当前注册的活动二进制格式处理程序数量"
+  },
+  "IPO_SYSCALL_IPC_CREATE": {
+    "description": "创建 a named IPC message endpoint with capability rights.",
+    "return": "成功返回非负句柄/端点 ID，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IPC_OPEN": {
+    "description": "打开 a named IPC endpoint requesting specific access rights.",
+    "return": "成功返回非负句柄/端点 ID，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IPC_CLOSE": {
+    "description": "关闭 caller process handle to an IPC endpoint.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IPC_DESTROY": {
+    "description": "销毁 a named IPC endpoint owned by the caller.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IPC_SEND": {
+    "description": "发送 a variable-length IPC message to an endpoint.",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IPC_RECEIVE": {
+    "description": "接收 next message from an IPC endpoint along with sender PID.",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IPC_PIPE_CREATE": {
+    "description": "创建 a named or anonymous self-expanding unidirectional IPC pipe.",
+    "return": "成功返回非负句柄/端点 ID，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IPC_PIPE_OPEN": {
+    "description": "打开 an existing named IPC pipe with requested read/write rights.",
+    "return": "成功返回非负句柄/端点 ID，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IPC_PIPE_CLOSE": {
+    "description": "关闭 specified handle rights on an IPC pipe.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IPC_PIPE_DESTROY": {
+    "description": "销毁 an IPC pipe and frees its dynamic ring buffer.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IPC_PIPE_READ": {
+    "description": "读取 bytes from an IPC pipe (blocking or non-blocking).",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IPC_PIPE_WRITE": {
+    "description": "写入 bytes into an IPC pipe, growing buffer dynamically as needed.",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IPC_NOTIFY_SEND": {
+    "description": "Delivers an asynchronous lightweight event notification to target PID.",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IPC_NOTIFY_WAIT": {
+    "description": "Waits for or polls pending asynchronous IPC notifications.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IPC_PIPE_POLL": {
+    "description": "查询 readable bytes and readiness flags on an IPC pipe.",
+    "return": "可读字节数 / 就绪掩码，无效句柄返回负值"
+  },
+  "IPO_SYSCALL_SHM_CREATE": {
+    "description": "创建 a named 共享内存 region backed by physical frames.",
+    "return": "成功返回非负句柄/端点 ID，失败返回负错误码"
+  },
+  "IPO_SYSCALL_SHM_OPEN": {
+    "description": "打开 an existing named 共享内存 object.",
+    "return": "成功返回非负句柄/端点 ID，失败返回负错误码"
+  },
+  "IPO_SYSCALL_SHM_ATTACH": {
+    "description": "映射 共享内存 object into process virtual space (0xD0000000+).",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_SHM_DETACH": {
+    "description": "取消映射 共享内存 pages from current process address space.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_SHM_DESTROY": {
+    "description": "销毁 共享内存 region once all attachments are released.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_SIGACTION": {
+    "description": "Installs or queries POSIX signal handler and mask for signum.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_SIGPROCMASK": {
+    "description": "Examines or modifies blocked signal mask for the calling thread.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_KILL": {
+    "description": "发送 POSIX signal sig to process pid.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_SIGALTSTACK": {
+    "description": "Configures alternate signal handler stack for the calling thread.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_THREAD_CREATE": {
+    "description": "Spawns a new kernel-scheduled POSIX thread sharing process address space.",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_THREAD_EXIT": {
+    "description": "Terminates calling thread and stores join return value.",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_THREAD_JOIN": {
+    "description": "Blocks until target thread tid exits and retrieves its return value.",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_THREAD_SELF": {
+    "description": "返回 kernel thread ID (TID) of calling thread.",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_THREAD_SYNC": {
+    "description": "执行 kernel-backed synchronization primitive (mutex, condvar, semaphore, rwlock, barrier).",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_INPUT_POLL_KEY_EXT": {
+    "description": "Polls extended multi-byte/UTF keyboard event record.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_INPUT_GET_KEY_STATE": {
+    "description": "查询 real-time pressed state of keycode.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_INPUT_GET_MODIFIERS": {
+    "description": "返回 unified modifier bitmask (Shift, Ctrl, Alt, Super, Locks).",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_SHORTCUT_REGISTER": {
+    "description": "注册 a global or app-scoped custom hotkey combination.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_SHORTCUT_UNREGISTER": {
+    "description": "注销 a previously registered shortcut ID.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_SHORTCUT_POLL": {
+    "description": "Polls triggered custom shortcut events for caller PID.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_INPUT_DEV_REGISTER": {
+    "description": "注册 a custom input device (touchpad, gamepad, tablet) in input hub.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_INPUT_DEV_UNREGISTER": {
+    "description": "注销 an input device by ID.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_INPUT_DEV_EMIT": {
+    "description": "Injects a 硬件/virtual input event from a driver into OS event queue.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_INPUT_DEV_LIST": {
+    "description": "Enumerates registered input devices and capabilities.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_INPUT_DEV_POLL_EVENT": {
+    "description": "Polls queued events for all or filtered input device ID.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_INPUT_DEV_GET_STATE": {
+    "description": "读取 current axis/button value for a registered input device.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_MOUSE_INJECT": {
+    "description": "Injects synthetic or HID mouse delta/absolute pointer coordinates.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_INPUT_SET_HOTKEY_MODE": {
+    "description": "Configures per-process hotkey interception policy (default vs pass-through).",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_INPUT_GET_HOTKEY_MODE": {
+    "description": "返回 active hotkey interception mode flags for current process.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_PS2_HOOK_REGISTER": {
+    "description": "注册 low-level PS/2 channel byte observer hook for external drivers.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_PS2_HOOK_UNREGISTER": {
+    "description": "Removes a PS/2 byte hook by handle.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_PS2_HOOK_POLL": {
+    "description": "Drains captured PS/2 controller bytes from hook queue.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_PS2_TRANSACT": {
+    "description": "执行 atomic PS/2 AUX/keyboard controller command transaction.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IRQ_SUBSCRIBE": {
+    "description": "Subscribes a process/driver to poll notification on 硬件 IRQ line.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IRQ_UNSUBSCRIBE": {
+    "description": "Unsubscribes from a 硬件 IRQ subscription handle.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IRQ_POLL": {
+    "description": "Polls 硬件 IRQ firing count and last timestamp.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IRQ_GET_COUNT": {
+    "description": "返回 total interrupt count observed on IRQ line.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IRQ_REGISTER_CB": {
+    "description": "注册 a callback IRQ handler with kernel IRQ dispatcher.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_IRQ_UNREGISTER_CB": {
+    "description": "注销 a callback IRQ handler.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_HW_MAP_MMIO": {
+    "description": "映射 physical PCI/MMIO device registers into caller virtual space.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_HW_UNMAP_MMIO": {
+    "description": "取消映射 previously mapped device MMIO aperture.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_HW_ALLOC_DMA": {
+    "description": "分配 physically contiguous aligned DMA buffer and returns physical address.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_HW_FREE_DMA": {
+    "description": "释放 a DMA buffer allocated via ipo_hw_alloc_dma.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_HW_VIRT_TO_PHYS": {
+    "description": "Translates virtual buffer address to physical RAM address for DMA descriptors.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_PCI_GET_COUNT": {
+    "description": "返回 total number of discovered PCI devices.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_PCI_GET_DEVICE": {
+    "description": "读取 PCI device coordinates, IDs, IRQ, and dynamic BAR list by index.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_PCI_CONFIG_READ": {
+    "description": "读取 8/16/32-bit PCI configuration space register.",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_PCI_CONFIG_WRITE": {
+    "description": "写入 8/16/32-bit PCI configuration space register.",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_PCI_ENABLE_BUS_MASTER": {
+    "description": "Enables PCI Command Bus Master & Memory/I/O decode bits for DMA.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_DEV_GET_COUNT": {
+    "description": "返回 total nodes registered in unified Device Registry.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_DEV_GET_INFO": {
+    "description": "Retrieves metadata, resources, and driver binding for device index.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_DEV_REGISTER": {
+    "description": "注册 a new device node from external driver.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_DEV_UNREGISTER": {
+    "description": "注销 a user-owned device node by ID.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_WM_SET_CURSOR_VISIBLE": {
+    "description": "Shows or hides WM software mouse cursor when win is focused.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_WM_GET_CURSOR_VISIBLE": {
+    "description": "查询 cursor visibility flag for window win.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_WM_GET_SCREEN_BOUNDS": {
+    "description": "返回 active Window Manager physical desktop dimensions in pixels.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_WM_SET_CURSOR_SCALE": {
+    "description": "设置 global WM pixel cursor width and height (arbitrary pixel scale).",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_WM_GET_CURSOR_SCALE": {
+    "description": "读取 current global WM cursor dimensions in pixels.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_KMOD_LOAD": {
+    "description": "加载 bare-metal .kmd kernel module from IPO_FS path into Ring 0.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_KMOD_UNLOAD": {
+    "description": "Runs module cleanup() and unloads loaded .kmd by name.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_KMOD_COUNT": {
+    "description": "返回 number of currently loaded kernel modules.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_KMOD_LOAD_MEM": {
+    "description": "加载 bare-metal .kmd module directly from memory buffer into kernel.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_EXT_REGISTER": {
+    "description": "注册 a hot-swappable kernel/userland extension service.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_EXT_UNREGISTER": {
+    "description": "注销 an extension service by ID.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_EXT_CALL": {
+    "description": "Invokes operation op on registered extension by name.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_EXT_LIST": {
+    "description": "列出 active registered extensions.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_CHAN_LIST": {
+    "description": "列出 universal raw data channels (e.g. 'eth0') and TX/RX stats.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_CHAN_TX": {
+    "description": "Transmits raw frame directly over registered channel chan_id.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_CHAN_RX": {
+    "description": "Polls next matching EtherType frame from channel subscription.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_CHAN_SUB": {
+    "description": "Subscribes to frames matching ethertype on channel chan_id.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_CHAN_UNSUB": {
+    "description": "Unsubscribes from universal data channel subscription.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_EXT_UPDATE": {
+    "description": "Hot-swaps ops/version of an active registered extension.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_SMP_GET_COUNT": {
+    "description": "返回 total ACPI MADT CPU count and optional online core count.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_SMP_GET_INFO": {
+    "description": "读取 per-CPU SMP metrics (LAPIC ID, ticks, tasks executed/queued).",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_SMP_SUBMIT": {
+    "description": "Dispatches parallel work item to target CPU or SMP_CPU_ANY via LAPIC IPI.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_SMP_WAIT": {
+    "description": "Waits for SMP worker task completion and collects result.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_SMP_CURRENT": {
+    "description": "返回 logical CPU ID (and optional LAPIC ID) running caller.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_DYNMOD_AUTH": {
+    "description": "Authorizes caller PID for runtime kernel symbol/patch introspection.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_DYNMOD_RESOLVE": {
+    "description": "Resolves live kernel symbol address from ksyms table.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_DYNMOD_READ": {
+    "description": "读取 kernel memory range under dynmod authorization.",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_DYNMOD_WRITE_VAR": {
+    "description": "Modifies authorized kernel variable with rollback patch tracking.",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_DYNMOD_HOOK_FUNC": {
+    "description": "Installs live trampoline hook onto a kernel function.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_DYNMOD_HOOK_SYSCALL": {
+    "description": "Hooks active syscall dispatcher entry dynamically.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_DYNMOD_RESTORE": {
+    "description": "Reverts a dynamic kernel patch or trampoline hook by ID.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_DYNMOD_LIST": {
+    "description": "列出 active dynamic kernel hooks and patches.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_DYNMOD_COMPUTE_DEMO": {
+    "description": "Invokes live-patchable reference computation function for dynmod testing.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_AUDIO_API_VERSION": {
+    "description": "返回 IPO Audio v2 ABI version.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_AUDIO_GET_DEV_COUNT": {
+    "description": "返回 count of active 硬件/virtual audio devices.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_AUDIO_GET_DEV_INFO": {
+    "description": "查询 audio backend capabilities (HDA, AC97, SB16, VirtIO-Sound).",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_AUDIO_OPEN": {
+    "description": "打开 a PCM/float audio playback or capture stream handle.",
+    "return": "成功返回非负句柄/端点 ID，失败返回负错误码"
+  },
+  "IPO_SYSCALL_AUDIO_CLOSE": {
+    "description": "关闭 open audio handle and releases 硬件 buffers.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_AUDIO_WRITE": {
+    "description": "写入 PCM samples into audio handle playback ring.",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_AUDIO_READ": {
+    "description": "Captures PCM samples from input audio handle.",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_AUDIO_HANDLE_PAUSE": {
+    "description": "Pauses or resumes playback on audio handle.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_AUDIO_HANDLE_SET_VOL": {
+    "description": "设置 per-handle linear gain volume (0.0..1.0+).",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_AUDIO_HANDLE_CLOCK": {
+    "description": "查询 sample-accurate A/V sync playback clock for handle.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_AUDIO_STREAM_CLOCK": {
+    "description": "查询 monotonic frame clock on legacy audio_stream_t.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_AUDIO_SET_MASTER_VOL": {
+    "description": "设置 left/right master mixer 硬件 volume.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_AUDIO_GET_MASTER_VOL": {
+    "description": "读取 left/right master mixer volume.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GFX_API_VERSION": {
+    "description": "返回 IPO GFX RGBA64F/HDR pipeline API version.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GFX_GET_CAPS": {
+    "description": "查询 display 硬件 capabilities, LFB geometry, and HDR formats.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GFX_ENUM_MODES": {
+    "description": "Enumerates supported display resolutions and pixel formats.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GFX_SET_MODE": {
+    "description": "Switches physical linear framebuffer video mode (arbitrary resolution).",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GFX_GET_MODE": {
+    "description": "返回 active display mode dimensions, pitch, and color encoding.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GFX_SELECT_FORMAT": {
+    "description": "Negotiates optimal render and 硬件 pixel formats.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GFX_PRESENT_WINDOW": {
+    "description": "Blits/tone-maps RGBA64F/32-bit surface directly into a WM window.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GFX_PRESENT_SCREEN": {
+    "description": "Presents a full-screen surface with dithering/format conversion.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GFX_GET_STATS": {
+    "description": "Retrieves frame presentation counts and conversion stats.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GFX_GET_PALETTE32": {
+    "description": "Synchronizes 256-entry XRGB8888 palette with kernel compositor.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GFX_BGA_OP": {
+    "description": "查询 Bochs/QEMU BGA display adapter state and LFB base.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GPU_GET_INFO": {
+    "description": "查询 VirtIO-GPU / VirGL 3D backend capabilities and limits.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GPU_SET_MODE": {
+    "description": "切换 between 硬件 VirGL 3D and software 3D fallback.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GPU_CTX_CREATE": {
+    "description": "创建 a 硬件 3D VirGL rendering context.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GPU_CTX_DESTROY": {
+    "description": "销毁 a VirGL rendering context owned by caller.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GPU_RES_CREATE": {
+    "description": "创建 GPU vertex/index/uniform buffer, 2D texture, or render target.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GPU_RES_UPLOAD": {
+    "description": "Uploads buffer/texture pixel data into GPU resource memory.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GPU_RES_DESTROY": {
+    "description": "销毁 GPU resource object and frees backing allocation.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_GPU_SUBMIT_BATCH": {
+    "description": "Submits 硬件 3D command batch (draw, blit, clear, present) to VirGL.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_THREAD_DETACH": {
+    "description": "Detaches thread so resources reclaim automatically upon exit.",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_THREAD_SET_TLS": {
+    "description": "设置 Thread-Local Storage base pointer (FS/GS or TCB register).",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_THREAD_GET_TLS": {
+    "description": "返回 Thread-Local Storage base pointer for calling thread.",
+    "return": "成功返回传输字节或条目数 (>= 0)，失败返回负错误码"
+  },
+  "IPO_SYSCALL_CLOCK_GETTIME": {
+    "description": "读取 realtime or monotonic nanosecond-resolution kernel clock.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_NANOSLEEP": {
+    "description": "Suspends calling thread for specified seconds + nanoseconds.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_FUTEX": {
+    "description": "Performs fast userspace mutex FUTEX_WAIT / FUTEX_WAKE operation.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_MMAP": {
+    "description": "映射 anonymous 虚拟页 with READ/WRITE/EXEC protections.",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_MUNMAP": {
+    "description": "取消映射 virtual memory range created by ipo_mmap().",
+    "return": "成功返回 0，失败返回负错误码"
+  },
+  "IPO_SYSCALL_MPROTECT": {
+    "description": "修改 page protection flags (PROT_READ/WRITE/EXEC) on mapped range.",
+    "return": "成功返回 0，失败返回负错误码"
   },
   "IPO_SYSCALL_EXIT": {
     "description": "终止调用进程，释放内存并切换上下文。",

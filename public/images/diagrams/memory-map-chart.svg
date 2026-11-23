@@ -17,54 +17,60 @@
     <text x="175" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#fca5a5">0xFFFFFFF0 - 0xFFFFFFFF</text>
     <text x="430" y="22" font-family="system-ui, sans-serif" font-size="12" fill="#f8fafc">Hardware Reset Vector (16B) &amp; SPI Flash Aliased Top</text>
 
-    <!-- 0x00800000 Userspace Apps -->
-    <rect x="0" y="44" width="160" height="110" fill="#d97706" rx="4"/>
-    <text x="175" y="95" font-family="monospace" font-size="12" font-weight="700" fill="#fcd34d">0x00800000 - 0x7FFFFFFF</text>
-    <text x="430" y="85" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="#ffffff">Userspace Process Space (IPO_EXEC / ELF32)</text>
-    <text x="430" y="105" font-family="system-ui, sans-serif" font-size="11.5" fill="#fde68a">Loaded at 8 MB base • Process Heap break (sbrk) • User stack • GUI Window buffers</text>
+    <!-- 0xD0000000 / 0xC0000000 High System & SHM -->
+    <rect x="0" y="44" width="160" height="44" fill="#b45309" rx="4"/>
+    <text x="175" y="63" font-family="monospace" font-size="12" font-weight="700" fill="#fcd34d">0xC0000000 - 0xFFFFFFFF</text>
+    <text x="430" y="63" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#ffffff">Trampolines, IPC SHM (0xD0000000+) &amp; PCI MMIO</text>
 
-    <!-- 0x00500000 Kernel Stack -->
-    <rect x="0" y="162" width="160" height="40" fill="#2563eb" rx="4"/>
-    <text x="175" y="186" font-family="monospace" font-size="12" font-weight="700" fill="#93c5fd">0x00500000</text>
-    <text x="430" y="186" font-family="system-ui, sans-serif" font-size="12" fill="#f8fafc">Kernel Stack Top (ESP = 0x500000, 5 MB, grows downward)</text>
+    <!-- 0x10000000 User Heaps -->
+    <rect x="0" y="96" width="160" height="58" fill="#d97706" rx="4"/>
+    <text x="175" y="121" font-family="monospace" font-size="12" font-weight="700" fill="#fcd34d">0x10000000 - 0xBFFFFFFF</text>
+    <text x="430" y="118" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="#ffffff">Isolated User Process Heaps &amp; mmap() / sbrk()</text>
+    <text x="430" y="136" font-family="system-ui, sans-serif" font-size="11.5" fill="#fde68a">USER_HEAP_START = 256 MiB (0x09000000 if RAM &lt;= 256 MiB) • 256 MiB stride</text>
 
-    <!-- 0x00100000 - 0x004FFFFF Extended Memory -->
-    <rect x="0" y="210" width="160" height="70" fill="#1d4ed8" rx="4"/>
-    <text x="175" y="245" font-family="monospace" font-size="12" font-weight="700" fill="#93c5fd">0x00100000 - 0x004FFFFF</text>
-    <text x="430" y="240" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#ffffff">Kernel Dynamic Heap (kmalloc / kfree pool)</text>
-    <text x="430" y="258" font-family="system-ui, sans-serif" font-size="11.5" fill="#bfdbfe">Physical page frame allocator • VFS cache • Inode buffers • Network packets</text>
+    <!-- 0x04000000 - 0x0FFFFFFF Kernel kmalloc + PMM -->
+    <rect x="0" y="162" width="160" height="60" fill="#2563eb" rx="4"/>
+    <text x="175" y="187" font-family="monospace" font-size="12" font-weight="700" fill="#93c5fd">0x04000000 - 0x0FFFFFFF</text>
+    <text x="430" y="185" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#ffffff">Kernel kmalloc Heap (64 MiB + Overflow) &amp; PMM Frames (0x08000000+)</text>
+    <text x="430" y="203" font-family="system-ui, sans-serif" font-size="11.5" fill="#bfdbfe">Self-expanding overflow arenas • PML4 / LA57 page tables • Storage &amp; IPC buffers</text>
+
+    <!-- 0x00100000 - 0x03FFFFFF Kernel + Apps -->
+    <rect x="0" y="230" width="160" height="54" fill="#1d4ed8" rx="4"/>
+    <text x="175" y="253" font-family="monospace" font-size="12" font-weight="700" fill="#93c5fd">0x00100000 - 0x03FFFFFF</text>
+    <text x="430" y="251" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#ffffff">IPO_OS Kernel (1 MiB), SB16 DMA (0x600000), User Apps (0x800000+)</text>
+    <text x="430" y="269" font-family="system-ui, sans-serif" font-size="11.5" fill="#bfdbfe">entry.asm • kmain() at 0x100000 • IDT/GDT/SMP • ELF/Flat Exec (0x800000)</text>
 
     <!-- 0x000F0000 - 0x000FFFFF Shadow RAM -->
-    <rect x="0" y="288" width="160" height="42" fill="#7c3aed" rx="4"/>
-    <text x="175" y="313" font-family="monospace" font-size="12" font-weight="700" fill="#c4b5fd">0x000F0000 - 0x000FFFFF</text>
-    <text x="430" y="313" font-family="system-ui, sans-serif" font-size="12" fill="#f8fafc">Shadow RAM: IPO_Firmware Runtime &amp; Handover Entry (0xF000:0004)</text>
+    <rect x="0" y="292" width="160" height="38" fill="#7c3aed" rx="4"/>
+    <text x="175" y="315" font-family="monospace" font-size="12" font-weight="700" fill="#c4b5fd">0x000F0000 - 0x000FFFFF</text>
+    <text x="430" y="315" font-family="system-ui, sans-serif" font-size="12" fill="#f8fafc">Firmware (0xF000:000C) + 8 KiB Bootblock (0xFE000..0xFFFFF)</text>
 
     <!-- 0x000C0000 - 0x000EFFFF VBIOS & Option ROMs -->
     <rect x="0" y="338" width="160" height="38" fill="#6d28d9" rx="4"/>
     <text x="175" y="361" font-family="monospace" font-size="12" font-weight="700" fill="#c4b5fd">0x000C0000 - 0x000EFFFF</text>
-    <text x="430" y="361" font-family="system-ui, sans-serif" font-size="12" fill="#f8fafc">Video BIOS (VBIOS 0xC000:0003) &amp; Expansion Option ROMs</text>
+    <text x="430" y="361" font-family="system-ui, sans-serif" font-size="12" fill="#f8fafc">Video BIOS (VBIOS) &amp; Expansion Option ROMs</text>
 
     <!-- 0x000A0000 - 0x000BFFFF VGA VRAM -->
     <rect x="0" y="384" width="160" height="50" fill="#059669" rx="4"/>
     <text x="175" y="413" font-family="monospace" font-size="12" font-weight="700" fill="#6ee7b7">0x000A0000 - 0x000BFFFF</text>
     <text x="430" y="405" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#ffffff">VGA Video Buffers</text>
-    <text x="430" y="423" font-family="system-ui, sans-serif" font-size="11.5" fill="#a7f3d0">0xB8000: 80x25 Color Text Mode (32KB) • 0xA0000: Mode 13h Graphics (64KB)</text>
+    <text x="430" y="423" font-family="system-ui, sans-serif" font-size="11.5" fill="#a7f3d0">0xB8000: Dynamic Text Mode • 0xA0000: Graphics Aperture</text>
 
     <!-- 0x0009FC00 EBDA -->
     <rect x="0" y="442" width="160" height="32" fill="#475569" rx="4"/>
     <text x="175" y="462" font-family="monospace" font-size="12" font-weight="700" fill="#cbd5e1">0x0009FC00 - 0x0009FFFF</text>
-    <text x="430" y="462" font-family="system-ui, sans-serif" font-size="12" fill="#f8fafc">EBDA (Extended BIOS Data Area) &amp; ACPI 1.0 Tables (RSDP, MADT)</text>
+    <text x="430" y="462" font-family="system-ui, sans-serif" font-size="12" fill="#f8fafc">EBDA &amp; ACPI 1.0 RSDP (Tables in SCRATCH_ACPI_BASE below TOLUD)</text>
 
-    <!-- 0x00010000 Kernel Code -->
+    <!-- 0x00070000 Boot ROM CAR -->
     <rect x="0" y="482" width="160" height="52" fill="#1e40af" rx="4"/>
-    <text x="175" y="512" font-family="monospace" font-size="12" font-weight="700" fill="#93c5fd">0x00010000 - 0x0007FFFF</text>
-    <text x="430" y="504" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#ffffff">IPO_OS Kernel Code &amp; Data</text>
-    <text x="430" y="522" font-family="system-ui, sans-serif" font-size="11.5" fill="#bfdbfe">Loaded at 64 KB • entry32.asm • kmain() • IDT Table (256 descriptors)</text>
+    <text x="175" y="512" font-family="monospace" font-size="12" font-weight="700" fill="#93c5fd">0x00070000 - 0x00077FFF</text>
+    <text x="430" y="504" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#ffffff">Boot ROM Cache-as-RAM (32 KiB CAR Window)</text>
+    <text x="430" y="522" font-family="system-ui, sans-serif" font-size="11.5" fill="#bfdbfe">Pre-DRAM stack &amp; XIP C romstage scratchpad (torn down before 0xF000:000C)</text>
 
-    <!-- 0x00007C00 MBR Boot Sector -->
+    <!-- 0x00006000 - 0x00008FFF Handover & SMP -->
     <rect x="0" y="542" width="160" height="30" fill="#047857" rx="4"/>
-    <text x="175" y="561" font-family="monospace" font-size="12" font-weight="700" fill="#6ee7b7">0x00007C00 - 0x00007DFF</text>
-    <text x="430" y="561" font-family="system-ui, sans-serif" font-size="12" fill="#f8fafc">Stage 1 MBR Bootloader (512 Bytes loaded by firmware)</text>
+    <text x="175" y="561" font-family="monospace" font-size="12" font-weight="700" fill="#6ee7b7">0x00006000 - 0x00008FFF</text>
+    <text x="430" y="561" font-family="system-ui, sans-serif" font-size="12" fill="#f8fafc">E820 Map (0x6000), MBR (0x7C00), SMP Trampoline (0x8000..0x81AF)</text>
 
     <!-- 0x00000500 Scratch RAM -->
     <rect x="0" y="580" width="160" height="26" fill="#334155" rx="4"/>

@@ -1,21 +1,21 @@
 {
   "global_stack": {
-    "title": "IPO Systems Platform Vertical Stack",
-    "caption": "Complete execution hierarchy from power-on hardware reset vector to userspace graphical/console applications.",
+    "title": "IPO Systems プラットフォーム垂直スタック",
+    "caption": "リセットベクタ (0xFE000) から XIP romstage・Firmware を経て IPO_OS・ユーザーアプリに至る実行階層。",
     "labels": {
       "hardware": "Physical Hardware (CPU x86, RAM, Chipset, Storage)",
       "boot_rom": "IPO_Boot_ROM (Reset Vector 0xFFFFFFF0, CAR, MRC, PAM)",
-      "contract_2": "Contract 2 Handover (CS:IP 0xF000:0004, Shadow RAM)",
+      "contract_2": "Contract 2 引継ぎ (CS:IP 0xF000:000C, 56 KiB Shadow RAM + 0x2000:0000)",
       "firmware": "IPO_Firmware (IVT, A20, Storage Discovery, MBR Load)",
-      "contract_3": "Contract 3 Handover (CS:IP 0x0000:7C00, DL=Drive ID)",
+      "contract_3": "Contract 3 引継ぎ (CS:IP 0x0000:7C00, DL=Drive ID)",
       "kernel": "IPO_OS Kernel (PMM, VFS, Sched, Drivers, TCP/IP)",
       "syscall_gate": "Syscall Gate (int 0x80, EAX=num, EBX=argc, ECX=argv)",
       "userland": "Userspace Applications (0x800000, LibC, Shell, GUI WM)"
     }
   },
   "boot_rom_flow": {
-    "title": "IPO_Boot_ROM Low-Level Execution Sequence",
-    "caption": "ハードウェアリセットベクターから Cache-as-RAM、DRAM コントローラー設定を経て firmware に制御を移す実行手順。",
+    "title": "IPO_Boot_ROM 起動・XIP romstage シーケンス",
+    "caption": "8 KiB bootblock (0xFE000) から 32 KiB CAR (.car_bypass 0x2E)、C XIP romstage を経て 0xF000:000C へ移行。",
     "labels": {
       "reset_vector": "CPU Reset Vector (0xFFFFFFF0 / F000:FFF0)",
       "jump_base": "Jump to ROM Base (0xF000:8000)",
@@ -24,81 +24,67 @@
       "mrc_training": "MRC: DRAM コントローラー設定",
       "car_teardown": "CAR 終了；引き渡しスタック SS:SP=0000:7C00",
       "pic_pit": "Phase 5: Cascaded 8259 PIC & 8254 PIT Setup",
-      "uart_init": "Phase 6: COM1 UART Init (115200 8N1)",
       "shadow_ram": "Phase 7: PAM Copy to Shadow RAM (0xF0000..0xFFFFF)",
-      "pam_lock": "Phase 8: PAM Read-Only Lock",
-      "magic_check": "Phase 9: Validate 'IPO' Magic (0x004F5049)",
-      "handover": "Transfer to Firmware: jmp 0xF000:0004"
+      "handover": "Validate 'IPO_Firmware' Header & Far Jump 0xF000:000C"
     }
   },
   "firmware_flow": {
-    "title": "IPO_Firmware Service Setup & Storage Discovery",
-    "caption": "Execution pipeline from Boot ROM handover through BIOS interrupts installation to storage drive discovery and OS handover.",
+    "title": "IPO_Firmware 初期化・SMP・ストレージ検出",
+    "caption": "0xF000:000C からのリアルモード初期化、AP 起動、IVT/ACPI、PCI 0..7、MBR 引継ぎ。",
     "labels": {
-      "entry": "Firmware Entry Point (0xF000:0004)",
+      "entry": "Firmware エントリ (CS:IP 0xF000:000C, Magic 'IPO_Firmware')",
       "ivt_setup": "Register IVT: INT 10h, 12h, 13h, 15h, 16h, 1Ah",
       "bda_ebda": "Init BDA (0x400) & EBDA / ACPI 1.0 (0x9FC00)",
       "pci_enum": "PCI Bus Enumeration (VGA, Storage, USB Controllers)",
-      "video_init": "Video Subsystem (VBIOS Option ROM or Text Mode 03h)",
       "a20_gate": "Fast A20 Gate Activation (Port 0x92)",
-      "memory_detect": "E820 / E801 Memory Map Construction",
-      "storage_probe": "Multi-Bus Storage Scan: ATA (0x1F0), AHCI, NVMe, USB",
+      "storage_probe": "ストレージ検出 (POST 0x29): ATA PIO, AHCI SATA, NVMe, USB EHCI",
       "mbr_load": "Read LBA 0 to 0x0000:7C00 via INT 13h AH=42h",
-      "validate_mbr": "Check MBR Signature 0x55AA",
       "os_handover": "OS Handover: DL=0x80..0x82, jmp 0x0000:7C00"
     }
   },
   "kernel_boot": {
-    "title": "IPO_OS Kernel Initialization Pipeline",
-    "caption": "Transition from MBR bootloader through Protected Mode to the running kernel, filesystem mount, and interactive shell.",
+    "title": "IPO_OS カーネル初期化パイプライン",
+    "caption": "MBR から 0x100000 での Long Mode (PML4/LA57) または 32-bit 移行、SMP・IPO_FS マウント。",
     "labels": {
       "mbr_stage1": "第 1 段ブートローダー（MBR セクター 0x7C00）",
       "stage2_load": "ディスクから第 2 段ブートローダーを読み込み",
       "prot_mode": "32 ビット保護モードへ移行（GDT 読み込み済み、CR0 PE=1）",
-      "kernel_load": "ELF32 カーネルを物理アドレス 0x10000 に読み込み",
-      "kernel_entry": "カーネルのエントリーポイント（linker.ld の _start）",
-      "mm_init": "E820 メモリマップと 64 MB のカーネルヒープ（kmalloc: 0x01000000–0x04FFFFFF）",
-      "idt_init": "IDT、PIC/APIC、SMP 検出、システムコールゲート（0x80）",
+      "kernel_load": "カーネル物理配置 1 MiB (0x00100000, Magic 'IPO_OS')",
+      "mm_init": "PMM (0x08000000+), Dynamic kmalloc (0x04000000+) & User Heaps (0x10000000+)",
       "fs_mount": "ルートファイルシステムをマウント（LBA 2048 の IPO_FS パーティション）",
       "drivers_init": "ブロック層、ATA、Storage Pool + WAL、KMOD、デバイスレジストリ",
       "launch_shell": "対話型ターミナルとシリアルコンソールを起動"
     }
   },
   "memory_map": {
-    "title": "IPO_OS Physical & Virtual Memory Layout",
-    "caption": "メモリ領域のマップ：リアルモードのレガシーテーブル、64 KB のカーネル、8 MB (0x00800000) のユーザー空間アプリケーション、16 MB (0x01000000) から始まる 64 MB のカーネルヒープ。",
+    "title": "IPO_OS 物理・仮想メモリマップ",
+    "caption": "実モード表、1 MiB カーネル、8 MiB アプリ、64 MiB kmalloc、128 MiB PMM、256 MiB+ ヒープ。",
     "labels": {
       "ivt_bda": "0x00000 - 0x004FF: IVT (1 KB) & BDA (256 B)",
-      "free_conv": "0x00500 - 0x07BFF: Scratch RAM & Stacks",
       "boot_mbr": "0x07C00 - 0x07DFF: Bootloader MBR Buffer (512 B)",
-      "kernel_bin": "0x10000 - 0x7FFFF: IPO_OS Kernel Core (.text, .data, .bss)",
       "video_ram": "0xA0000 - 0xBFFFF: Video Framebuffer (VGA Text 0xB8000)",
       "ebda_rom": "0xC0000 - 0xFFFFF: VBIOS, Shadow RAM & ROM Firmware",
-      "kernel_heap": "0x01000000 - 0x04FFFFFF: カーネル kmalloc ヒープ (64 MB) と PMM / sbrk",
-      "user_apps": "0x800000+: Userspace Applications (Entry at 0x800000)"
+      "kernel_bin": "0x00100000–0x007FFFFF: IPO_OS Kernel Core, Page Tables & SMP Stacks",
+      "user_apps": "0x800000+: Userspace Applications (Entry at 0x800000)",
+      "kernel_heap": "0x04000000–0x07FFFFFF: Dynamic Kernel kmalloc() Arena (+ PMM Overflow)",
+      "user_heaps": "0x08000000+ / 0x10000000+: PMM Frames, User sbrk() Heaps, mmap/SHM (0xD0000000+)"
     }
   },
   "syscall_pipeline": {
-    "title": "System Call Dispatch Pipeline (int 0x80)",
-    "caption": "Flow of control and argument passing when a userspace application requests an operating system service.",
+    "title": "システムコール処理パイプライン (int 0x80)",
+    "caption": "305 個の OS / Net システムコールの Ring 3 -> Ring 0 遷移経路。",
     "labels": {
       "app_call": "Application executes ipo_syscall(num, argc, argv)",
       "trap_gate": "Assembly 'int 0x80' triggers CPU Software Interrupt Gate",
       "ring_switch": "Hardware CPU Switch: Ring 3 (User) -> Ring 0 (Kernel)",
       "dispatcher": "Kernel Syscall Dispatcher validates number & arguments",
-      "handler_exec": "Target Subsystem Handler executes (FS, Process, Net, WM)",
       "return_ring": "Result placed in EAX, 'iret' returns to Ring 3"
     }
   },
   "fs_layout": {
-    "title": "IPO_FS 64-bit Extent-Based On-Disk Structure",
-    "caption": "Partition layout showing 512-byte blocks, 64-bit extents, and 128-byte inode organization.",
+    "title": "IPO_FS 64-bit 動的エクステント構造",
+    "caption": "WAL (LBA 2030..2039)、104 B スーパーブロック (LBA 2048)、ビットマップ、動的 iノードチャンク。",
     "labels": {
-      "mbr_reserved": "Sector 0..2047: MBR and Reserved Boot Sectors",
-      "superblock": "LBA 2048: Superblock ('IPO_FS\\0\\0', Block Size, Pointers)",
-      "inode_bitmap": "Block Bitmap / Inode Bitmap (Allocation Tracking)",
-      "inode_table": "Inode Table (128 bytes per inode, 4 inodes / block)",
-      "data_blocks": "Data Extent Pool (Contiguous Multi-Block Extents)",
       "mbr_title": "MBR / Pool+WAL",
       "mbr_lba": "LBA 0..2047",
       "wal_lba": "(WAL 2030..2039)",
@@ -113,8 +99,8 @@
     }
   },
   "pc_assembly_flow": {
-    "title": "Hardware Assembly & Safety Progression",
-    "caption": "Order of physical assembly from workbench ESD safety preparation to power-on self test.",
+    "title": "PC 組み立て手順と安全確認",
+    "caption": "静電気対策から JFP1 配線、POST 0x80 確認までの標準手順。",
     "labels": {
       "esd_prep": "Step 1: ESD Protection & Workstation Preparation",
       "cpu_install": "Step 2: CPU Socket Installation & Thermal Compound",
@@ -122,24 +108,35 @@
       "ram_install": "Step 4: Dual-Channel DDR/SDRAM Insertion",
       "case_mb": "Step 5: Standoff Alignment & Motherboard Mounting",
       "psu_cabling": "Step 6: Power Supply (24-pin ATX, 8-pin EPS)",
-      "storage_conn": "Step 7: Storage Drives & SATA/IDE Data Cables",
       "front_panel": "Step 8: Front Panel Pinout (Power SW, Reset SW, LEDs)",
       "post_test": "Step 9: Bench POST Self-Test & Diagnostic Speaker Check"
     }
   },
   "front_panel_pinout": {
-    "title": "Standard Motherboard Front Panel Header Pinout",
-    "caption": "Pin layout and polarity guidelines for power button, reset button, and status LEDs.",
+    "title": "フロントパネルヘッダ (JFP1) ピン配列",
+    "caption": "JFP1 配列：HDD LED (+1/-3)、Power LED (+2/-4)、Reset (5/7)、Power (6/8)。",
     "labels": {
-      "pwr_led": "電源LED (+ は Pin 1, - は Pin 3)",
+      "jfp1_title": "JFP1 / F_PANEL (2.54 mm 2×5 Pinout)",
+      "jfp1_subtitle": "Odd Row = Bottom (ピン 1,3,5,7,9) · Even Row = Top (ピン 2,4,6,8,10 Key)",
       "hdd_led": "アクセスLED (+ は Pin 2, - は Pin 4)",
+      "hdd_led_pins": "ピン 1 (+) / 3 (-)",
+      "hdd_led_short": "HDD+ / HDD-",
+      "pwr_led": "電源LED (+ は Pin 1, - は Pin 3)",
+      "pwr_led_pins": "ピン 2 (+) / 4 (-)",
+      "pwr_led_short": "PLED+ / PLED-",
       "reset_sw": "リセットスイッチ (極性なし)",
-      "pwr_sw": "電源スイッチ (極性なし)"
+      "reset_sw_pins": "ピン 5 / 7 (極性なし)",
+      "reset_sw_short": "RESET SW",
+      "pwr_sw": "電源スイッチ (極性なし)",
+      "pwr_sw_pins": "ピン 6 / 8 (極性なし)",
+      "pwr_sw_short": "POWER SW",
+      "pin9_key": "Pin 9: NC / RSVD",
+      "pin10_nc": "Pin 10: Key (Blocked)"
     }
   },
   "net_stack": {
-    "title": "IPO_OS Bare-Metal TCP/IP Protocol Stack",
-    "caption": "Network packet processing hierarchy from physical RTL8139 PCI NIC to BSD-like Socket API.",
+    "title": "モジュラーネットワークスタック (/drivers/rtl8139 KMD)",
+    "caption": "RTL8139 / E1000 / VirtIO-Net から Ethernet/ARP/IPv4/TCP/UDP/DHCP/DNS・BSD ソケットへ。",
     "labels": {
       "nic_driver": "RTL8139 PCI NIC Driver (Ring Buffers, RX/TX Packets)",
       "ethernet_l2": "Ethernet II Framing & MAC Filtering",
@@ -150,47 +147,207 @@
     }
   },
   "vertical_platform_stack": {
-    "title": "IPO Systems Platform 垂直プラットフォームスタック",
-    "caption": "電源投入ハードウェアリセットベクタからユーザーランドアプリケーションまでの完全な実行階層。"
+    "title": "IPO Systems プラットフォーム垂直スタック",
+    "caption": "リセットベクタ (0xFE000) から XIP romstage・Firmware を経て IPO_OS・ユーザーアプリに至る実行階層。",
+    "labels": {
+      "hardware": "物理ハードウェア (CPU x86-64/x86, RAM, Chipset, PCI, Storage)",
+      "boot_rom": "IPO_Boot_ROM (Bootblock 0xFE000 / F000:E000, 32 KiB CAR, XIP romstage, PAM)",
+      "contract_2": "Contract 2 引継ぎ (CS:IP 0xF000:000C, 56 KiB Shadow RAM + 0x2000:0000)",
+      "firmware": "IPO_Firmware (Dynamic AP SMP, IVT, ACPI, PCI 0..7, Multi-Bus Storage)",
+      "contract_3": "Contract 3 引継ぎ (CS:IP 0x0000:7C00, DL=Drive ID)",
+      "kernel": "IPO_OS Kernel (Long Mode + 32-bit Fallback, SMP, VFS/IPO_FS, VirGL/HDR)",
+      "syscall_gate": "Syscall Gate (int 0x80, 305 OS + Net Calls)",
+      "userland": "Userspace (0x800000 ELF, 0x10000000+ Heaps, /drivers/*, WM Apps)"
+    }
   },
   "spi_flashing_pinout": {
-    "title": "CH341A USB プログラマから SOIC-8 SPI Flash ピンアサイン",
-    "caption": "CH341A ハードウェアプログラマと 8 ピン SPI NOR Flash（W25Q64 等）間のピン接続配線。"
+    "title": "CH341A 書込器と SOIC-8 SPI Flash ピン配線",
+    "caption": "3.3V SPI NOR Flash (128 KiB–16 MiB) 接続図。",
+    "labels": {
+      "prog_title": "CH341A (3.3V Mod)",
+      "chip_title": "SOIC-8 SPI Flash",
+      "pin1_cs": "Pin 1: /CS (Chip Select)",
+      "pin2_miso": "Pin 2: DO / MISO",
+      "pin3_wp": "Pin 3: /WP (Pull-Up 3.3V)",
+      "pin4_gnd": "Pin 4: GND (Common)",
+      "pin5_mosi": "Pin 5: DI / MOSI",
+      "pin6_clk": "Pin 6: CLK (Clock)",
+      "pin7_hold": "Pin 7: /HOLD (Pull-Up 3.3V)",
+      "pin8_vcc": "Pin 8: VCC (+3.3V Only)"
+    }
   },
   "process_scheduler": {
-    "title": "プロセスライフサイクルとタスクスケジューラ状態遷移",
-    "caption": "状態遷移：CREATED、READY（実行待ち）、RUNNING（実行中）、WAITING/BLOCKED、TERMINATED。"
+    "title": "プロセス・スレッドスケジューラ状態遷移",
+    "caption": "自動拡張スタックと IPI 0xE0 起動を備えた全コア SMP スケジューラ。",
+    "labels": {
+      "state_created": "CREATED (ELF Load + PCB)",
+      "state_ready": "READY (Runqueue)",
+      "state_running": "RUNNING (CPU Core 0..N)",
+      "state_blocked": "BLOCKED (Futex / I/O / Pipe)",
+      "state_terminated": "TERMINATED (Reclaim)",
+      "tr_schedule": "spawn / wake",
+      "tr_preempt": "PIT / LAPIC quantum",
+      "tr_block": "sleep / futex / wait",
+      "tr_wakeup": "IRQ / IPI 0xE0 wakeup",
+      "tr_exit": "exit / SIGKILL"
+    }
   },
   "window_manager": {
-    "title": "ウィンドウマネージャー合成パイプラインと VBE フレームバッファ",
-    "caption": "クライアントバックバッファのクリッピング合成と VBE リニアフレームバッファへの転送。"
+    "title": "WM コンポジタ・RGBA64F HDR・VirGL 3D パイプライン",
+    "caption": "任意解像度対応 HDR コンポジタおよび VirGL ハードウェア 3D 描画。",
+    "labels": {
+      "wm_client1": "クライアントウィンドウ 1",
+      "wm_client1_desc": "Software Backbuffer (Arbitrary W×H)",
+      "wm_client2": "クライアントウィンドウ 2",
+      "wm_client2_desc": "RGBA64F Linear HDR Surface + Tone Map",
+      "wm_client3": "クライアントウィンドウ 3",
+      "wm_client3_desc": "VirGL 3D Hardware Render Context",
+      "wm_comp": "カーネル WM コンポジタ & Input Router",
+      "wm_comp_desc1": "Dirty-Rect Damage Tracking, Z-Order & Dynamic Software/Hardware Cursor",
+      "wm_comp_desc2": "Arbitrary Desktop Geometry + Dynamic Console Cols×Rows Synchronization",
+      "wm_comp_desc3": "Double-Buffered Blit, Gamma/Dither & Non-Blocking wm_poll_event()",
+      "wm_hw": "ディスプレイバックエンド",
+      "wm_hw_d1": "VirtIO-GPU 2D/VirGL 3D",
+      "wm_hw_d2": "Bochs BGA / Linear FB",
+      "wm_hw_sub": "Zero Fixed Resolution Caps · Direct Present (0x11E0–0x11F7)"
+    }
   },
   "car_memory_layout": {
-    "title": "Cache-as-RAM (CAR) メモリマップと MTRR 設定",
-    "caption": "DRAM初期化前に 64 KB の L1/L2 キャッシュを一時的な SRAM 作業領域およびスタックとして構成。"
+    "title": "32 KiB Cache-as-RAM (CAR) 配置とバイパス",
+    "caption": "C XIP romstage 用 0x70000..0x77FFF キャッシュ空間（0x2E .car_bypass 対応）。",
+    "labels": {
+      "car_range": "32 KiB CAR Window (0x70000..0x77FFF)",
+      "mtrr_config": "MTRR WB Setup (or .car_bypass 0x2E on v86)",
+      "cache_lines": "Pinned CPU L1/L2 Cache Lines (No DRAM Eviction)",
+      "c_runtime": "32-bit C Stack & Temporary Vars (XIP romstage)",
+      "mrc_zone": "SPD SMBus Scratch + Chipset Detection Records",
+      "post_logs": "COM1 (115200 8N1) & Port 0x80 Diagnostics",
+      "stack_top": "Stack Top (0x77FFF growing down)",
+      "teardown_phase": "Pre-DRAM Exit & CAR Teardown (POST 0x16)",
+      "teardown_desc": "INVD/MTRR Clear -> Real-Mode Transition -> Firmware 0xF000:000C"
+    }
   },
   "chipset_init_flow": {
-    "title": "チップセット検出と PAM シャドウ RAM (Shadow RAM)",
-    "caption": "Host Bridge 検出（i440FX vs Q35）、SMRAM ロック、PAM レジスタ設定とファームウェア展開。"
+    "title": "チップセット検出と PAM Shadow RAM ロック",
+    "caption": "ホストブリッジ、SMRAM、DRAM タイミングおよび PAM シャドウ設定。",
+    "labels": {
+      "probe_bridge": "1. Probe Host Bridge (00:00.0) & Report Raw PCI Vendor/Device ID",
+      "smram_ctrl": "2. Configure SMRAM / Legacy Memory Routing (15–16 MiB Hole Disabled)",
+      "piix_routing": "3. Init Southbridge (PIIX/ICH), SMBus (SPD) & Cascaded 8259/8254",
+      "pam_config": "4. Set PAM0..PAM6 (WE=1, RE=0) & Copy 56 KiB Firmware -> 0xF0000",
+      "lock_pam": "5. Lock PAM Read-Only (WE=0, RE=1) & 引継ぎ to 0xF000:000C"
+    }
   },
   "pci_bus_topology": {
-    "title": "PCI バストポロジとデバイス列挙階層",
-    "caption": "I/O ポート 0xCF8（CONFIG_ADDRESS）と 0xCFC（CONFIG_DATA）を介したバス・デバイス・機能スキャン。"
+    "title": "PCI バス 0..7 トポロジと 64-bit BAR 割り当て",
+    "caption": "バス 0..7 の再帰走査と動的 MMIO/I/O BAR 配置。",
+    "labels": {
+      "host_bridge": "PCI Host Bridge (Bus 00:00.0) + PCI-to-PCI Bridges",
+      "pci_ports": "Config Ports 0xCF8 / 0xCFC",
+      "bus_scan_title": "Bus 0..7 Dynamic Enumerator",
+      "bus_scan_desc": "Firmware & Kernel enumerate all buses/slots/functions with unlimited dynamic BAR arrays (uint64_t* bar[])",
+      "dev_storage": "ストレージコントローラ",
+      "dev_storage_sub": "ATA IDE / AHCI SATA / VirtIO-Blk",
+      "dev_storage_io": "BARs / DMA / Bus Master",
+      "dev_nic": "ネットワーク NIC",
+      "dev_nic_sub": "RTL8139 / Intel E1000 / VirtIO-Net",
+      "dev_nic_io": "Dynamic MMIO/I/O + /drivers/*",
+      "dev_gpu": "ディスプレイ・3D GPU",
+      "dev_gpu_sub": "VirtIO-GPU (VirGL) / Bochs BGA",
+      "dev_gpu_io": "Linear FB + 3D Command Queue",
+      "dev_usb_audio": "オーディオ・入力/USB",
+      "dev_usb_audio_sub": "HDA / AC97 / SB16 / VirtIO-Sound",
+      "dev_usb_audio_io": "DMA Rings + MSI/IRQ Routing"
+    }
   },
   "storage_transfer_flow": {
-    "title": "ATA PIO モードセクタ転送パイプライン",
-    "caption": "ポート 0x1F7 の BSY/DRQ 監視、コマンド 0x20 発行、rep insw による 512 バイト読み取り。"
+    "title": "統合ストレージ・WAL 転送パイプライン",
+    "caption": "VFS・IPO_FS・WAL・AHCI/VirtIO-Blk/ATA による 64-bit ブロック転送。",
+    "labels": {
+      "st_step1": "1. VFS / Process Syscall (64-bit File Offset & Extent Lookup)",
+      "st_step2": "2. IPO_FS Cache & Dynamic Inode Chunk / Extent Resolver",
+      "st_step3": "3. Storage Pool Translator & WAL Transaction Logger",
+      "st_step3_desc": "64-sector (32 KiB) pool stripe mapping + TXNL journal entry CRC",
+      "st_step4": "4. Block Scheduler & Controller Dispatch (AHCI DMA / VirtIO-Blk / ATA PIO)",
+      "st_step5": "5. Hardware DMA Ring or Port 0x1F0/0x170 Register Transfer + IRQ Completion",
+      "st_step5_desc": "Zero hard disk limits · Multi-member pool recovery on boot"
+    }
   },
   "interrupt_routing": {
-    "title": "IDT 割り込みベクタテーブルとハードウェア IRQ ルーティング",
-    "caption": "カスケード 8259 PIC（0x20..0x2F）、CPU 例外トラップ、および int 0x80 システムコールゲート。"
+    "title": "IDT ベクタ・PIC/APIC IRQ・SMP IPI 0xE0",
+    "caption": "CPU 例外、ハードウェア IRQ、IPI 0xE0 および int 0x80 ルーティング。",
+    "labels": {
+      "idt_title": "Kernel IDT (32-bit 8B / 64-bit 16B Gates)",
+      "idt_desc1": "0x00–0x1F: CPU Exceptions (#DE, #GP, #PF Stack Grow, #UD)",
+      "idt_desc2": "0x20–0x2F: Remapped Hardware IRQs (8259 PIC / IOAPIC)",
+      "idt_desc3": "0x80: Userspace Syscall Gate (DPL=3)",
+      "idt_desc4": "0xE0: All-Core SMP Work & Reschedule IPI",
+      "idt_desc5": "APIC Timer & Spurious Vectors (0xFF)",
+      "irq_hw_title": "Hardware Sources",
+      "irq_0": "IRQ 0: PIT / LAPIC Timer Tick",
+      "irq_1": "IRQ 1 / 12: PS/2 Keyboard & Mouse",
+      "irq_5": "PCI/Audio/Net IRQs (HDA, NIC, VirtIO)",
+      "irq_12": "IRQ 14/15: ATA / AHCI / VirtIO-Blk",
+      "irq_ipi": "LAPIC IPI 0xE0 (All-Core Dispatch)",
+      "traps_title": "Userland Syscall",
+      "trap_80": "int 0x80 (305 Calls)",
+      "ring0_handlers": "Ring-0 ISR Dispatcher + Callback Subscriptions (0x1160..0x1165)",
+      "eoi_text": "EOI (PIC 0x20 / LAPIC 0xB0)",
+      "iret_text": "iret / iretq to Thread Context"
+    }
   },
   "driver_architecture": {
-    "title": "カーネルデバイスドライバモデルと VFS バインド",
-    "caption": "/dev 仮想ノードとハードウェアポート I/O・MMIO を抽象化する struct device_ops 構造。"
+    "title": "ハイブリッドドライバモデル（内蔵・.kmd・/drivers/*）",
+    "caption": "内蔵ドライバ・動的 .kmd・ユーザー空間ドライバを結ぶ統合デバイスレジストリ。",
+    "labels": {
+      "drv_layer1": "Ring-3 Applications & /drivers/* Userland Drivers",
+      "drv_layer1_desc": "BSD Sockets, Input Hub API, MMIO/DMA Syscalls (0x1140–0x1183) & /drivers/rtl8139",
+      "drv_layer2": "Unified Device Registry & Hot-Swappable Kernel Extensions",
+      "drv_layer2_desc": "device_node_t (64-bit BARs), driver_ops (64-bit offsets), .kmd PIC Relocator & Channels",
+      "drv_hw": "Kernel Built-In Hardware & Virtual Controllers",
+      "drv_hw_desc": "Direct Ring-0 I/O Ports, PCI BARs, DMA Buffers & Interrupt Subscriptions",
+      "drv_storage": "Storage Stack",
+      "drv_storage_1": "AHCI SATA (DMA/NCQ)",
+      "drv_storage_2": "VirtIO-Blk Modern/Legacy",
+      "drv_storage_3": "ATA/ATAPI PIO + Pool WAL",
+      "drv_net": "Network / KMD",
+      "drv_net_1": "/drivers/rtl8139 (KMD)",
+      "drv_net_2": "RTL8139 / E1000 / VirtIO-Net",
+      "drv_net_3": "Universal Frame Channels",
+      "drv_av": "Graphics & Audio",
+      "drv_av_1": "VirtIO-GPU / VirGL 3D",
+      "drv_av_2": "Bochs BGA / RGBA64F HDR",
+      "drv_av_3": "HDA / AC97 / SB16 / VirtIO",
+      "drv_input": "Input & External Drivers",
+      "drv_input_1": "PS/2 Keyboard & Mouse",
+      "drv_input_2": "/drivers/touchpad + gamepad",
+      "drv_input_3": "/drivers/custom_proto Demo"
+    }
   },
   "ipc_architecture": {
-    "title": "プロセス間通信 (IPC) サブシステム",
-    "caption": "256 バイトメッセージキュー、4 KB パイプ、非同期シグナル、ゼロコピー共有メモリ。"
+    "title": "自己拡張型 IPC・SHM・パイプ・POSIX シグナル",
+    "caption": "名前付きエンドポイント、自動拡張パイプ、0xD0000000+ SHM および POSIX シグナル。",
+    "labels": {
+      "proc_a": "プロセス A (Ring 3 Producer / Client)",
+      "proc_a_sub1": "Message Queue Client",
+      "proc_a_sub2": "Pipe Writer / Signal Sender",
+      "proc_a_sub3": "SHM Page Writer",
+      "proc_a_sub4": "Async Notifier",
+      "proc_b": "プロセス B (Ring 3 Consumer / Service)",
+      "proc_b_sub1": "Endpoint Receiver",
+      "proc_b_sub2": "Pipe Reader / Sigaction",
+      "proc_b_sub3": "Zero-Copy SHM Reader",
+      "proc_b_sub4": "Notify Waiter",
+      "ring3_user": "Ring 3 Isolated Process Spaces (0xD0000000+ SHM Window)",
+      "ipc_core": "IPO_OS Kernel Dynamic IPC & Signal Subsystem (Ring 0)",
+      "ipc_msg": "名前付きエンドポイント (0x10F0–0x10F5)",
+      "ipc_msg_desc": "Dynamic Queue + Capability Rights",
+      "ipc_pipes": "自動拡張パイプ (0x10F6–0x10FE)",
+      "ipc_pipes_desc": "Auto-Growing Ring Buffers",
+      "ipc_shm": "共有メモリ SHM (0x1100–0x1104)",
+      "ipc_shm_desc": "Zero-Copy Physical Page Frames",
+      "ipc_sig": "通知・POSIX シグナル (0x1110–0x1113)",
+      "ipc_sig_desc": "kill(), sigaction, Notify Events"
+    }
   }
 }

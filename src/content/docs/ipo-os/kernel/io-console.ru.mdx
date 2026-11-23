@@ -39,7 +39,7 @@ void vga_set_cursor(uint16_t x, uint16_t y) {
 
 При переходе в графический режим ядро взаимодействует с адаптером **Bochs VBE / BGA (Bochs Graphic Adapter)**:
 - **Порты ввода-вывода:** Индекс `0x01CE`, Данные `0x01CF`.
-- **Разрешения:** 1024x768 (32 bpp), 800x600 (32 bpp).
+- **Разрешения:** Произвольное разрешение (`resolution set <W> <H>` / автоматическое из терминала), RGBA64F HDR и VirtIO-GPU VirGL 3D (`gpu_info`).
 - **Линейный фреймбуфер:** Память MMIO, сопоставленная видеокарте через регистр PCI BAR 0.
 
 ### Системные вызовы оконного менеджера:
@@ -51,7 +51,7 @@ void vga_set_cursor(uint16_t x, uint16_t y) {
 
 ---
 
-## 💻 Интерактивная оболочка терминала (`terminal.c`, 32 встроенные команды) и консоль COM1
+## 💻 Интерактивная оболочка терминала (`terminal.c`, 33 встроенные команды (+ /applications/gpu_info)) и консоль COM1
 
 Терминал ядра (`src/kernel/core/terminal.c`) поддерживает историю команд, автодополнение по `Tab`, пакетные конвейеры (`run`), фоновый приём и исполнение команд через последовательный порт **COM1 (`0x3F8`, `terminal_poll_serial_commands()`)** (в том числе во время работы графического менеджера окон `startwm`), и использует **саморасширяющиеся динамические буферы** (текущий путь `terminal_cwd`, буфер ввода и история команд расширяются через `krealloc` без фиксированных лимитов длины):
 
@@ -59,8 +59,8 @@ void vga_set_cursor(uint16_t x, uint16_t y) {
 | :--- | :--- |
 | **Навигация и файлы (`IPO_FS`)** | `ls`, `cd`, `pwd`, `mkdir`, `touch`, `cat`, `echo`, `rm`, `mv`, `cp`, `stat`, `df`, `reinstall_fs` |
 | **Пул хранения и WAL (`storage_pool`)** | `storage [list \| status \| usage \| check \| create [uuid] [dev] \| add &lt;dev&gt; \| recover \| save]` |
-| **Драйверы и модули KMOD (`.kmd`)** | `drivers [list \| info \| load <path.kmd> \| unload \| status \| symbols]`, `symbols [фильтр]` (`ksyms`) |
+| **Драйверы и модули KMOD (`.kmd`)** | `drivers [list \| info \| load <path.kmd> \| unload \| status \| symbols]`, `kernel_symbols [фильтр]` |
 | **Реестр оборудования и SMP** | `hardware [overview \| list \| cpu \| memory \| pci \| storage \| network \| usb \| refresh \| info <id> \| status]` |
 | **Память, процессы и раскладки** | `free`, `ps`, `kill`, `killall`, `run`, `return`, `keymap` |
-| **Графика, сеть и система** | `startwm`, `stopwm`, `ifconfig`, `clear`, `help`, `reboot`, `shutdown` |
+| **Графика, сеть и система** | `startwm`, `stopwm`, `resolution`, `cursor`, `rtc`, `cpuinfo`, `kernel_symbols`, `clear`, `help`, `reboot`, `shutdown` |
 

@@ -70,6 +70,6 @@ Always confirm the target drive identifier (`/dev/sdX`) using `lsblk` before run
 
 ```bash
 # Write OS image to USB or CompactFlash drive
-sudo dd if=build/IPO_OS.img of=/dev/sdX bs=4M status=progress conv=fsync
+sudo dd if=build/disks/disk.img of=/dev/sdX bs=4M status=progress conv=fsync
 sudo sync
 ```

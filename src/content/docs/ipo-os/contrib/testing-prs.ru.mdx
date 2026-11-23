@@ -15,8 +15,8 @@ IPO_OS может быть запущена в headless-режиме с выво
 
 ```bash
 # Запуск тестирования без графического интерфейса с подключением загрузочного диска и диска данных
-qemu-system-i386 -m 2048 \
-    -drive format=raw,file=build/IPO_OS.img,if=ide,index=0 \
+qemu-system-x86_64 -m 2048 \
+    -drive format=raw,file=build/disks/disk.img,if=ide,index=0 \
     -drive format=raw,file=build/disks/disk.img,if=ide,index=1 \
     -display none -serial stdio
 ```

@@ -9,8 +9,8 @@ import Callout from '../../../components/Callout.astro';
 # User Interface, Shell, GUI and Multimedia
 
 **IPO_OS** provides a comprehensive user experience:
-1. **Interactive Console Shell:** 31 built-in commands, multitasking virtual workspaces (`run &`), result-value argument passing (`|`), scrollback history, and ANSI colors.
-2. **Window Manager (WM):** 2D graphical desktop running in VGA Mode 13h (320x200x256); compositor updates run from the active process/console loop without a fixed FPS cap, with a PS/2 software mouse pointer and event-driven windows.
+1. **Interactive Console Shell:** 33 built-in commands (+ `/applications/gpu_info`), multitasking virtual workspaces (`run &`), result-value argument passing (`|`), scrollback history, and ANSI colors.
+2. **Window Manager (WM):** 2D graphical desktop running in HDR RGBA64F & arbitrary pixel resolution (default synced to terminal geometry); compositor updates run from the active process/console loop without a fixed FPS cap, with a PS/2 software mouse pointer and event-driven windows.
 3. **TinyGL 3D Engine (OpenGL 1.1):** Software 3D rasterizer inside kernel space, featuring Z-buffering, dynamic lighting, texture mapping, and flat/smooth shading.
 4. **Audio Architecture:** Sound Blaster 16 DSP hardware driver (16-bit DMA Ch 5, 22050 Hz stereo mixer) and fallback PC Speaker PWM.
 
@@ -22,7 +22,7 @@ import Callout from '../../../components/Callout.astro';
 
 The kernel command line interpreter (`src/kernel/core/terminal.c`) provides interactive text navigation, remote serial command execution (`terminal_poll_serial_commands()`), and multitasking execution operators:
 
-### 📋 Complete 32 Built-in Command Reference (`terminal_is_builtin`)
+### 📋 Complete 33 Built-in Shell Command Reference (+ `/applications/gpu_info`) (`terminal_is_builtin`)
 
 | Command | Syntax | Description |
 | :--- | :--- | :--- |
@@ -43,15 +43,18 @@ The kernel command line interpreter (`src/kernel/core/terminal.c`) provides inte
 | `kill` | `kill <pid>` | Terminates a process by PID. |
 | `killall` | `killall` | Terminates all active processes and stops background async tasks. |
 | `run` | `run <cmd> [&\|&&\|\|\|;]` | Launches executables (ELF32, `.bin`, `#!` scripts) with multitasking operators. |
-| `startwm` | `startwm` | Launches graphical Window Manager desktop session in VGA Mode 13h (`320x200x256`). |
+| `startwm` | `startwm` | Launches graphical Window Manager desktop session in HDR RGBA64F & arbitrary desktop resolution. |
 | `stopwm` | `stopwm` | Terminates graphical WM session and restores `80x25` text mode. |
-| `ifconfig` | `ifconfig [<ip> [netmask] [gateway] [dns]]` | Displays or configures IPv4 address, subnet mask, gateway, DNS, and RTL8139 MAC. |
+| `gpu_info` (app) | `gpu_info [gpu|auto|cpu]` | Inspects VirtIO-GPU / VirGL 3D capabilities and toggles hardware vs software 3D backend (network setup uses `/drivers/rtl8139`). |
 | `df` | `df` | Reports `IPO_FS` storage capacity, used/free 4 KB blocks, and inodes. |
 | `free` | `free` | Reports physical RAM, 64 MB kernel heap (`kmalloc`), and PMM frame statistics. |
 | `drivers` | `drivers [list\|info\|load\|unload\|status\|symbols]` | Manages dynamic kernel modules (`.kmd`, ABI 0x0100) and lists registered drivers. |
 | `hardware` | `hardware [overview\|list\|cpu\|memory\|pci\|storage\|network\|usb\|refresh\|info\|status]` | Inspects live hardware resources probed from buses, ACPI, SMBIOS, and Option ROMs. |
-| `symbols` | `symbols [filter]` | Displays the kernel exported symbol table (`EXPORT_SYMBOL`). |
-| `ksyms` | `ksyms [filter]` | Alias for `symbols` to inspect exported kernel symbols with optional prefix filter. |
+| `kernel_symbols` | `kernel_symbols [filter]` | Displays the kernel exported symbol table (`EXPORT_SYMBOL`). |
+| `resolution` | `resolution [show\|default\|set <w> <h>]` | Sets arbitrary desktop pixel resolution (default derived automatically from hardware terminal size). |
+| `cursor` | `cursor [show\|default\|set <w> <h>]` | Inspects or sets arbitrary pixel cursor dimensions. |
+| `rtc` | `rtc [status\|resync\|fmt\|datefmt\|set\|add]` | Inspects and configures CMOS MC146818 clock and taskbar date/time formats. |
+| `cpuinfo` | `cpuinfo` | Prints CPU vendor, brand, caches, and instruction feature flags. |
 | `storage` | `storage [list\|status\|usage\|check\|create\|add\|recover\|save]` | Manages multi-disk storage pool (`IPO_STORAGE_POOL`), block devices, superblocks, and WAL. |
 | `reinstall_fs`| `reinstall_fs` | Formats the disk partition with a clean `IPO_FS` filesystem. |
 | `keymap` | `keymap [list\|on\|off\|rm] [name]` | Manages runtime keyboard layouts (`/etc/keymaps/*.kmap`). |
@@ -65,7 +68,7 @@ The kernel command line interpreter (`src/kernel/core/terminal.c`) provides inte
 
 ```bash
 # 1. '&' operator — separate virtual workspaces (Ctrl+PgUp / Ctrl+PgDn to switch):
-run edit & player & hosting_server
+run edit & links & hosting_server
 
 # 2. '&&' operator — asynchronous shared workspace (run multiple GUI/3D apps on same desktop):
 run gl_cube && gl_gears && fps_meter
@@ -88,7 +91,7 @@ run setfont /fonts/terminus.fnt ; startwm
 
 ## 🪟 2. Window Manager (WM)
 
-The graphical desktop compositor is updated by the active process/console loop in VGA Mode 13h (320x200x256), without a fixed 60 FPS cap:
+The graphical desktop compositor is updated by the active process/console loop in HDR RGBA64F & arbitrary pixel resolution (default synced to terminal geometry), without a fixed 60 FPS cap:
 - Window decoration styles: `WM_DECOR_DEFAULT`, `WM_DECOR_THIN`, `WM_DECOR_NONE`.
 - Event model: `WM_EVENT_CLICK`, `WM_EVENT_KEY_DOWN`, `WM_EVENT_MOVE`, `WM_EVENT_RESIZE`, `WM_EVENT_CLOSE`.
 - Drag a standard window by its title bar only; clicking the client area sends `WM_EVENT_CLICK` and does not move the window. Resize using the window borders, and maximize/restore with the title-bar button or a double-click on the title bar.
@@ -145,4 +148,4 @@ Integrated bare-metal software 3D rasterizer:
 
 - **Sound Blaster 16:** Base port `0x220`, 16-bit DMA Channel 5, double buffering at `0x600000`, 22050 Hz stereo mixer.
 - **PC Speaker:** Dynamic PWM frequency tracking using Zero-Crossing rate analysis.
-- **Audio & Multimedia applications:** `player` (plays media files from `/music/`), `doom`.
+- **Audio & Multimedia applications:** `doom`, `quake`, `sdk_3d_audio_demo`.

@@ -177,7 +177,7 @@
     "featured_badge": "⭐ 完全プラットフォームバンドル",
     "featured_ribbon": "⭐ 完全プラットフォームバンドル",
     "featured_title": "IPO Systems 完全バンドル（全プロジェクトとディスク）",
-    "featured_desc": "プラットフォーム全体のコンパイル済みバイナリを全て同梱：Boot ROM (bootrom.bin)、Firmware (firmware.bin)、IPO_OS カーネルイメージ (IPO_OS.img)、クリーン＆プリインストール済みディスク (disk-clean.img, disk-installed.img)、コンパイル済みアプリケーション (applications.zip)。",
+    "featured_desc": "プラットフォームの全バイナリを含みます：Boot ROM (bootrom.bin)、Firmware (firmware.bin)、IPO_OS カーネルバイナリ (IPO_OS.bin)、クリーンおよびプリインストール済みディスク (disk-clean.img, disk-installed.img)、アプリ・ドライバ・ヘッダ・データ一式 (applications.zip)。",
     "download_bundle": "完全バンドルをダウンロード",
     "components_title": "個別のコンポーネントとディスクイメージ",
     "download_btn": "ダウンロード",
@@ -203,13 +203,13 @@
     "stack_desc": "3 つのプロジェクトすべてが、明確に定義された契約を持つ単一のプラットフォームとして連携します。",
     "projects_title": "プラットフォームプロジェクト",
     "projects_desc": "各コンポーネントは自己完結型であり、厳密に文書化されています。",
-    "os_desc": "完全な 32 ビット x86 OS: 保護モードカーネル、64 ビット IPO_FS を備えた VFS、GUI ウィンドウマネージャー、TCP/IP スタック。",
+    "os_desc": "ベアメタル x86-64 / x86 OS：64-bit Long Mode (PML4 / LA57) と 32-bit ページングフォールバック、全コア SMP スケジューラ (IPI 0xE0)、64-bit 動的 IPO_FS + WAL ジャーナル、.kmd & /drivers/* モジュール (TCP/IP/DNS/DHCP, タッチパッド, ゲームパッド)、VirGL 3D 対応 RGBA64F HDR WM、HDA/AC97/SB16/VirtIO オーディオ、305 システムコール、pthread/シグナル/futex/mmap。",
     "os_docs_link": "IPO_OS ドキュメント →",
-    "boot_rom_desc": "物理マシンと QEMU 用のハードウェアリセットベクター初期化プログラム。CAR を設定し、host bridge の生 ID を報告し、パターンテストなしで DRAM コントローラーを設定し、PAM shadowing を行って Contract 2 へ制御を移します。",
+    "boot_rom_desc": "実機・QEMU向けリセットベクタ初期化コード（bootblock 0xFE000 / F000:E000）。32 KiB Cache-as-RAM（0x70000..0x77FFF、.car_bypass 0x2E 対応）と C XIP romstage による SPD/DRAM・PAM 設定を行い、0xF000:000C へ移行します。",
     "boot_rom_docs_link": "Boot ROM ドキュメント →",
-    "firmware_desc": "IVT 割り込み、E820 メモリマップ、Fast A20 を備えた BIOS 互換リアルモードファームウェア層。",
+    "firmware_desc": "BIOS 互換 16-bit リアルモードファームウェア（56 KiB、0xF0000..0xFDFFF）。IVT（INT 10h–1Ah）、動的 E820 / ACPI 1.0、Fast A20、PCI バス 0..7、ストレージ（ATA PIO, AHCI, NVMe, USB EHCI）と AP SMP 起動を実行します。",
     "firmware_docs_link": "Firmware ドキュメント →",
-    "software_desc": "IPO_OS 用ユーザースペースソフトウェアエコシステム: C標準ライブラリ (libc, libm, libstdc++)、TinyGL 3Dグラフィックス、ウィンドウ管理API、システム内コンパイラ (TinyCC, Lua, MicroPython, NASM, GNU binutils)、DOOMを含む移植アプリ、IPO_FSディスクユーティリティ。",
+    "software_desc": "IPO_OS ユーザー空間エコシステム：C/C++ ランタイム（libc, libm, libstdc++）、OpenGL/GPU/HDR/オーディオライブラリ、WM API、OS 内コンパイラ（GCC, G++, TinyCC, Lua, MicroPython, NASM, GNU binutils）、外部ドライバ、DOOM/SENSE/Links、IPO_FS ユーティリティ。",
     "software_docs_link": "ソフトウェアエコシステム →",
     "roles_title": "どこから始めるか（読者プロフィール）",
     "roles_desc": "目的に合わせたステップバイステップガイドを選択してください:",
@@ -217,7 +217,7 @@
     "user_role_desc": "QEMU での実行、シェルコマンドライン操作、ネットワーク設定。",
     "user_role_link": "QEMU でのクイックスタート →",
     "app_dev_title": "アプリケーション開発者",
-    "app_dev_desc": "C/ASM でのコード記述、int 0x80 システムコールの呼び出し、ディスクへの展開。",
+    "app_dev_desc": "C/C++/ASM で int 0x80（305 システムコール）を使用し、0x800000 にリンク・0x10000000+ 動的ヒープ構成で disk_editor.py により配置します。",
     "app_dev_link": "Hello, World アプリの作成 →",
     "kernel_dev_title": "カーネルエンジニア",
     "kernel_dev_desc": "メモリレイアウト、IDT トラップ、ドライバモデル、TCP/IP 状態マシン。",
@@ -259,10 +259,10 @@
     "emulator_promo_desc": "インストール不要。QEMU WebAssembly 上でライブシリアルログとターミナル操作を備えた完全なネイティブブートチェーンを実行します。",
     "emulator_promo_btn": "オンラインエミュレータを開く →",
     "emulator_promo_serial": "ライブシリアルコンソール",
-    "raw_img_512k": "RAW IMG (512K 起動可能)",
-    "binary_4m_shadow": "バイナリ 4 MB (Shadow RAM)",
+    "raw_img_512k": "RAW BIN（起動カーネル）",
+    "binary_4m_shadow": "ROM BIN（Shadow + XIP Flash）",
     "emulator_reset_disk": "ディスクを初期化",
-    "emulator_reset_confirm": "仮想ディスク IDE1 (64 MB) を工場出荷時の状態にリセットしますか？保存されたすべてのファイルと OS の変更は削除されます。",
+    "emulator_reset_confirm": "仮想ディスク IDE1（512 MiB）を初期状態にリセットしますか？保存された変更はすべて消去されます。",
     "emulator_saving_disk": "再起動前に仮想ディスクを保存中…",
     "emulator_serial_placeholder": "IPO_OS に入力 (例: help、sysinfo、ls)...",
     "emulator_serial_send": "送信",
@@ -278,9 +278,9 @@
     "emulator_card_v86_title": "1. v86 x86 PC エミュレーター",
     "emulator_card_v86_description": "v86 は WebAssembly 上で x86 CPU、メモリ、VGA ディスプレイ、キーボード、IDE ストレージをエミュレートします。",
     "emulator_card_firmware_title": "2. オリジナルの IPO_Boot_ROM と IPO_Firmware",
-    "emulator_card_firmware_description": "完全な IPO_Boot_ROM イメージは CPU のリセットベクター領域に配置され、元の実行ウィンドウ F000:8000 は従来の F セグメントに公開されます。完全な単独の IPO_Firmware イメージは BIOS として別にマッピングされ、ROM イメージは結合されません。パッチ適用済みの v86 CPU は IPO_Boot_ROM に必要な MTRR レジスターを実装しています。",
+    "emulator_card_firmware_description": "IPO_Boot_ROM は CPU リセット領域を占有し、8 KiB bootblock（F000:E000 / 0xFE000..0xFFFFF）とフラッシュ内の XIP romstage を提供します。独立した 56 KiB IPO_Firmware は 0xF0000..0xFDFFF に配置され、パッチ済み v86 CPU は MTRR と CAR バイパスに対応します。",
     "emulator_card_os_title": "3. ソフトウェアをインストールした IPO_OS",
-    "emulator_card_os_description": "disk-installed.img は唯一のプライマリディスクです。元の IPO_OS 起動イメージを保持し、IPO_FS パーティションに検証済みのアプリケーション、ツールチェーン、フォント、サポートファイルを含みます。変更されたディスクブロックは IndexedDB を使ってこのブラウザープロファイルに保存され、次回以降も利用できます。",
+    "emulator_card_os_description": "disk-installed.img（512 MiB）がプライマリディスクです。IPO_OS ブート領域に加え、IPO_FS 上にアプリ、ドライバ（/drivers/*）、コンパイラ、データ、SDK ヘッダ、フォントを搭載し、変更は IndexedDB に保存されます。",
     "emulator_card_serial_title": "4. シリアル出力のリアルタイム表示",
     "emulator_card_serial_description": "オリジナルの Boot ROM、IPO_Firmware、IPO_OS のシリアル診断出力を VGA 画面とともにブラウザーコンソールへストリーミングします。",
     "emulator_error": "エミュレーターエラー",
@@ -289,15 +289,16 @@
     "emulator_send_enter": "送信 (Enter)",
     "emulator_vga_bios_license": "VGA BIOS の LGPL ライセンス",
     "emulator_step1_title": "1. IPO_Boot_ROM ハードウェアリセット",
-    "emulator_step1_desc": "QEMU は IPO_Boot_ROM をシステム BIOS として読み込みます。ROM は firmware payload を物理アドレス 0xF0000 の shadow memory にコピーし、CS:IP 0xF000:0004 で制御を移します。",
+    "emulator_step1_desc": "QEMU/v86 は 0xFFFFFFF0 (F000:E000) から IPO_Boot_ROM を起動し、CAR・C XIP romstage を実行後、Firmware を 0xF0000 へコピーして CS:IP 0xF000:000C へジャンプします。",
     "emulator_step2_title": "2. BIOS POST、IVT およびストレージ引き渡し",
     "emulator_step2_desc": "IPO_Firmware は割り込みベクターテーブル (IVT: INT 10h VGA、INT 13h ディスク、INT 15h E820 マップ、INT 16h キーボード) を構築し、ATA/IDE コントローラーを検出して MBR セクター 0 を 0x7C00 に読み込み、実行を引き渡します。",
     "emulator_step3_title": "3. マルチタスクカーネルとデスクトップ",
-    "emulator_step3_desc": "IPO_OS は CPU を 2 レベルページングを備えた 32 ビット保護モードに切り替え、VFS をマウントし、マウスとキーボードフォーカスを備えたグラフィカルウィンドウマネージャーを初期化します。",
+    "emulator_step3_desc": "IPO_OS は 64-bit Long Mode（PML4/LA57）または 32-bit ページングへ移行し、VFS/IPO_FS をマウントして /drivers/*、対話シェル、Window Manager を起動します。",
     "emulator_step4_title": "4. リアルタイムシリアルテレメトリ",
     "emulator_step4_desc": "すべてのブートステップとカーネルデバッグ出力は COM1 (0x3F8) UART を介してミラーリングされ、WebAssembly ライブログウィンドウに直接キャプチャされて即時分析やコマンド入力が行えます。",
     "emulator_disk_resetting": "仮想ディスクを初期状態にリセット中…",
-    "emulator_logs_cleared": "ログがクリアされました。"
+    "emulator_logs_cleared": "ログがクリアされました。",
+    "emulator_booted": "IPO_OS の起動が完了しました。"
   },
   "tables": {
     "struct": {
@@ -331,7 +332,7 @@
       "storage_opt2": "3.5 インチ HDD × 1 + SSD × 1 (25 W)",
       "storage_opt3": "3.5 インチ HDD × 2 + IDE 光学ドライブ (45 W)",
       "pci_label": "拡張カード (PCI / NIC):",
-      "pci_opt1": "RTL8139 NIC + SB16 オーディオ (15 W)",
+      "pci_opt1": "PCI/PCIe NIC + HDA/AC97 オーディオ (15W)",
       "pci_opt2": "独立 PCI ビデオ + NIC + オーディオ (40 W)",
       "peak_label": "Estimated Peak Load:",
       "rec_label": "推奨電源容量 (+30% の余裕):",
@@ -345,14 +346,17 @@
       "size": "Size:",
       "initial_desc": "リアルモード割り込みベクターテーブル (256 ベクター × 4 バイト CS:IP)。",
       "regions": {
-        "ivt": "リアルモード割り込みベクタテーブル（256ベクタ * 4バイト CS:IP）。",
-        "bda": "BIOSデータ領域: COM/LPT基本ポート、キーボードバッファ、0x46Cタイマーカウント。",
-        "mbr": "BIOSがLBA 0をロードする標準DRAM領域（契約3引き渡し）。",
-        "kernel": "32ビット保護モードカーネルコア（.text, .rodata, .data, .bss）。",
-        "vga": "0xB8000のVGAモード03hテキストモード画面メモリ（80x25文字）。",
-        "shadow": "0xC0000のVBIOS Option ROM、Shadow RAM内のIPO_Boot_ROMおよびIPO_Firmware。",
-        "heap": "kmalloc()およびページフレーム割り当て用拡張メモリヒープ。",
-        "userspace": "ELF/バイナリユーザー空間アプリの物理配置ベースアドレス（app.ldでリンク）。"
+        "ivt": "リアルモード割り込みベクタテーブル IVT（256 ベクタ × 4 バイト）。",
+        "bda": "BIOS データ領域 (BDA)：COM/LPT ポート、キーボードバッファ、タイマティック (0x46C)。",
+        "mbr": "ブート・SMP 低位メモリ：E820 マップ (0x6000)、MBR (0x7C00)、SMP Trampoline (0x8000)、SMP トランポリン (0x8000..0x8FFF (mailbox 0x8180–0x81A7))。",
+        "vga": "VGA VRAM (0xA0000) および任意 CRTC 解像度対応テキスト VRAM (0xB8000)。",
+        "shadow": "VBIOS (0xC0000)、56 KiB IPO_Firmware (0xF0000..0xFDFFF)、8 KiB Bootblock (0xFE000..0xFFFFF)。",
+        "kernel": "IPO_OS カーネル本体（1 MiB 0x00100000〜）：コード・データ・動的 IDT・ページテーブル（PML4/PDPT/PD）。",
+        "userspace": "ユーザー空間 ELF64/ELF32 実行領域（0x00800000〜）および #PF 動的拡張スレッドスタック。",
+        "heap": "カーネル動的ヒープ kmalloc() 基本アリーナ（64 MiB 0x04000000–0x07FFFFFF）＋ PMM 拡張アリーナ。",
+        "pmm": "物理メモリマネージャ (PMM) および VMM 管理領域（128 MiB 0x08000000–0x0FFFFFFF）。",
+        "user_heap": "USER_HEAP_START 256 MiB（0x10000000+、RAM<=256 MiB 時は 0x09000000）：動的拡張 sbrk() ヒープ。",
+        "high_sys": "高位仮想空間・MMIO（0xC0000000+）：mmap()/SHM（0xD0000000+）、.kmd モジュール、64-bit PCI BAR、VirGL/LFB。"
       }
     }
   },
@@ -360,7 +364,7 @@
     "hello-c": "main.c（IPO_OS の最初のアプリケーション）",
     "hello-asm": "hello_asm.asm（純粋なアセンブリアプリケーション）",
     "socket-tcp-server": "tcp_server.c（IPO_OS の POSIX ソケット HTTP サーバー）",
-    "opengl-cube": "gl_cube.c（IPO_OS の TinyGL 3D 描画）",
+    "opengl-cube": "gl_cube.c（IPO_OS 上のハードウェア VirGL / OpenGL 3D 描画）",
     "wm-gui-window": "wm_app.c（コールバック付き GUI ウィンドウの作成）",
     "micropython-script": "test.py（ベアメタル IPO_OS で Python を実行）",
     "in-os-tcc": "IPO_OS 内で C コードを直接コンパイル",
@@ -401,28 +405,28 @@
   },
   "artifact_labels": {
     "ipo_os_raw": {
-      "name": "IPO_OS 起動イメージ",
-      "description": "IPO_OS カーネルとブートローダーを含む、32 ビットの未加工起動イメージです。"
+      "name": "IPO_OS 起動バイナリ (IPO_OS.bin)",
+      "description": "MBR ブートローダと IPO_OS カーネルを含む起動バイナリ（0x100000 リンク）。"
     },
     "ipo_disk_blank": {
-      "name": "IPO_OS 空の RAW ディスク (512 MiB)",
-      "description": "ファイルシステムやプリインストール済みアプリケーションを含まない、未フォーマットの 512 MiB RAW ディスクイメージです。"
+      "name": "IPO_OS ブランクディスク (512 MiB)",
+      "description": "未フォーマットの 512 MiB 生ディスクイメージ。"
     },
     "ipo_disk_installed": {
-      "name": "アプリケーションインストール済み IPO_OS ディスク (512 MB)",
-      "description": "アプリケーション、開発ツール、ランタイムライブラリ、フォントをインストール済みの、すぐ使える 512 MB IPO_FS ディスクイメージです。"
+      "name": "IPO_OS プリインストールディスク (512 MiB)",
+      "description": "アプリ、ドライバ、ツールチェーン、ヘッダ、データ、フォント導入済み 512 MiB IPO_FS ディスク。"
     },
     "ipo_disk_clean": {
-      "name": "クリーン IPO_OS ディスク (512 MB)",
-      "description": "IPO_FS でフォーマットされた、アプリケーション未インストールの 512 MB ディスクイメージです。"
+      "name": "IPO_OS クリーンディスク (512 MiB)",
+      "description": "64-bit 動的 IPO_FS でフォーマット済みの 512 MiB 空ディスク。"
     },
     "ipo_applications": {
-      "name": "IPO_OS アプリケーションパッケージ",
-      "description": "IPO_OS 用のコンパイル済みアプリケーション、開発ツール、ランタイムライブラリ、SDK ヘッダー、フォントです。"
+      "name": "IPO_OS アプリ・ソフトウェアパッケージ",
+      "description": "コンパイル済みアプリ、ドライバ、コンパイラ、C/C++ ライブラリ、再帰ヘッダ、データ、フォント一式。"
     },
     "ipo_firmware": {
       "name": "IPO_Firmware",
-      "description": "コンパイル済み IPO_Firmware ランタイムサービス ROM バイナリ (firmware.bin) です。"
+      "description": "56 KiB リアルモード BIOS サービス ROM バイナリ (firmware.bin)。"
     }
   },
   "units": {

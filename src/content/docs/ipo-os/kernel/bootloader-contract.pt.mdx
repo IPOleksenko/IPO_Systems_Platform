@@ -7,13 +7,13 @@ import SharedCode from '../../../../components/SharedCode.astro';
 
 # Contrato de transferência do carregador de inicialização
 
-When the primary MBR bootloader (`src/boot/boot.asm`) hands over control to the IPO_OS kernel entrypoint (`_start` in `src/kernel/entry32.asm`), the CPU and memory state strictly conform to the following hardware contract.
+When the primary MBR bootloader (`src/boot/boot.asm`) hands over control to the IPO_OS kernel entrypoint (`_start` in `src/kernel/linker.ld / _start`), the CPU and memory state strictly conform to the following hardware contract.
 
 ---
 
-## 📋 CPU State at Kernel Entry (0x10000)
+## 📋 CPU State at Kernel Entry (0x100000)
 
-The bootloader establishes a flat 32-bit Protected Mode environment (Ring 0) with paging disabled:
+The bootloader establishes a flat 32-bit Protected Mode environment (Ring 0) with 32-bit entry before Long Mode PML4/LA57 or 32-bit Paged initialization:
 
 | CPU Register | State at Handover | Purpose & Hardware Description |
 | :--- | :--- | :--- |
@@ -23,7 +23,7 @@ The bootloader establishes a flat 32-bit Protected Mode environment (Ring 0) wit
 | **`ESP`** | `0x00500000` | 5 MB kernel stack (initialized in `boot.asm` and reset in `entry32.asm`) |
 | **`CR0`** | `PE = 1 (bit 0), PG = 0 (bit 31)` | Protected Mode active, Paging disabled |
 | **`EFLAGS`** | `0x00000002` (`IF = 0`) | Hardware interrupts disabled (`cli`) until IDT installation in kernel |
-| **`EIP`** | `0x00010000` | Kernel physical entry point address (`_start`) |
+| **`EIP`** | `0x00100000` | Kernel physical Kernel physical entry point address (`0x00100000` `_start`, bouncing via `0x10000` during real-mode Unreal copy) |
 | **A20 Line** | Enabled (Fast A20) | Asserted via system I/O port `0x92` (`in al, 0x92; or al, 2; out 0x92, al`) |
 | **VGA Cursor** | Hidden | BIOS text cursor disabled prior to protected mode entry (`INT 10h, AH=01h, CH=20h`) |
 
@@ -39,10 +39,10 @@ Instead, the real-mode bootloader (`src/boot/boot.asm`) probes physical memory u
 - **`0x8FE8`**: Physical address of the E820 entry array (`0x00006000`).
 - **`0x8FF0`**: Total usable RAM in bytes (low 32 bits) and **`0x8FF4`** (high 32 bits).
 
-During kernel initialization, `memory_map_init()` (`src/kernel/mm/memory_map.c`) parses the E820 memory map from `0x8FE0` / `0x6000` (or synthesizes a layout if the `'E820'` signature is absent), reserves the first **64 MB** of `0x01000000`–`0x04FFFFFF` for the `kmalloc()` kernel heap, and the process manager queries usable RAM capacity to size user `sbrk` heaps (starting at `0x08000000`).
+During kernel initialization, `memory_map_init()` (`src/kernel/mm/memory_map.c`) parses the E820 memory map from `0x8FE0` / `0x6000` (or synthesizes a layout if the `'E820'` signature is absent), reserves the first **64 MB** of `0x04000000`–`0x04FFFFFF` for the `kmalloc()` kernel heap, and the process manager queries usable RAM capacity to size user `sbrk` heaps (starting at `0x10000000`).
 
 Furthermore, `src/boot/boot.asm` pads its executable code to **446 bytes** (`times 446-($-$$) db 0`) and embeds a **standard 64-byte MBR Partition Table** at offsets `0x1BE`–`0x1FD` before the `0xAA55` boot signature:
-- **Partition 1 (`0x1BE`)**: Bootable (`0x80`), Type `0x83` (`Linux / IPO_FS`), Start **LBA 2048** (`0x00000800`), Count **260,096 sectors** (`0x0003F800`, ~127 MB).
+- **Partition 1 (`0x1BE`)**: Bootable (`0x80`), Type `0x83` (`Linux / IPO_FS`), Start **LBA 2048** (`0x00000800`), Count **1,046,528 sectors** (`0x000FF800`, ~511 MiB).
 - **Partitions 2–4 (`0x1CE`–`0x1FD`)**: Zeroed (`times 48 db 0`), available for partitioning and inspected via `partition_scan()`.
 
 ---
@@ -52,13 +52,13 @@ Furthermore, `src/boot/boot.asm` pads its executable code to **446 bytes** (`tim
 For bare-metal debugging on systems without active serial lines, the bootloader and kernel render visual progress markers:
 
 1. **`A`** (`0x41`): Bootloader verified BIOS disk extensions (`INT 13h, AH=41h, BX=55AAh`).
-2. **`R`** (`0x52`): Kernel binary sectors read from LBA 1 into physical address `0x10000` via DAP (`INT 13h, AH=42h`).
+2. **`R`** (`0x52`): Kernel binary sectors read from LBA 1 into physical address `0x100000` via DAP (`INT 13h, AH=42h`).
 3. **`G`** (`0x47`): Physical RAM detected and saved to `0x8FF0`, GDT loaded, entering Protected Mode.
 4. **`K`** (`0x4B`): Kernel entrypoint `_start` wrote `'K'` (attribute `0x07`, light grey on black) to top-left VGA buffer `0xB8000` immediately prior to calling `kmain()`!
 
 ---
 
-## 🎯 Kernel Entrypoint (src/kernel/entry32.asm)
+## 🎯 Kernel Entrypoint (src/kernel/linker.ld / _start)
 
 The kernel assembly entrypoint consists of exactly 11 instructions:
 
@@ -80,6 +80,6 @@ _start:
 
 ## ⚙️ Kernel Linker Script (src/kernel/linker.ld)
 
-The kernel binary is linked to start at physical address `0x10000` (64 KB):
+The kernel binary is linked to start at physical address `0x100000` (64 KB):
 
 <SharedCode id="kernel-linker-script" />

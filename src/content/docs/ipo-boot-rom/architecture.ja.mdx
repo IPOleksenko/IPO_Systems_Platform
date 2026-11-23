@@ -27,7 +27,7 @@ On modern processors, external physical DRAM requires extensive initialization t
 2. **Set the default memory type:** Write `0x800` to `MTRRdefType` (`0x2FF`), enabling MTRRs with the default type set to Uncacheable (`UC`, `0x00`).
 3. **Configure variable MTRR 0** (`MTRRphysBase0` `0x200`, `MTRRphysMask0` `0x201`) for the Write-Back (`0x06`) region `0x70000`..`0x77FFF`.
 4. **Fill CAR:** Clear `CR0.CD` for cache fills. Pace the first 64 dword stores through port `0x80`, then fill the remaining 8,128 dwords with `rep stosd`. The pacing does not guarantee that physical boards will avoid hangs.
-5. **Restore cache state and establish the CAR stack:** Set `CR0.CD` again, use `SS:SP = 0x7000:0x8000`, and clear a further 256-byte scratch area.
+5. **Restore cache state and establish the CAR stack:** Set `CR0.CD` again, use 32 KiB CAR at `0x70000`..`0x77FFF` (with non-halting `.car_bypass` `0x2E` if MTRRs are absent), and clear a further 256-byte scratch area.
 
 ---
 
@@ -50,11 +50,11 @@ After DRAM initialization:
 
 1. **Unlock PAM Registers:** Programmable Attribute Map registers (e.g. PAM0 on i440FX register `0x59`) control the BIOS segment `0xF0000`..`0xFFFFF`:
    - Set `WE = 1` and `RE = 0` for the PAM open state used during shadow copying.
-2. **Payload Relocation:** Copy the full 64 KB ROM segment (including the `IPO_Firmware` payload at `0xF000:0000`) from the ROM memory window (`0xFFFF0000`) into DRAM Shadow RAM at `0xF000:0000` (`0x000F0000`).
+2. **Payload Relocation:** Copy the 56 KiB firmware bank (`0xF000:0000`..`0xDFFF`, or up to `65,520` B via `0x2000:0000` staging) via trampoline `0x0600` (including the `IPO_Firmware` payload at `0xF000:0000`) from the ROM memory window (`0xFFFF0000`) into DRAM Shadow RAM at `0xF000:0000` (`0x000F0000`).
 3. **Set the handover stack:** The handover state uses `SS:SP = 0x0000:0x7C00`.
 4. **Teardown CAR:** Disable variable MTRR 0 and execute `wbinvd` (Write-Back and Invalidate Cache).
 5. **Configure PAM for read-only shadow access:** Set `WE = 0` and `RE = 1`; the current code does not read back the register to verify this state.
-6. **Handover Jump:** Validate header magic `'IPO'` (`0x004F5049`) at `0xF000:0000` and execute far jump to entry point:
+6. **Handover Jump:** Validate header magic `'IPO_Firmware'` (`0x4F504920 ('IPO_Firmware' 12B)`) at `0xF000:0000` and execute far jump to entry point:
 ```asm
-jmp 0xF000:0004       ; Enter IPO_Firmware (Contract 2)
+jmp 0xF000:000C       ; Enter IPO_Firmware (Contract 2)
 ```

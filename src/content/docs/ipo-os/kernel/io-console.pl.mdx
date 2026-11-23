@@ -5,7 +5,7 @@ description: "VGA Mode 03h text console, font loading, Bochs VBE graphics, and M
 
 # I/O, Video & Console Subsystem
 
-IPO_OS provides a dual-mode video architecture: a hardware VGA 80x25 text console with custom glyph rendering, and a managed graphical Window Manager (WM) with hardware acceleration under Bochs VBE/BGA.
+IPO_OS provides a dual-mode video architecture: a hardware VGA arbitrary CRTC-dimension text console (default auto-detected from hardware, e.g. 80x25+) with custom glyph rendering, and a managed graphical Window Manager (WM) with hardware acceleration under Bochs VBE/BGA.
 
 ---
 
@@ -39,7 +39,7 @@ The system call `IPO_SYSCALL_FONT_LOAD` (`0x1052`) allows loading custom 8x16 bi
 
 When switched to graphical mode, the kernel interfaces with the **Bochs VBE / BGA (Bochs Graphic Adapter)** registers:
 - **I/O Ports:** Index Register `0x01CE`, Data Register `0x01CF`.
-- **Supported Modes:** 1024x768 (32 bpp), 800x600 (32 bpp).
+- **Supported Modes:** Arbitrary desktop resolution synchronized to hardware (`resolution set <W> <H>` / default derived from terminal pixels), RGBA64F HDR compositor (`0x11E0`–`0x11EA`), and VirtIO-GPU VirGL 3D (`0x11F0`–`0x11F7`, `gpu_info`).
 - **Framebuffer Base:** Memory-mapped linear frame buffer assigned via PCI BAR 0.
 
 ### Window Management Syscalls:
@@ -51,7 +51,7 @@ Applications create and manage graphical windows using the WM API:
 
 ---
 
-## 💻 Interactive Terminal Shell (`terminal.c`, 31 Built-In Commands) & COM1 Serial Console
+## 💻 Interactive Terminal Shell (`terminal.c`, 33 Built-In Commands (+ /applications/gpu_info)) & COM1 Serial Console
 
 The built-in kernel shell (`src/kernel/core/terminal.c`) features command history, `Tab` auto-completion, batch execution pipelines (`run`), background interactive command execution over **UART COM1 (`0x3F8`, `terminal_poll_serial_commands()`)** (including while the graphical Window Manager `startwm` is active), and **self-expanding dynamic buffers** (`terminal_cwd`, input line, and history buffers grow automatically via `krealloc` without fixed array length caps):
 
@@ -59,7 +59,7 @@ The built-in kernel shell (`src/kernel/core/terminal.c`) features command histor
 | :--- | :--- |
 | **Filesystem & Navigation (`IPO_FS`)** | `ls`, `cd`, `pwd`, `mkdir`, `touch`, `cat`, `echo`, `rm`, `mv`, `cp`, `stat`, `df`, `reinstall_fs` |
 | **Storage Pool & WAL (`storage_pool`)** | `storage [list \| status \| usage \| check \| create [uuid] [dev] \| add &lt;dev&gt; \| recover \| save]` |
-| **Drivers & KMOD Modules (`.kmd`)** | `drivers [list \| info \| load <path.kmd> \| unload \| status \| symbols]`, `symbols [filter]` (`ksyms`) |
+| **Drivers & KMOD Modules (`.kmd`)** | `drivers [list \| info \| load <path.kmd> \| unload \| status \| symbols]`, `kernel_symbols [filter]` |
 | **Hardware Registry & SMP** | `hardware [overview \| list \| cpu \| memory \| pci \| storage \| network \| usb \| refresh \| info <id> \| status]` |
 | **Memory, Processes & Keymaps** | `free`, `ps`, `kill`, `killall`, `run`, `return`, `keymap` |
-| **Graphics, Networking & System** | `startwm`, `stopwm`, `ifconfig`, `clear`, `help`, `reboot`, `shutdown` |
+| **Graphics, Networking & System** | `startwm`, `stopwm`, `resolution`, `cursor`, `rtc`, `cpuinfo`, `kernel_symbols`, `clear`, `help`, `reboot`, `shutdown` |

@@ -60,3 +60,13 @@ For full-duplex stream or datagram message passing, processes establish local co
 - Communicates across the internal loopback pseudo-interface (`src/net/loopback.c`).
 - Utilizes standard POSIX-like socket calls (`socket()`, `bind()`, `connect()`, `send()`, `recv()`).
 - Bypasses physical NIC hardware with zero packet loss and microsecond latency.
+
+---
+
+## 📬 Self-Expanding IPC Endpoints, Pipes, Shared Memory & Signals
+
+Beyond System Variables and async tasks, the kernel implements zero-fixed-limit IPC subsystems:
+- **Named IPC Endpoints (`0x10F0`–`0x10F5`):** Capability-gated variable-length message queues.
+- **Self-Expanding Pipes (`0x10F6`–`0x10FE`):** Unidirectional channels whose ring buffers grow automatically.
+- **Shared Memory SHM (`0x1100`–`0x1104`):** Zero-copy physical frame sharing mapped at `0xD0000000+`.
+- **POSIX Signals & Futex (`0x1110`–`0x1130`, `0x1205`):** `sigaction`, `sigprocmask`, `kill`, lightweight notify events, and `ipo_futex`.

@@ -17,7 +17,7 @@ Compiling IPO_Firmware requires:
 - **NASM 2.14+** (Netwide Assembler)
 - **Python 3.8+** (for ROM packaging via `tools/build_rom.py`)
 - **GNU Make 4.0+**
-- **QEMU** (`qemu-system-i386`)
+- **QEMU** (`qemu-system-x86_64`)
 
 ```bash
 # Ubuntu / Debian
@@ -36,12 +36,12 @@ make all
 ```
 
 This compiles:
-- `src/entry.asm` (Contract 2 entrypoint at `0xF000:0004`)
+- `src/entry.asm` (Contract 2 entrypoint at `0xF000:000C`)
 - `src/ivt.asm` (Real-mode interrupt vector table handlers)
 - `src/pci_scan.asm`, `src/ahci.asm`, `src/nvme.asm` (Multi-bus storage discovery)
 - `src/chainload.asm` (Sector 0 reading and Contract 3 handover)
 
-The default `make` target (`all`) assembles the temporary Contract 2 payload at `build/.bin/firmware.bin` (under 32 KB) and packages it as `build/firmware.bin`. The payload is embedded into an external IPO_Boot_ROM image only when `ROM_BIN` is set (for example, with `make run BOOTROM=path/to/bootrom.bin`); otherwise it is only an intermediate input to the standalone BIOS image. The standalone image is 256 KB, while a packaged image retains the supplied Boot ROM's size. IPO_Firmware's image size is not configured by IPO_Boot_ROM's `FLASH_SIZE` option.
+The default `make` target (`all`) assembles the temporary Contract 2 payload at `build/.bin/firmware.bin` (under 32 KB) and packages it as `build/firmware.bin`. The payload is embedded into an external IPO_Boot_ROM image only when `ROM_BIN` is set (for example, with `make run BOOTROM=path/to/bootrom.bin`); otherwise it is only an intermediate input to the standalone BIOS (`build/firmware.bin`) image. The standalone `build/firmware.bin` image packages into `256 KiB` (with the 16-bit code under `32 KiB` and Bank payload max `56 KiB`; or patches the 56 KiB bank in an existing Boot ROM when `ROM_BIN` is supplied). IPO_Firmware's image size is not configured by IPO_Boot_ROM's `FLASH_SIZE` option.
 
 ---
 
@@ -51,31 +51,31 @@ To run IPO_Firmware standalone or with an operating system image, pass the boota
 
 ### 1. Booting with Legacy ATA IDE Storage
 ```bash
-qemu-system-i386 \
+qemu-system-x86_64 \
     -bios build/firmware.bin \
-    -drive file=path/to/IPO_OS.img,format=raw,if=ide,index=0 \
+    -drive file=path/to/disk.img,format=raw,if=ide,index=0 \
     -serial stdio
 ```
 Or directly using the project Makefile:
 ```bash
-make run OS=path/to/IPO_OS.img
+make run OS=path/to/disk.img
 ```
 
 ### 2. Booting with High-Performance AHCI SATA
 ```bash
-qemu-system-i386 \
+qemu-system-x86_64 \
     -bios build/firmware.bin \
     -device ahci,id=ahci0 \
-    -drive file=path/to/IPO_OS.img,format=raw,if=none,id=disk0 \
+    -drive file=path/to/disk.img,format=raw,if=none,id=disk0 \
     -device ide-hd,bus=ahci0.0,drive=disk0 \
     -serial stdio
 ```
 
 ### 3. Booting with Modern NVMe Storage
 ```bash
-qemu-system-i386 \
+qemu-system-x86_64 \
     -bios build/firmware.bin \
-    -drive file=path/to/IPO_OS.img,format=raw,if=none,id=nvm0 \
+    -drive file=path/to/disk.img,format=raw,if=none,id=nvm0 \
     -device nvme,serial=IPO_NVME0,drive=nvm0 \
     -serial stdio
 ```

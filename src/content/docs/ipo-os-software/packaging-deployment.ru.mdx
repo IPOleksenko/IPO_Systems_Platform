@@ -70,6 +70,6 @@ python3 -m http.server 8000 --directory ./build
 
 ```bash
 # Запись образа ОС на USB-флешку или карту CompactFlash
-sudo dd if=build/IPO_OS.img of=/dev/sdX bs=4M status=progress conv=fsync
+sudo dd if=build/disks/disk.img of=/dev/sdX bs=4M status=progress conv=fsync
 sudo sync
 ```

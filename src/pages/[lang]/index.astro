@@ -20,7 +20,7 @@ const base = siteConfig.base;
 const cleanBase = base.endsWith('/') ? base : `${base}/`;
 const downloadsBase = `${cleanBase}downloads/`;
 const { artifacts } = getRealArtifacts();
-const osArtifact = artifacts.find((a) => a.id === 'ipo-os-raw') ?? artifacts.find((a) => a.file === 'IPO_OS.img');
+const osArtifact = artifacts.find((a) => a.id === 'ipo-os-raw') ?? artifacts.find((a) => a.file === 'IPO_OS.bin');
 const fwArtifact = artifacts.find((a) => a.id === 'ipo-firmware') ?? artifacts.find((a) => a.file === 'firmware.bin');
 const archiveGroups = new Map(
   groupArtifacts(artifacts).map((group) => [group.id, group.artifacts])
@@ -136,14 +136,6 @@ const archiveGroups = new Map(
               {getTranslation(currentLang, 'home.os_docs_link')}
             </a>
             <div class="archive-options">
-              <div class="archive-options-fields">
-                <label class="archive-options-field">
-                  <span>{getTranslation(currentLang, 'downloads.choose_archive')}</span>
-                  <select class="archive-options-select-static" disabled aria-label={getTranslation(currentLang, 'downloads.choose_archive')}>
-                    <option selected>{getTranslation(currentLang, 'home.raw_img_512k')}</option>
-                  </select>
-                </label>
-              </div>
               <div class="archive-options-action">
                 {osArtifact && (
                   <div class="archive-options-meta" title={`SHA256: ${osArtifact.sha256}`}>
@@ -154,7 +146,7 @@ const archiveGroups = new Map(
                     </span>
                   </div>
                 )}
-                <a href={`${cleanBase}downloads/IPO_OS.img`} download="IPO_OS.img" class="archive-options-download btn-download-primary" title={getTranslation(currentLang, 'interface.download_image')}>
+                <a href={`${cleanBase}downloads/IPO_OS.bin`} download="IPO_OS.bin" class="archive-options-download btn-download-primary" title={getTranslation(currentLang, 'interface.download_image')}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="7 10 12 15 17 10"></polyline>
@@ -205,14 +197,6 @@ const archiveGroups = new Map(
               {getTranslation(currentLang, 'home.firmware_docs_link')}
             </a>
             <div class="archive-options">
-              <div class="archive-options-fields">
-                <label class="archive-options-field">
-                  <span>{getTranslation(currentLang, 'downloads.choose_archive')}</span>
-                  <select class="archive-options-select-static" disabled aria-label={getTranslation(currentLang, 'downloads.choose_archive')}>
-                    <option selected>{getTranslation(currentLang, 'home.binary_4m_shadow')}</option>
-                  </select>
-                </label>
-              </div>
               <div class="archive-options-action">
                 {fwArtifact && (
                   <div class="archive-options-meta" title={`SHA256: ${fwArtifact.sha256}`}>
@@ -619,26 +603,6 @@ const archiveGroups = new Map(
     background: #fffbeb;
     color: #b45309;
     border-color: #fde68a;
-  }
-
-  .archive-options-static-field {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    min-width: 0;
-    min-height: 2.45rem;
-    padding: 0.5rem 0.65rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    font: inherit;
-    font-size: 0.85rem;
-    font-family: var(--font-mono, monospace);
-    box-sizing: border-box;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .repo-badge {

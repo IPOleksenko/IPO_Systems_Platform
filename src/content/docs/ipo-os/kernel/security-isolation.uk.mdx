@@ -23,13 +23,13 @@ IPO_OS implements a robust execution and stability model designed for bare-metal
 │                Background Applications Storage                   │
 │   • Dedicated binary_storage buffers allocated in heap           │
 │   • Modified .data and .bss segments preserved across switches   │
-│   • Isolated dynamic heap slots: 0x08000000 + slot * 0x10000000   │
+│   • Isolated dynamic heap slots: 0x10000000 + slot * 0x10000000   │
 └──────────────────────────────────────────────────────────────────┘
                                  │
 ┌────────────────────────────────▼─────────────────────────────────┐
 │                    Kernel Executive Protection                   │
-│   • Kernel code at 0x10000, 5 MB stack at 0x500000               │
-│   • Dedicated 64 MB kmalloc pool at 0x01000000–0x04FFFFFF        │
+│   • Kernel code at 0x100000, 5 MB stack at 0x500000               │
+│   • Dedicated 64 MB kmalloc pool at 0x04000000–0x07FFFFFF        │
 │   • Two-tier cpu_exception_handler: crashes isolated to proc     │
 └──────────────────────────────────────────────────────────────────┘
 ```
@@ -39,9 +39,9 @@ IPO_OS implements a robust execution and stability model designed for bare-metal
 ## 🧠 1. Partitioned Dynamic Memory Slicing
 
 To prevent user processes from colliding with the kernel heap or each other:
-1. **Kernel Heap (`kmalloc`):** Allocated at `0x01000000` (16 MB) to `0x05000000` (80 MB) with **64 MB** (`0x04000000`) capacity.
+1. **Kernel Heap (`kmalloc`):** Allocated at `0x04000000` (64 MiB) to `0x08000000` (128 MiB) with **64 MB** (`0x04000000`) capacity.
 2. **Process Heaps (`sbrk`):** Dynamic user allocations are partitioned into strictly isolated physical slots:
-   `Base Address = USER_HEAP_START (0x08000000, or 0x05000000 on systems with 128 MB RAM or less) + slot * USER_HEAP_PROCESS_STRIDE (256 MB dynamic stride)`
+   `Base Address = USER_HEAP_START (0x10000000, or 0x09000000 on systems with <= 256 MiB RAM) + slot * USER_HEAP_PROCESS_STRIDE (256 MB dynamic stride)`
    Slots are dynamically allocated as the first non-overlapping range, validated against E820 RAM capacity, and reclaimed immediately upon process termination.
 
 ---

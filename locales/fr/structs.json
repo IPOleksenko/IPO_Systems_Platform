@@ -1,7 +1,7 @@
 {
   "ipo_superblock": {
-    "totalSize": "64 octets (en-tête d'un bloc de 512 octets)",
-    "title": "Structure du superbloc IPO_FS (LBA 2048)",
+    "title": "Structure Superbloc IPO_FS (LBA 2048)",
+    "totalSize": "104 octets (en-tête LBA 2048)",
     "fields": {
       "magic": "Magic signature (\"IPO_FS\\0\\0\")",
       "fs_size_blocks": "Total 512-byte blocks in storage pool",
@@ -11,24 +11,30 @@
       "inode_bitmap_start": "Starting block of inode allocation bitmap",
       "block_bitmap_start": "Starting block of data block bitmap",
       "inode_table_start": "Starting block of Inode Table",
-      "data_blocks_start": "Starting block of data blocks pool"
+      "data_blocks_start": "Starting block of data blocks pool",
+      "primary_inodes": "Nombre d'inodes statiques initiaux au formatage",
+      "reserved": "Octets d'alignement réservés",
+      "dynamic_chunk_tree": "LBA racine de l'arbre de chunks d'inodes dynamiques",
+      "dynamic_chunks_count": "Nombre de chunks d'inodes dynamiques actifs",
+      "dynamic_inodes_count": "Capacité totale d'inodes dynamiques",
+      "dynamic_inodes_used": "Nombre d'inodes dynamiques utilisés"
     }
   },
   "ipo_inode": {
+    "title": "Structure Inode IPO_FS (128 octets)",
     "totalSize": "128 octets",
-    "title": "Structure d'inode IPO_FS (128 octets, 4 par bloc)",
     "fields": {
       "mode": "File type (0x1=Dir, 0x2=File, 0x80000000=Protected)",
       "links_count": "Number of active hard links",
       "size": "Exact 64-bit file size in bytes",
       "extents": "4 primary contiguous extent descriptors (24 B each)",
       "next_extent_node": "Physical block of chained extent node (0 if none)",
-      "_pad": "Padding to exactly 128 bytes alignment"
+      "reserved": "Octets d'alignement réservés"
     }
   },
   "ipo_extent": {
+    "title": "Descripteur d'Extent IPO_FS (24 octets)",
     "totalSize": "24 octets",
-    "title": "Descripteur d'extent IPO_FS (24 octets)",
     "fields": {
       "logical_block": "Starting logical block inside file",
       "physical_block": "Starting physical LBA block in storage pool",
@@ -37,8 +43,8 @@
     }
   },
   "storage_pool_raw_sb": {
-    "totalSize": "512 octets (en-tête de 68 B + tableau flexible members[] + CRC32)",
-    "title": "Superbloc du pool de stockage (storage_pool_raw_sb_t, LBA 2030 & 2039)",
+    "title": "Superbloc Storage Pool (LBA 2030 & 2039)",
+    "totalSize": "512 octets (68 o + members[] + CRC32)",
     "fields": {
       "magic": "Pool magic signature (0x504F4F4C \"POOL\")",
       "version": "Superblock format version (2)",
@@ -47,7 +53,7 @@
       "member_index": "Index of this drive in the spanned pool",
       "member_count": "Total number of drives in the storage pool",
       "total_capacity_sectors": "Combined capacity across all member drives in sectors",
-      "chunk_size_sectors": "Allocation chunk granularity (64 sectors = 32 KB)",
+      "chunk_size_sectors": "Allocation chunk granularity (64 sectors = 32 KiB)",
       "generation": "Monotonic metadata generation counter",
       "state": "Pool state (0=ONLINE, 1=DEGRADED, 2=CORRUPT)",
       "members": "Flexible on-disk array of member descriptors (48 B each)",
@@ -55,8 +61,8 @@
     }
   },
   "storage_raw_disk_tx_entry": {
-    "totalSize": "64 octets (8 entrées par secteur de 512 octets, 64 entrées au total)",
-    "title": "Entrée de journal WAL du pool de stockage (storage_raw_disk_tx_entry_t, LBA 2031–2038)",
+    "title": "Entrée Journal WAL (LBA 2031–2038)",
+    "totalSize": "64 octets",
     "fields": {
       "magic": "Journal entry signature (0x54584E4C \"TXNL\")",
       "tx_id": "Monotonic transaction identifier",
@@ -67,31 +73,30 @@
       "timestamp": "System uptime timestamp in milliseconds",
       "data_crc": "CRC32 checksum of the written sector payload",
       "entry_crc": "CRC32 checksum of the journal entry header",
-      "reserved": "On-disk alignment padding (dynamic in storage_disk_tx_entry_t)"
+      "reserved": "Octets d'alignement réservés"
     }
   },
   "kmod_header": {
-    "totalSize": "192 octets (0xC0 sur disque) / pointeurs dynamiques en RAM",
-    "title": "En-tête de module noyau relocalisable (kmod_raw_header_t / kmod_header_t)",
+    "title": "Descripteur Module Noyau (kmod_t / .kmd)",
+    "totalSize": "En-tête 72 o / kmod_t dynamique",
     "fields": {
-      "magic": "Module magic signature (0x444D4B49 \"IKMD\")",
-      "abi_version": "Kernel Module ABI version (0x0100 = v1.0)",
-      "flags": "Module flags (BUILTIN, LOADED, ACTIVE)",
+      "id": "Identifiant unique",
       "name": "Module identifier (dynamic char* in kmod_header_t)",
       "author": "Module author string (dynamic char* in kmod_header_t)",
-      "version": "Semantic version string (dynamic char* in kmod_header_t)",
       "description": "Module description (dynamic char* in kmod_header_t)",
-      "init_offset": "Byte offset of init() entrypoint from .text start",
-      "cleanup_offset": "Byte offset of cleanup() from .text start",
-      "text/data/bss_size": "Sizes of .text, .data, and .bss sections in bytes",
-      "sym_tab_offset/count": "Offset and count of external symbol table entries",
-      "reloc_offset/count": "Offset and count of ABS32/REL32 relocation records",
-      "checksum": "CRC32 checksum of the module payload"
+      "flags": "Module state/flags (BUILTIN, LOADED, ACTIVE, PERM)",
+      "image_base": "Adresse virtuelle de base du module .kmd",
+      "image_size": "Taille mappée du module en octets",
+      "init": "Pointeur vers la fonction init()",
+      "cleanup": "Pointeur vers la fonction cleanup()",
+      "ref_count": "Compteur de références actives",
+      "next": "Pointeur vers l'élément suivant",
+      "resolve_sym_metadata": "Hook optionnel de résolution dynamique de symboles"
     }
   },
   "cpu_info": {
-    "totalSize": "24 octets",
-    "title": "Descripteur SMP par processeur (cpu_info_t)",
+    "title": "Descripteur CPU SMP (cpu_info_t)",
+    "totalSize": "48 octets (smp.h)",
     "fields": {
       "cpu_id": "Logical processor core ID (0 = BSP, 1..N = AP)",
       "lapic_id": "Hardware Local APIC physical ID",
@@ -99,72 +104,36 @@
       "is_online": "Set to true once AP finishes trampoline boot",
       "stack_base": "Allocated 16 KB per-CPU kernel stack base",
       "stack_top": "Initial ESP top of stack passed to AP trampoline",
-      "ticks": "Per-CPU activity & task execution counter"
+      "ticks": "Per-CPU activity & task execution counter",
+      "tasks_executed": "Nombre total de tâches SMP exécutées sur ce cœur",
+      "tasks_queued": "Tâches en file d'attente sur ce cœur",
+      "busy": "Vrai pendant l'exécution d'une tâche SMP",
+      "current_task_id": "ID de la tâche SMP active"
     }
   },
   "process_pcb": {
-    "totalSize": "372 octets (0x174)",
-    "title": "Structure du descripteur de processus (process_t)",
+    "title": "Descripteur de Processus (process_t)",
+    "totalSize": "PCB dynamique sans limites fixes",
     "fields": {
       "pid": "Identifiant unique de processus (PID)",
-      "binary_base": "Adresse de base du binaire en mémoire",
-      "binary_size": "Taille totale du binaire en octets",
-      "entry_point": "Adresse du point d'entrée (_start)",
-      "binary_storage": "Pointeur vers le tampon de stockage du binaire",
-      "data_offset": "Décalage des données dans le binaire",
-      "data_size": "Taille des données initialisées en octets",
-      "code_mapped": "Indique si les segments de code sont mappés en mémoire",
-      "stack_base": "Adresse de base de la pile du processus",
-      "stack_ptr": "Pointeur de pile actuel (ESP)",
-      "stack_start": "Adresse de début de l'allocation de pile",
-      "stack_size": "Taille totale de la pile allouée en octets",
-      "argc": "Nombre d'arguments de ligne de commande",
-      "argv_addr": "Adresse dans la pile utilisateur du tableau argv",
-      "argv_kernel": "Tableau d'arguments du noyau",
-      "exit_code": "Code de sortie du processus (0=succès)",
+      "binary_base / entry_point": "Adresse de base 64 bits et point d'entrée (ELF64/ELF32)",
+      "arch_ctx": "Contexte complet des registres x86 64/32 bits",
+      "address_space": "Tables de pages PML4/LA57 ou PD isolées par processus",
+      "stack_base / stack_size": "Pile à page de garde extensible sur #PF depuis 4096 o",
       "return_val": "Union de valeur de retour structurée",
-      "return_val_explicit": "Indique un retour défini explicitement par appel système",
-      "is_running": "Indicateur d'exécution active du processus (1=actif)",
-      "waiting_for_input": "Processus bloqué en attente d'entrée clavier",
-      "wants_graphics": "Processus en mode graphique VGA 13h",
-      "gfx_overlay_flags": "Indicateurs de visibilité de l'overlay VGA (bouton fermer, curseur)",
-      "is_wm_app": "Processus géré comme fenêtre du gestionnaire de fenêtres",
-      "async_task_count": "Nombre de tâches asynchrones actives en arrière-plan",
-      "user_heap_base": "Adresse de base du tas (heap) isolé du processus",
-      "user_heap_break": "Point d'arrêt dynamique actuel du tas via sbrk",
-      "user_heap_limit": "Limite virtuel maximal du tas isolé du processus",
-      "user_heap_slot": "Index de slot mémoire dynamique alloué (-1 si aucun)",
-      "exec_inode": "Copie de l'inode du fichier binaire pour le chargement à la demande",
-      "demand_loading": "Indique si le binaire est en cours de chargement progressif",
-      "demand_file_offset": "Décalage actuel en octets dans le fichier sur disque",
-      "demand_mem_offset": "Décalage mémoire actuel dans l'espace d'adressage",
-      "demand_loaded_bytes": "Octets chargés en mémoire jusqu'à présent",
-      "demand_total_bytes": "Taille totale des segments chargeables en octets",
-      "text_vram_backup": "Sauvegarde de la VRAM texte 80x25 lors du passage en arrière-plan",
-      "gfx_vram_backup": "Sauvegarde de la VRAM graphique 320x200 lors du passage en arrière-plan",
-      "gfx_palette_backup": "Sauvegarde de la palette DAC 256 couleurs (768 octets)",
-      "text_cursor_pos": "Position enregistrée du curseur en mode texte",
-      "text_cursor_visible": "Visibilité enregistrée du curseur en mode texte",
-      "completed_and_acknowledged": "Processus terminé et acquitté par le shell",
-      "scroll_top_buffer": "Tampon de défilement supérieur de la console",
-      "scroll_bottom_buffer": "Tampon de défilement inférieur de la console",
-      "scroll_top_count": "Nombre de lignes défilées dans la zone supérieure",
-      "scroll_bottom_count": "Nombre de lignes défilées dans la zone inférieure",
-      "window_id": "Identifiant de fenêtre ou de groupe dans le batch",
-      "text_screen_shared": "Indique si les tampons écran sont partagés avec un autre processus",
-      "text_output_buf": "Tampon de capture de sortie texte (tubes)",
-      "text_output_len": "Longueur actuelle de la sortie texte capturée",
-      "text_output_cap": "Capacité du tampon de sortie texte en octets",
-      "name": "Nom du processus alloué dynamiquement",
-      "return_format": "Descripteur de format des données renvoyées",
-      "next": "Pointeur vers le processus suivant dans la liste"
+      "user_heap_base / heap_chunks": "Tas sbrk() isolé (0x10000000+ / 0x09000000) et chunks",
+      "mmap_regions": "Tableau dynamique des régions ipo_mmap() et SHM",
+      "threads / thread_count": "Tableau dynamique des threads POSIX (TID, TLS)",
+      "signal_handlers / pending": "Table sigaction POSIX, masques et file de signaux",
+      "text_vram_backup / text_output_buf": "Sauvegarde console et tampon stdout dynamique",
+      "name / return_format / next": "Nom dynamique, format DWARF et chaînage"
     }
   },
   "device_node": {
-    "totalSize": "148 octets (0x94) avec chaînes dynamiques et tableau BAR extensible (src/include/kernel/device.h)",
-    "title": "Nœud de périphérique matériel unifié (device_node_t)",
+    "title": "Nœud Périphérique Unifié (device_node_t)",
+    "totalSize": "Dynamique avec tableau BAR 64 bits",
     "fields": {
-      "id": "Identifiant unique du périphérique",
+      "id": "Identifiant unique",
       "parent_id": "ID du bus parent (0 si racine)",
       "capabilities": "Masque de capacités (DMA, IRQ, PCI)",
       "type": "Type de périphérique (stockage, réseau, etc.)",
@@ -177,8 +146,8 @@
     }
   },
   "kmalloc_stats": {
-    "totalSize": "28 octets",
-    "title": "Statistiques de l'allocateur de tas noyau (kmalloc_stats_t)",
+    "title": "Statistiques Tas Noyau (kmalloc_stats_t)",
+    "totalSize": "28 octets (arène 64 Mio 0x04000000 + PMM)",
     "fields": {
       "heap_total": "Total kernel heap capacity in bytes (64 MB / 0x04000000)",
       "heap_used": "Bytes consumed by high-watermark with headers",
@@ -190,8 +159,8 @@
     }
   },
   "ata_device": {
-    "totalSize": "44 octets (0x2C)",
-    "title": "Informations sur le périphérique de stockage ATA (ata_device_t)",
+    "title": "Descripteur Disque ATA (ata_device_t)",
+    "totalSize": "44 octets",
     "fields": {
       "present": "1 si le périphérique est détecté, 0 sinon",
       "channel": "Canal IDE (0=Primaire, 1=Secondaire)",
@@ -211,54 +180,33 @@
     }
   },
   "ipo_idt_entry": {
-    "totalSize": "8 octets",
-    "title": "Porte de descripteur d'interruption x86 (ipo_idt_entry_t)",
+    "title": "Porte IDT x86/x86-64 (idt_entry_t)",
+    "totalSize": "8 octets (32 bits) / 16 octets (64 bits)",
     "fields": {
       "base_lo": "Lower 16 bits of ISR entrypoint address",
       "selector": "Kernel code segment selector (0x08)",
       "zero": "Reserved zero byte",
-      "flags": "Gate attributes (0x8E=Interrupt, 0xEE=Syscall/User)",
-      "base_hi": "Upper 16 bits of ISR entrypoint address"
+      "flags": "Gate attributes (0x8E=Interrupt, 0xEE=Syscall/User DPL=3)",
+      "base_hi": "Upper 16/48 bits of ISR entrypoint address"
     }
   },
   "bootrom_post_codes": {
-    "totalSize": "Port de diagnostic 8 bits 0x80",
-    "title": "Codes de diagnostic POST port 0x80 (IPO_Boot_ROM)",
+    "title": "Codes POST Port 0x80 (IPO_Boot_ROM)",
+    "totalSize": "Codes actifs 8 bits",
     "fields": {
-      "POST_RESET": "Vecteur de réinitialisation CPU atteint (0xFFFFFFF0)",
-      "POST_INIT_ENTRY": "Entrée dans le code d'initialisation Boot_ROM (0xF000:8000)",
-      "POST_CAR_START": "Démarrage de la configuration Cache-as-RAM via MTRRs",
-      "POST_CAR_OK": "Pile CAR opérationnelle à 0x7000:8000",
-      "POST_HOST_BRIDGE_PROBE": "Identifiants du host bridge lus et signalés ; aucune validation de compatibilité du chipset",
-      "POST_HOST_BRIDGE_OK": "Identifiants du host bridge lus et signalés ; aucune validation de compatibilité du chipset",
-      "POST_DRAM_START": "Début de la configuration MRC du contrôleur DRAM",
-      "POST_DRAM_OK": "Étape d'initialisation DRAM terminée ; aucun test de motifs n'est effectué",
-      "POST_CAR_TEARDOWN": "Fin de CAR ; pile de transfert SS:SP=0000:7C00",
-      "POST_SHADOW_LOCK": "PAM configuré pour la lecture Shadow (WE=0, RE=1) ; aucune relecture du registre pour vérification",
-      "POST_FW_VALIDATE": "Vérification du magic de l'en-tête du firmware ('IPO')",
-      "POST_FW_JUMP": "Saut lointain vers la charge utile du micrologiciel",
-      "POST_ERR_NO_CAR": "Erreur définie : échec de configuration Cache-as-RAM",
-      "POST_ERR_UNKNOWN_CS": "Erreur définie : host bridge inconnu ; le code actuel signale les identifiants bruts sans rejeter le périphérique",
-      "POST_ERR_DRAM_FAIL": "Erreur définie : échec d'initialisation DRAM ; aucun test de motifs n'est effectué",
-      "POST_ERR_FW_MAGIC": "Erreur définie : magic du firmware incorrect ; le traitement actuel n'émet pas le code POST 0x7E"
+      "POST_CAR_START": "0x12 — Initialisation Cache-as-RAM (MTRR)",
+      "POST_CAR_OK": "0x13 — Pile CAR 32 Kio opérationnelle à 0x70000..0x77FFF",
+      "POST_ROMSTAGE_START": "0x15 — Entrée dans romstage C XIP",
+      "POST_ROMSTAGE_OK": "0x16 — Chipset, SPD/DRAM et ombre PAM terminés",
+      "POST_WARN_SPD_FAIL": "0x1F — Alerte SMBus SPD : timings de secours actifs",
+      "POST_NOMTRR_BYPASS": "0x2E — MTRR absent : contournement .car_bypass actif"
     }
   },
   "firmware_post_codes": {
-    "totalSize": "Port de diagnostic 8 bits 0x80",
-    "title": "Codes de diagnostic POST port 0x80 (IPO_Firmware)",
+    "title": "Codes POST Port 0x80 (IPO_Firmware)",
+    "totalSize": "Codes actifs 8 bits",
     "fields": {
-      "FW_ENTRY": "Firmware entry point reached (0xF000:0004)",
-      "FW_PCI_ENUM_DONE": "PCI bus enumeration completed",
-      "FW_IVT_INSTALLED": "Real-mode IVT registered (INT 10h–1Ah)",
-      "FW_ACPI_INSTALLED": "ACPI 1.0 tables installed in EBDA (0x9FC00)",
-      "FW_VIDEO_READY": "Video subsystem initialized (VBIOS or Mode 03h)",
-      "FW_A20_ACTIVE": "Fast A20 Gate activated and verified",
-      "FW_PS2_READY": "Contrôleur clavier 8042 PS/2 initialisé",
-      "FW_STORAGE_PROBE": "Détection des contrôleurs de stockage (ATA, AHCI, NVMe, USB)",
-      "FW_SCAN_BOOTABLE": "Recherche de support de démarrage actif (0x80..0x82)",
-      "FW_MBR_VALIDATED": "Secteur MBR valide avec 0xAA55 chargé en 0x0000:7C00",
-      "FW_HANDOVER_OS": "Saut vers le MBR (0x0000:7C00) — Transfert de contrôle à l'OS",
-      "FW_ERR_NO_BOOT": "ERREUR : Aucun support amorçable trouvé sur aucun contrôleur"
+      "POST_DISK_SPINUP_WAIT": "0x29 — Attente de disponibilité des disques IDE/AHCI/NVMe"
     }
   }
 }

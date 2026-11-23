@@ -11,7 +11,7 @@ const memoryRegions = [
   {
     id: 'ivt',
     name: 'IVT',
-    label: '0x00000 — IVT (1 KB)',
+    label: '0x00000 — IVT (1 KiB)',
     start: '0x00000',
     end: '0x003FF',
     size: '1024 B',
@@ -29,56 +29,83 @@ const memoryRegions = [
   {
     id: 'mbr',
     name: 'E820, MBR & SMP Trampoline',
-    label: '0x06000 — E820 (0x6000), MBR (0x7C00), SMP (0x8000) & E820 Hdr (0x8FE0)',
+    label: '0x06000 — E820 (0x6000), MBR (0x7C00), SMP (0x8000..0x81AF)',
     start: '0x06000',
     end: '0x08FFF',
-    size: '12 KB',
+    size: '12 KiB',
     descKey: 'widgets.memory_map.regions.mbr'
   },
   {
-    id: 'kernel',
-    name: 'IPO_OS Kernel',
-    label: '0x10000 — Kernel Code (0x10000)',
-    start: '0x10000',
-    end: '0x7FFFF',
-    size: '448 KB',
-    descKey: 'widgets.memory_map.regions.kernel'
-  },
-  {
     id: 'vga',
-    name: 'VGA Framebuffer',
-    label: '0xA0000 — VGA Text / Video VRAM',
+    name: 'VGA Framebuffer & Text VRAM',
+    label: '0xA0000 — VGA Graphics & Text VRAM (0xB8000)',
     start: '0xA0000',
     end: '0xBFFFF',
-    size: '128 KB',
+    size: '128 KiB',
     descKey: 'widgets.memory_map.regions.vga'
   },
   {
     id: 'shadow',
-    name: 'Shadow RAM & ROM',
-    label: '0xC0000 — VBIOS & Shadow RAM',
+    name: 'Shadow RAM, Firmware & Bootblock',
+    label: '0xC0000 — VBIOS, Firmware (0xF000:000C) & Bootblock (0xFE000)',
     start: '0xC0000',
     end: '0xFFFFF',
-    size: '256 KB',
+    size: '256 KiB',
     descKey: 'widgets.memory_map.regions.shadow'
   },
   {
+    id: 'kernel',
+    name: 'IPO_OS Kernel (1 MiB)',
+    label: '0x00100000 — IPO_OS Kernel Core & SB16 DMA (0x600000)',
+    start: '0x00100000',
+    end: '0x007FFFFF',
+    size: '7 MiB',
+    descKey: 'widgets.memory_map.regions.kernel'
+  },
+  {
     id: 'userspace',
-    name: 'Userspace Apps',
-    label: '0x00800000 — Userspace Applications & Stack',
+    name: 'Userspace Load Base & Process Heaps',
+    label: '0x00800000 — Applications (ELF32 / .bin) & Process Heaps',
     start: '0x00800000',
-    end: '0x00FFFFFF',
-    size: '8 MB',
+    end: '0x03FFFFFF',
+    size: '56 MiB',
     descKey: 'widgets.memory_map.regions.userspace'
   },
   {
     id: 'heap',
-    name: 'Kernel Heap & Extended RAM',
-    label: '0x01000000 — Kernel Heap (64 MB kmalloc) & PMM / sbrk',
-    start: '0x01000000',
-    end: '0x04FFFFFF+',
-    size: '64 MB+',
+    name: 'Kernel kmalloc Heap & Overflow Arenas',
+    label: '0x04000000 — Primary kmalloc Pool (64 MiB) + Overflow',
+    start: '0x04000000',
+    end: '0x07FFFFFF',
+    size: '64 MiB+',
     descKey: 'widgets.memory_map.regions.heap'
+  },
+  {
+    id: 'pmm',
+    name: 'PMM Physical Frame Pool',
+    label: '0x08000000 — PMM Frames & Low-RAM User Heaps (0x09000000)',
+    start: '0x08000000',
+    end: '0x0FFFFFFF',
+    size: '128 MiB',
+    descKey: 'widgets.memory_map.regions.pmm'
+  },
+  {
+    id: 'user_heap',
+    name: 'Isolated User Process Heaps & mmap()',
+    label: '0x10000000 — USER_HEAP_START (256 MiB+ Stride) & mmap',
+    start: '0x10000000',
+    end: '0xBFFFFFFF',
+    size: '2.75 GiB',
+    descKey: 'widgets.memory_map.regions.user_heap'
+  },
+  {
+    id: 'high_sys',
+    name: 'Trampolines, IPC SHM & MMIO BARs',
+    label: '0xC0000000+ — Trampolines, IPC SHM (0xD0000000+) & PCI MMIO',
+    start: '0xC0000000',
+    end: '0xFFFFFFFF+',
+    size: '1 GiB+',
+    descKey: 'widgets.memory_map.regions.high_sys'
   }
 ];
 

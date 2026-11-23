@@ -34,7 +34,7 @@ Building a physical machine for IPO_OS requires selecting components with verifi
 - **Display Connection:** Native VGA (D-Sub 15-pin) or an active D-Sub to HDMI converter.
 
 ### 6. Network Interface Card (NIC)
-- **Target Controller:** **Realtek RTL8139C / RTL8139D** Fast Ethernet PCI card.
+- **Target Controller:** **Realtek RTL8139, Intel PRO/1000 (E1000), or VirtIO-Net** PCI controller (driven by modular `/drivers/rtl8139`).
 - **Why RTL8139:** It is the official reference NIC supported by the IPO_OS native kernel driver, featuring simple memory-mapped ring buffers and robust hardware packet filtering.
 
 ### 7. Real-Time Clock (RTC) & Battery

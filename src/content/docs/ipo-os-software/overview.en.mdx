@@ -37,12 +37,12 @@ The `IPO_OS_Software` repository is organized into four primary functional layer
    - **NASM:** 32-bit x86 assembler running directly inside the operating system.
    - **GNU Binutils (`gcc`, `g++`, `as`, `ld`, `ar`, `ranlib`, `objcopy`, `objdump`, `readelf`, `nm`, `strip`).
 
-4. **Applications & Utilities (`applications/`):**
-   - **DOOM (`doom.bin`):** Full port of official `linuxdoom-1.10` running bare-metal at 320x200 60 FPS with SB16 audio and BGA graphics.
-   - **Text Editor (`edit.bin`):** Interactive modal text editor with syntax display.
-   - **3D Demos (`gl_gears.bin`, `gl_cube.bin`, `gl_teapot.bin`):** Hardware-independent 3D TinyGL graphics demonstrations.
+4. **Applications, Drivers & Utilities (34 Apps, 4 Drivers) (`applications/`):**
+   - **DOOM (`doom`):** Full port of official `linuxdoom-1.10` running bare-metal at custom desktop / VGA resolution without artificial frame caps with SB16 audio and BGA graphics.
+   - **Text Editor (`edit`):** Interactive modal text editor with syntax display.
+   - **3D Demos (`gl_gears`, `gl_cube`, `gl_teapot`):** Hardware-independent 3D TinyGL graphics demonstrations.
    - **Networking Tools (`hosting_server.bin`, `hosting_client.bin`, `ping.bin`):** HTTP web server, web client, and ICMP diagnostics.
-   - **Terminal Utilities:** `echo.bin` prints its arguments; `hello.bin` is a Hello World example; `player.bin` plays multimedia; `setfont.bin` lists or switches console fonts; `term_ctl.bin` sends text to the terminal, optionally executing it.
+   - **Terminal Utilities:** `echo` prints arguments; `gpu_info` inspects/switches VirGL hardware vs CPU 3D rendering; `SENSE-The-Game` and `links` demonstrate multimedia and web browsing; `setfont.bin` lists or switches console fonts; `term_ctl.bin` sends text to the terminal, optionally executing it.
 
 ---
 
@@ -60,7 +60,7 @@ IPO_OS and IPO_OS_Software provide two flexible distribution models for develope
   - Console font databases (`fonts/*.fnt`)
 
 ### Option 2: Pre-Populated System Disk
-- **`disk-installed.img`:** A ready-to-use 512 MB virtual disk image with all applications, DOOM, toolchains, runtime libraries, and font databases already installed under `/applications`, `/lib`, `/include`, and `/fonts`. Simply attach this disk to QEMU or flash it to a physical drive, and boot into a fully featured environment immediately.
+- **`disk-installed.img`:** A ready-to-use 512 MB virtual disk image with all applications, DOOM, toolchains, runtime libraries, and font databases already installed under ``/applications`, `/drivers`, `/lib`, recursive `/include`, `/data`, and `/fonts`. Simply attach this disk to QEMU or flash it to a physical drive, and boot into a fully featured environment immediately.
 
 ---
 

@@ -57,7 +57,7 @@ pmode_entry:
     mov fs, ax
     mov gs, ax
     mov esp, 0x500000          ; Initial 5 MB kernel stack
-    jmp 0x00010000             ; Enter kernel at _start
+    jmp 0x00100000             ; Enter kernel at _start
 ```
 
 ---
@@ -99,13 +99,13 @@ During `smp_init()`, the **Bootstrap Processor (BSP)** discovers processor cores
 
 ### 3. Application Processor (AP) Boot Trampoline (`0x8000`) & `INIT-SIPI-SIPI`
 For each discovered AP core, the kernel allocates a 16 KB stack via `kmalloc` and copies the 16-to-32-bit trampoline (`smp_trampoline.asm`) to physical address **`0x00008000`**:
-- **Trampoline Mailbox (`0x80F0`–`0x80FC`):**
-  - `0x80F0` (`SMP_BOOT_STACK_ADDR`) — Top of the 16 KB stack allocated for the target AP.
-  - `0x80F4` (`SMP_BOOT_CPUID_ADDR`) — Logical `cpu_id` assigned to the AP.
-  - `0x80F8` (`SMP_BOOT_FN_ADDR`) — Physical address of C entrypoint `smp_ap_entry()`.
-  - `0x80FC` (`SMP_BOOT_DONE_ADDR`) — Handshake flag set to `1` once the AP enters 32-bit Protected Mode.
+- **Trampoline Mailbox (`0x8180`–`0x81A7`):**
+  - `0x8180` (`SMP_BOOT_STACK_ADDR`) — Top of the 16 KB stack allocated for the target AP.
+  - `0x8188` (`SMP_BOOT_CPUID_ADDR`) — Logical `cpu_id` assigned to the AP.
+  - `0x8198` (`SMP_BOOT_FN_ADDR`) — Physical address of C entrypoint `smp_ap_entry()`.
+  - `0x819C` (`SMP_BOOT_DONE_ADDR`) — Handshake flag set to `1` once the AP enters 32-bit Protected Mode.
 - **`INIT-SIPI-SIPI` Sequence:** The BSP writes the target AP's LAPIC ID into `LAPIC_ICR_HIGH` (`0x0310`) and issues an `INIT` IPI (`0x00004500`) via `LAPIC_ICR_LOW` (`0x0300`), waits 10 ms, and sends two Startup IPIs (`SIPI`, `0x00004608`, vector page `0x08` = `0x8000 >> 12`).
-- The waking AP starts in 16-bit Real Mode at `0x8000`, loads a temporary GDT, sets `CR0.PE = 1`, jumps to 32-bit mode, loads its `ESP` from `0x80F0`, signals `0x80FC = 1`, loads the kernel IDT, enables its own Local APIC, and enters the `smp_ap_entry()` work loop.
+- The waking AP starts in 16-bit Real Mode at `0x8000`, loads a temporary GDT, sets `CR0.PE = 1`, jumps to 32-bit mode, loads its `ESP` from `0x8180`, signals `0x819C = 1`, loads the kernel IDT, enables its own Local APIC, and enters the `smp_ap_entry()` work loop.
 
 ### 4. Hardware Spinlocks (`spinlock_t`) & Cross-Core Task Broadcast
 - `src/include/kernel/smp.h` provides atomic hardware spinlocks (`spinlock_acquire`, `spinlock_release`, `spinlock_irqsave`, `spinlock_irqrestore`) built on `__atomic_test_and_set` and the x86 `pause` hint.

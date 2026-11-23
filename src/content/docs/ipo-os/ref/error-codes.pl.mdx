@@ -32,7 +32,7 @@ The userland C runtime library (`libc.a`, `IPO_OS_Software/lib/libc/sys.c`) catc
 | `20` | `ENOTDIR` | Component of path prefix is not a directory. |
 | `21` | `EISDIR` | Attempted file operation on a directory node. |
 | `22` | `EINVAL` | Invalid parameter, illegal flag, or out-of-range argument. |
-| `24` | `EMFILE` | Process open file descriptors limit reached (64 max). |
+| `24` | `EMFILE` | Process open file descriptors limit reached (dynamic FD table; only system memory limits). |
 | `28` | `ENOSPC` | Filesystem partition has no free blocks available. |
 | `30` | `EROFS` | Read-only file system modification attempted. |
 | `32` | `EPIPE` | Broken pipe or socket connection closed by peer. |
@@ -47,5 +47,5 @@ The userland C runtime library (`libc.a`, `IPO_OS_Software/lib/libc/sys.c`) catc
 - **Fix:** Allocate memory on the heap with `malloc()` or ensure local buffers are properly sized on the stack.
 
 ### `EMFILE` (`24`)
-- Occurs when the task opens more than 64 file descriptors without closing them.
+- Occurs when the task opens too many file descriptors without closing them.
 - **Fix:** Verify every branch calling `ipo_open()` (`IPO_SYSCALL_FS_OPEN` `0x1011`) invokes `ipo_close()` (`IPO_SYSCALL_FS_CLOSE` `0x1018`).

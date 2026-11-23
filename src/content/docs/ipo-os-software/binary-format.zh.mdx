@@ -18,20 +18,20 @@ Every user application in IPO_OS executes in a 32-bit flat address space. The me
 
 ```
 +-------------------------------------------------------------+ Top of RAM
-| Per-Process Isolated Dynamic Heaps (0x08000000 + slot*stride)| On-demand sbrk()
-+-------------------------------------------------------------+ 0x08000000 (128 MB)
+| Per-Process Isolated Dynamic Heaps (0x10000000 + slot*stride)| On-demand sbrk()
++-------------------------------------------------------------+ 0x10000000 (256 MiB)
 | PMM Page Frame Pool (memory_map_alloc) / Low-RAM Heap Base  |
-+-------------------------------------------------------------+ 0x05000000 (80 MB)
++-------------------------------------------------------------+ 0x08000000 (128 MiB)
 | Kernel Dynamic Heap (kmalloc, 64 MB capacity)               |
 |   • Process Stacks (256 KB each, setup_stack)               |
 |   • Process Argument Arrays (argv) & Environment            |
-+-------------------------------------------------------------+ 0x01000000 (16 MB)
++-------------------------------------------------------------+ 0x04000000 (64 MiB)
 | Dynamic Process Allocations Pool (PROCESS_HEAP_START)       |
 |   • First-fit block allocation (allocate_process_memory)    |
 |   • Coalesced free blocks (coalesce_free_blocks)            |
 |   • Distinct base per process (entry_point = mem)           |
 +-------------------------------------------------------------+ 0x00800000 (8 MB)
-| Kernel Space (Code at 0x10000, Stack at 0x500000)            |
+| Kernel Space (Code at 0x100000, Stack at 0x500000)            |
 | E820 memory map at 0x6000, RAM detection header at 0x8FE0   |
 +-------------------------------------------------------------+ 0x00000000
 ```
@@ -115,7 +115,7 @@ In IPO_OS, multitasking processes do not swap into a single static window. Inste
 ## 📈 Per-Process Dynamic Heap Isolation (`process_heap_init`)
 
 Userland dynamic memory allocated via `malloc()` and `sbrk()` (`IPO_SYSCALL_SBRK`, `0x1045`) is completely isolated between processes:
-- **Base Address:** Starts at `USER_HEAP_START` (`0x08000000`, 128 MB), or `0x05000000` (80 MB) on low-RAM systems.
+- **Base Address:** Starts at `USER_HEAP_START` (`0x10000000`, 256 MiB), or `0x09000000` (144 MiB) on `<= 256 MiB` RAM systems.
 - **Dynamic Stride:** Dynamically calculated from available physical RAM (256 MB default, 32 MB minimum).
 - **Slot Discovery:** Scans active processes to find the first non-overlapping, available slot.
 - **Zero-Commit Startup:** Each process heap starts with **0 bytes committed**. Physical RAM is committed on-demand as `sbrk()` expands the heap break.

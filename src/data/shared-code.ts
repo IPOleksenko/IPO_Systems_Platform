@@ -153,40 +153,25 @@ int main(int argc, char **argv) {
   'opengl-cube': {
     id: 'opengl-cube',
     lang: 'c',
-    title: 'gl_cube.c (TinyGL 3D Rendering on IPO_OS)',
+    title: 'gl_cube.c (Hardware VirGL 3D & CPU Fallback in IPO_OS)',
     code: `#include <GL/gl.h>
-#include <GL/glu.h>
 #include <GL/ipo_gl.h>
+#include <ipo/gpu_client.h>
+#include <ipo/gfx.h>
 #include <wm.h>
 
-void draw_cube(float angle) {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();
-    glTranslatef(0.0f, 0.0f, -5.0f);
-    glRotatef(angle, 1.0f, 1.0f, 0.0f);
+void render_cube_frame(ipo_gfx3d_ctx_t *ctx, wm_window_t *win, float rot_x, float rot_y) {
+    (void)ipo_gfx_ensure_hd_mode(1280u, 720u);
 
-    glBegin(GL_QUADS);
-    // Front face (Red)
-    glColor3f(1.0f, 0.0f, 0.0f);
-    glVertex3f(-1.0f, -1.0f,  1.0f);
-    glVertex3f( 1.0f, -1.0f,  1.0f);
-    glVertex3f( 1.0f,  1.0f,  1.0f);
-    glVertex3f(-1.0f,  1.0f,  1.0f);
-    // Back face (Green)
-    glColor3f(0.0f, 1.0f, 0.0f);
-    glVertex3f(-1.0f, -1.0f, -1.0f);
-    glVertex3f(-1.0f,  1.0f, -1.0f);
-    glVertex3f( 1.0f,  1.0f, -1.0f);
-    glVertex3f( 1.0f, -1.0f, -1.0f);
-    // Top face (Blue)
-    glColor3f(0.0f, 0.0f, 1.0f);
-    glVertex3f(-1.0f,  1.0f, -1.0f);
-    glVertex3f(-1.0f,  1.0f,  1.0f);
-    glVertex3f( 1.0f,  1.0f,  1.0f);
-    glVertex3f( 1.0f,  1.0f, -1.0f);
-    glEnd();
+    ipo_gpu_info_t gi;
+    bool has_gpu = (ipo_gpu_get_info(&gi) &&
+                    gi.backend_mode == IPO_GPU_BACKEND_VIRGL_3D &&
+                    !gi.forced_cpu_fallback);
 
-    ipo_gl_swap_buffers();
+    ipo_gfx3d_clear(ctx, 0xFF0B1018u, 1.0f);
+    ipo_gfx3d_set_rotation(ctx, rot_x, rot_y, 0.0f);
+    ipo_gfx3d_draw_mesh(ctx, &cube_mesh);
+    ipo_gfx3d_present(ctx, win, has_gpu);
 }
 `
   },
@@ -194,44 +179,40 @@ void draw_cube(float angle) {
   'wm-gui-window': {
     id: 'wm-gui-window',
     lang: 'c',
-    title: 'wm_app.c (Creating GUI Window with Callbacks)',
+    title: 'wm_app.c (Creating GUI Window & Polling Events)',
     code: `#include <wm.h>
+#include <stdbool.h>
 #include <stdio.h>
 
-static void my_draw_cb(wm_window_t *win) {
-    // Fill client area with light blue
-    wm_buf_fill_rect(win->framebuf, win->w, win->h, 0, 0, win->w, win->h, 9);
-    // Draw decorative border
-    wm_buf_draw_rect(win->framebuf, win->w, win->h, 2, 2, win->w - 4, win->h - 4, 15);
-    // Draw text inside window
-    wm_buf_draw_string(win->framebuf, win->w, win->h, 10, 15, "IPO_OS GUI Window", 15);
-    wm_buf_draw_string(win->framebuf, win->w, win->h, 10, 30, "Move with Mouse drag!", 14);
-}
-
-static void my_event_cb(wm_window_t *win, uint32_t event, uint32_t data) {
-    if (event == WM_EVENT_CLICK) {
-        printf("Window clicked!\n");
-    } else if (event == WM_EVENT_CLOSE) {
-        printf("Window closed!\n");
-    }
-}
-
-int main(int argc, char **argv) {
+int main(void) {
     wm_window_options_t opts = WM_WINDOW_OPTIONS_DEFAULT;
     opts.x = 30;
     opts.y = 25;
-    opts.w = 160;
-    opts.h = 80;
+    opts.w = 180;
+    opts.h = 90;
     opts.title = "Sample Window";
-    opts.draw_cb = my_draw_cb;
-    opts.event_cb = my_event_cb;
 
     wm_window_t *win = wm_create_window(&opts);
     if (!win) {
-        printf("Failed to create WM window\n");
+        printf("Failed to create WM window\\n");
         return 1;
     }
-    // Return immediately: compositor async task keeps window alive on desktop
+
+    wm_buf_fill_rect(win->framebuf, win->w, win->h, 0, 0, win->w, win->h, 9);
+    wm_buf_draw_rect(win->framebuf, win->w, win->h, 2, 2, win->w - 4, win->h - 4, 15);
+    wm_buf_draw_string(win->framebuf, win->w, win->h, 10, 15, "IPO_OS GUI Window", 15);
+    wm_invalidate(win);
+
+    wm_event_t ev;
+    bool running = true;
+    while (running && wm_is_window_valid(win)) {
+        while (wm_poll_event(win, &ev)) {
+            if (ev.type == WM_EVENT_CLOSE) running = false;
+            else if (ev.type == WM_EVENT_CLICK) printf("Window clicked!\\n");
+        }
+        wm_compositor_tick();
+    }
+    wm_destroy_window(win);
     return 0;
 }
 `
@@ -263,7 +244,7 @@ print("Fibonacci(20) =", fib(20))
     lang: 'bash',
     title: 'Compiling C code directly inside IPO_OS',
     code: `# 1. Create C file in shell
-echo 'int main() { printf("Built inside IPO_OS!\n"); return 0; }' > prog.c
+echo 'int main() { printf("Built inside IPO_OS!\\n"); return 0; }' > prog.c
 
 # 2. Compile with Tiny C Compiler running in IPO_OS
 tcc -o prog prog.c
@@ -278,10 +259,10 @@ prog
     lang: 'bash',
     title: 'Shell Multitasking & Workspace Operators',
     code: `# Run programs in separate virtual workspaces (Ctrl+PgUp / Ctrl+PgDn to switch):
-run edit & player & hosting_server
+run edit & links & hosting_server
 
 # Run multiple GUI/3D applications concurrently on the same desktop:
-run gl_cube && gl_gears && fps_meter
+run gl_cube && gl_gears && gl_teapot
 
 # Pipeline: wait for left command and pass return code to right:
 run hello | echo
@@ -305,7 +286,7 @@ python3 tools/disk_editor.py -i build/disks/disk.img put ./build/applications/do
 python3 tools/disk_editor.py -i build/disks/disk.img mkdir /home/user
 
 # Write text file into image
-python3 tools/disk_editor.py -i build/disks/disk.img touch /autorun "startwm\nrun gl_gears\n"
+python3 tools/disk_editor.py -i build/disks/disk.img touch /autorun "startwm\\nrun gl_gears\\n"
 
 # View file content
 python3 tools/disk_editor.py -i build/disks/disk.img cat /autorun
@@ -326,25 +307,26 @@ make all
 # Incremental kernel module builds:
 make lib          # Builds kernel standard library (src/lib/libk.a)
 make kernel       # Builds kernel.bin + symbol table via generate_ksyms.py
-make boot         # Builds boot.bin bootloader (Stage 1 + Stage 2 + E820)
-make image        # Builds bootable IPO_OS.img and ensures virtual disk images exist
-make disks        # Prepares build/disks/disk.img and build/disks/disk.iso
+make boot         # Builds MBR + Stage 2 bootloader (build/boot/boot.bin)
+make image        # Builds bootable IPO_OS.bin (boot.bin + kernel.bin, max 2030 sectors)
+make disks        # Prepares build/disks/disk.img with Partition 1 + IPO_FS
 
 # Host TAP networking configuration (direct L2 communication, host 192.168.7.1):
 make setup-tap
 
-# Launch in QEMU:
+# Launch in QEMU (x86_64 with KVM/VirGL/Audio auto-detection):
 make run NET_MODE=tap AUDIODEV=pa
-make run NET_MODE=user DRIVE_TYPE=ide
+make run NET_MODE=user DRIVE_TYPE=ahci
 
 # Cleanups:
 make clean        # Removes build outputs, including build/disks
 make clean-lib    # Cleans kernel library artifacts
 make clean-disks  # Removes build/disks directory
 
-# === IPO_OS_Software (Userland Ecosystem) ===
-# Build all userland libraries, apps, compilers, and font tables:
+# === IPO_OS_Software (Userland Ecosystem & Modular Drivers) ===
+# Build all libraries, /drivers/* KMD executables, 34 apps, 15 toolchain ELFs, and fonts:
 make -C ../IPO_OS_Software all
+make -C ../IPO_OS_Software drivers
 make -C ../IPO_OS_Software load-apps DISK=../IPO_OS/build/disks/disk.img
 `
   },
@@ -359,7 +341,7 @@ sudo ./tools/setup-tap.sh tap0 192.168.7.1 24 192.168.7.2
 # 2. Launch IPO_OS with TAP network enabled
 make run NET_MODE=tap
 
-# 3. Inside IPO_OS shell: verify network configuration
+# 3. Inside IPO_OS shell: verify network configuration (requires /drivers/rtl8139 loaded)
 ifconfig
 
 # 4. From Linux host: ping guest OS or test TCP server
@@ -372,15 +354,15 @@ curl http://192.168.7.2:8000/
     id: 'qemu-full-stack-run',
     lang: 'bash',
     title: 'Running Complete Vertical Stack in QEMU',
-    code: `# Execute standalone Boot ROM with embedded firmware and IPO_OS disk:
-qemu-system-i386 \\
-    -bios build/bootrom.bin \\
-    -m 2048 \\
-    -drive format=raw,file=build/IPO_OS.img,if=ide,index=0 \\
-    -drive format=raw,file=build/disks/disk.img,if=ide,index=1 \\
+    code: `# Execute unified Boot ROM + Firmware + IPO_OS disk (default x86_64 SMP + VirGL + Audio):
+qemu-system-x86_64 \\
+    -M pc -cpu qemu64,+rdrand -smp 4 -m 2048 \\
+    -bios ../IPO_Boot_ROM/build/bootrom.bin \\
+    -drive format=raw,file=build/disks/disk.img,if=ide,index=0 \\
+    -device virtio-vga-gl -display gtk,gl=on \\
     -device rtl8139,netdev=net0 \\
     -netdev user,id=net0,net=192.168.7.0/24,host=192.168.7.1,dhcpstart=192.168.7.2 \\
-    -device sb16 \\
+    -audiodev pa,id=snd0 -device sb16,audiodev=snd0 \\
     -serial stdio
 `
   },
@@ -398,8 +380,8 @@ flashrom -p ch341a_spi -r backup2.bin
 # 3. Verify identical checksums before proceeding
 cmp backup1.bin backup2.bin || echo "CRITICAL: Clamp contact unstable! Re-attach clip!"
 
-# 4. Build unified ROM image (default 4MB, embedding firmware payload)
-make FIRMWARE=../IPO_Firmware/build/.bin/firmware.bin FLASH_SIZE=4M
+# 4. Build unified ROM image (default 4MiB IEC suffix, with XIP romstage & firmware)
+make FIRMWARE=../IPO_Firmware/build/firmware.bin FLASH_SIZE=4MiB
 
 # 5. Flash physical chip with verification
 flashrom -p ch341a_spi -w build/bootrom.bin
@@ -409,7 +391,7 @@ flashrom -p ch341a_spi -w build/bootrom.bin
   'syscall-c-wrapper': {
     id: 'syscall-c-wrapper',
     lang: 'c',
-    title: 'applications/lib/libc/sys.c (Syscall Invoker)',
+    title: 'lib/libc/sys.c (Syscall Invoker)',
     code: `#include <stdint.h>
 #include <syscall.h>
 
@@ -421,7 +403,7 @@ int ipo_syscall(uint32_t num, uint32_t argc, uint32_t *argv) {
         : "a"(num),
           "b"(argc),
           "c"(argv)
-        : "memory"
+        : "edx", "memory", "cc"
     );
     return ret;
 }
@@ -431,7 +413,7 @@ int ipo_syscall(uint32_t num, uint32_t argc, uint32_t *argv) {
   'app-linker-script': {
     id: 'app-linker-script',
     lang: 'c',
-    title: 'applications/app.ld (Application Linker Script)',
+    title: 'lib/linker.ld (Application Linker Script)',
     code: `ENTRY(_start)
 
 PHDRS
@@ -442,7 +424,7 @@ PHDRS
 
 SECTIONS
 {
-    . = 0x800000; /* Applications loaded at 8 MB physical address */
+    . = 0x800000; /* Userspace base image load address (8 MiB) */
 
     .text : ALIGN(4)
     {
@@ -460,24 +442,24 @@ SECTIONS
         *(.rdata*)
     } :text
 
-    .eh_frame_hdr : ALIGN(4)
-    {
-        *(.eh_frame_hdr)
-    } :text
-
+    .eh_frame_hdr : ALIGN(4) { *(.eh_frame_hdr) } :text
     .eh_frame : ALIGN(4)
     {
+        PROVIDE_HIDDEN(__eh_frame_start = .);
         KEEP(*(.eh_frame))
         *(.eh_frame.*)
+        LONG(0);
+        PROVIDE_HIDDEN(__eh_frame_end = .);
     } :text
-
-    .gcc_except_table : ALIGN(4)
-    {
-        *(.gcc_except_table*)
-    } :text
+    .gcc_except_table : ALIGN(4) { *(.gcc_except_table*) } :text
 
     . = ALIGN(4);
-
+    .preinit_array : ALIGN(4)
+    {
+        PROVIDE_HIDDEN (__preinit_array_start = .);
+        KEEP (*(.preinit_array))
+        PROVIDE_HIDDEN (__preinit_array_end = .);
+    } :data
     .init_array : ALIGN(4)
     {
         PROVIDE_HIDDEN (__init_array_start = .);
@@ -485,7 +467,6 @@ SECTIONS
         KEEP (*(.init_array EXCLUDE_FILE (*crtbegin.o *crtbegin?.o *crtend.o *crtend?.o ) .ctors))
         PROVIDE_HIDDEN (__init_array_end = .);
     } :data
-
     .fini_array : ALIGN(4)
     {
         PROVIDE_HIDDEN (__fini_array_start = .);
@@ -494,11 +475,7 @@ SECTIONS
         PROVIDE_HIDDEN (__fini_array_end = .);
     } :data
 
-    .data : ALIGN(4)
-    {
-        *(.data*)
-    } :data
-
+    .data : ALIGN(4) { *(.data*) } :data
     .bss : ALIGN(4)
     {
         PROVIDE_HIDDEN (__bss_start = .);
@@ -516,13 +493,25 @@ SECTIONS
   'app-entry-s': {
     id: 'app-entry-s',
     lang: 'asm',
-    title: 'applications/entry.s (Entrypoint Stub)',
-    code: `.global _start
+    title: 'lib/crt/crt0.s (Userspace C Runtime Entrypoint)',
+    code: `.code32
+.global _start
 .extern main
+.extern __libc_start_main
+.extern environ
+.extern __progname
 
 .section .entry, "ax"
 _start:
-    jmp main
+    fninit
+    /* Zero .bss [__bss_start .. __bss_end] */
+    pushl %ebp
+    movl %esp, %ebp
+    movl 8(%ebp), %eax   /* argc */
+    movl 12(%ebp), %edx  /* argv */
+    movl 16(%ebp), %ecx  /* envp */
+    andl $-16, %esp
+    /* Calls __libc_start_main(main, argc, argv, envp) */
 `
   },
 
@@ -534,24 +523,25 @@ _start:
 
 SECTIONS
 {
-    . = 0x10000; /* Kernel loaded at physical address 64 KB (0x10000) */
+    . = 0x100000; /* Kernel linked and loaded at 1 MiB physical address (0x100000) */
 
-    .text :
+    .text : ALIGN(4096)
     {
+        *(.entry)
         *(.text*)
     }
 
-    .rodata :
+    .rodata : ALIGN(4096)
     {
         *(.rodata*)
     }
 
-    .data :
+    .data : ALIGN(4096)
     {
         *(.data*)
     }
 
-    .bss :
+    .bss : ALIGN(4096)
     {
         *(COMMON)
         *(.bss*)
@@ -574,29 +564,29 @@ SECTIONS
 ASM     := nasm
 OBJCOPY := objcopy
 
-CFLAGS  := -m32 -O2 \
-           -ffreestanding \
-           -fno-pic -fno-pie \
-           -fno-builtin \
-           -nostdlib -nostartfiles \
-           -DIPO_APP \
-           -I/path/to/IPO_OS/applications/include
+CFLAGS  := -m32 -O2 -msse2 -mfpmath=sse \\
+           -ffreestanding \\
+           -fno-pic -fno-pie \\
+           -fno-builtin \\
+           -std=gnu11 \\
+           -I/path/to/IPO_OS_Software/include
 
-LDFLAGS := -Wl,-T,app.ld -nostdlib -nostartfiles
+LDFLAGS := -m elf_i386 -T /path/to/IPO_OS_Software/lib/linker.ld
 
 all: my_app.bin
-
-entry.o: entry.s
-	$(CC) $(CFLAGS) -c entry.s -o entry.o
 
 main.o: main.c
 	$(CC) $(CFLAGS) -c main.c -o main.o
 
-my_app.bin: entry.o main.o
-	$(CC) $(CFLAGS) $(LDFLAGS) entry.o main.o -o my_app.elf
-	$(OBJCOPY) --set-section-flags .bss=alloc,load,contents \
+my_app.bin: main.o
+	ld $(LDFLAGS) /path/to/IPO_OS_Software/build/lib/crt0.o main.o \\
+		/path/to/IPO_OS_Software/build/lib/libapp.a \\
+		/path/to/IPO_OS_Software/build/lib/libapp_api.a \\
+		/path/to/IPO_OS_Software/build/lib/libc.a \\
+		/path/to/IPO_OS_Software/build/lib/libgcc.a -o my_app.elf
+	$(OBJCOPY) --set-section-flags .bss=alloc,load,contents \\
 		-j .text -j .rodata -j .data -j .bss -O binary my_app.elf my_app.bin
-	@rm my_app.elf
+	@rm -f my_app.elf
 	@echo "✓ Generated raw binary: my_app.bin ready for IPO_FS"
 
 clean:
@@ -627,9 +617,9 @@ curl http://192.168.7.2:8000/
 export const sharedStructTables: StructTable[] = [
   {
     id: 'ipo_superblock',
-    totalSize: '64 bytes (Header of 512-byte block)',
+    totalSize: '104 bytes (Root superblock of 512-byte LBA 2048 block)',
     fields: [
-      { offset: '0x00', size: '8 bytes', type: 'char[8]', name: 'magic' },
+      { offset: '0x00', size: '8 bytes', type: 'uint64_t', name: 'magic' },
       { offset: '0x08', size: '8 bytes', type: 'uint64_t', name: 'fs_size_blocks' },
       { offset: '0x10', size: '4 bytes', type: 'uint32_t', name: 'block_size' },
       { offset: '0x14', size: '4 bytes', type: 'uint32_t', name: 'flags' },
@@ -637,7 +627,13 @@ export const sharedStructTables: StructTable[] = [
       { offset: '0x20', size: '8 bytes', type: 'uint64_t', name: 'inode_bitmap_start' },
       { offset: '0x28', size: '8 bytes', type: 'uint64_t', name: 'block_bitmap_start' },
       { offset: '0x30', size: '8 bytes', type: 'uint64_t', name: 'inode_table_start' },
-      { offset: '0x38', size: '8 bytes', type: 'uint64_t', name: 'data_blocks_start' }
+      { offset: '0x38', size: '8 bytes', type: 'uint64_t', name: 'data_blocks_start' },
+      { offset: '0x40', size: '4 bytes', type: 'uint32_t', name: 'primary_inodes' },
+      { offset: '0x44', size: '4 bytes', type: 'uint32_t', name: 'reserved' },
+      { offset: '0x48', size: '8 bytes', type: 'uint64_t', name: 'dynamic_chunk_tree' },
+      { offset: '0x50', size: '8 bytes', type: 'uint64_t', name: 'dynamic_chunks_count' },
+      { offset: '0x58', size: '8 bytes', type: 'uint64_t', name: 'dynamic_inodes_count' },
+      { offset: '0x60', size: '8 bytes', type: 'uint64_t', name: 'dynamic_inodes_used' }
     ]
   },
   {
@@ -649,7 +645,7 @@ export const sharedStructTables: StructTable[] = [
       { offset: '0x08', size: '8 bytes', type: 'uint64_t', name: 'size' },
       { offset: '0x10', size: '96 bytes', type: 'struct ipo_extent[4]', name: 'extents' },
       { offset: '0x70', size: '8 bytes', type: 'uint64_t', name: 'next_extent_node' },
-      { offset: '0x78', size: '8 bytes', type: 'uint8_t[8]', name: '_pad' }
+      { offset: '0x78', size: '8 bytes', type: 'uint64_t', name: 'reserved' }
     ]
   },
   {
@@ -664,7 +660,7 @@ export const sharedStructTables: StructTable[] = [
   },
   {
     id: 'storage_pool_raw_sb',
-    totalSize: '512 bytes (68 B header + flexible members[] + CRC32)',
+    totalSize: '512 bytes (LBA 2030/2039 + XTMB extension blocks 2040..2047)',
     fields: [
       { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'magic' },
       { offset: '0x04', size: '4 bytes', type: 'uint32_t', name: 'version' },
@@ -682,7 +678,7 @@ export const sharedStructTables: StructTable[] = [
   },
   {
     id: 'storage_raw_disk_tx_entry',
-    totalSize: '64 bytes (8 entries per 512-byte sector, 64 entries total)',
+    totalSize: '64 bytes (8 entries per 512-byte sector, LBA 2031..2038)',
     fields: [
       { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'magic' },
       { offset: '0x04', size: '4 bytes', type: 'uint32_t', name: 'tx_id' },
@@ -698,113 +694,76 @@ export const sharedStructTables: StructTable[] = [
   },
   {
     id: 'kmod_header',
-    totalSize: '192 bytes (0xC0 on-disk raw) / Dynamic pointers in RAM',
+    totalSize: 'Bare-metal PIC (.kmd) + kmod_init_meta_t (24 B) & kmod_t (44 B in RAM)',
     fields: [
-      { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'magic' },
-      { offset: '0x04', size: '2 bytes', type: 'uint16_t', name: 'abi_version' },
-      { offset: '0x06', size: '2 bytes', type: 'uint16_t', name: 'flags' },
-      { offset: '0x08', size: '32 B / char*', name: 'name', type: 'char[32] / char*' },
-      { offset: '0x28', size: '32 B / char*', name: 'author', type: 'char[32] / char*' },
-      { offset: '0x48', size: '16 B / char*', name: 'version', type: 'char[16] / char*' },
-      { offset: '0x58', size: '64 B / char*', name: 'description', type: 'char[64] / char*' },
-      { offset: '0x98', size: '4 bytes', type: 'uint32_t', name: 'init_offset' },
-      { offset: '0x9C', size: '4 bytes', type: 'uint32_t', name: 'cleanup_offset' },
-      { offset: '0xA0', size: '12 bytes', type: 'uint32_t[3]', name: 'text/data/bss_size' },
-      { offset: '0xAC', size: '8 bytes', type: 'uint32_t[2]', name: 'sym_tab_offset/count' },
-      { offset: '0xB4', size: '8 bytes', type: 'uint32_t[2]', name: 'reloc_offset/count' },
-      { offset: '0xBC', size: '4 bytes', type: 'uint32_t', name: 'checksum' }
+      { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'id' },
+      { offset: '0x04', size: '4 bytes', type: 'char*', name: 'name' },
+      { offset: '0x08', size: '4 bytes', type: 'char*', name: 'author' },
+      { offset: '0x0C', size: '4 bytes', type: 'char*', name: 'description' },
+      { offset: '0x10', size: '4 bytes', type: 'uint32_t', name: 'flags' },
+      { offset: '0x14', size: '4 bytes', type: 'void*', name: 'image_base' },
+      { offset: '0x18', size: '4 bytes', type: 'size_t', name: 'image_size' },
+      { offset: '0x1C', size: '4 bytes', type: 'int (*)(void)', name: 'init' },
+      { offset: '0x20', size: '4 bytes', type: 'int (*)(void)', name: 'cleanup' },
+      { offset: '0x24', size: '4 bytes', type: 'uint32_t', name: 'ref_count' },
+      { offset: '0x28', size: '4 bytes', type: 'struct kmod*', name: 'next' },
+      { offset: 'meta', size: '24 bytes', type: 'kmod_init_meta_t', name: 'resolve_sym_metadata' }
     ]
   },
   {
     id: 'cpu_info',
-    totalSize: '24 bytes',
+    totalSize: '40+ bytes (cpu_info_t with ipo_vaddr_t stack pointers)',
     fields: [
       { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'cpu_id' },
       { offset: '0x04', size: '4 bytes', type: 'uint32_t', name: 'lapic_id' },
       { offset: '0x08', size: '1 byte', type: 'bool', name: 'is_bsp' },
       { offset: '0x09', size: '1 byte', type: 'volatile bool', name: 'is_online' },
-      { offset: '0x0C', size: '4 bytes', type: 'uint32_t', name: 'stack_base' },
-      { offset: '0x10', size: '4 bytes', type: 'uint32_t', name: 'stack_top' },
-      { offset: '0x14', size: '4 bytes', type: 'volatile uint32_t', name: 'ticks' }
+      { offset: '0x0C', size: '4/8 bytes', type: 'ipo_vaddr_t', name: 'stack_base' },
+      { offset: '0x10', size: '4/8 bytes', type: 'ipo_vaddr_t', name: 'stack_top' },
+      { offset: '0x14', size: '4 bytes', type: 'volatile uint32_t', name: 'ticks' },
+      { offset: '0x18', size: '4 bytes', type: 'volatile uint32_t', name: 'tasks_executed' },
+      { offset: '0x1C', size: '4 bytes', type: 'volatile uint32_t', name: 'tasks_queued' },
+      { offset: '0x20', size: '4 bytes', type: 'volatile uint32_t', name: 'busy' },
+      { offset: '0x24', size: '4 bytes', type: 'volatile uint32_t', name: 'current_task_id' }
     ]
   },
   {
     id: 'process_pcb',
-    totalSize: '372 bytes (0x174)',
+    totalSize: 'Dynamic PCB (process_t with threads, address_space & self-expanding heaps)',
     fields: [
-      { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'pid' },
-      { offset: '0x04', size: '4 bytes', type: 'void*', name: 'binary_base' },
-      { offset: '0x08', size: '4 bytes', type: 'uint32_t', name: 'binary_size' },
-      { offset: '0x0C', size: '4 bytes', type: 'uint32_t', name: 'entry_point' },
-      { offset: '0x10', size: '4 bytes', type: 'void*', name: 'binary_storage' },
-      { offset: '0x14', size: '4 bytes', type: 'uint32_t', name: 'data_offset' },
-      { offset: '0x18', size: '4 bytes', type: 'uint32_t', name: 'data_size' },
-      { offset: '0x1C', size: '1 byte', type: 'bool', name: 'code_mapped' },
-      { offset: '0x20', size: '4 bytes', type: 'void*', name: 'stack_base' },
-      { offset: '0x24', size: '4 bytes', type: 'uint32_t', name: 'stack_ptr' },
-      { offset: '0x28', size: '4 bytes', type: 'uint32_t', name: 'stack_start' },
-      { offset: '0x2C', size: '4 bytes', type: 'uint32_t', name: 'stack_size' },
-      { offset: '0x30', size: '4 bytes', type: 'int', name: 'argc' },
-      { offset: '0x34', size: '4 bytes', type: 'uint32_t', name: 'argv_addr' },
-      { offset: '0x38', size: '4 bytes', type: 'char**', name: 'argv_kernel' },
-      { offset: '0x3C', size: '4 bytes', type: 'int', name: 'exit_code' },
-      { offset: '0x40', size: '64 bytes', type: 'process_return_value_t', name: 'return_val' },
-      { offset: '0x80', size: '1 byte', type: 'bool', name: 'return_val_explicit' },
-      { offset: '0x81', size: '1 byte', type: 'uint8_t', name: 'is_running' },
-      { offset: '0x82', size: '1 byte', type: 'bool', name: 'waiting_for_input' },
-      { offset: '0x83', size: '1 byte', type: 'bool', name: 'wants_graphics' },
-      { offset: '0x84', size: '4 bytes', type: 'uint32_t', name: 'gfx_overlay_flags' },
-      { offset: '0x88', size: '1 byte', type: 'bool', name: 'is_wm_app' },
-      { offset: '0x8C', size: '4 bytes', type: 'uint32_t', name: 'async_task_count' },
-      { offset: '0x90', size: '4 bytes', type: 'uint32_t', name: 'user_heap_base' },
-      { offset: '0x94', size: '4 bytes', type: 'uint32_t', name: 'user_heap_break' },
-      { offset: '0x98', size: '4 bytes', type: 'uint32_t', name: 'user_heap_limit' },
-      { offset: '0x9C', size: '4 bytes', type: 'int32_t', name: 'user_heap_slot' },
-      { offset: '0xA0', size: '128 bytes', type: 'struct ipo_inode', name: 'exec_inode' },
-      { offset: '0x120', size: '1 byte', type: 'bool', name: 'demand_loading' },
-      { offset: '0x124', size: '4 bytes', type: 'uint32_t', name: 'demand_file_offset' },
-      { offset: '0x128', size: '4 bytes', type: 'uint32_t', name: 'demand_mem_offset' },
-      { offset: '0x12C', size: '4 bytes', type: 'uint32_t', name: 'demand_loaded_bytes' },
-      { offset: '0x130', size: '4 bytes', type: 'uint32_t', name: 'demand_total_bytes' },
-      { offset: '0x134', size: '4 bytes', type: 'uint16_t*', name: 'text_vram_backup' },
-      { offset: '0x138', size: '4 bytes', type: 'uint8_t*', name: 'gfx_vram_backup' },
-      { offset: '0x13C', size: '4 bytes', type: 'uint8_t*', name: 'gfx_palette_backup' },
-      { offset: '0x140', size: '2 bytes', type: 'uint16_t', name: 'text_cursor_pos' },
-      { offset: '0x142', size: '1 byte', type: 'bool', name: 'text_cursor_visible' },
-      { offset: '0x143', size: '1 byte', type: 'bool', name: 'completed_and_acknowledged' },
-      { offset: '0x144', size: '4 bytes', type: 'uint16_t*', name: 'scroll_top_buffer' },
-      { offset: '0x148', size: '4 bytes', type: 'uint16_t*', name: 'scroll_bottom_buffer' },
-      { offset: '0x14C', size: '4 bytes', type: 'int', name: 'scroll_top_count' },
-      { offset: '0x150', size: '4 bytes', type: 'int', name: 'scroll_bottom_count' },
-      { offset: '0x154', size: '4 bytes', type: 'int', name: 'window_id' },
-      { offset: '0x158', size: '1 byte', type: 'bool', name: 'text_screen_shared' },
-      { offset: '0x15C', size: '4 bytes', type: 'char*', name: 'text_output_buf' },
-      { offset: '0x160', size: '4 bytes', type: 'uint32_t', name: 'text_output_len' },
-      { offset: '0x164', size: '4 bytes', type: 'uint32_t', name: 'text_output_cap' },
-      { offset: '0x168', size: '4 bytes', type: 'char*', name: 'name' },
-      { offset: '0x16C', size: '4 bytes', type: 'char*', name: 'return_format' },
-      { offset: '0x170', size: '4 bytes', type: 'struct process*', name: 'next' }
+      { offset: 'hdr', size: '4 bytes', type: 'uint32_t', name: 'pid' },
+      { offset: 'img', size: 'ptr + size', type: 'void* / ipo_size_t', name: 'binary_base / entry_point' },
+      { offset: 'ctx', size: 'arch_ctx', type: 'arch_context_t*', name: 'arch_ctx' },
+      { offset: 'mm', size: 'ptr + list', type: 'address_space_t*', name: 'address_space' },
+      { offset: 'stk', size: '4096 B+', type: 'ipo_vaddr_t', name: 'stack_base / stack_size' },
+      { offset: 'ret', size: 'dynamic', type: 'process_return_value_t', name: 'return_val' },
+      { offset: 'heap', size: '0x10000000+', type: 'ipo_vaddr_t + chunks[]', name: 'user_heap_base / heap_chunks' },
+      { offset: 'mmap', size: 'dynamic', type: 'proc_mmap_region_t*', name: 'mmap_regions' },
+      { offset: 'thrd', size: 'dynamic', type: 'process_thread_t*', name: 'threads / thread_count' },
+      { offset: 'sig', size: 'dynamic', type: 'sigaction_t[]', name: 'signal_handlers / pending' },
+      { offset: 'vram', size: 'dynamic', type: 'void*', name: 'text_vram_backup / text_output_buf' },
+      { offset: 'meta', size: 'char*', type: 'char* / struct process*', name: 'name / return_format / next' }
     ]
   },
   {
     id: 'device_node',
-    totalSize: '148 bytes (0x94) with dynamic strings & self-expanding BAR array (src/include/kernel/device.h)',
+    totalSize: 'Dynamic device_node_t with ipo_paddr_t* bar[] & strings (src/include/kernel/device.h)',
     fields: [
       { offset: '0x00', size: '4 bytes', type: 'uint32_t', name: 'id' },
       { offset: '0x04', size: '4 bytes', type: 'uint32_t', name: 'parent_id' },
       { offset: '0x08', size: '4 bytes', type: 'uint32_t', name: 'capabilities' },
       { offset: '0x0C', size: '4 bytes', type: 'device_type_t', name: 'type' },
       { offset: '0x10', size: '4 bytes', type: 'device_state_t', name: 'state' },
-      { offset: '0x14', size: '12 bytes', type: 'char* + len/cap', name: 'name' },
-      { offset: '0x20', size: '36 bytes', type: 'char* + len/cap', name: 'vendor / model / description' },
-      { offset: '0x44', size: '52 bytes', type: 'device_resources_t', name: 'res' },
-      { offset: '0x78', size: '16 bytes', type: 'char* + void*', name: 'driver_name / driver_ptr' },
-      { offset: '0x88', size: '12 bytes', type: 'device_ops_t* + next', name: 'ops / priv_data / next' }
+      { offset: '0x14', size: 'dynamic', type: 'char* + len/cap', name: 'name' },
+      { offset: '0x20', size: 'dynamic', type: 'char* + len/cap', name: 'vendor / model / description' },
+      { offset: '0x44', size: '64-bit BARs', type: 'device_resources_t', name: 'res' },
+      { offset: '0x78', size: 'dynamic', type: 'char* + void*', name: 'driver_name / driver_ptr' },
+      { offset: '0x88', size: 'pointers', type: 'device_ops_t* + next', name: 'ops / priv_data / next' }
     ]
   },
   {
     id: 'kmalloc_stats',
-    totalSize: '28 bytes',
+    totalSize: '28 bytes (Primary 64 MiB at 0x04000000 + dynamic overflow arenas)',
     fields: [
       { offset: '0x00', size: '4 bytes', type: 'size_t', name: 'heap_total' },
       { offset: '0x04', size: '4 bytes', type: 'size_t', name: 'heap_used' },
@@ -838,52 +797,32 @@ export const sharedStructTables: StructTable[] = [
   },
   {
     id: 'ipo_idt_entry',
-    totalSize: '8 bytes',
+    totalSize: '8 bytes (32-bit IDT gate) / 16 bytes (64-bit ipo_idt_entry64_t in Long Mode)',
     fields: [
       { offset: '0x00', size: '2 bytes', type: 'uint16_t', name: 'base_lo' },
       { offset: '0x02', size: '2 bytes', type: 'uint16_t', name: 'selector' },
       { offset: '0x04', size: '1 byte', type: 'uint8_t', name: 'zero' },
       { offset: '0x05', size: '1 byte', type: 'uint8_t', name: 'flags' },
-      { offset: '0x06', size: '2 bytes', type: 'uint16_t', name: 'base_hi' }
+      { offset: '0x06', size: '2/10 B', type: 'uint16_t / uint64_t', name: 'base_hi' }
     ]
   },
   {
     id: 'bootrom_post_codes',
-    totalSize: '8-bit Diagnostic Port 0x80',
+    totalSize: '8-bit Diagnostic Port 0x80 (IPO_Boot_ROM/include/contract.inc)',
     fields: [
-      { offset: '0x10', size: '1 byte', type: 'Progress', name: 'POST_RESET_VECTOR' },
-      { offset: '0x11', size: '1 byte', type: 'Progress', name: 'POST_ROM_INIT_ENTRY' },
       { offset: '0x12', size: '1 byte', type: 'Progress', name: 'POST_CAR_START' },
-      { offset: '0x13', size: '1 byte', type: 'Progress', name: 'POST_CAR_READY' },
-      { offset: '0x15', size: '1 byte', type: 'Progress', name: 'POST_CHIPSET_DETECTED' },
-      { offset: '0x16', size: '1 byte', type: 'Progress', name: 'POST_MRC_START' },
-      { offset: '0x17', size: '1 byte', type: 'Progress', name: 'POST_DRAM_TEST_PASS' },
-      { offset: '0x18', size: '1 byte', type: 'Progress', name: 'POST_CAR_TEARDOWN' },
-      { offset: '0x1C', size: '1 byte', type: 'Progress', name: 'POST_PAM_LOCKED' },
-      { offset: '0x1D', size: '1 byte', type: 'Progress', name: 'POST_FW_VALIDATE' },
-      { offset: '0x1E', size: '1 byte', type: 'Progress', name: 'POST_HANDOVER' },
-      { offset: '0x2E', size: '1 byte', type: 'Error', name: 'ERR_NO_MTRR' },
-      { offset: '0x3E', size: '1 byte', type: 'Error', name: 'ERR_UNKNOWN_CHIPSET' },
-      { offset: '0x4E', size: '1 byte', type: 'Error', name: 'ERR_DRAM_FAIL' },
-      { offset: '0x7E', size: '1 byte', type: 'Error', name: 'ERR_MAGIC_MISMATCH' }
+      { offset: '0x13', size: '1 byte', type: 'Progress', name: 'POST_CAR_OK' },
+      { offset: '0x15', size: '1 byte', type: 'Progress', name: 'POST_ROMSTAGE_START' },
+      { offset: '0x16', size: '1 byte', type: 'Progress', name: 'POST_ROMSTAGE_OK' },
+      { offset: '0x1F', size: '1 byte', type: 'Warning', name: 'POST_WARN_SPD_FAIL' },
+      { offset: '0x2E', size: '1 byte', type: 'Notice', name: 'POST_NOMTRR_BYPASS' }
     ]
   },
   {
     id: 'firmware_post_codes',
-    totalSize: '8-bit Diagnostic Port 0x80',
+    totalSize: '8-bit Diagnostic Port 0x80 (IPO_Firmware/include/boot_constants.inc)',
     fields: [
-      { offset: '0x20', size: '1 byte', type: 'Progress', name: 'FW_ENTRY' },
-      { offset: '0x21', size: '1 byte', type: 'Progress', name: 'FW_PCI_ENUM_DONE' },
-      { offset: '0x22', size: '1 byte', type: 'Progress', name: 'FW_IVT_INSTALLED' },
-      { offset: '0x23', size: '1 byte', type: 'Progress', name: 'FW_ACPI_INSTALLED' },
-      { offset: '0x24', size: '1 byte', type: 'Progress', name: 'FW_VIDEO_READY' },
-      { offset: '0x25', size: '1 byte', type: 'Progress', name: 'FW_A20_ACTIVE' },
-      { offset: '0x27', size: '1 byte', type: 'Progress', name: 'FW_PS2_READY' },
-      { offset: '0x28', size: '1 byte', type: 'Progress', name: 'FW_STORAGE_PROBE' },
-      { offset: '0x30', size: '1 byte', type: 'Progress', name: 'FW_SCAN_BOOTABLE' },
-      { offset: '0x31', size: '1 byte', type: 'Progress', name: 'FW_MBR_VALIDATED' },
-      { offset: '0xF0', size: '1 byte', type: 'Success', name: 'FW_HANDOVER_OS' },
-      { offset: '0xEE', size: '1 byte', type: 'Error', name: 'FW_ERR_NO_BOOT' }
+      { offset: '0x29', size: '1 byte', type: 'Progress', name: 'POST_DISK_SPINUP_WAIT' }
     ]
   }
 ];
@@ -972,6 +911,36 @@ export const sharedSyscallsList: SyscallDoc[] = [
     numDec: 4121,
     name: 'IPO_SYSCALL_FS_SEEK',
     signature: 'int ipo_seek(int fd, int32_t offset, int whence)',
+  },
+  {
+    numHex: '0x101A',
+    numDec: 4122,
+    name: 'IPO_SYSCALL_FS_TRUNCATE',
+    signature: 'int ipo_truncate64(const char *path, uint64_t size)',
+  },
+  {
+    numHex: '0x101B',
+    numDec: 4123,
+    name: 'IPO_SYSCALL_FS_FTRUNCATE',
+    signature: 'int ipo_ftruncate64(int fd, uint64_t size)',
+  },
+  {
+    numHex: '0x101C',
+    numDec: 4124,
+    name: 'IPO_SYSCALL_FS_MKDIR',
+    signature: 'int ipo_mkdir(const char *path)',
+  },
+  {
+    numHex: '0x101D',
+    numDec: 4125,
+    name: 'IPO_SYSCALL_FS_RMDIR',
+    signature: 'int ipo_rmdir(const char *path)',
+  },
+  {
+    numHex: '0x101E',
+    numDec: 4126,
+    name: 'IPO_SYSCALL_FS_LSEEK64',
+    signature: 'int64_t ipo_lseek64(int fd, int64_t offset, int whence)',
   },
   {
     numHex: '0x1020',
@@ -1118,6 +1087,36 @@ export const sharedSyscallsList: SyscallDoc[] = [
     signature: 'int timer_after(uint32_t start_ms, uint32_t delay_ms)',
   },
   {
+    numHex: '0x104B',
+    numDec: 4171,
+    name: 'IPO_SYSCALL_RTC_GET_STR',
+    signature: 'int ipo_rtc_get_str(const char *fmt, char *out_buf, size_t cap)',
+  },
+  {
+    numHex: '0x104C',
+    numDec: 4172,
+    name: 'IPO_SYSCALL_RTC_SET_STR',
+    signature: 'int ipo_rtc_set_str(const char *spec, uint32_t kind)',
+  },
+  {
+    numHex: '0x104D',
+    numDec: 4173,
+    name: 'IPO_SYSCALL_RTC_GET_FORMAT',
+    signature: 'int ipo_rtc_get_format(char *out_buf, size_t cap)',
+  },
+  {
+    numHex: '0x104E',
+    numDec: 4174,
+    name: 'IPO_SYSCALL_RTC_SET_FORMAT',
+    signature: 'int ipo_rtc_set_format(const char *fmt)',
+  },
+  {
+    numHex: '0x104F',
+    numDec: 4175,
+    name: 'IPO_SYSCALL_RTC_ADD_STR',
+    signature: 'int ipo_rtc_add_str(const char *unit, const char *amount)',
+  },
+  {
     numHex: '0x1050',
     numDec: 4176,
     name: 'IPO_SYSCALL_KEYMAP_SET',
@@ -1242,6 +1241,72 @@ export const sharedSyscallsList: SyscallDoc[] = [
     numDec: 4196,
     name: 'IPO_SYSCALL_FS_STATVFS',
     signature: 'int ipo_statvfs(uint32_t out_stats[7])',
+  },
+  {
+    numHex: '0x1065',
+    numDec: 4197,
+    name: 'IPO_SYSCALL_VGA_GET_BOUNDS',
+    signature: 'int ipo_vga_get_screen_bounds(int32_t *width, int32_t *height)',
+  },
+  {
+    numHex: '0x1066',
+    numDec: 4198,
+    name: 'IPO_SYSCALL_PORT_IN8',
+    signature: 'uint8_t ipo_port_in8(uint16_t port)',
+  },
+  {
+    numHex: '0x1067',
+    numDec: 4199,
+    name: 'IPO_SYSCALL_PORT_OUT8',
+    signature: 'void ipo_port_out8(uint16_t port, uint8_t value)',
+  },
+  {
+    numHex: '0x1068',
+    numDec: 4200,
+    name: 'IPO_SYSCALL_PORT_IN16',
+    signature: 'uint16_t ipo_port_in16(uint16_t port)',
+  },
+  {
+    numHex: '0x1069',
+    numDec: 4201,
+    name: 'IPO_SYSCALL_PORT_OUT16',
+    signature: 'void ipo_port_out16(uint16_t port, uint16_t value)',
+  },
+  {
+    numHex: '0x106A',
+    numDec: 4202,
+    name: 'IPO_SYSCALL_PORT_IN32',
+    signature: 'uint32_t ipo_port_in32(uint16_t port)',
+  },
+  {
+    numHex: '0x106B',
+    numDec: 4203,
+    name: 'IPO_SYSCALL_PORT_OUT32',
+    signature: 'void ipo_port_out32(uint16_t port, uint32_t value)',
+  },
+  {
+    numHex: '0x106C',
+    numDec: 4204,
+    name: 'IPO_SYSCALL_RTC_GET_DATE_FORMAT',
+    signature: 'int ipo_rtc_get_date_format(char *out_buf, size_t cap)',
+  },
+  {
+    numHex: '0x106D',
+    numDec: 4205,
+    name: 'IPO_SYSCALL_RTC_SET_DATE_FORMAT',
+    signature: 'int ipo_rtc_set_date_format(const char *fmt)',
+  },
+  {
+    numHex: '0x106E',
+    numDec: 4206,
+    name: 'IPO_SYSCALL_RTC_GET_DATE_STR',
+    signature: 'int ipo_rtc_get_date_str(char *out_buf, size_t cap)',
+  },
+  {
+    numHex: '0x106F',
+    numDec: 4207,
+    name: 'IPO_SYSCALL_RTC_GET_STATUS',
+    signature: 'int ipo_rtc_get_status(char *out_buf, size_t cap)',
   },
   {
     numHex: '0x1070',
@@ -1396,26 +1461,14 @@ export const sharedSyscallsList: SyscallDoc[] = [
   {
     numHex: '0x1089',
     numDec: 4233,
-    name: 'IPO_SYSCALL_WM_DISPATCH_KEY',
-    signature: 'bool wm_dispatch_key(uint8_t scancode)',
-  },
-  {
-    numHex: '0x108A',
-    numDec: 4234,
-    name: 'IPO_SYSCALL_WM_COMPOSE',
-    signature: 'void wm_compose(uint8_t *backbuf)',
+    name: 'IPO_SYSCALL_WM_POLL_EVENT',
+    signature: 'bool wm_poll_event(wm_window_t *win, wm_event_t *out)',
   },
   {
     numHex: '0x108B',
     numDec: 4235,
     name: 'IPO_SYSCALL_WM_COMPOSITOR_TICK',
     signature: 'void wm_compositor_tick(void)',
-  },
-  {
-    numHex: '0x108C',
-    numDec: 4236,
-    name: 'IPO_SYSCALL_WM_SESSION_RUN',
-    signature: 'void wm_session_run(void)',
   },
   {
     numHex: '0x108D',
@@ -1580,6 +1633,12 @@ export const sharedSyscallsList: SyscallDoc[] = [
     signature: 'void ipo_mouse_get_state(mouse_state_t *state)',
   },
   {
+    numHex: '0x10B1',
+    numDec: 4273,
+    name: 'IPO_SYSCALL_MOUSE_GET_MOTION',
+    signature: 'int ipo_mouse_get_motion(int64_t *dx, int64_t *dy)',
+  },
+  {
     numHex: '0x10C0',
     numDec: 4288,
     name: 'IPO_SYSCALL_VGA_SET_CURSOR',
@@ -1620,6 +1679,12 @@ export const sharedSyscallsList: SyscallDoc[] = [
     numDec: 4294,
     name: 'IPO_SYSCALL_VGA_GET_OVERLAY_FLAGS',
     signature: 'uint32_t ipo_vga_get_overlay_flags(void)',
+  },
+  {
+    numHex: '0x10C7',
+    numDec: 4295,
+    name: 'IPO_SYSCALL_VGA_GET_TEXT_INFO',
+    signature: 'int ipo_vga_get_text_info(uint16_t *cols, uint16_t *rows, uint32_t *vram_addr)',
   },
   {
     numHex: '0x10D0',
@@ -1700,6 +1765,24 @@ export const sharedSyscallsList: SyscallDoc[] = [
     signature: 'void ipo_audio_stream_update_buffered(audio_stream_t *stream, size_t new_size, bool loop)',
   },
   {
+    numHex: '0x10DD',
+    numDec: 4317,
+    name: 'IPO_SYSCALL_AUDIO_SET_FP_CONFIG',
+    signature: 'bool audio_set_fp_config(const audio_fp_config_t *cfg)',
+  },
+  {
+    numHex: '0x10DE',
+    numDec: 4318,
+    name: 'IPO_SYSCALL_AUDIO_GET_FP_CONFIG',
+    signature: 'bool audio_get_fp_config(audio_fp_config_t *out_cfg)',
+  },
+  {
+    numHex: '0x10DF',
+    numDec: 4319,
+    name: 'IPO_SYSCALL_AUDIO_GET_STATS',
+    signature: 'bool audio_get_stats(audio_stats_t *out_stats)',
+  },
+  {
     numHex: '0x10E0',
     numDec: 4320,
     name: 'IPO_SYSCALL_BINFMT_REGISTER',
@@ -1716,6 +1799,858 @@ export const sharedSyscallsList: SyscallDoc[] = [
     numDec: 4322,
     name: 'IPO_SYSCALL_BINFMT_LIST',
     signature: 'int ipo_binfmt_list(void)',
+  },
+  {
+    numHex: '0x10F0',
+    numDec: 4336,
+    name: 'IPO_SYSCALL_IPC_CREATE',
+    signature: 'int ipo_ipc_create(const char *name, uint32_t public_rights)',
+  },
+  {
+    numHex: '0x10F1',
+    numDec: 4337,
+    name: 'IPO_SYSCALL_IPC_OPEN',
+    signature: 'int ipo_ipc_open(const char *name, uint32_t rights)',
+  },
+  {
+    numHex: '0x10F2',
+    numDec: 4338,
+    name: 'IPO_SYSCALL_IPC_CLOSE',
+    signature: 'int ipo_ipc_close(int endpoint)',
+  },
+  {
+    numHex: '0x10F3',
+    numDec: 4339,
+    name: 'IPO_SYSCALL_IPC_DESTROY',
+    signature: 'int ipo_ipc_destroy(int endpoint)',
+  },
+  {
+    numHex: '0x10F4',
+    numDec: 4340,
+    name: 'IPO_SYSCALL_IPC_SEND',
+    signature: 'int ipo_ipc_send(int endpoint, const void *message, uint32_t length, uint32_t flags)',
+  },
+  {
+    numHex: '0x10F5',
+    numDec: 4341,
+    name: 'IPO_SYSCALL_IPC_RECEIVE',
+    signature: 'int ipo_ipc_receive(int endpoint, void *buffer, uint32_t capacity, uint32_t *sender_pid, uint32_t *msg_len, uint32_t flags)',
+  },
+  {
+    numHex: '0x10F6',
+    numDec: 4342,
+    name: 'IPO_SYSCALL_IPC_PIPE_CREATE',
+    signature: 'int ipo_ipc_pipe_create(const char *name, uint32_t public_rights, int *pipe_handle)',
+  },
+  {
+    numHex: '0x10F7',
+    numDec: 4343,
+    name: 'IPO_SYSCALL_IPC_PIPE_OPEN',
+    signature: 'int ipo_ipc_pipe_open(const char *name, uint32_t rights)',
+  },
+  {
+    numHex: '0x10F8',
+    numDec: 4344,
+    name: 'IPO_SYSCALL_IPC_PIPE_CLOSE',
+    signature: 'int ipo_ipc_pipe_close(int pipe_handle, uint32_t rights)',
+  },
+  {
+    numHex: '0x10F9',
+    numDec: 4345,
+    name: 'IPO_SYSCALL_IPC_PIPE_DESTROY',
+    signature: 'int ipo_ipc_pipe_destroy(int pipe_handle)',
+  },
+  {
+    numHex: '0x10FA',
+    numDec: 4346,
+    name: 'IPO_SYSCALL_IPC_PIPE_READ',
+    signature: 'int ipo_ipc_pipe_read(int pipe_handle, void *buffer, uint32_t capacity, uint32_t flags)',
+  },
+  {
+    numHex: '0x10FB',
+    numDec: 4347,
+    name: 'IPO_SYSCALL_IPC_PIPE_WRITE',
+    signature: 'int ipo_ipc_pipe_write(int pipe_handle, const void *buffer, uint32_t length, uint32_t flags)',
+  },
+  {
+    numHex: '0x10FC',
+    numDec: 4348,
+    name: 'IPO_SYSCALL_IPC_NOTIFY_SEND',
+    signature: 'int ipo_ipc_notify_send(uint32_t recipient_pid, uint32_t event, uint32_t value)',
+  },
+  {
+    numHex: '0x10FD',
+    numDec: 4349,
+    name: 'IPO_SYSCALL_IPC_NOTIFY_WAIT',
+    signature: 'int ipo_ipc_notify_wait(ipo_ipc_notification_t *notification, uint32_t flags)',
+  },
+  {
+    numHex: '0x10FE',
+    numDec: 4350,
+    name: 'IPO_SYSCALL_IPC_PIPE_POLL',
+    signature: 'int ipo_ipc_pipe_poll(int pipe_handle)',
+  },
+  {
+    numHex: '0x1100',
+    numDec: 4352,
+    name: 'IPO_SYSCALL_SHM_CREATE',
+    signature: 'int ipo_shm_create(const char *name, uint32_t size, uint32_t public_rights)',
+  },
+  {
+    numHex: '0x1101',
+    numDec: 4353,
+    name: 'IPO_SYSCALL_SHM_OPEN',
+    signature: 'int ipo_shm_open(const char *name, uint32_t rights)',
+  },
+  {
+    numHex: '0x1102',
+    numDec: 4354,
+    name: 'IPO_SYSCALL_SHM_ATTACH',
+    signature: 'int ipo_shm_attach(int handle, void **address, uint32_t *size)',
+  },
+  {
+    numHex: '0x1103',
+    numDec: 4355,
+    name: 'IPO_SYSCALL_SHM_DETACH',
+    signature: 'int ipo_shm_detach(int handle)',
+  },
+  {
+    numHex: '0x1104',
+    numDec: 4356,
+    name: 'IPO_SYSCALL_SHM_DESTROY',
+    signature: 'int ipo_shm_destroy(int handle)',
+  },
+  {
+    numHex: '0x1110',
+    numDec: 4368,
+    name: 'IPO_SYSCALL_SIGACTION',
+    signature: 'int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact)',
+  },
+  {
+    numHex: '0x1111',
+    numDec: 4369,
+    name: 'IPO_SYSCALL_SIGPROCMASK',
+    signature: 'int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)',
+  },
+  {
+    numHex: '0x1112',
+    numDec: 4370,
+    name: 'IPO_SYSCALL_KILL',
+    signature: 'int kill(pid_t pid, int sig)',
+  },
+  {
+    numHex: '0x1113',
+    numDec: 4371,
+    name: 'IPO_SYSCALL_SIGALTSTACK',
+    signature: 'int sigaltstack(const stack_t *ss, stack_t *old_ss)',
+  },
+  {
+    numHex: '0x1120',
+    numDec: 4384,
+    name: 'IPO_SYSCALL_THREAD_CREATE',
+    signature: 'int ipo_thread_create(void *(*entry)(void *), void *arg, uint32_t *out_tid)',
+  },
+  {
+    numHex: '0x1121',
+    numDec: 4385,
+    name: 'IPO_SYSCALL_THREAD_EXIT',
+    signature: 'void ipo_thread_exit(uintptr_t retval)',
+  },
+  {
+    numHex: '0x1122',
+    numDec: 4386,
+    name: 'IPO_SYSCALL_THREAD_JOIN',
+    signature: 'int ipo_thread_join(uint32_t tid, uintptr_t *out_retval)',
+  },
+  {
+    numHex: '0x1123',
+    numDec: 4387,
+    name: 'IPO_SYSCALL_THREAD_SELF',
+    signature: 'uint32_t ipo_thread_self(void)',
+  },
+  {
+    numHex: '0x1130',
+    numDec: 4400,
+    name: 'IPO_SYSCALL_THREAD_SYNC',
+    signature: 'int ipo_sync_call(const void *object, uint32_t type, uint32_t op, uint32_t val)',
+  },
+  {
+    numHex: '0x1140',
+    numDec: 4416,
+    name: 'IPO_SYSCALL_INPUT_POLL_KEY_EXT',
+    signature: 'int ipo_input_poll_key_ext(ipo_key_event_t *out_ev)',
+  },
+  {
+    numHex: '0x1141',
+    numDec: 4417,
+    name: 'IPO_SYSCALL_INPUT_GET_KEY_STATE',
+    signature: 'bool ipo_input_get_key_state(uint32_t keycode)',
+  },
+  {
+    numHex: '0x1142',
+    numDec: 4418,
+    name: 'IPO_SYSCALL_INPUT_GET_MODIFIERS',
+    signature: 'uint32_t ipo_sys_input_get_modifiers(void)',
+  },
+  {
+    numHex: '0x1143',
+    numDec: 4419,
+    name: 'IPO_SYSCALL_SHORTCUT_REGISTER',
+    signature: 'uint32_t ipo_shortcut_register(const ipo_shortcut_spec_t *spec)',
+  },
+  {
+    numHex: '0x1144',
+    numDec: 4420,
+    name: 'IPO_SYSCALL_SHORTCUT_UNREGISTER',
+    signature: 'int ipo_shortcut_unregister(uint32_t shortcut_id)',
+  },
+  {
+    numHex: '0x1145',
+    numDec: 4421,
+    name: 'IPO_SYSCALL_SHORTCUT_POLL',
+    signature: 'int ipo_shortcut_poll(ipo_shortcut_event_t *out_ev)',
+  },
+  {
+    numHex: '0x1146',
+    numDec: 4422,
+    name: 'IPO_SYSCALL_INPUT_DEV_REGISTER',
+    signature: 'uint32_t ipo_input_dev_register(const ipo_input_dev_desc_t *desc)',
+  },
+  {
+    numHex: '0x1147',
+    numDec: 4423,
+    name: 'IPO_SYSCALL_INPUT_DEV_UNREGISTER',
+    signature: 'int ipo_input_dev_unregister(uint32_t dev_id)',
+  },
+  {
+    numHex: '0x1148',
+    numDec: 4424,
+    name: 'IPO_SYSCALL_INPUT_DEV_EMIT',
+    signature: 'int ipo_input_dev_emit(uint32_t dev_id, const ipo_input_event_t *ev)',
+  },
+  {
+    numHex: '0x1149',
+    numDec: 4425,
+    name: 'IPO_SYSCALL_INPUT_DEV_LIST',
+    signature: 'uint32_t ipo_input_dev_list(ipo_input_dev_info_t *out_arr, uint32_t max_count)',
+  },
+  {
+    numHex: '0x114A',
+    numDec: 4426,
+    name: 'IPO_SYSCALL_INPUT_DEV_POLL_EVENT',
+    signature: 'int ipo_input_dev_poll_event(uint32_t dev_filter_id, ipo_input_event_t *out_ev)',
+  },
+  {
+    numHex: '0x114B',
+    numDec: 4427,
+    name: 'IPO_SYSCALL_INPUT_DEV_GET_STATE',
+    signature: 'int ipo_input_dev_get_state(uint32_t dev_id, uint16_t type, uint32_t code, int32_t *out_val)',
+  },
+  {
+    numHex: '0x114C',
+    numDec: 4428,
+    name: 'IPO_SYSCALL_MOUSE_INJECT',
+    signature: 'int ipo_sys_mouse_inject(int32_t x_or_dx, int32_t y_or_dy, int32_t dz, uint32_t buttons, bool abs)',
+  },
+  {
+    numHex: '0x114D',
+    numDec: 4429,
+    name: 'IPO_SYSCALL_INPUT_SET_HOTKEY_MODE',
+    signature: 'int ipo_sys_input_set_hotkey_mode(uint32_t mode_flags)',
+  },
+  {
+    numHex: '0x114E',
+    numDec: 4430,
+    name: 'IPO_SYSCALL_INPUT_GET_HOTKEY_MODE',
+    signature: 'uint32_t ipo_sys_input_get_hotkey_mode(void)',
+  },
+  {
+    numHex: '0x1150',
+    numDec: 4432,
+    name: 'IPO_SYSCALL_PS2_HOOK_REGISTER',
+    signature: 'uint32_t ipo_ps2_hook_register(uint32_t chan_mask, uint32_t flags)',
+  },
+  {
+    numHex: '0x1151',
+    numDec: 4433,
+    name: 'IPO_SYSCALL_PS2_HOOK_UNREGISTER',
+    signature: 'int ipo_ps2_hook_unregister(uint32_t handle)',
+  },
+  {
+    numHex: '0x1152',
+    numDec: 4434,
+    name: 'IPO_SYSCALL_PS2_HOOK_POLL',
+    signature: 'uint32_t ipo_ps2_hook_poll(uint32_t handle, ipo_ps2_byte_event_t *out_events, uint32_t max_count)',
+  },
+  {
+    numHex: '0x1153',
+    numDec: 4435,
+    name: 'IPO_SYSCALL_PS2_TRANSACT',
+    signature: 'int ipo_ps2_transact(const ipo_ps2_transact_req_t *req)',
+  },
+  {
+    numHex: '0x1160',
+    numDec: 4448,
+    name: 'IPO_SYSCALL_IRQ_SUBSCRIBE',
+    signature: 'uint32_t ipo_irq_subscribe(uint8_t irq)',
+  },
+  {
+    numHex: '0x1161',
+    numDec: 4449,
+    name: 'IPO_SYSCALL_IRQ_UNSUBSCRIBE',
+    signature: 'int ipo_irq_unsubscribe(uint32_t handle)',
+  },
+  {
+    numHex: '0x1162',
+    numDec: 4450,
+    name: 'IPO_SYSCALL_IRQ_POLL',
+    signature: 'uint32_t ipo_irq_poll(uint32_t handle, uint32_t *out_total, uint64_t *out_last_ms)',
+  },
+  {
+    numHex: '0x1163',
+    numDec: 4451,
+    name: 'IPO_SYSCALL_IRQ_GET_COUNT',
+    signature: 'uint32_t ipo_irq_get_count(uint8_t irq)',
+  },
+  {
+    numHex: '0x1164',
+    numDec: 4452,
+    name: 'IPO_SYSCALL_IRQ_REGISTER_CB',
+    signature: 'uint32_t ipo_irq_register_cb(uint8_t irq, ipo_irq_cb_t fn, void *ctx)',
+  },
+  {
+    numHex: '0x1165',
+    numDec: 4453,
+    name: 'IPO_SYSCALL_IRQ_UNREGISTER_CB',
+    signature: 'int ipo_irq_unregister_cb(uint32_t handle)',
+  },
+  {
+    numHex: '0x1170',
+    numDec: 4464,
+    name: 'IPO_SYSCALL_HW_MAP_MMIO',
+    signature: 'void *ipo_hw_map_mmio(uint32_t phys_addr, uint32_t size, uint32_t flags)',
+  },
+  {
+    numHex: '0x1171',
+    numDec: 4465,
+    name: 'IPO_SYSCALL_HW_UNMAP_MMIO',
+    signature: 'int ipo_hw_unmap_mmio(void *virt_addr, uint32_t size)',
+  },
+  {
+    numHex: '0x1172',
+    numDec: 4466,
+    name: 'IPO_SYSCALL_HW_ALLOC_DMA',
+    signature: 'void *ipo_hw_alloc_dma(uint32_t size, uint32_t alignment, uint32_t *out_phys)',
+  },
+  {
+    numHex: '0x1173',
+    numDec: 4467,
+    name: 'IPO_SYSCALL_HW_FREE_DMA',
+    signature: 'int ipo_hw_free_dma(void *virt_addr)',
+  },
+  {
+    numHex: '0x1174',
+    numDec: 4468,
+    name: 'IPO_SYSCALL_HW_VIRT_TO_PHYS',
+    signature: 'uint32_t ipo_hw_virt_to_phys(const void *virt_addr)',
+  },
+  {
+    numHex: '0x1178',
+    numDec: 4472,
+    name: 'IPO_SYSCALL_PCI_GET_COUNT',
+    signature: 'uint32_t ipo_sys_pci_get_count(void)',
+  },
+  {
+    numHex: '0x1179',
+    numDec: 4473,
+    name: 'IPO_SYSCALL_PCI_GET_DEVICE',
+    signature: 'int ipo_pci_get_device(uint32_t index, ipo_pci_dev_info_t *out_info)',
+  },
+  {
+    numHex: '0x117A',
+    numDec: 4474,
+    name: 'IPO_SYSCALL_PCI_CONFIG_READ',
+    signature: 'uint32_t ipo_pci_config_read(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uint8_t width)',
+  },
+  {
+    numHex: '0x117B',
+    numDec: 4475,
+    name: 'IPO_SYSCALL_PCI_CONFIG_WRITE',
+    signature: 'int ipo_pci_config_write(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uint8_t width, uint32_t value)',
+  },
+  {
+    numHex: '0x117C',
+    numDec: 4476,
+    name: 'IPO_SYSCALL_PCI_ENABLE_BUS_MASTER',
+    signature: 'int ipo_pci_enable_bus_master(uint8_t bus, uint8_t slot, uint8_t func)',
+  },
+  {
+    numHex: '0x1180',
+    numDec: 4480,
+    name: 'IPO_SYSCALL_DEV_GET_COUNT',
+    signature: 'uint32_t ipo_sys_device_get_count(void)',
+  },
+  {
+    numHex: '0x1181',
+    numDec: 4481,
+    name: 'IPO_SYSCALL_DEV_GET_INFO',
+    signature: 'int ipo_device_get_info(uint32_t index, ipo_device_info_t *out_info)',
+  },
+  {
+    numHex: '0x1182',
+    numDec: 4482,
+    name: 'IPO_SYSCALL_DEV_REGISTER',
+    signature: 'uint32_t ipo_device_register(const ipo_device_info_t *info)',
+  },
+  {
+    numHex: '0x1183',
+    numDec: 4483,
+    name: 'IPO_SYSCALL_DEV_UNREGISTER',
+    signature: 'int ipo_device_unregister(uint32_t dev_id)',
+  },
+  {
+    numHex: '0x1190',
+    numDec: 4496,
+    name: 'IPO_SYSCALL_WM_SET_CURSOR_VISIBLE',
+    signature: 'void wm_set_cursor_visible(wm_window_t *win, bool visible)',
+  },
+  {
+    numHex: '0x1191',
+    numDec: 4497,
+    name: 'IPO_SYSCALL_WM_GET_CURSOR_VISIBLE',
+    signature: 'bool wm_get_cursor_visible(const wm_window_t *win)',
+  },
+  {
+    numHex: '0x1192',
+    numDec: 4498,
+    name: 'IPO_SYSCALL_WM_GET_SCREEN_BOUNDS',
+    signature: 'void wm_get_screen_bounds(int *out_w, int *out_h)',
+  },
+  {
+    numHex: '0x1193',
+    numDec: 4499,
+    name: 'IPO_SYSCALL_WM_SET_CURSOR_SCALE',
+    signature: 'bool wm_set_cursor_scale(int width, int height)',
+  },
+  {
+    numHex: '0x1194',
+    numDec: 4500,
+    name: 'IPO_SYSCALL_WM_GET_CURSOR_SCALE',
+    signature: 'void wm_get_cursor_scale(int *out_width, int *out_height)',
+  },
+  {
+    numHex: '0x11A0',
+    numDec: 4512,
+    name: 'IPO_SYSCALL_KMOD_LOAD',
+    signature: 'int ipo_kmod_load(const char *path, uint32_t *out_mod_id)',
+  },
+  {
+    numHex: '0x11A1',
+    numDec: 4513,
+    name: 'IPO_SYSCALL_KMOD_UNLOAD',
+    signature: 'int ipo_kmod_unload(const char *name)',
+  },
+  {
+    numHex: '0x11A2',
+    numDec: 4514,
+    name: 'IPO_SYSCALL_KMOD_COUNT',
+    signature: 'uint32_t ipo_kmod_count(void)',
+  },
+  {
+    numHex: '0x11A3',
+    numDec: 4515,
+    name: 'IPO_SYSCALL_KMOD_LOAD_MEM',
+    signature: 'int ipo_kmod_load_mem(const char *name, const void *buf, size_t size, uint32_t *out_mod_id)',
+  },
+  {
+    numHex: '0x11A4',
+    numDec: 4516,
+    name: 'IPO_SYSCALL_EXT_REGISTER',
+    signature: 'uint32_t ipo_ext_register(const ipo_ext_desc_t *desc, uint32_t owner_pid)',
+  },
+  {
+    numHex: '0x11A5',
+    numDec: 4517,
+    name: 'IPO_SYSCALL_EXT_UNREGISTER',
+    signature: 'int ipo_ext_unregister(uint32_t ext_id, uint32_t caller_pid)',
+  },
+  {
+    numHex: '0x11A6',
+    numDec: 4518,
+    name: 'IPO_SYSCALL_EXT_CALL',
+    signature: 'int ipo_ext_call(const char *name, uint32_t op, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3)',
+  },
+  {
+    numHex: '0x11A7',
+    numDec: 4519,
+    name: 'IPO_SYSCALL_EXT_LIST',
+    signature: 'uint32_t ipo_ext_list(ipo_ext_info_t *out_arr, uint32_t max_count)',
+  },
+  {
+    numHex: '0x11A8',
+    numDec: 4520,
+    name: 'IPO_SYSCALL_CHAN_LIST',
+    signature: 'uint32_t ipo_chan_list(ipo_chan_info_t *out_arr, uint32_t max_count)',
+  },
+  {
+    numHex: '0x11A9',
+    numDec: 4521,
+    name: 'IPO_SYSCALL_CHAN_TX',
+    signature: 'int ipo_chan_transmit(uint32_t chan_id, const void *frame, uint32_t len)',
+  },
+  {
+    numHex: '0x11AA',
+    numDec: 4522,
+    name: 'IPO_SYSCALL_CHAN_RX',
+    signature: 'int ipo_chan_poll_sub(uint32_t sub_id, void *buf, uint32_t max_len)',
+  },
+  {
+    numHex: '0x11AB',
+    numDec: 4523,
+    name: 'IPO_SYSCALL_CHAN_SUB',
+    signature: 'uint32_t ipo_chan_subscribe(uint32_t chan_id, uint16_t ethertype_filter, ipo_chan_rx_cb_t cb, void *ctx, uint32_t owner_pid)',
+  },
+  {
+    numHex: '0x11AC',
+    numDec: 4524,
+    name: 'IPO_SYSCALL_CHAN_UNSUB',
+    signature: 'int ipo_chan_unsubscribe(uint32_t sub_id, uint32_t caller_pid)',
+  },
+  {
+    numHex: '0x11AD',
+    numDec: 4525,
+    name: 'IPO_SYSCALL_EXT_UPDATE',
+    signature: 'int ipo_ext_update(uint32_t ext_id, const ipo_ext_desc_t *new_desc, uint32_t caller_pid)',
+  },
+  {
+    numHex: '0x11B0',
+    numDec: 4528,
+    name: 'IPO_SYSCALL_SMP_GET_COUNT',
+    signature: 'uint32_t ipo_smp_get_count(uint32_t *out_online_count)',
+  },
+  {
+    numHex: '0x11B1',
+    numDec: 4529,
+    name: 'IPO_SYSCALL_SMP_GET_INFO',
+    signature: 'int ipo_smp_get_info(uint32_t cpu_id, cpu_info_t *out_info)',
+  },
+  {
+    numHex: '0x11B2',
+    numDec: 4530,
+    name: 'IPO_SYSCALL_SMP_SUBMIT',
+    signature: 'int ipo_smp_submit(uint32_t target_cpu, smp_work_fn_t fn, uintptr_t arg, uint32_t *out_task_id)',
+  },
+  {
+    numHex: '0x11B3',
+    numDec: 4531,
+    name: 'IPO_SYSCALL_SMP_WAIT',
+    signature: 'int ipo_smp_wait(uint32_t task_id, uint32_t timeout_ms, smp_task_result_t *out_res)',
+  },
+  {
+    numHex: '0x11B4',
+    numDec: 4532,
+    name: 'IPO_SYSCALL_SMP_CURRENT',
+    signature: 'uint32_t ipo_smp_current(uint32_t *out_lapic_id)',
+  },
+  {
+    numHex: '0x11C0',
+    numDec: 4544,
+    name: 'IPO_SYSCALL_DYNMOD_AUTH',
+    signature: 'int dynmod_authorize(uint32_t pid, uint32_t token)',
+  },
+  {
+    numHex: '0x11C1',
+    numDec: 4545,
+    name: 'IPO_SYSCALL_DYNMOD_RESOLVE',
+    signature: 'int dynmod_resolve_symbol(const char *name, ipo_vaddr_t *out_addr)',
+  },
+  {
+    numHex: '0x11C2',
+    numDec: 4546,
+    name: 'IPO_SYSCALL_DYNMOD_READ',
+    signature: 'int dynmod_read_mem(ipo_vaddr_t addr, void *out_buf, size_t size)',
+  },
+  {
+    numHex: '0x11C3',
+    numDec: 4547,
+    name: 'IPO_SYSCALL_DYNMOD_WRITE_VAR',
+    signature: 'int dynmod_write_var(ipo_vaddr_t addr, const void *in_buf, size_t size, uint32_t *out_patch_id)',
+  },
+  {
+    numHex: '0x11C4',
+    numDec: 4548,
+    name: 'IPO_SYSCALL_DYNMOD_HOOK_FUNC',
+    signature: 'int dynmod_hook_function(ipo_vaddr_t target_fn, ipo_vaddr_t replacement_fn, uint32_t *out_patch_id)',
+  },
+  {
+    numHex: '0x11C5',
+    numDec: 4549,
+    name: 'IPO_SYSCALL_DYNMOD_HOOK_SYSCALL',
+    signature: 'int dynmod_hook_syscall(uint32_t num, ipo_syscall_handler_t new_handler, ipo_syscall_handler_t *out_old, uint32_t *out_patch_id)',
+  },
+  {
+    numHex: '0x11C6',
+    numDec: 4550,
+    name: 'IPO_SYSCALL_DYNMOD_RESTORE',
+    signature: 'int dynmod_restore(uint32_t patch_id)',
+  },
+  {
+    numHex: '0x11C7',
+    numDec: 4551,
+    name: 'IPO_SYSCALL_DYNMOD_LIST',
+    signature: 'uint32_t dynmod_list(ipo_dynmod_info_t *out_arr, uint32_t max_count)',
+  },
+  {
+    numHex: '0x11C8',
+    numDec: 4552,
+    name: 'IPO_SYSCALL_DYNMOD_COMPUTE_DEMO',
+    signature: 'uint32_t dynmod_target_compute(uint32_t x, uint32_t y)',
+  },
+  {
+    numHex: '0x11D0',
+    numDec: 4560,
+    name: 'IPO_SYSCALL_AUDIO_API_VERSION',
+    signature: 'uint32_t ipo_audio_api_version(void)',
+  },
+  {
+    numHex: '0x11D1',
+    numDec: 4561,
+    name: 'IPO_SYSCALL_AUDIO_GET_DEV_COUNT',
+    signature: 'int ipo_audio_get_device_count(void)',
+  },
+  {
+    numHex: '0x11D2',
+    numDec: 4562,
+    name: 'IPO_SYSCALL_AUDIO_GET_DEV_INFO',
+    signature: 'int ipo_audio_get_device_info(uint32_t device_id, ipo_audio_device_info_t *out_info)',
+  },
+  {
+    numHex: '0x11D3',
+    numDec: 4563,
+    name: 'IPO_SYSCALL_AUDIO_OPEN',
+    signature: 'int ipo_audio_open(const ipo_audio_open_params_t *params, ipo_audio_handle_t *out_handle)',
+  },
+  {
+    numHex: '0x11D4',
+    numDec: 4564,
+    name: 'IPO_SYSCALL_AUDIO_CLOSE',
+    signature: 'int ipo_audio_close(ipo_audio_handle_t handle)',
+  },
+  {
+    numHex: '0x11D5',
+    numDec: 4565,
+    name: 'IPO_SYSCALL_AUDIO_WRITE',
+    signature: 'int ipo_audio_write(ipo_audio_handle_t handle, const void *pcm_data, size_t byte_count)',
+  },
+  {
+    numHex: '0x11D6',
+    numDec: 4566,
+    name: 'IPO_SYSCALL_AUDIO_READ',
+    signature: 'int ipo_audio_read(ipo_audio_handle_t handle, void *out_buf, size_t max_bytes)',
+  },
+  {
+    numHex: '0x11D7',
+    numDec: 4567,
+    name: 'IPO_SYSCALL_AUDIO_HANDLE_PAUSE',
+    signature: 'int ipo_audio_pause(ipo_audio_handle_t handle, bool paused)',
+  },
+  {
+    numHex: '0x11D8',
+    numDec: 4568,
+    name: 'IPO_SYSCALL_AUDIO_HANDLE_SET_VOL',
+    signature: 'int ipo_audio_set_volume(ipo_audio_handle_t handle, float volume)',
+  },
+  {
+    numHex: '0x11D9',
+    numDec: 4569,
+    name: 'IPO_SYSCALL_AUDIO_HANDLE_CLOCK',
+    signature: 'int ipo_audio_get_clock(ipo_audio_handle_t handle, ipo_audio_clock_t *out_clock)',
+  },
+  {
+    numHex: '0x11DA',
+    numDec: 4570,
+    name: 'IPO_SYSCALL_AUDIO_STREAM_CLOCK',
+    signature: 'int ipo_audio_get_stream_clock(audio_stream_t *stream, ipo_audio_clock_t *out_clock)',
+  },
+  {
+    numHex: '0x11DB',
+    numDec: 4571,
+    name: 'IPO_SYSCALL_AUDIO_SET_MASTER_VOL',
+    signature: 'int ipo_audio_set_master_volume(uint8_t left_0_255, uint8_t right_0_255)',
+  },
+  {
+    numHex: '0x11DC',
+    numDec: 4572,
+    name: 'IPO_SYSCALL_AUDIO_GET_MASTER_VOL',
+    signature: 'int ipo_audio_get_master_volume(uint8_t *out_left, uint8_t *out_right)',
+  },
+  {
+    numHex: '0x11E0',
+    numDec: 4576,
+    name: 'IPO_SYSCALL_GFX_API_VERSION',
+    signature: 'uint32_t ipo_gfx_api_version(void)',
+  },
+  {
+    numHex: '0x11E1',
+    numDec: 4577,
+    name: 'IPO_SYSCALL_GFX_GET_CAPS',
+    signature: 'int ipo_gfx_get_caps(ipo_gfx_caps_t *out_caps)',
+  },
+  {
+    numHex: '0x11E2',
+    numDec: 4578,
+    name: 'IPO_SYSCALL_GFX_ENUM_MODES',
+    signature: 'int ipo_gfx_enum_modes(uint32_t index, ipo_gfx_mode_info_t *out_mode)',
+  },
+  {
+    numHex: '0x11E3',
+    numDec: 4579,
+    name: 'IPO_SYSCALL_GFX_SET_MODE',
+    signature: 'int ipo_gfx_set_mode(uint32_t width, uint32_t height, uint32_t bpp)',
+  },
+  {
+    numHex: '0x11E4',
+    numDec: 4580,
+    name: 'IPO_SYSCALL_GFX_GET_MODE',
+    signature: 'int ipo_gfx_get_mode(ipo_gfx_mode_info_t *out_mode)',
+  },
+  {
+    numHex: '0x11E5',
+    numDec: 4581,
+    name: 'IPO_SYSCALL_GFX_SELECT_FORMAT',
+    signature: 'int ipo_gfx_select_best_formats(const ipo_color_select_req_t *req, ipo_pixel_format_t *out_ren, ipo_pixel_format_t *out_hw)',
+  },
+  {
+    numHex: '0x11E6',
+    numDec: 4582,
+    name: 'IPO_SYSCALL_GFX_PRESENT_WINDOW',
+    signature: 'int ipo_gfx_present_window(wm_window_t *win, const ipo_gfx_surface_desc_t *surf)',
+  },
+  {
+    numHex: '0x11E7',
+    numDec: 4583,
+    name: 'IPO_SYSCALL_GFX_PRESENT_SCREEN',
+    signature: 'int ipo_gfx_present_screen(const ipo_gfx_surface_desc_t *surf)',
+  },
+  {
+    numHex: '0x11E8',
+    numDec: 4584,
+    name: 'IPO_SYSCALL_GFX_GET_STATS',
+    signature: 'int ipo_gfx_get_stats(ipo_gfx_stats_t *out_stats)',
+  },
+  {
+    numHex: '0x11E9',
+    numDec: 4585,
+    name: 'IPO_SYSCALL_GFX_GET_PALETTE32',
+    signature: 'int ipo_gfx_sync_palette_32(uint32_t *out_xrgb256)',
+  },
+  {
+    numHex: '0x11EA',
+    numDec: 4586,
+    name: 'IPO_SYSCALL_GFX_BGA_OP',
+    signature: 'uint32_t ipo_gfx_bga_op(uint32_t op, void *opt_out)',
+  },
+  {
+    numHex: '0x11F0',
+    numDec: 4592,
+    name: 'IPO_SYSCALL_GPU_GET_INFO',
+    signature: 'int ipo_sys_gpu_get_info(ipo_gpu_info_t *out_info)',
+  },
+  {
+    numHex: '0x11F1',
+    numDec: 4593,
+    name: 'IPO_SYSCALL_GPU_SET_MODE',
+    signature: 'int ipo_sys_gpu_set_mode(uint32_t force_cpu)',
+  },
+  {
+    numHex: '0x11F2',
+    numDec: 4594,
+    name: 'IPO_SYSCALL_GPU_CTX_CREATE',
+    signature: 'int ipo_sys_gpu_ctx_create(uint32_t *out_ctx_id, const char *debug_name)',
+  },
+  {
+    numHex: '0x11F3',
+    numDec: 4595,
+    name: 'IPO_SYSCALL_GPU_CTX_DESTROY',
+    signature: 'int ipo_sys_gpu_ctx_destroy(uint32_t ctx_id)',
+  },
+  {
+    numHex: '0x11F4',
+    numDec: 4596,
+    name: 'IPO_SYSCALL_GPU_RES_CREATE',
+    signature: 'int ipo_sys_gpu_res_create(uint32_t ctx_id, const ipo_gpu_res_desc_t *desc, uint32_t *out_res_id)',
+  },
+  {
+    numHex: '0x11F5',
+    numDec: 4597,
+    name: 'IPO_SYSCALL_GPU_RES_UPLOAD',
+    signature: 'int ipo_sys_gpu_res_upload(const ipo_gpu_upload_desc_t *upload_desc)',
+  },
+  {
+    numHex: '0x11F6',
+    numDec: 4598,
+    name: 'IPO_SYSCALL_GPU_RES_DESTROY',
+    signature: 'int ipo_sys_gpu_res_destroy(uint32_t res_id)',
+  },
+  {
+    numHex: '0x11F7',
+    numDec: 4599,
+    name: 'IPO_SYSCALL_GPU_SUBMIT_BATCH',
+    signature: 'int ipo_sys_gpu_submit_batch(const ipo_gpu_batch_desc_t *batch_desc)',
+  },
+  {
+    numHex: '0x1200',
+    numDec: 4608,
+    name: 'IPO_SYSCALL_THREAD_DETACH',
+    signature: 'int ipo_thread_detach(uint32_t thread_id)',
+  },
+  {
+    numHex: '0x1201',
+    numDec: 4609,
+    name: 'IPO_SYSCALL_THREAD_SET_TLS',
+    signature: 'int ipo_thread_set_tls(uintptr_t tls_base)',
+  },
+  {
+    numHex: '0x1202',
+    numDec: 4610,
+    name: 'IPO_SYSCALL_THREAD_GET_TLS',
+    signature: 'uintptr_t ipo_thread_get_tls(void)',
+  },
+  {
+    numHex: '0x1203',
+    numDec: 4611,
+    name: 'IPO_SYSCALL_CLOCK_GETTIME',
+    signature: 'int ipo_clock_gettime(uint32_t clock_id, ipo_timespec_t *out_ts)',
+  },
+  {
+    numHex: '0x1204',
+    numDec: 4612,
+    name: 'IPO_SYSCALL_NANOSLEEP',
+    signature: 'int ipo_nanosleep(const ipo_timespec_t *req, ipo_timespec_t *rem)',
+  },
+  {
+    numHex: '0x1205',
+    numDec: 4613,
+    name: 'IPO_SYSCALL_FUTEX',
+    signature: 'int ipo_futex(volatile uint32_t *uaddr, uint32_t op, uint32_t val, uint32_t timeout_or_ts)',
+  },
+  {
+    numHex: '0x1206',
+    numDec: 4614,
+    name: 'IPO_SYSCALL_MMAP',
+    signature: 'void *ipo_mmap(void *hint, uint32_t len, uint32_t prot, uint32_t flags)',
+  },
+  {
+    numHex: '0x1207',
+    numDec: 4615,
+    name: 'IPO_SYSCALL_MUNMAP',
+    signature: 'int ipo_munmap(void *addr, uint32_t len)',
+  },
+  {
+    numHex: '0x1208',
+    numDec: 4616,
+    name: 'IPO_SYSCALL_MPROTECT',
+    signature: 'int ipo_mprotect(void *addr, uint32_t len, uint32_t prot)',
   },
   {
     numHex: '0xFFFF',

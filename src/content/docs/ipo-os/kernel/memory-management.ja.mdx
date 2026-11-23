@@ -29,16 +29,16 @@ Memory management in **IPO_OS** is organized into hardware RAM detection during 
 ### 1. BIOS E820 Physical Memory Map Manager (`src/kernel/mm/memory_map.c`)
 The physical memory map and total usable RAM are detected by the MBR bootloader in real mode using BIOS `INT 15h, EAX=0xE820` (with fallback to `AX=0xE801`):
 - The bootloader stores an array of **20-byte** `e820_entry_t` region descriptors starting at physical address **`0x6000`** and writes the `e820_map_header_t` metadata into `0x8FE0`–`0x8FF7` (`'E820'` magic `0x45383230` at `0x8FE0`, entry count at `0x8FE4`, array pointer `0x00006000` at `0x8FE8`, total usable RAM bytes at `0x8FF0`/`0x8FF4`).
-- `memory_map_init()` parses all E820 regions (`E820_RAM`, `E820_RESERVED`, `E820_ACPI`, `E820_NVS`, `E820_BADMEM`) into a dynamically growing array, reserves the first 64 MB of the `0x01000000` region for `kmalloc`, allocates contiguous physical blocks above `0x05000000` via `memory_map_alloc()`, and exposes system-wide telemetry via `free` and `hardware memory`.
+- `memory_map_init()` parses all E820 regions (`E820_RAM`, `E820_RESERVED`, `E820_ACPI`, `E820_NVS`, `E820_BADMEM`) into a dynamically growing array, reserves the first 64 MB of the `0x04000000` region for `kmalloc`, allocates contiguous physical blocks in PMM `0x08000000`–`0x0FFFFFFF` via `memory_map_alloc()`, and exposes system-wide telemetry via `free` and `hardware memory`.
 
 ### 2. Kernel Heap Allocator (`src/kernel/mm/kmalloc.c`)
-The kernel heap spans physical addresses `0x01000000` (16 MB) to `0x05000000` (80 MB) with a capacity of **64 MB** (`KMALLOC_HEAP_SIZE = 0x04000000`), protected by the SMP spinlock `s_kmalloc_lock`:
+The kernel heap spans physical addresses `0x04000000` (64 MiB) to `0x08000000` (128 MiB) with a capacity of **64 MB** (`KMALLOC_HEAP_SIZE = 0x04000000`), protected by the SMP spinlock `s_kmalloc_lock`:
 - Each allocated block has a 16-byte boundary-tag header `kmalloc_block_t` containing validation magic `0xDEADBEEF` (allocated) or `0xDEADC0DE` (freed).
 - Provides `kmalloc()`, `kcalloc()`, `krealloc()`, and `kfree()`, automatically running `kmalloc_coalesce_and_shrink()` to merge contiguous free blocks and lower the heap watermark.
 
 ### 3. Process Address Space & Isolated Heap Allocation (`sbrk` & `malloc`)
 Raw flat binaries are loaded by the kernel bare-metal loader at base address `0x00800000`, while ELF32 executables and scripts are dispatched via the dynamic `binfmt` registry and executed via userspace runners.
-- Dynamic memory expansion is handled via `IPO_SYSCALL_SBRK` (`0x1045`), adjusting `proc->user_heap_break` within the process's isolated physical dynamic heap (`USER_HEAP_START = 0x08000000` / 128 MB, or `0x05000000` / 80 MB on low-RAM systems with 128 MB or less, with `USER_HEAP_PROCESS_STRIDE = 0x10000000` / 256 MB dynamic stride).
+- Dynamic memory expansion is handled via `IPO_SYSCALL_SBRK` (`0x1045`), adjusting `proc->user_heap_break` within the process's isolated physical dynamic heap (`USER_HEAP_START = 0x10000000` / 256 MiB, or `0x09000000` / 144 MiB on `<= 256 MiB` RAM systems, with `USER_HEAP_PROCESS_STRIDE = 0x10000000` / 256 MiB dynamic stride).
 - Each process is dynamically allocated the first non-overlapping physical slot (`proc->user_heap_slot`, `user_heap_base`, `user_heap_limit`), preventing cross-process memory contamination. Slot memory is immediately recycled upon process termination.
 - Userspace `malloc()` / `calloc()` / `realloc()` / `free()` (`IPO_OS_Software/lib/libc/stdlib.c`) requests memory from `sbrk()` in 64 KB multiples and tracks blocks using `block_hdr_t` with magic `0x4D414C43` (`"MALC"`).
 

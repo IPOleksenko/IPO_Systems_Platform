@@ -24,21 +24,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DOWNLOADS_DIR = BASE_DIR / "public" / "downloads"
 
 STANDARD_BOOTROM_SIZES = [
-    ("64K", "64k", "64 KB"),
-    ("128K", "128k", "128 KB"),
-    ("256K", "256k", "256 KB"),
-    ("512K", "512k", "512 KB"),
-    ("1M", "1m", "1 MB"),
-    ("2M", "2m", "2 MB"),
-    ("4M", "4m", "4 MB"),
-    ("8M", "8m", "8 MB"),
-    ("16M", "16m", "16 MB"),
+    ("128KiB", "128k", "128 KiB"),
+    ("256KiB", "256k", "256 KiB"),
+    ("512KiB", "512k", "512 KiB"),
+    ("1MiB", "1m", "1 MiB"),
+    ("2MiB", "2m", "2 MiB"),
+    ("4MiB", "4m", "4 MiB"),
+    ("8MiB", "8m", "8 MiB"),
+    ("16MiB", "16m", "16 MiB"),
 ]
-RETIRED_BOOTROM_SIZES = ["32m", "64m", "128m"]
+RETIRED_BOOTROM_SIZES = ["64k", "32m", "64m", "128m"]
 ARCHIVE_FORMATS = ["zip", "tar.gz", "tar.bz2", "tar.xz"]
 EXPECTED_ARTIFACTS = [
     *[f"ipo-system-bundle.{extension}" for extension in ARCHIVE_FORMATS],
-    "IPO_OS.img",
+    "IPO_OS.bin",
     "disk.img",
     "disk-installed.img",
     "disk-clean.img",
@@ -112,7 +111,21 @@ def add_tar_archive_variants(
         manifest_entries.append(variant)
 
 
+def rebuild_romstage(repo_dir: Path, flash_size: str) -> Path:
+    """Force re-linking Flash-XIP romstage at 4 GiB - flash_size."""
+    bin_dir = repo_dir / "build" / ".bin"
+    for artifact in (bin_dir / "romstage.elf", bin_dir / "romstage.bin"):
+        artifact.unlink(missing_ok=True)
+    subprocess.run(
+        ["make", f"FLASH_SIZE={flash_size}", "build/.bin/romstage.bin"],
+        cwd=repo_dir,
+        check=True,
+    )
+    return bin_dir / "romstage.bin"
+
+
 def build_bootrom_binaries(bootrom: dict, manifest_entries: list) -> None:
+    repo_dir = bootrom["repo_dir"]
     with tempfile.TemporaryDirectory(prefix="ipo-boot-rom-") as temp_dir:
         temp_path = Path(temp_dir)
         build_rom_script = bootrom["build_rom_script"]
@@ -121,6 +134,7 @@ def build_bootrom_binaries(bootrom: dict, manifest_entries: list) -> None:
             binary_name = f"ipo-boot-rom{'' if size_slug == '4m' else f'-{size_slug}'}.bin"
             binary_path = DOWNLOADS_DIR / binary_name
             raw_path = temp_path / f"bootrom-{size_slug}.bin"
+            romstage_bin = rebuild_romstage(repo_dir, flash_size)
             subprocess.run(
                 [
                     sys.executable,
@@ -130,6 +144,8 @@ def build_bootrom_binaries(bootrom: dict, manifest_entries: list) -> None:
                     str(bootrom["init_bin"]),
                     str(bootrom["reset_bin"]),
                     str(raw_path),
+                    "--romstage",
+                    str(romstage_bin),
                 ],
                 check=True,
             )
@@ -150,6 +166,9 @@ def build_bootrom_binaries(bootrom: dict, manifest_entries: list) -> None:
                 "sha256": sha256_file(binary_path),
             }
             manifest_entries.append(artifact)
+
+        # Restore default 4MiB romstage build
+        rebuild_romstage(repo_dir, "4MiB")
 
 
 def format_size(bytes_num: int) -> str:
@@ -187,11 +206,11 @@ def artifacts_exist() -> bool:
         return False
     bootrom = bootrom_path.read_bytes()
     firmware = firmware_path.read_bytes()
-    if bootrom[0xF0000:0xF8000] != b"\xFF" * 0x8000:
+    if bootrom[0xF0000:0xFE000] != b"\xFF" * 0xE000:
         return False
-    if bootrom[0xFFFF0:0xFFFF5] != b"\xEA\x00\x80\x00\xF0":
+    if bootrom[0xFFFF0:0xFFFF5] != b"\xEA\x00\xE0\x00\xF0":
         return False
-    if firmware[0x30000:0x30003] != b"IPO":
+    if firmware[0x30000:0x3000C] != b"IPO_Firmware":
         return False
     return True
 
@@ -201,33 +220,37 @@ def build_emulator_roms(firmware: dict, bootrom: dict) -> None:
     emulator_dir.mkdir(parents=True, exist_ok=True)
     bootrom_path = emulator_dir / "ipo-boot-rom-1m.bin"
     firmware_path = emulator_dir / "ipo-firmware.bin"
+    repo_dir = bootrom["repo_dir"]
+    romstage_bin = rebuild_romstage(repo_dir, "1MiB")
     subprocess.run(
         [
             sys.executable,
             str(bootrom["build_rom_script"]),
-            "1M",
+            "1MiB",
             "",
             str(bootrom["init_bin"]),
             str(bootrom["reset_bin"]),
             str(bootrom_path),
+            "--romstage",
+            str(romstage_bin),
         ],
         check=True,
     )
     shutil.copy2(firmware["bin"], firmware_path)
     if bootrom_path.stat().st_size != 1024 * 1024:
-        raise RuntimeError("Standalone IPO_Boot_ROM image must be exactly 1 MB")
-    if bootrom_path.read_bytes()[0xF0000:0xF8000] != b"\xFF" * 0x8000:
+        raise RuntimeError("Standalone IPO_Boot_ROM image must be exactly 1 MiB")
+    if bootrom_path.read_bytes()[0xF0000:0xFE000] != b"\xFF" * 0xE000:
         raise RuntimeError("Standalone IPO_Boot_ROM unexpectedly contains an embedded firmware payload")
+    if bootrom_path.read_bytes()[0xFFFF0:0xFFFF5] != b"\xEA\x00\xE0\x00\xF0":
+        raise RuntimeError("Standalone IPO_Boot_ROM reset vector does not target F000:E000")
     if firmware_path.stat().st_size != 256 * 1024:
-        raise RuntimeError("Standalone IPO_Firmware ROM image must be exactly 256 KB")
+        raise RuntimeError("Standalone IPO_Firmware ROM image must be exactly 256 KiB")
     print(f"✓ Separate emulator ROMs ready: {bootrom_path.name} and {firmware_path.name}")
 
 
 def build_firmware(repo_dir: Path, force_rebuild: bool = False) -> dict:
     fw_payload = repo_dir / "build" / ".bin" / "firmware.bin"
     fw_bin = repo_dir / "build" / "firmware.bin"
-    if not fw_bin.exists():
-        fw_bin = repo_dir / "build" / "firmware.rom"
 
     if force_rebuild or not fw_payload.exists() or not fw_bin.exists():
         print("\n--- Building IPO_Firmware ---")
@@ -235,8 +258,6 @@ def build_firmware(repo_dir: Path, force_rebuild: bool = False) -> dict:
         subprocess.run(["make"], cwd=repo_dir, check=True)
         fw_payload = repo_dir / "build" / ".bin" / "firmware.bin"
         fw_bin = repo_dir / "build" / "firmware.bin"
-        if not fw_bin.exists():
-            fw_bin = repo_dir / "build" / "firmware.rom"
 
     if not fw_payload.exists() or not fw_bin.exists():
         raise RuntimeError("IPO_Firmware build did not produce firmware.bin")
@@ -249,26 +270,14 @@ def build_bootrom(repo_dir: Path, firmware_bin: Path, firmware_repo_dir: Path, f
     bootrom_bin = repo_dir / "build" / "bootrom.bin"
     init_bin = repo_dir / "build" / ".bin" / "init.bin"
     reset_bin = repo_dir / "build" / ".bin" / "reset.bin"
-    build_rom_script = repo_dir / "tools" / "build_rom.sh"
+    romstage_bin = repo_dir / "build" / ".bin" / "romstage.bin"
+    build_rom_script = repo_dir / "tools" / "build_rom.py"
 
-    if force_rebuild or not bootrom_bin.exists() or not init_bin.exists() or not reset_bin.exists():
+    if force_rebuild or not bootrom_bin.exists() or not init_bin.exists() or not reset_bin.exists() or not romstage_bin.exists():
         print("\n--- Building IPO_Boot_ROM ---")
         subprocess.run(["make", "clean"], cwd=repo_dir, check=True)
         subprocess.run(
-            ["make", "build/.bin/init.bin", "build/.bin/reset.bin"],
-            cwd=repo_dir,
-            check=True,
-        )
-        subprocess.run(
-            [
-                sys.executable,
-                str(build_rom_script),
-                "4M",
-                str(firmware_bin),
-                str(init_bin),
-                str(reset_bin),
-                str(bootrom_bin),
-            ],
+            ["make", f"FIRMWARE={firmware_bin}", "FLASH_SIZE=4MiB", "bootrom"],
             cwd=repo_dir,
             check=True,
         )
@@ -278,31 +287,33 @@ def build_bootrom(repo_dir: Path, firmware_bin: Path, firmware_repo_dir: Path, f
 
     print(f"✓ IPO_Boot_ROM ready: {bootrom_bin.name} ({bootrom_bin.stat().st_size} bytes)")
     return {
+        "repo_dir": repo_dir,
         "bin": bootrom_bin,
         "firmware_bin": firmware_bin,
         "init_bin": init_bin,
         "reset_bin": reset_bin,
+        "romstage_bin": romstage_bin,
         "build_rom_script": build_rom_script,
     }
 
 
 def build_os(repo_dir: Path, force_rebuild: bool = False) -> dict:
-    os_img = repo_dir / "build" / "IPO_OS.img"
+    os_bin = repo_dir / "build" / "IPO_OS.bin"
 
-    if force_rebuild or not os_img.exists():
-        print("\n--- Building IPO_OS (Kernel & Boot Image) ---")
+    if force_rebuild or not os_bin.exists():
+        print("\n--- Building IPO_OS (Kernel & Boot Binary) ---")
         subprocess.run(["make", "clean"], cwd=repo_dir, check=True)
-        cmd = ["make", "lib", "kernel", "boot", "image"]
+        cmd = ["make", f"-j{os.cpu_count() or 4}", "lib", "kernel", "boot", "image"]
         subprocess.run(cmd, cwd=repo_dir, check=True)
 
-    if not os_img.exists():
-        raise RuntimeError("IPO_OS build did not produce IPO_OS.img")
+    if not os_bin.exists():
+        raise RuntimeError("IPO_OS build did not produce IPO_OS.bin")
 
-    print(f"✓ IPO_OS ready: {os_img.name} ({os_img.stat().st_size} bytes)")
-    return {"os_img": os_img}
+    print(f"✓ IPO_OS ready: {os_bin.name} ({os_bin.stat().st_size} bytes)")
+    return {"os_img": os_bin}
 
 
-def build_software(repo_dir: Path) -> dict:
+def build_software(repo_dir: Path, os_bin: Path | None = None) -> dict:
     print("\n--- Building IPO_OS_Software (Applications, Libraries, Toolchain & Disks) ---")
     build_dir = repo_dir / "build"
 
@@ -365,7 +376,7 @@ def build_software(repo_dir: Path) -> dict:
 
     make_command = shutil.which("make")
     if make_command:
-        subprocess.run([make_command, "all"], cwd=repo_dir, check=True)
+        subprocess.run([make_command, f"-j{os.cpu_count() or 4}", "all"], cwd=repo_dir, check=True)
     else:
         apps_build = build_dir / "applications"
         toolchain_build = build_dir / "toolchain"
@@ -382,6 +393,10 @@ def build_software(repo_dir: Path) -> dict:
     if disk_installed.exists():
         disk_installed.unlink()
     print("[IPO_OS_Software] Populating IPO_FS disk with applications (disk-installed.img)...")
+    if os_bin and os_bin.is_file():
+        shutil.copyfile(os_bin, disk_installed)
+        with disk_installed.open("r+b") as disk:
+            disk.truncate(512 * 1024 * 1024)
     subprocess.run(
         [
             sys.executable,
@@ -432,26 +447,43 @@ def build_software(repo_dir: Path) -> dict:
 
         apps_build = build_dir / "applications"
         if apps_build.exists():
-            for file in apps_build.rglob("*"):
+            for file in sorted(apps_build.rglob("*")):
                 if file.is_file() and file.suffix in {".bin", ".wad"}:
-                    add_file(file, f"applications/{file.name}")
+                    name = file.stem if file.suffix == ".bin" else file.name
+                    add_file(file, f"applications/{name}")
+
+        drivers_build = build_dir / "drivers"
+        if drivers_build.is_dir():
+            for file in sorted(drivers_build.iterdir()):
+                if file.is_file() and ("." not in file.name or file.suffix == ".kmd"):
+                    add_file(file, f"drivers/{file.name}")
 
         doom_wad = repo_dir / "applications" / "doom" / "doom1.wad"
         if doom_wad.exists():
             add_file(doom_wad, "applications/doom1.wad")
+
+        data_dir = repo_dir / "data"
+        if data_dir.is_dir():
+            for file in sorted(data_dir.rglob("*")):
+                if file.is_file():
+                    add_file(file, f"data/{file.relative_to(data_dir).as_posix()}")
 
         for directory, suffixes, archive_root in [
             (build_dir / "toolchain", {".elf"}, "toolchain"),
             (build_dir / "lib", {".a", ".o", ".ld"}, "lib"),
         ]:
             if directory.exists():
-                for file in directory.rglob("*"):
+                for file in sorted(directory.rglob("*")):
                     if file.is_file() and file.suffix in suffixes:
                         add_file(file, f"{archive_root}/{file.name}")
 
         linker_script = repo_dir / "lib" / "linker.ld"
         if linker_script.exists():
             add_file(linker_script, "lib/linker.ld")
+
+        autorun = repo_dir / "assets" / "autorun"
+        if autorun.is_file():
+            add_file(autorun, "autorun")
 
         fonts_build = build_dir / "fonts"
         fonts_dir = (
@@ -460,19 +492,26 @@ def build_software(repo_dir: Path) -> dict:
             else repo_dir / "assets" / "fonts"
         )
         if fonts_dir.exists():
-            for file in fonts_dir.rglob("*.fnt"):
+            for file in sorted(fonts_dir.rglob("*.fnt")):
                 add_file(file, f"fonts/{file.name}")
+
+        tcc_include = repo_dir / "applications" / "tcc" / "include"
+        if tcc_include.is_dir():
+            for file in sorted(tcc_include.rglob("*")):
+                if file.is_file():
+                    add_file(file, f"include/{file.relative_to(tcc_include).as_posix()}")
 
         include_dir = repo_dir / "include"
         if include_dir.exists():
-            for file in include_dir.rglob("*.h"):
-                add_file(file, f"include/{file.relative_to(include_dir)}")
+            for file in sorted(include_dir.rglob("*")):
+                if file.is_file():
+                    add_file(file, f"include/{file.relative_to(include_dir).as_posix()}")
 
     if not applications_zip.exists() or applications_zip.stat().st_size == 0:
         raise RuntimeError("IPO_OS_Software build did not produce applications.zip")
     with zipfile.ZipFile(applications_zip) as archive:
         if archive.testzip() is not None or not any(
-            name.startswith("applications/") and name.endswith(".bin") for name in archive.namelist()
+            name.startswith("applications/") for name in archive.namelist()
         ):
             raise RuntimeError("applications.zip is invalid or contains no compiled application binaries.")
 
@@ -493,15 +532,18 @@ def package_artifacts(fw: dict, br: dict, os_art: dict, sw_art: dict) -> list:
 
     print("\n--- Packaging Release Artifacts ---")
 
-    # 1. Standalone IPO_OS.img (Bootable Kernel Image)
-    raw_os_dest = DOWNLOADS_DIR / "IPO_OS.img"
+    # 1. Standalone IPO_OS.bin (Bootable Kernel Binary)
+    raw_os_dest = DOWNLOADS_DIR / "IPO_OS.bin"
     shutil.copy2(os_art["os_img"], raw_os_dest)
+    obsolete_os_img = DOWNLOADS_DIR / "IPO_OS.img"
+    if obsolete_os_img.exists():
+        obsolete_os_img.unlink()
     manifest_entries.append({
         "id": "ipo-os-raw",
-        "file": "IPO_OS.img",
-        "name": "IPO_OS Kernel Bootable Image",
+        "file": "IPO_OS.bin",
+        "name": "IPO_OS Kernel Bootable Binary",
         "category": "os",
-        "description": "Raw 32-bit bootable image containing IPO_OS kernel (LBA 0 bootloader + kernel binary).",
+        "description": "Raw bootable binary containing the IPO_OS MBR bootloader and kernel (linked at 0x100000).",
         "size_bytes": raw_os_dest.stat().st_size,
         "size_formatted": format_size(raw_os_dest.stat().st_size),
         "sha256": sha256_file(raw_os_dest),
@@ -566,7 +608,9 @@ def package_artifacts(fw: dict, br: dict, os_art: dict, sw_art: dict) -> list:
     # IPO_Firmware ROM (single-file artifact)
     firmware_dest = DOWNLOADS_DIR / "firmware.bin"
     shutil.copy2(fw["bin"], firmware_dest)
-    shutil.copy2(fw["bin"], DOWNLOADS_DIR / "firmware.rom")
+    obsolete_fw_rom = DOWNLOADS_DIR / "firmware.rom"
+    if obsolete_fw_rom.exists():
+        obsolete_fw_rom.unlink()
     manifest_entries.append({
         "id": "ipo-firmware",
         "file": "firmware.bin",
@@ -586,7 +630,7 @@ def package_artifacts(fw: dict, br: dict, os_art: dict, sw_art: dict) -> list:
     with zipfile.ZipFile(full_bundle_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
         z.write(br["bin"], "bootrom.bin")
         z.write(fw["bin"], "firmware.bin")
-        z.write(os_art["os_img"], "IPO_OS.img")
+        z.write(os_art["os_img"], "IPO_OS.bin")
         z.write(sw_art["disk_installed"], "disk-installed.img")
         z.write(sw_art["disk_clean"], "disk-clean.img")
         z.write(sw_art["applications_zip"], "applications.zip")
@@ -648,7 +692,8 @@ def package_artifacts(fw: dict, br: dict, os_art: dict, sw_art: dict) -> list:
 def main():
     parser = argparse.ArgumentParser(description="Build and package IPO Systems artifacts")
     parser.add_argument("--force", action="store_true", help="Force rebuild even if artifacts already exist")
-    parser.add_argument("--update", action="store_true", help="Pull latest repository changes before building")
+    parser.add_argument("--update", action="store_true", help="Sync and reset git submodules before building")
+    parser.add_argument("--local-repos", type=Path, default=None, help="Directory containing local sibling repositories")
     args = parser.parse_args()
 
     if not args.force and artifacts_exist():
@@ -660,16 +705,19 @@ def main():
     print("IPO Systems Platform — Artifact Pipeline")
     print("==================================================")
 
-    force_sync = args.force or args.update
-    fw_repo = ensure_repo("IPO_Firmware", REPOSITORIES["IPO_Firmware"], force_update=force_sync)
-    br_repo = ensure_repo("IPO_Boot_ROM", REPOSITORIES["IPO_Boot_ROM"], force_update=force_sync)
-    os_repo = ensure_repo("IPO_OS", REPOSITORIES["IPO_OS"], force_update=force_sync)
-    software_repo = ensure_repo("IPO_OS_Software", REPOSITORIES["IPO_OS_Software"], force_update=force_sync)
+    if args.local_repos is not None:
+        os.environ["IPO_LOCAL_REPOS"] = str(args.local_repos.resolve())
+
+    force_sync = args.update
+    fw_repo = ensure_repo("IPO_Firmware", REPOSITORIES["IPO_Firmware"], force_update=force_sync, local_root=args.local_repos)
+    br_repo = ensure_repo("IPO_Boot_ROM", REPOSITORIES["IPO_Boot_ROM"], force_update=force_sync, local_root=args.local_repos)
+    os_repo = ensure_repo("IPO_OS", REPOSITORIES["IPO_OS"], force_update=force_sync, local_root=args.local_repos)
+    software_repo = ensure_repo("IPO_OS_Software", REPOSITORIES["IPO_OS_Software"], force_update=force_sync, local_root=args.local_repos)
     # Build in dependency order: Firmware -> Boot ROM -> OS
-    fw_art = build_firmware(fw_repo)
-    br_art = build_bootrom(br_repo, fw_art["bin"], fw_repo)
-    os_art = build_os(os_repo)
-    software_art = build_software(software_repo)
+    fw_art = build_firmware(fw_repo, force_rebuild=args.force)
+    br_art = build_bootrom(br_repo, fw_art["bin"], fw_repo, force_rebuild=args.force)
+    os_art = build_os(os_repo, force_rebuild=args.force)
+    software_art = build_software(software_repo, os_bin=os_art["os_img"])
 
     # Package and generate manifest in public/downloads/
     package_artifacts(fw_art, br_art, os_art, software_art)

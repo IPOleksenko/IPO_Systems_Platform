@@ -1,21 +1,21 @@
 {
   "global_stack": {
-    "title": "IPO Systems Platform Vertical Stack",
-    "caption": "Complete execution hierarchy from power-on hardware reset vector to userspace graphical/console applications.",
+    "title": "Vertikaler Stack der IPO Systems Plattform",
+    "caption": "Ausführungshierarchie vom Reset-Vektor (0xFE000) über XIP-Romstage und Firmware bis IPO_OS und Userland.",
     "labels": {
       "hardware": "Physical Hardware (CPU x86, RAM, Chipset, Storage)",
       "boot_rom": "IPO_Boot_ROM (Reset Vector 0xFFFFFFF0, CAR, MRC, PAM)",
-      "contract_2": "Contract 2 Handover (CS:IP 0xF000:0004, Shadow RAM)",
+      "contract_2": "Contract 2 Übergabe (CS:IP 0xF000:000C, 56 KiB Shadow RAM + 0x2000:0000)",
       "firmware": "IPO_Firmware (IVT, A20, Storage Discovery, MBR Load)",
-      "contract_3": "Contract 3 Handover (CS:IP 0x0000:7C00, DL=Drive ID)",
+      "contract_3": "Contract 3 Übergabe (CS:IP 0x0000:7C00, DL=Drive ID)",
       "kernel": "IPO_OS Kernel (PMM, VFS, Sched, Drivers, TCP/IP)",
       "syscall_gate": "Syscall Gate (int 0x80, EAX=num, EBX=argc, ECX=argv)",
       "userland": "Userspace Applications (0x800000, LibC, Shell, GUI WM)"
     }
   },
   "boot_rom_flow": {
-    "title": "IPO_Boot_ROM Low-Level Execution Sequence",
-    "caption": "Ablauf vom Hardware-Resetvektor über Cache-as-RAM und DRAM-Controllerkonfiguration bis zur Firmware-Übergabe.",
+    "title": "IPO_Boot_ROM Reset & XIP-Romstage Ablauf",
+    "caption": "Vom 8-KiB-Bootblock (0xFE000) über 32-KiB-CAR (.car_bypass 0x2E) und C-Romstage zu 0xF000:000C.",
     "labels": {
       "reset_vector": "CPU Reset Vector (0xFFFFFFF0 / F000:FFF0)",
       "jump_base": "Jump to ROM Base (0xF000:8000)",
@@ -24,81 +24,67 @@
       "mrc_training": "MRC: DRAM-Controllerkonfiguration",
       "car_teardown": "CAR-Abbau; Übergabestack SS:SP=0000:7C00",
       "pic_pit": "Phase 5: Cascaded 8259 PIC & 8254 PIT Setup",
-      "uart_init": "Phase 6: COM1 UART Init (115200 8N1)",
       "shadow_ram": "Phase 7: PAM Copy to Shadow RAM (0xF0000..0xFFFFF)",
-      "pam_lock": "Phase 8: PAM Read-Only Lock",
-      "magic_check": "Phase 9: Validate 'IPO' Magic (0x004F5049)",
-      "handover": "Transfer to Firmware: jmp 0xF000:0004"
+      "handover": "Validate 'IPO_Firmware' Header & Far Jump 0xF000:000C"
     }
   },
   "firmware_flow": {
-    "title": "IPO_Firmware Service Setup & Storage Discovery",
-    "caption": "Execution pipeline from Boot ROM handover through BIOS interrupts installation to storage drive discovery and OS handover.",
+    "title": "IPO_Firmware Initialisierung, SMP & Speicher-Scan",
+    "caption": "Real-Mode-Ablauf ab 0xF000:000C mit AP-SMP, IVT/ACPI, PCI 0..7 und MBR-Übergabe.",
     "labels": {
-      "entry": "Firmware Entry Point (0xF000:0004)",
+      "entry": "Firmware-Einstieg (CS:IP 0xF000:000C, Magic 'IPO_Firmware')",
       "ivt_setup": "Register IVT: INT 10h, 12h, 13h, 15h, 16h, 1Ah",
       "bda_ebda": "Init BDA (0x400) & EBDA / ACPI 1.0 (0x9FC00)",
       "pci_enum": "PCI Bus Enumeration (VGA, Storage, USB Controllers)",
-      "video_init": "Video Subsystem (VBIOS Option ROM or Text Mode 03h)",
       "a20_gate": "Fast A20 Gate Activation (Port 0x92)",
-      "memory_detect": "E820 / E801 Memory Map Construction",
-      "storage_probe": "Multi-Bus Storage Scan: ATA (0x1F0), AHCI, NVMe, USB",
+      "storage_probe": "Speicher-Scan (POST 0x29): ATA PIO, AHCI SATA, NVMe, USB EHCI",
       "mbr_load": "Read LBA 0 to 0x0000:7C00 via INT 13h AH=42h",
-      "validate_mbr": "Check MBR Signature 0x55AA",
       "os_handover": "OS Handover: DL=0x80..0x82, jmp 0x0000:7C00"
     }
   },
   "kernel_boot": {
-    "title": "IPO_OS Kernel Initialization Pipeline",
-    "caption": "Transition from MBR bootloader through Protected Mode to the running kernel, filesystem mount, and interactive shell.",
+    "title": "IPO_OS Kernel-Initialisierungspipeline",
+    "caption": "Kaltstart vom MBR zu Long Mode (PML4/LA57) oder 32-Bit-Fallback bei 0x100000, SMP und IPO_FS.",
     "labels": {
       "mbr_stage1": "Bootloader der ersten Stufe (MBR-Sektor 0x7C00)",
       "stage2_load": "Bootloader der zweiten Stufe von Datenträger geladen",
       "prot_mode": "In den 32-Bit-Protected-Mode wechseln (GDT geladen, CR0 PE=1)",
-      "kernel_load": "Kernel-ELF32 an physische Adresse 0x10000 laden",
-      "kernel_entry": "Kernel-Einsprungpunkt (_start in linker.ld)",
-      "mm_init": "E820-Speicherkarte und 64-MB-Kernel-Heap (kmalloc: 0x01000000–0x04FFFFFF)",
-      "idt_init": "IDT, PIC/APIC, SMP-Erkennung und Syscall-Gate (0x80)",
+      "kernel_load": "Kernel ab physisch 1 MiB (0x00100000, Magic 'IPO_OS')",
+      "mm_init": "PMM (0x08000000+), Dynamic kmalloc (0x04000000+) & User Heaps (0x10000000+)",
       "fs_mount": "Root-Dateisystem einhängen (IPO_FS-Partition ab LBA 2048)",
       "drivers_init": "Blockschicht, ATA, Storage Pool + WAL, KMOD, Geräteregister",
       "launch_shell": "Interaktives Terminal und serielle Konsole starten"
     }
   },
   "memory_map": {
-    "title": "IPO_OS Physical & Virtual Memory Layout",
-    "caption": "Speicherbereiche: Legacy-Tabellen im Real Mode, Kernel bei 64 KB, Userspace-Anwendungen bei 8 MB (0x00800000) und ein 64-MB-Kernel-Heap ab 16 MB (0x01000000).",
+    "title": "Physische & Virtuelle Speicheraufteilung von IPO_OS",
+    "caption": "Real-Mode-Tabellen, Kernel bei 1 MiB (0x00100000), Userland bei 8 MiB, kmalloc ab 64 MiB, PMM ab 128 MiB, User-Heaps ab 256 MiB+.",
     "labels": {
       "ivt_bda": "0x00000 - 0x004FF: IVT (1 KB) & BDA (256 B)",
-      "free_conv": "0x00500 - 0x07BFF: Scratch RAM & Stacks",
       "boot_mbr": "0x07C00 - 0x07DFF: Bootloader MBR Buffer (512 B)",
-      "kernel_bin": "0x10000 - 0x7FFFF: IPO_OS Kernel Core (.text, .data, .bss)",
       "video_ram": "0xA0000 - 0xBFFFF: Video Framebuffer (VGA Text 0xB8000)",
       "ebda_rom": "0xC0000 - 0xFFFFF: VBIOS, Shadow RAM & ROM Firmware",
-      "kernel_heap": "0x01000000 - 0x04FFFFFF: Kernel-kmalloc-Heap (64 MB) und PMM / sbrk",
-      "user_apps": "0x800000+: Userspace Applications (Entry at 0x800000)"
+      "kernel_bin": "0x00100000–0x007FFFFF: IPO_OS Kernel Core, Page Tables & SMP Stacks",
+      "user_apps": "0x800000+: Userspace Applications (Entry at 0x800000)",
+      "kernel_heap": "0x04000000–0x07FFFFFF: Dynamische Kernel-kmalloc()-Arena (+ PMM Overflow)",
+      "user_heaps": "0x08000000+ / 0x10000000+: PMM Frames, User sbrk() Heaps, mmap/SHM (0xD0000000+)"
     }
   },
   "syscall_pipeline": {
-    "title": "System Call Dispatch Pipeline (int 0x80)",
-    "caption": "Flow of control and argument passing when a userspace application requests an operating system service.",
+    "title": "Systemaufruf-Pipeline (int 0x80)",
+    "caption": "Ring-3 zu Ring-0 Übergang für 305 OS- und Netzwerk-Syscalls.",
     "labels": {
       "app_call": "Application executes ipo_syscall(num, argc, argv)",
       "trap_gate": "Assembly 'int 0x80' triggers CPU Software Interrupt Gate",
       "ring_switch": "Hardware CPU Switch: Ring 3 (User) -> Ring 0 (Kernel)",
       "dispatcher": "Kernel Syscall Dispatcher validates number & arguments",
-      "handler_exec": "Target Subsystem Handler executes (FS, Process, Net, WM)",
       "return_ring": "Result placed in EAX, 'iret' returns to Ring 3"
     }
   },
   "fs_layout": {
-    "title": "IPO_FS 64-bit Extent-Based On-Disk Structure",
-    "caption": "Partition layout showing 512-byte blocks, 64-bit extents, and 128-byte inode organization.",
+    "title": "IPO_FS 64-Bit Dynamische Extent-Struktur",
+    "caption": "Partition und Pool mit WAL (LBA 2030..2039), 104-B-Superblock (LBA 2048), Bitmaps und Inode-Chunk-Baum.",
     "labels": {
-      "mbr_reserved": "Sector 0..2047: MBR and Reserved Boot Sectors",
-      "superblock": "LBA 2048: Superblock ('IPO_FS\\0\\0', Block Size, Pointers)",
-      "inode_bitmap": "Block Bitmap / Inode Bitmap (Allocation Tracking)",
-      "inode_table": "Inode Table (128 bytes per inode, 4 inodes / block)",
-      "data_blocks": "Data Extent Pool (Contiguous Multi-Block Extents)",
       "mbr_title": "MBR / Pool+WAL",
       "mbr_lba": "LBA 0..2047",
       "wal_lba": "(WAL 2030..2039)",
@@ -113,8 +99,8 @@
     }
   },
   "pc_assembly_flow": {
-    "title": "Hardware Assembly & Safety Progression",
-    "caption": "Order of physical assembly from workbench ESD safety preparation to power-on self test.",
+    "title": "Hardware-Montage & Sicherheitsabfolge",
+    "caption": "Empfohlene Reihenfolge von ESD-Schutz bis JFP1-Header und POST 0x80.",
     "labels": {
       "esd_prep": "Step 1: ESD Protection & Workstation Preparation",
       "cpu_install": "Step 2: CPU Socket Installation & Thermal Compound",
@@ -122,24 +108,35 @@
       "ram_install": "Step 4: Dual-Channel DDR/SDRAM Insertion",
       "case_mb": "Step 5: Standoff Alignment & Motherboard Mounting",
       "psu_cabling": "Step 6: Power Supply (24-pin ATX, 8-pin EPS)",
-      "storage_conn": "Step 7: Storage Drives & SATA/IDE Data Cables",
       "front_panel": "Step 8: Front Panel Pinout (Power SW, Reset SW, LEDs)",
       "post_test": "Step 9: Bench POST Self-Test & Diagnostic Speaker Check"
     }
   },
   "front_panel_pinout": {
-    "title": "Standard Motherboard Front Panel Header Pinout",
-    "caption": "Pin layout and polarity guidelines for power button, reset button, and status LEDs.",
+    "title": "Frontpanel-Header Pinbelegung (JFP1)",
+    "caption": "JFP1-Pinout: HDD LED (+1/-3), Power LED (+2/-4), Reset (5/7), Power (6/8).",
     "labels": {
-      "pwr_led": "Power-LED (+ an Pin 1, - an Pin 3)",
+      "jfp1_title": "JFP1 / F_PANEL (2.54 mm 2×5 Pinout)",
+      "jfp1_subtitle": "Ungerade Reihe = Unten (Pins 1,3,5,7,9) · Gerade Reihe = Oben (Pins 2,4,6,8,10 Key)",
       "hdd_led": "HDD-Aktivitäts-LED (+ an Pin 2, - an Pin 4)",
+      "hdd_led_pins": "Pins 1 (+) / 3 (-)",
+      "hdd_led_short": "HDD+ / HDD-",
+      "pwr_led": "Power-LED (+ an Pin 1, - an Pin 3)",
+      "pwr_led_pins": "Pins 2 (+) / 4 (-)",
+      "pwr_led_short": "PLED+ / PLED-",
       "reset_sw": "Reset-Taster (Schließer, ohne Polarität)",
-      "pwr_sw": "Power-Taster (Schließer, ohne Polarität)"
+      "reset_sw_pins": "Pins 5 / 7 (Keine Polarität)",
+      "reset_sw_short": "RESET SW",
+      "pwr_sw": "Power-Taster (Schließer, ohne Polarität)",
+      "pwr_sw_pins": "Pins 6 / 8 (Keine Polarität)",
+      "pwr_sw_short": "POWER SW",
+      "pin9_key": "Pin 9: NC / RSVD",
+      "pin10_nc": "Pin 10: Key (Kodierung)"
     }
   },
   "net_stack": {
-    "title": "IPO_OS Bare-Metal TCP/IP Protocol Stack",
-    "caption": "Network packet processing hierarchy from physical RTL8139 PCI NIC to BSD-like Socket API.",
+    "title": "Modularer IPO_OS Netzwerk-Stack (/drivers/rtl8139)",
+    "caption": "Treiber für RTL8139 / Intel E1000 / VirtIO-Net über Ethernet/ARP/IPv4/TCP/UDP/DHCP/DNS zu BSD-Sockets.",
     "labels": {
       "nic_driver": "RTL8139 PCI NIC Driver (Ring Buffers, RX/TX Packets)",
       "ethernet_l2": "Ethernet II Framing & MAC Filtering",
@@ -150,47 +147,207 @@
     }
   },
   "vertical_platform_stack": {
-    "title": "Vertikaler Stack der IPO Systems Platform",
-    "caption": "Vollständige Ausführungshierarchie vom Hardware-Reset-Vektor bis zu Userspace-Anwendungen."
+    "title": "Vertikaler Stack der IPO Systems Plattform",
+    "caption": "Ausführungshierarchie vom Reset-Vektor (0xFE000) über XIP-Romstage und Firmware bis IPO_OS und Userland.",
+    "labels": {
+      "hardware": "Physische Hardware (CPU x86-64/x86, RAM, Chipset, PCI, Storage)",
+      "boot_rom": "IPO_Boot_ROM (Bootblock 0xFE000 / F000:E000, 32 KiB CAR, XIP romstage, PAM)",
+      "contract_2": "Contract 2 Übergabe (CS:IP 0xF000:000C, 56 KiB Shadow RAM + 0x2000:0000)",
+      "firmware": "IPO_Firmware (Dynamic AP SMP, IVT, ACPI, PCI 0..7, Multi-Bus Storage)",
+      "contract_3": "Contract 3 Übergabe (CS:IP 0x0000:7C00, DL=Drive ID)",
+      "kernel": "IPO_OS Kernel (Long Mode + 32-bit Fallback, SMP, VFS/IPO_FS, VirGL/HDR)",
+      "syscall_gate": "Syscall Gate (int 0x80, 305 OS + Net Calls)",
+      "userland": "Userspace (0x800000 ELF, 0x10000000+ Heaps, /drivers/*, WM Apps)"
+    }
   },
   "spi_flashing_pinout": {
-    "title": "Pinbelegung von CH341A-Programmierer zu SOIC-8 SPI Flash",
-    "caption": "Verdrahtungsschema zwischen CH341A-Programmierer und 8-Pin SPI NOR Flash (W25Q64 / MX25L6405)."
+    "title": "CH341A Programmer auf SOIC-8 SPI-Flash Pinout",
+    "caption": "3,3V SPI-NOR-Flash-Belegung (128 KiB–16 MiB) am CH341A.",
+    "labels": {
+      "prog_title": "CH341A (3.3V Mod)",
+      "chip_title": "SOIC-8 SPI Flash",
+      "pin1_cs": "Pin 1: /CS (Chip-Auswahl)",
+      "pin2_miso": "Pin 2: DO / MISO",
+      "pin3_wp": "Pin 3: /WP (Pull-Up 3.3V)",
+      "pin4_gnd": "Pin 4: GND (Common)",
+      "pin5_mosi": "Pin 5: DI / MOSI",
+      "pin6_clk": "Pin 6: CLK (Takt)",
+      "pin7_hold": "Pin 7: /HOLD (Pull-Up 3.3V)",
+      "pin8_vcc": "Pin 8: VCC (+3.3V Only)"
+    }
   },
   "process_scheduler": {
-    "title": "Prozess-Lebenszyklus und Zustandsautomat des Schedulers",
-    "caption": "Zustandsübergänge: CREATED, READY, RUNNING, WAITING/BLOCKED und TERMINATED."
+    "title": "Prozess- und Thread-Scheduler Zustandsautomat",
+    "caption": "All-Core SMP-Scheduler mit dynamischen Thread-Stacks und IPI 0xE0.",
+    "labels": {
+      "state_created": "CREATED (ELF Load + PCB)",
+      "state_ready": "READY (Runqueue)",
+      "state_running": "RUNNING (CPU Core 0..N)",
+      "state_blocked": "BLOCKED (Futex / I/O / Pipe)",
+      "state_terminated": "TERMINATED (Reclaim)",
+      "tr_schedule": "spawn / wake",
+      "tr_preempt": "PIT / LAPIC quantum",
+      "tr_block": "sleep / futex / wait",
+      "tr_wakeup": "IRQ / IPI 0xE0 wakeup",
+      "tr_exit": "exit / SIGKILL"
+    }
   },
   "window_manager": {
-    "title": "Compositing-Pipeline des Window Managers und VBE-Framebuffer",
-    "caption": "Client-Backbuffer-Compositing mit Clipping und Blitting in den linearen VBE-Framebuffer."
+    "title": "Window Manager Compositor, RGBA64F HDR & VirGL 3D",
+    "caption": "Beliebig aufgelöster Compositor mit HDR und Hardware-3D via VirGL.",
+    "labels": {
+      "wm_client1": "Client-Fenster 1",
+      "wm_client1_desc": "Software-Backbuffer (Arbitrary W×H)",
+      "wm_client2": "Client-Fenster 2",
+      "wm_client2_desc": "RGBA64F Linear HDR Surface + Tone Map",
+      "wm_client3": "Client-Fenster 3",
+      "wm_client3_desc": "VirGL 3D Hardware-3D-Kontext",
+      "wm_comp": "Kernel-WM-Compositor & Eingabe-Router",
+      "wm_comp_desc1": "Dirty-Rect Damage Tracking, Z-Order & Dynamic Software/Hardware Cursor",
+      "wm_comp_desc2": "Arbitrary Desktop Geometry + Dynamic Console Cols×Rows Synchronization",
+      "wm_comp_desc3": "Double-Buffered Blit, Gamma/Dither & Non-Blocking wm_poll_event()",
+      "wm_hw": "Display-Hardware-Backends",
+      "wm_hw_d1": "VirtIO-GPU 2D/VirGL 3D",
+      "wm_hw_d2": "Bochs BGA / Linear FB",
+      "wm_hw_sub": "Keine festen Auflösungsgrenzen · Direkte Ausgabe (0x11E0–0x11F7)"
+    }
   },
   "car_memory_layout": {
-    "title": "Cache-as-RAM (CAR) Speicherlayout und MTRR-Konfiguration",
-    "caption": "64 KB L1/L2-Cache als temporärer SRAM-Arbeitsbereich vor der DRAM-Initialisierung."
+    "title": "Cache-as-RAM (32 KiB CAR) Speicherlayout & Bypass",
+    "caption": "32-KiB-L1/L2-Cachefenster bei 0x70000..0x77FFF (mit .car_bypass 0x2E).",
+    "labels": {
+      "car_range": "32 KiB CAR Window (0x70000..0x77FFF)",
+      "mtrr_config": "MTRR WB Setup (or .car_bypass 0x2E on v86)",
+      "cache_lines": "Pinned CPU L1/L2 Cache Lines (No DRAM Eviction)",
+      "c_runtime": "32-bit C Stack & Temporary Vars (XIP romstage)",
+      "mrc_zone": "SPD SMBus Scratch + Chipset Detection Records",
+      "post_logs": "COM1 (115200 8N1) & Port 0x80 Diagnostics",
+      "stack_top": "Stack Top (0x77FFF growing down)",
+      "teardown_phase": "Pre-DRAM Exit & CAR Teardown (POST 0x16)",
+      "teardown_desc": "INVD/MTRR Clear -> Real-Mode Übergang -> Firmware 0xF000:000C"
+    }
   },
   "chipset_init_flow": {
-    "title": "Chipsatz-Erkennung & PAM Shadow RAM",
-    "caption": "Host-Bridge-Erkennung (i440FX vs Q35), SMRAM-Sperre, PAM-Freigabe und Firmware-Spiegelung."
+    "title": "Chipsatz-Probe & PAM Shadow-RAM-Sperre",
+    "caption": "Host-Bridge-Erkennung, SMRAM, DRAM-Konfiguration und PAM-Programmierung.",
+    "labels": {
+      "probe_bridge": "1. Probe Host Bridge (00:00.0) & Report Raw PCI Vendor/Device ID",
+      "smram_ctrl": "2. Configure SMRAM / Legacy Memory Routing (15–16 MiB Hole Disabled)",
+      "piix_routing": "3. Init Southbridge (PIIX/ICH), SMBus (SPD) & Cascaded 8259/8254",
+      "pam_config": "4. Set PAM0..PAM6 (WE=1, RE=0) & Copy 56 KiB Firmware -> 0xF0000",
+      "lock_pam": "5. Lock PAM Read-Only (WE=0, RE=1) & Übergabe to 0xF000:000C"
+    }
   },
   "pci_bus_topology": {
-    "title": "PCI-Bus-Hierarchie und Geräte-Enumeration",
-    "caption": "Rekursives Scannen von Bus, Gerät und Funktion über I/O-Ports 0xCF8 und 0xCFC."
+    "title": "PCI Bus 0..7 Topologie & 64-Bit-BAR-Vergabe",
+    "caption": "Rekursiver Scan über Bus 0..7 mit dynamischen MMIO/I/O-BARs.",
+    "labels": {
+      "host_bridge": "PCI Host Bridge (Bus 00:00.0) + PCI-to-PCI Bridges",
+      "pci_ports": "Config Ports 0xCF8 / 0xCFC",
+      "bus_scan_title": "Bus 0..7 Dynamic Enumerator",
+      "bus_scan_desc": "Firmware & Kernel enumerate all buses/slots/functions with unlimited dynamic BAR arrays (uint64_t* bar[])",
+      "dev_storage": "Speichercontroller",
+      "dev_storage_sub": "ATA IDE / AHCI SATA / VirtIO-Blk",
+      "dev_storage_io": "BARs / DMA / Bus Master",
+      "dev_nic": "Netzwerkschnittstellen",
+      "dev_nic_sub": "RTL8139 / Intel E1000 / VirtIO-Net",
+      "dev_nic_io": "Dynamic MMIO/I/O + /drivers/*",
+      "dev_gpu": "Grafik- & 3D-Adapter",
+      "dev_gpu_sub": "VirtIO-GPU (VirGL) / Bochs BGA",
+      "dev_gpu_io": "Linear FB + 3D Command Queue",
+      "dev_usb_audio": "Audio & Eingabe/USB",
+      "dev_usb_audio_sub": "HDA / AC97 / SB16 / VirtIO-Sound",
+      "dev_usb_audio_io": "DMA Rings + MSI/IRQ Routing"
+    }
   },
   "storage_transfer_flow": {
-    "title": "ATA PIO-Modus Sektor-Transfer-Ablauf",
-    "caption": "Abfragen von BSY/DRQ auf Port 0x1F7, Befehl 0x20 und 512-Byte-Lesevorgang via rep insw auf Port 0x1F0."
+    "title": "Einheitliche Speicher- & WAL-Pipeline",
+    "caption": "64-Bit-I/O durch VFS, IPO_FS, WAL und AHCI/VirtIO-Blk/ATA.",
+    "labels": {
+      "st_step1": "1. VFS / Process Syscall (64-bit File Offset & Extent Lookup)",
+      "st_step2": "2. IPO_FS Cache & Dynamic Inode Chunk / Extent Resolver",
+      "st_step3": "3. Storage Pool Translator & WAL Transaction Logger",
+      "st_step3_desc": "64-sector (32 KiB) pool stripe mapping + TXNL journal entry CRC",
+      "st_step4": "4. Block Scheduler & Controller Dispatch (AHCI DMA / VirtIO-Blk / ATA PIO)",
+      "st_step5": "5. Hardware DMA Ring or Port 0x1F0/0x170 Register Transfer + IRQ Completion",
+      "st_step5_desc": "Zero hard disk limits · Multi-member pool recovery on boot"
+    }
   },
   "interrupt_routing": {
-    "title": "IDT-Vektor-Mapping und Hardware-IRQ-Routing",
-    "caption": "Hardware-IRQs über kaskadierte 8259 PICs (0x20..0x2F), CPU-Exceptions und int 0x80 Syscall-Gate."
+    "title": "IDT-Vektoren, PIC/APIC IRQs & SMP IPI 0xE0",
+    "caption": "CPU-Traps, Hardware-IRQs, LAPIC IPI 0xE0 und int 0x80.",
+    "labels": {
+      "idt_title": "Kernel IDT (32-bit 8B / 64-bit 16B Gates)",
+      "idt_desc1": "0x00–0x1F: CPU Exceptions (#DE, #GP, #PF Stack Grow, #UD)",
+      "idt_desc2": "0x20–0x2F: Remapped Hardware IRQs (8259 PIC / IOAPIC)",
+      "idt_desc3": "0x80: Userspace Syscall Gate (DPL=3)",
+      "idt_desc4": "0xE0: All-Core SMP Work & Reschedule IPI",
+      "idt_desc5": "APIC Timer & Spurious Vectors (0xFF)",
+      "irq_hw_title": "Hardware-Quellen",
+      "irq_0": "IRQ 0: PIT / LAPIC Timer Tick",
+      "irq_1": "IRQ 1 / 12: PS/2 Keyboard & Mouse",
+      "irq_5": "PCI/Audio/Net IRQs (HDA, NIC, VirtIO)",
+      "irq_12": "IRQ 14/15: ATA / AHCI / VirtIO-Blk",
+      "irq_ipi": "LAPIC IPI 0xE0 (All-Core Dispatch)",
+      "traps_title": "Userland-Syscall",
+      "trap_80": "int 0x80 (305 Calls)",
+      "ring0_handlers": "Ring-0 ISR Dispatcher + Callback Subscriptions (0x1160..0x1165)",
+      "eoi_text": "EOI (PIC 0x20 / LAPIC 0xB0)",
+      "iret_text": "iret / iretq to Thread Context"
+    }
   },
   "driver_architecture": {
-    "title": "Kernel-Gerätetreibermodell und VFS-Anbindung",
-    "caption": "Treibertabelle (struct device_ops) zur Abstraktion von /dev-Dateien zu I/O-Ports und MMIO."
+    "title": "Hybrides Treibermodell (Kernel, .kmd & /drivers/*)",
+    "caption": "Device Registry für integrierte Treiber, .kmd-Module und Ring-3-Treiber.",
+    "labels": {
+      "drv_layer1": "Ring-3 Applications & /drivers/* Userland Drivers",
+      "drv_layer1_desc": "BSD Sockets, Input Hub API, MMIO/DMA Syscalls (0x1140–0x1183) & /drivers/rtl8139",
+      "drv_layer2": "Unified Device Registry & Hot-Swappable Kernel Extensions",
+      "drv_layer2_desc": "device_node_t (64-bit BARs), driver_ops (64-bit offsets), .kmd PIC Relocator & Channels",
+      "drv_hw": "Kernel Built-In Hardware & Virtual Controllers",
+      "drv_hw_desc": "Direct Ring-0 I/O Ports, PCI BARs, DMA Buffers & Interrupt Subscriptions",
+      "drv_storage": "Storage Stack",
+      "drv_storage_1": "AHCI SATA (DMA/NCQ)",
+      "drv_storage_2": "VirtIO-Blk Modern/Legacy",
+      "drv_storage_3": "ATA/ATAPI PIO + Pool WAL",
+      "drv_net": "Network / KMD",
+      "drv_net_1": "/drivers/rtl8139 (KMD)",
+      "drv_net_2": "RTL8139 / E1000 / VirtIO-Net",
+      "drv_net_3": "Universal Frame Channels",
+      "drv_av": "Graphics & Audio",
+      "drv_av_1": "VirtIO-GPU / VirGL 3D",
+      "drv_av_2": "Bochs BGA / RGBA64F HDR",
+      "drv_av_3": "HDA / AC97 / SB16 / VirtIO",
+      "drv_input": "Input & External Drivers",
+      "drv_input_1": "PS/2 Keyboard & Mouse",
+      "drv_input_2": "/drivers/touchpad + gamepad",
+      "drv_input_3": "/drivers/custom_proto Demo"
+    }
   },
   "ipc_architecture": {
-    "title": "Inter-Process Communication (IPC) Subsystem",
-    "caption": "Nachrichtenwarteschlangen, anonyme Pipes, Signale und Shared-Memory-Seiten."
+    "title": "Dynamische IPC, SHM, Pipes & POSIX-Signale",
+    "caption": "Fähigkeitsbasierte Endpunkte, selbstwachsende Pipes, SHM 0xD0000000+ und Signale.",
+    "labels": {
+      "proc_a": "Prozess A (Ring 3 Erzeuger / Client)",
+      "proc_a_sub1": "Message Queue Client",
+      "proc_a_sub2": "Pipe Writer / Signal Sender",
+      "proc_a_sub3": "SHM Page Writer",
+      "proc_a_sub4": "Async Notifier",
+      "proc_b": "Prozess B (Ring 3 Empfänger / Dienst)",
+      "proc_b_sub1": "Endpoint Receiver",
+      "proc_b_sub2": "Pipe Reader / Sigaction",
+      "proc_b_sub3": "Zero-Copy SHM Reader",
+      "proc_b_sub4": "Notify Waiter",
+      "ring3_user": "Ring 3 Isolated Process Spaces (0xD0000000+ SHM Window)",
+      "ipc_core": "IPO_OS Kernel Dynamic IPC & Signal Subsystem (Ring 0)",
+      "ipc_msg": "Benannte Endpunkte (0x10F0–0x10F5)",
+      "ipc_msg_desc": "Dynamic Queue + Capability Rights",
+      "ipc_pipes": "Selbstwachsende Pipes (0x10F6–0x10FE)",
+      "ipc_pipes_desc": "Auto-Growing Ring Buffers",
+      "ipc_shm": "Shared Memory SHM (0x1100–0x1104)",
+      "ipc_shm_desc": "Zero-Copy Physical Page Frames",
+      "ipc_sig": "Benachrichtigungen & Signale (0x1110–0x1113)",
+      "ipc_sig_desc": "kill(), sigaction, Notify Events"
+    }
   }
 }

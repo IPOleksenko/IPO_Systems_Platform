@@ -1,21 +1,21 @@
 {
   "global_stack": {
-    "title": "IPO Systems Platform Vertical Stack",
-    "caption": "Complete execution hierarchy from power-on hardware reset vector to userspace graphical/console applications.",
+    "title": "IPO Systems 平台垂直架构栈",
+    "caption": "从硬件复位向量 (0xFE000) 经 XIP romstage 与固件到 IPO_OS 内核及用户态应用的完整层次。",
     "labels": {
       "hardware": "Physical Hardware (CPU x86, RAM, Chipset, Storage)",
       "boot_rom": "IPO_Boot_ROM (Reset Vector 0xFFFFFFF0, CAR, MRC, PAM)",
-      "contract_2": "Contract 2 Handover (CS:IP 0xF000:0004, Shadow RAM)",
+      "contract_2": "Contract 2 控制移交 (CS:IP 0xF000:000C, 56 KiB Shadow RAM + 0x2000:0000)",
       "firmware": "IPO_Firmware (IVT, A20, Storage Discovery, MBR Load)",
-      "contract_3": "Contract 3 Handover (CS:IP 0x0000:7C00, DL=Drive ID)",
+      "contract_3": "Contract 3 控制移交 (CS:IP 0x0000:7C00, DL=Drive ID)",
       "kernel": "IPO_OS Kernel (PMM, VFS, Sched, Drivers, TCP/IP)",
       "syscall_gate": "Syscall Gate (int 0x80, EAX=num, EBX=argc, ECX=argv)",
       "userland": "Userspace Applications (0x800000, LibC, Shell, GUI WM)"
     }
   },
   "boot_rom_flow": {
-    "title": "IPO_Boot_ROM Low-Level Execution Sequence",
-    "caption": "从硬件复位向量开始，经 Cache-as-RAM 和 DRAM 控制器配置，最终移交给固件的执行流程。",
+    "title": "IPO_Boot_ROM 复位与 XIP romstage 流程",
+    "caption": "从 8 KiB bootblock (0xFE000) 经 32 KiB CAR (.car_bypass 0x2E) 与 C XIP romstage 跳转至 0xF000:000C。",
     "labels": {
       "reset_vector": "CPU Reset Vector (0xFFFFFFF0 / F000:FFF0)",
       "jump_base": "Jump to ROM Base (0xF000:8000)",
@@ -24,81 +24,67 @@
       "mrc_training": "MRC：DRAM 控制器配置",
       "car_teardown": "CAR 拆除；交接栈 SS:SP=0000:7C00",
       "pic_pit": "Phase 5: Cascaded 8259 PIC & 8254 PIT Setup",
-      "uart_init": "Phase 6: COM1 UART Init (115200 8N1)",
       "shadow_ram": "Phase 7: PAM Copy to Shadow RAM (0xF0000..0xFFFFF)",
-      "pam_lock": "Phase 8: PAM Read-Only Lock",
-      "magic_check": "Phase 9: Validate 'IPO' Magic (0x004F5049)",
-      "handover": "Transfer to Firmware: jmp 0xF000:0004"
+      "handover": "Validate 'IPO_Firmware' Header & Far Jump 0xF000:000C"
     }
   },
   "firmware_flow": {
-    "title": "IPO_Firmware Service Setup & Storage Discovery",
-    "caption": "Execution pipeline from Boot ROM handover through BIOS interrupts installation to storage drive discovery and OS handover.",
+    "title": "IPO_Firmware 初始化、SMP 与存储探测",
+    "caption": "从 0xF000:000C 起执行实模式服务：AP 启动、IVT/ACPI、PCI 0..7 扫描与 MBR 移交。",
     "labels": {
-      "entry": "Firmware Entry Point (0xF000:0004)",
+      "entry": "Firmware 入口 (CS:IP 0xF000:000C, Magic 'IPO_Firmware')",
       "ivt_setup": "Register IVT: INT 10h, 12h, 13h, 15h, 16h, 1Ah",
       "bda_ebda": "Init BDA (0x400) & EBDA / ACPI 1.0 (0x9FC00)",
       "pci_enum": "PCI Bus Enumeration (VGA, Storage, USB Controllers)",
-      "video_init": "Video Subsystem (VBIOS Option ROM or Text Mode 03h)",
       "a20_gate": "Fast A20 Gate Activation (Port 0x92)",
-      "memory_detect": "E820 / E801 Memory Map Construction",
-      "storage_probe": "Multi-Bus Storage Scan: ATA (0x1F0), AHCI, NVMe, USB",
+      "storage_probe": "存储控制器扫描 (POST 0x29): ATA PIO, AHCI SATA, NVMe, USB EHCI",
       "mbr_load": "Read LBA 0 to 0x0000:7C00 via INT 13h AH=42h",
-      "validate_mbr": "Check MBR Signature 0x55AA",
       "os_handover": "OS Handover: DL=0x80..0x82, jmp 0x0000:7C00"
     }
   },
   "kernel_boot": {
-    "title": "IPO_OS Kernel Initialization Pipeline",
-    "caption": "Transition from MBR bootloader through Protected Mode to the running kernel, filesystem mount, and interactive shell.",
+    "title": "IPO_OS 内核初始化流水线",
+    "caption": "从 MBR 过渡到 0x100000 处的 64 位 Long Mode (PML4/LA57) 或 32 位回退、SMP 与 IPO_FS 挂载。",
     "labels": {
       "mbr_stage1": "第一阶段引导程序（MBR 扇区 0x7C00）",
       "stage2_load": "从磁盘加载第二阶段引导程序",
       "prot_mode": "进入 32 位保护模式（已加载 GDT，CR0 PE=1）",
       "kernel_load": "将 ELF32 内核加载到物理地址 0x10000",
-      "kernel_entry": "内核入口点（linker.ld 中的 _start）",
-      "mm_init": "E820 内存映射与 64 MB 内核堆（kmalloc：0x01000000–0x04FFFFFF）",
-      "idt_init": "IDT、PIC/APIC、SMP 检测与系统调用门（0x80）",
+      "mm_init": "PMM (0x08000000+), Dynamic kmalloc (0x04000000+) & User Heaps (0x10000000+)",
       "fs_mount": "挂载根文件系统（LBA 2048 处的 IPO_FS 分区）",
       "drivers_init": "块设备层、ATA、Storage Pool + WAL、KMOD 与设备注册表",
       "launch_shell": "启动交互式终端和串行控制台"
     }
   },
   "memory_map": {
-    "title": "IPO_OS Physical & Virtual Memory Layout",
-    "caption": "内存区域图：实模式遗留表、位于 64 KB 的内核、位于 8 MB (0x00800000) 的用户空间应用，以及从 16 MB (0x01000000) 开始的 64 MB 内核堆。",
+    "title": "IPO_OS 物理与虚拟内存布局",
+    "caption": "实模式区、1 MiB 内核、8 MiB 应用、64 MiB kmalloc、128 MiB PMM 与 256 MiB+ 用户堆。",
     "labels": {
       "ivt_bda": "0x00000 - 0x004FF: IVT (1 KB) & BDA (256 B)",
-      "free_conv": "0x00500 - 0x07BFF: Scratch RAM & Stacks",
       "boot_mbr": "0x07C00 - 0x07DFF: Bootloader MBR Buffer (512 B)",
-      "kernel_bin": "0x10000 - 0x7FFFF: IPO_OS Kernel Core (.text, .data, .bss)",
       "video_ram": "0xA0000 - 0xBFFFF: Video Framebuffer (VGA Text 0xB8000)",
       "ebda_rom": "0xC0000 - 0xFFFFF: VBIOS, Shadow RAM & ROM Firmware",
-      "kernel_heap": "0x01000000 - 0x04FFFFFF：内核 kmalloc 堆 (64 MB) 与 PMM / sbrk",
-      "user_apps": "0x800000+: Userspace Applications (Entry at 0x800000)"
+      "kernel_bin": "0x00100000–0x007FFFFF: IPO_OS Kernel Core, Page Tables & SMP Stacks",
+      "user_apps": "0x800000+: Userspace Applications (Entry at 0x800000)",
+      "kernel_heap": "0x04000000–0x07FFFFFF: Dynamic Kernel kmalloc() Arena (+ PMM Overflow)",
+      "user_heaps": "0x08000000+ / 0x10000000+: PMM Frames, User sbrk() Heaps, mmap/SHM (0xD0000000+)"
     }
   },
   "syscall_pipeline": {
-    "title": "System Call Dispatch Pipeline (int 0x80)",
-    "caption": "Flow of control and argument passing when a userspace application requests an operating system service.",
+    "title": "系统调用分发流水线 (int 0x80)",
+    "caption": "305 个内核与网络 KMD 系统调用从 Ring 3 到 Ring 0 的陷入与返回路径。",
     "labels": {
       "app_call": "Application executes ipo_syscall(num, argc, argv)",
       "trap_gate": "Assembly 'int 0x80' triggers CPU Software Interrupt Gate",
       "ring_switch": "Hardware CPU Switch: Ring 3 (User) -> Ring 0 (Kernel)",
       "dispatcher": "Kernel Syscall Dispatcher validates number & arguments",
-      "handler_exec": "Target Subsystem Handler executes (FS, Process, Net, WM)",
       "return_ring": "Result placed in EAX, 'iret' returns to Ring 3"
     }
   },
   "fs_layout": {
-    "title": "IPO_FS 64-bit Extent-Based On-Disk Structure",
-    "caption": "Partition layout showing 512-byte blocks, 64-bit extents, and 128-byte inode organization.",
+    "title": "IPO_FS 64 位动态区段磁盘布局",
+    "caption": "包含 WAL 日志 (LBA 2030..2039)、104 字节超级块 (LBA 2048)、位图及动态 inode 块树。",
     "labels": {
-      "mbr_reserved": "Sector 0..2047: MBR and Reserved Boot Sectors",
-      "superblock": "LBA 2048: Superblock ('IPO_FS\\0\\0', Block Size, Pointers)",
-      "inode_bitmap": "Block Bitmap / Inode Bitmap (Allocation Tracking)",
-      "inode_table": "Inode Table (128 bytes per inode, 4 inodes / block)",
-      "data_blocks": "Data Extent Pool (Contiguous Multi-Block Extents)",
       "mbr_title": "MBR / Pool+WAL",
       "mbr_lba": "LBA 0..2047",
       "wal_lba": "（WAL 2030..2039）",
@@ -113,8 +99,8 @@
     }
   },
   "pc_assembly_flow": {
-    "title": "Hardware Assembly & Safety Progression",
-    "caption": "Order of physical assembly from workbench ESD safety preparation to power-on self test.",
+    "title": "硬件装机与安全操作流程",
+    "caption": "从防静电准备到 JFP1 前面板接线及 POST 0x80 检测的标准顺序。",
     "labels": {
       "esd_prep": "Step 1: ESD Protection & Workstation Preparation",
       "cpu_install": "Step 2: CPU Socket Installation & Thermal Compound",
@@ -122,24 +108,35 @@
       "ram_install": "Step 4: Dual-Channel DDR/SDRAM Insertion",
       "case_mb": "Step 5: Standoff Alignment & Motherboard Mounting",
       "psu_cabling": "Step 6: Power Supply (24-pin ATX, 8-pin EPS)",
-      "storage_conn": "Step 7: Storage Drives & SATA/IDE Data Cables",
       "front_panel": "Step 8: Front Panel Pinout (Power SW, Reset SW, LEDs)",
       "post_test": "Step 9: Bench POST Self-Test & Diagnostic Speaker Check"
     }
   },
   "front_panel_pinout": {
-    "title": "Standard Motherboard Front Panel Header Pinout",
-    "caption": "Pin layout and polarity guidelines for power button, reset button, and status LEDs.",
+    "title": "主板前面板接头引脚定义 (JFP1)",
+    "caption": "标准 JFP1 定义：HDD LED (+1/-3)、Power LED (+2/-4)、Reset (5/7)、Power (6/8)。",
     "labels": {
-      "pwr_led": "电源指示灯 (+ 极接 Pin 1, - 极接 Pin 3)",
+      "jfp1_title": "JFP1 / F_PANEL (2.54 mm 2×5 Pinout)",
+      "jfp1_subtitle": "Odd Row = Bottom (引脚 1,3,5,7,9) · Even Row = Top (引脚 2,4,6,8,10 Key)",
       "hdd_led": "硬盘指示灯 (+ 极接 Pin 2, - 极接 Pin 4)",
+      "hdd_led_pins": "引脚 1 (+) / 3 (-)",
+      "hdd_led_short": "HDD+ / HDD-",
+      "pwr_led": "电源指示灯 (+ 极接 Pin 1, - 极接 Pin 3)",
+      "pwr_led_pins": "引脚 2 (+) / 4 (-)",
+      "pwr_led_short": "PLED+ / PLED-",
       "reset_sw": "重启开关 (微动开关，无极性)",
-      "pwr_sw": "电源开关 (微动开关，无极性)"
+      "reset_sw_pins": "引脚 5 / 7 (无极性)",
+      "reset_sw_short": "RESET SW",
+      "pwr_sw": "电源开关 (微动开关，无极性)",
+      "pwr_sw_pins": "引脚 6 / 8 (无极性)",
+      "pwr_sw_short": "POWER SW",
+      "pin9_key": "Pin 9: NC / RSVD",
+      "pin10_nc": "Pin 10: Key (Blocked)"
     }
   },
   "net_stack": {
-    "title": "IPO_OS Bare-Metal TCP/IP Protocol Stack",
-    "caption": "Network packet processing hierarchy from physical RTL8139 PCI NIC to BSD-like Socket API.",
+    "title": "模块化网络协议栈 (/drivers/rtl8139 KMD)",
+    "caption": "跨 RTL8139 / Intel E1000 / VirtIO-Net 经 Ethernet/ARP/IPv4/TCP/UDP/DHCP/DNS 到 BSD 套接字。",
     "labels": {
       "nic_driver": "RTL8139 PCI NIC Driver (Ring Buffers, RX/TX Packets)",
       "ethernet_l2": "Ethernet II Framing & MAC Filtering",
@@ -150,47 +147,207 @@
     }
   },
   "vertical_platform_stack": {
-    "title": "IPO Systems Platform 纵向平台技术栈",
-    "caption": "从开机硬件复位向量到用户空间图形与命令行应用程序的完整执行层级。"
+    "title": "IPO Systems 平台垂直架构栈",
+    "caption": "从硬件复位向量 (0xFE000) 经 XIP romstage 与固件到 IPO_OS 内核及用户态应用的完整层次。",
+    "labels": {
+      "hardware": "物理硬件 (CPU x86-64/x86, RAM, Chipset, PCI, Storage)",
+      "boot_rom": "IPO_Boot_ROM (Bootblock 0xFE000 / F000:E000, 32 KiB CAR, XIP romstage, PAM)",
+      "contract_2": "Contract 2 控制移交 (CS:IP 0xF000:000C, 56 KiB Shadow RAM + 0x2000:0000)",
+      "firmware": "IPO_Firmware (Dynamic AP SMP, IVT, ACPI, PCI 0..7, Multi-Bus Storage)",
+      "contract_3": "Contract 3 控制移交 (CS:IP 0x0000:7C00, DL=Drive ID)",
+      "kernel": "IPO_OS Kernel (Long Mode + 32-bit Fallback, SMP, VFS/IPO_FS, VirGL/HDR)",
+      "syscall_gate": "Syscall Gate (int 0x80, 305 OS + Net Calls)",
+      "userland": "Userspace (0x800000 ELF, 0x10000000+ Heaps, /drivers/*, WM Apps)"
+    }
   },
   "spi_flashing_pinout": {
-    "title": "CH341A USB 烧录器至 SOIC-8 SPI Flash 引脚定义",
-    "caption": "CH341A 硬件编程器与 8 引脚 SPI NOR Flash (W25Q64 / MX25L6405) 之间的引脚物理连接拓扑。"
+    "title": "CH341A 编程器至 SOIC-8 SPI 闪存引脚图",
+    "caption": "3.3V SPI NOR 闪存 (128 KiB–16 MiB) 标准接线图。",
+    "labels": {
+      "prog_title": "CH341A (3.3V Mod)",
+      "chip_title": "SOIC-8 SPI Flash",
+      "pin1_cs": "Pin 1: /CS (Chip Select)",
+      "pin2_miso": "Pin 2: DO / MISO",
+      "pin3_wp": "Pin 3: /WP (Pull-Up 3.3V)",
+      "pin4_gnd": "Pin 4: GND (Common)",
+      "pin5_mosi": "Pin 5: DI / MOSI",
+      "pin6_clk": "Pin 6: CLK (Clock)",
+      "pin7_hold": "Pin 7: /HOLD (Pull-Up 3.3V)",
+      "pin8_vcc": "Pin 8: VCC (+3.3V Only)"
+    }
   },
   "process_scheduler": {
-    "title": "进程生命周期与任务调度器状态机",
-    "caption": "状态转换：CREATED、READY (就绪队列)、RUNNING (执行)、WAITING/BLOCKED (等待I/O/睡眠) 及 TERMINATED。"
+    "title": "进程与线程调度器状态机",
+    "caption": "支持按需扩栈与 IPI 0xE0 唤醒的全核 SMP 调度器。",
+    "labels": {
+      "state_created": "CREATED (ELF Load + PCB)",
+      "state_ready": "READY (Runqueue)",
+      "state_running": "RUNNING (CPU Core 0..N)",
+      "state_blocked": "BLOCKED (Futex / I/O / Pipe)",
+      "state_terminated": "TERMINATED (Reclaim)",
+      "tr_schedule": "spawn / wake",
+      "tr_preempt": "PIT / LAPIC quantum",
+      "tr_block": "sleep / futex / wait",
+      "tr_wakeup": "IRQ / IPI 0xE0 wakeup",
+      "tr_exit": "exit / SIGKILL"
+    }
   },
   "window_manager": {
-    "title": "窗口管理器图层合成与 VBE 帧缓冲区流水线",
-    "caption": "客户端应用程序后台缓冲区经剪裁区域合成后直接位块传输至 VBE 线性显存。"
+    "title": "窗口管理器合成器、RGBA64F HDR 与 VirGL 3D",
+    "caption": "支持任意分辨率、RGBA64F HDR 色调映射及 VirGL 硬件 3D 加速的合成流水线。",
+    "labels": {
+      "wm_client1": "客户端窗口 1",
+      "wm_client1_desc": "Software Backbuffer (Arbitrary W×H)",
+      "wm_client2": "客户端窗口 2",
+      "wm_client2_desc": "RGBA64F Linear HDR Surface + Tone Map",
+      "wm_client3": "客户端窗口 3",
+      "wm_client3_desc": "VirGL 3D Hardware Render Context",
+      "wm_comp": "内核 WM 合成器 & Input Router",
+      "wm_comp_desc1": "Dirty-Rect Damage Tracking, Z-Order & Dynamic Software/Hardware Cursor",
+      "wm_comp_desc2": "Arbitrary Desktop Geometry + Dynamic Console Cols×Rows Synchronization",
+      "wm_comp_desc3": "Double-Buffered Blit, Gamma/Dither & Non-Blocking wm_poll_event()",
+      "wm_hw": "显示硬件后端",
+      "wm_hw_d1": "VirtIO-GPU 2D/VirGL 3D",
+      "wm_hw_d2": "Bochs BGA / Linear FB",
+      "wm_hw_sub": "Zero Fixed Resolution Caps · Direct Present (0x11E0–0x11F7)"
+    }
   },
   "car_memory_layout": {
-    "title": "Cache-as-RAM (CAR) 内存映射与 MTRR 配置",
-    "caption": "在物理 DRAM 初始化之前，将 64 KB L1/L2 缓存配置为临时 SRAM 工作区与堆栈。"
+    "title": "Cache-as-RAM (32 KiB CAR) 内存映射与旁路",
+    "caption": "0x70000..0x77FFF 32 KiB L1/L2 缓存窗口及无 MTRR 时的 0x2E .car_bypass 回退。",
+    "labels": {
+      "car_range": "32 KiB CAR Window (0x70000..0x77FFF)",
+      "mtrr_config": "MTRR WB Setup (or .car_bypass 0x2E on v86)",
+      "cache_lines": "Pinned CPU L1/L2 Cache Lines (No DRAM Eviction)",
+      "c_runtime": "32-bit C Stack & Temporary Vars (XIP romstage)",
+      "mrc_zone": "SPD SMBus Scratch + Chipset Detection Records",
+      "post_logs": "COM1 (115200 8N1) & Port 0x80 Diagnostics",
+      "stack_top": "Stack Top (0x77FFF growing down)",
+      "teardown_phase": "Pre-DRAM Exit & CAR Teardown (POST 0x16)",
+      "teardown_desc": "INVD/MTRR Clear -> Real-Mode Transition -> Firmware 0xF000:000C"
+    }
   },
   "chipset_init_flow": {
-    "title": "芯片组硬件探测与 PAM 影子内存 (Shadow RAM)",
-    "caption": "PCI 宿主桥探测 (i440FX 与 Q35)、SMRAM 锁定、PAM0-PAM6 寄存器解锁及固件代码镜像。"
+    "title": "芯片组探测与 PAM 影内存锁定",
+    "caption": "主桥探测、SMRAM 控制、DRAM 配置及 PAM 写保护移交。",
+    "labels": {
+      "probe_bridge": "1. Probe Host Bridge (00:00.0) & Report Raw PCI Vendor/Device ID",
+      "smram_ctrl": "2. Configure SMRAM / Legacy Memory Routing (15–16 MiB Hole Disabled)",
+      "piix_routing": "3. Init Southbridge (PIIX/ICH), SMBus (SPD) & Cascaded 8259/8254",
+      "pam_config": "4. Set PAM0..PAM6 (WE=1, RE=0) & Copy 56 KiB Firmware -> 0xF0000",
+      "lock_pam": "5. Lock PAM Read-Only (WE=0, RE=1) & 控制移交 to 0xF000:000C"
+    }
   },
   "pci_bus_topology": {
-    "title": "PCI 总线拓扑结构与设备递归枚举",
-    "caption": "通过 I/O 端口 0xCF8 (CONFIG_ADDRESS) 与 0xCFC (CONFIG_DATA) 递归遍历总线、设备及功能。"
+    "title": "PCI 总线 0..7 拓扑与 64 位 BAR 分配",
+    "caption": "总线 0..7 递归扫描与动态 MMIO/I/O BAR 资源分配。",
+    "labels": {
+      "host_bridge": "PCI Host Bridge (Bus 00:00.0) + PCI-to-PCI Bridges",
+      "pci_ports": "Config Ports 0xCF8 / 0xCFC",
+      "bus_scan_title": "Bus 0..7 Dynamic Enumerator",
+      "bus_scan_desc": "Firmware & Kernel enumerate all buses/slots/functions with unlimited dynamic BAR arrays (uint64_t* bar[])",
+      "dev_storage": "存储控制器",
+      "dev_storage_sub": "ATA IDE / AHCI SATA / VirtIO-Blk",
+      "dev_storage_io": "BARs / DMA / Bus Master",
+      "dev_nic": "网络接口",
+      "dev_nic_sub": "RTL8139 / Intel E1000 / VirtIO-Net",
+      "dev_nic_io": "Dynamic MMIO/I/O + /drivers/*",
+      "dev_gpu": "显示与 3D 适配器",
+      "dev_gpu_sub": "VirtIO-GPU (VirGL) / Bochs BGA",
+      "dev_gpu_io": "Linear FB + 3D Command Queue",
+      "dev_usb_audio": "音频与输入/USB",
+      "dev_usb_audio_sub": "HDA / AC97 / SB16 / VirtIO-Sound",
+      "dev_usb_audio_io": "DMA Rings + MSI/IRQ Routing"
+    }
   },
   "storage_transfer_flow": {
-    "title": "ATA PIO 模式扇区读写控制流水线",
-    "caption": "轮询 0x1F7 状态端口 BSY/DRQ 位，下发 0x20 读扇区命令，并通过 rep insw 从 0x1F0 读取 512 字节。"
+    "title": "统一存储与 WAL 传输流水线",
+    "caption": "经由 VFS、IPO_FS、WAL 日志及 AHCI/VirtIO-Blk/ATA 的 64 位读写通路。",
+    "labels": {
+      "st_step1": "1. VFS / Process Syscall (64-bit File Offset & Extent Lookup)",
+      "st_step2": "2. IPO_FS Cache & Dynamic Inode Chunk / Extent Resolver",
+      "st_step3": "3. Storage Pool Translator & WAL Transaction Logger",
+      "st_step3_desc": "64-sector (32 KiB) pool stripe mapping + TXNL journal entry CRC",
+      "st_step4": "4. Block Scheduler & Controller Dispatch (AHCI DMA / VirtIO-Blk / ATA PIO)",
+      "st_step5": "5. Hardware DMA Ring or Port 0x1F0/0x170 Register Transfer + IRQ Completion",
+      "st_step5_desc": "Zero hard disk limits · Multi-member pool recovery on boot"
+    }
   },
   "interrupt_routing": {
-    "title": "IDT 中断向量表映射与硬件 IRQ 路由",
-    "caption": "双片级联 8259 PIC (0x20..0x2F)、CPU 异常陷阱 (0x00..0x1F) 及 int 0x80 系统调用门。"
+    "title": "IDT 中断向量、PIC/APIC IRQ 与 SMP IPI 0xE0",
+    "caption": "CPU 异常、硬件中断、全核 IPI 0xE0 与 int 0x80 分发拓扑。",
+    "labels": {
+      "idt_title": "Kernel IDT (32-bit 8B / 64-bit 16B Gates)",
+      "idt_desc1": "0x00–0x1F: CPU Exceptions (#DE, #GP, #PF Stack Grow, #UD)",
+      "idt_desc2": "0x20–0x2F: Remapped Hardware IRQs (8259 PIC / IOAPIC)",
+      "idt_desc3": "0x80: Userspace Syscall Gate (DPL=3)",
+      "idt_desc4": "0xE0: All-Core SMP Work & Reschedule IPI",
+      "idt_desc5": "APIC Timer & Spurious Vectors (0xFF)",
+      "irq_hw_title": "Hardware Sources",
+      "irq_0": "IRQ 0: PIT / LAPIC Timer Tick",
+      "irq_1": "IRQ 1 / 12: PS/2 Keyboard & Mouse",
+      "irq_5": "PCI/Audio/Net IRQs (HDA, NIC, VirtIO)",
+      "irq_12": "IRQ 14/15: ATA / AHCI / VirtIO-Blk",
+      "irq_ipi": "LAPIC IPI 0xE0 (All-Core Dispatch)",
+      "traps_title": "Userland Syscall",
+      "trap_80": "int 0x80 (305 Calls)",
+      "ring0_handlers": "Ring-0 ISR Dispatcher + Callback Subscriptions (0x1160..0x1165)",
+      "eoi_text": "EOI (PIC 0x20 / LAPIC 0xB0)",
+      "iret_text": "iret / iretq to Thread Context"
+    }
   },
   "driver_architecture": {
-    "title": "内核设备驱动模型与 VFS 节点抽象绑定",
-    "caption": "抽象设备操作表 struct device_ops 隔离 /dev 虚拟节点与底层端口 I/O 及 MMIO。"
+    "title": "混合驱动架构（内核内置、.kmd 与 /drivers/*）",
+    "caption": "统一设备注册表连接内核内置驱动、热加载 .kmd 模块及用户态驱动。",
+    "labels": {
+      "drv_layer1": "Ring-3 Applications & /drivers/* Userland Drivers",
+      "drv_layer1_desc": "BSD Sockets, Input Hub API, MMIO/DMA Syscalls (0x1140–0x1183) & /drivers/rtl8139",
+      "drv_layer2": "Unified Device Registry & Hot-Swappable Kernel Extensions",
+      "drv_layer2_desc": "device_node_t (64-bit BARs), driver_ops (64-bit offsets), .kmd PIC Relocator & Channels",
+      "drv_hw": "Kernel Built-In Hardware & Virtual Controllers",
+      "drv_hw_desc": "Direct Ring-0 I/O Ports, PCI BARs, DMA Buffers & Interrupt Subscriptions",
+      "drv_storage": "Storage Stack",
+      "drv_storage_1": "AHCI SATA (DMA/NCQ)",
+      "drv_storage_2": "VirtIO-Blk Modern/Legacy",
+      "drv_storage_3": "ATA/ATAPI PIO + Pool WAL",
+      "drv_net": "Network / KMD",
+      "drv_net_1": "/drivers/rtl8139 (KMD)",
+      "drv_net_2": "RTL8139 / E1000 / VirtIO-Net",
+      "drv_net_3": "Universal Frame Channels",
+      "drv_av": "Graphics & Audio",
+      "drv_av_1": "VirtIO-GPU / VirGL 3D",
+      "drv_av_2": "Bochs BGA / RGBA64F HDR",
+      "drv_av_3": "HDA / AC97 / SB16 / VirtIO",
+      "drv_input": "Input & External Drivers",
+      "drv_input_1": "PS/2 Keyboard & Mouse",
+      "drv_input_2": "/drivers/touchpad + gamepad",
+      "drv_input_3": "/drivers/custom_proto Demo"
+    }
   },
   "ipc_architecture": {
-    "title": "进程间通信 (IPC) 核心子系统",
-    "caption": "256 字节定长消息队列、4 KB 匿名管道、异步 POSIX 信号及零拷贝共享内存页。"
+    "title": "自扩展 IPC、共享内存 SHM、管道与 POSIX 信号",
+    "caption": "命名消息端点、自动扩展管道、0xD0000000+ SHM 与 POSIX 信号机制。",
+    "labels": {
+      "proc_a": "进程 A (Ring 3 Producer / Client)",
+      "proc_a_sub1": "Message Queue Client",
+      "proc_a_sub2": "Pipe Writer / Signal Sender",
+      "proc_a_sub3": "SHM Page Writer",
+      "proc_a_sub4": "Async Notifier",
+      "proc_b": "进程 B (Ring 3 Consumer / Service)",
+      "proc_b_sub1": "Endpoint Receiver",
+      "proc_b_sub2": "Pipe Reader / Sigaction",
+      "proc_b_sub3": "Zero-Copy SHM Reader",
+      "proc_b_sub4": "Notify Waiter",
+      "ring3_user": "Ring 3 Isolated Process Spaces (0xD0000000+ SHM Window)",
+      "ipc_core": "IPO_OS Kernel Dynamic IPC & Signal Subsystem (Ring 0)",
+      "ipc_msg": "命名消息端点 (0x10F0–0x10F5)",
+      "ipc_msg_desc": "Dynamic Queue + Capability Rights",
+      "ipc_pipes": "自扩展管道 (0x10F6–0x10FE)",
+      "ipc_pipes_desc": "Auto-Growing Ring Buffers",
+      "ipc_shm": "共享内存 SHM (0x1100–0x1104)",
+      "ipc_shm_desc": "Zero-Copy Physical Page Frames",
+      "ipc_sig": "异步通知与 POSIX 信号 (0x1110–0x1113)",
+      "ipc_sig_desc": "kill(), sigaction, Notify Events"
+    }
   }
 }

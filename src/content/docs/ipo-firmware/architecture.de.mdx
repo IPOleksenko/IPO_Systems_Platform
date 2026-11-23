@@ -50,11 +50,11 @@ Reserved 1 KB memory segment containing:
 
 ## 🔍 Multi-Bus Storage Discovery (`src/pci_scan.asm`)
 
-Written 100% in NASM assembly, IPO_Firmware scans PCI buses 0..3 via I/O ports `0x0CF8` (Address) and `0x0CFC` (Data):
+Written 100% in NASM assembly, IPO_Firmware scans PCI buses 0..7 via I/O ports `0x0CF8` (Address) and `0x0CFC` (Data):
 
 ```asm
 pci_scan_devices:
-    ; Scans PCI buses 0..3 for boot-critical hardware
+    ; Scans PCI buses 0..7 for boot-critical hardware
     ; Stores discovered hardware flags into Scratch RAM (0x0000:0x0540..0x056F)
     mov     byte [es:SCRATCH_AHCI_FOUND], 0
     mov     byte [es:SCRATCH_USB_FOUND], 0

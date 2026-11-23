@@ -55,9 +55,29 @@
     "description": "ファイルの読み取り/書き込みカーソルオフセットを変更します。",
     "return": "新しい絶対バイト位置、失敗時は負"
   },
+  "IPO_SYSCALL_FS_TRUNCATE": {
+    "description": "指定サイズへ切り詰め/拡張します： a file at path to a 64-bit byte size.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_FS_FTRUNCATE": {
+    "description": "指定サイズへ切り詰め/拡張します： an open file descriptor to a 64-bit byte size.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_FS_MKDIR": {
+    "description": "作成します： new directory on the mounted IPO_FS volume.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_FS_RMDIR": {
+    "description": "Removes an empty directory from IPO_FS.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_FS_LSEEK64": {
+    "description": "Repositions the 64-bit file offset of an open file descriptor.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
   "IPO_SYSCALL_EXEC": {
-    "description": "実行可能バイナリを割り当てられた空きメモリブロックにロードし、新しいプロセスをディスパッチします。",
-    "return": "生成されたプロセスのPID、エラー時は負"
+    "description": "実行します： ELF64/ELF32/flat binary or script from IPO_FS in a new child/sub-process.",
+    "return": "プログラムの終了コードまたは負のエラーコード"
   },
   "IPO_SYSCALL_READ": {
     "description": "アクティブな端末キーボードバッファからユーザー入力の1行を読み取ります。",
@@ -151,6 +171,26 @@
     "description": "start_ms から要求された時間間隔が経過したかどうかを確認します。",
     "return": "遅延時間が経過した場合は1、それ以外は0"
   },
+  "IPO_SYSCALL_RTC_GET_STR": {
+    "description": "Formats current RTC time using fmt into out_buf.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_RTC_SET_STR": {
+    "description": "Sets RTC time or date fields from string spec.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_RTC_GET_FORMAT": {
+    "description": "読み取ります： active RTC time display format string.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_RTC_SET_FORMAT": {
+    "description": "Sets default RTC time display format string.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_RTC_ADD_STR": {
+    "description": "Applies relative offset adjustment to RTC clock/alarm.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
   "IPO_SYSCALL_KEYMAP_SET": {
     "description": "カスタム Unicode グリフを持つ動的キーボードレイアウトを登録します。",
     "return": "成功時は0、エラー時は負"
@@ -234,6 +274,50 @@
   "IPO_SYSCALL_FS_STATVFS": {
     "description": "ファイルシステムの統計情報を取得します：合計/空きブロック、inodeの健全性、マウントフラグ。",
     "return": "成功時は0、エラー時は非ゼロ"
+  },
+  "IPO_SYSCALL_VGA_GET_BOUNDS": {
+    "description": "照会します： physical graphics screen resolution bounds in pixels.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_PORT_IN8": {
+    "description": "読み取ります： an 8-bit value from x86 I/O port.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_PORT_OUT8": {
+    "description": "書き込みます： an 8-bit value to x86 I/O port.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_PORT_IN16": {
+    "description": "読み取ります： a 16-bit value from x86 I/O port.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_PORT_OUT16": {
+    "description": "書き込みます： a 16-bit value to x86 I/O port.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_PORT_IN32": {
+    "description": "読み取ります： a 32-bit value from x86 I/O port.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_PORT_OUT32": {
+    "description": "書き込みます： a 32-bit value to x86 I/O port.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_RTC_GET_DATE_FORMAT": {
+    "description": "読み取ります： active RTC date format string.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_RTC_SET_DATE_FORMAT": {
+    "description": "Sets RTC date formatting pattern.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_RTC_GET_DATE_STR": {
+    "description": "Formats current RTC date into out_buf.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_RTC_GET_STATUS": {
+    "description": "読み取ります： formatted RTC status summary string.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
   },
   "IPO_SYSCALL_WM_CREATE_WINDOW": {
     "description": "コンポジタを介して新しい GUI ウィンドウを作成および割り当てます。",
@@ -335,21 +419,13 @@
     "description": "ウィンドウの境界線、影、および角のジオメトリを構成します。",
     "return": "0"
   },
-  "IPO_SYSCALL_WM_DISPATCH_KEY": {
-    "description": "キーボードイベントをアクティブなフォーカスウィンドウに転送します。",
-    "return": "処理された場合は1、それ以外は0"
-  },
-  "IPO_SYSCALL_WM_COMPOSE": {
-    "description": "Z オーダーでソートされたウィンドウシーンとオーバーレイを指定のバックバッファに描画します。",
-    "return": "0"
+  "IPO_SYSCALL_WM_POLL_EVENT": {
+    "description": "Pops next pending keyboard, mouse, resize, or close event for a WM window.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
   },
   "IPO_SYSCALL_WM_COMPOSITOR_TICK": {
     "description": "ウィンドウコンポジタの更新を1回実行します。",
     "return": "0"
-  },
-  "IPO_SYSCALL_WM_SESSION_RUN": {
-    "description": "ブロッキングアニメーションウィンドウマネージャセッションを実行します。",
-    "return": "なし（セッション終了時に制御を返す）"
   },
   "IPO_SYSCALL_WM_GET_COUNT_PID": {
     "description": "指定されたプロセスが所有するウィンドウの数を返します。",
@@ -459,6 +535,10 @@
     "description": "現在の PS/2 マウス座標、ボタンのクリック状態、およびホイールのデルタを取得します。",
     "return": "0"
   },
+  "IPO_SYSCALL_MOUSE_GET_MOTION": {
+    "description": "読み取ります： accumulated 64-bit mouse delta motion since process attach.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
   "IPO_SYSCALL_VGA_SET_CURSOR": {
     "description": "ポート 0x3D4/0x3D5 を介してハードウェア CRTC テキストモードカーソル位置を設定します。",
     "return": "0"
@@ -487,9 +567,13 @@
     "description": "アクティブなプロセスの現在の VGA オーバーレイ可視性フラグを返します。",
     "return": "現在のオーバーレイフラグビットマスク"
   },
+  "IPO_SYSCALL_VGA_GET_TEXT_INFO": {
+    "description": "照会します： hardware text-mode dimensions (columns/rows) and text VRAM address.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
   "IPO_SYSCALL_AUDIO_INIT": {
-    "description": "Sound Blaster 16 DSP、DMA チャンネル 5、およびソフトウェアミキサーを初期化します。",
-    "return": "オーディオハードウェアが初期化されている場合は1、それ以外は0"
+    "description": "初期化します： kernel audio backends (Intel HDA, AC97, Sound Blaster 16, VirtIO-Sound) and software DSP mixer.",
+    "return": "オーディオ初期化成功時は 1、その他は 0"
   },
   "IPO_SYSCALL_AUDIO_TICK": {
     "description": "オーディオ再生ストリームミキサーを進め、DMA バッファを補充します。",
@@ -539,6 +623,18 @@
     "description": "ストリーミングリングバッファ内のバッファデータを追加または更新します。",
     "return": "0"
   },
+  "IPO_SYSCALL_AUDIO_SET_FP_CONFIG": {
+    "description": "Configures kernel floating-point audio DSP mixer parameters.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_AUDIO_GET_FP_CONFIG": {
+    "description": "Retrieves active floating-point audio DSP configuration.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_AUDIO_GET_STATS": {
+    "description": "読み取ります： audio subsystem buffer, underrun, and hardware playback stats.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
   "IPO_SYSCALL_BINFMT_REGISTER": {
     "description": "シグネチャ照合機能を持つ動的実行可能バイナリ形式ハンドラを登録し、非ネイティブの実行をインタプリタに委任します。",
     "return": "成功時は0、または負のエラーコード"
@@ -550,6 +646,574 @@
   "IPO_SYSCALL_BINFMT_LIST": {
     "description": "現在登録されているすべての動的バイナリ形式ハンドラを一覧表示します。",
     "return": "アクティブな登録済みバイナリ形式ハンドラの数"
+  },
+  "IPO_SYSCALL_IPC_CREATE": {
+    "description": "作成します： named IPC message endpoint with capability rights.",
+    "return": "成功時は非負ハンドル、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_IPC_OPEN": {
+    "description": "開きます： a named IPC endpoint requesting specific access rights.",
+    "return": "成功時は非負ハンドル、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_IPC_CLOSE": {
+    "description": "閉じます： caller process handle to an IPC endpoint.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_IPC_DESTROY": {
+    "description": "破棄します： a named IPC endpoint owned by the caller.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_IPC_SEND": {
+    "description": "送信します： a variable-length IPC message to an endpoint.",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_IPC_RECEIVE": {
+    "description": "受信します： next message from an IPC endpoint along with sender PID.",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_IPC_PIPE_CREATE": {
+    "description": "作成します： named or anonymous self-expanding unidirectional IPC pipe.",
+    "return": "成功時は非負ハンドル、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_IPC_PIPE_OPEN": {
+    "description": "開きます： an existing named IPC pipe with requested read/write rights.",
+    "return": "成功時は非負ハンドル、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_IPC_PIPE_CLOSE": {
+    "description": "閉じます： specified handle rights on an IPC pipe.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_IPC_PIPE_DESTROY": {
+    "description": "破棄します： an IPC pipe and frees its dynamic ring buffer.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_IPC_PIPE_READ": {
+    "description": "読み取ります： bytes from an IPC pipe (blocking or non-blocking).",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_IPC_PIPE_WRITE": {
+    "description": "書き込みます： bytes into an IPC pipe, growing buffer dynamically as needed.",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_IPC_NOTIFY_SEND": {
+    "description": "Delivers an asynchronous lightweight event notification to target PID.",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_IPC_NOTIFY_WAIT": {
+    "description": "Waits for or polls pending asynchronous IPC notifications.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_IPC_PIPE_POLL": {
+    "description": "照会します： readable bytes and readiness flags on an IPC pipe.",
+    "return": "読み取り可能バイト数/状態ビット（無効時は負値）"
+  },
+  "IPO_SYSCALL_SHM_CREATE": {
+    "description": "作成します： named shared memory region backed by physical frames.",
+    "return": "成功時は非負ハンドル、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_SHM_OPEN": {
+    "description": "開きます： an existing named shared memory object.",
+    "return": "成功時は非負ハンドル、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_SHM_ATTACH": {
+    "description": "マッピングします： shared memory object into process virtual space (0xD0000000+).",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_SHM_DETACH": {
+    "description": "アンマップします： shared memory pages from current process address space.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_SHM_DESTROY": {
+    "description": "破棄します： shared memory region once all attachments are released.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_SIGACTION": {
+    "description": "Installs or queries POSIX signal handler and mask for signum.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_SIGPROCMASK": {
+    "description": "Examines or modifies blocked signal mask for the calling thread.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_KILL": {
+    "description": "送信します： POSIX signal sig to process pid.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_SIGALTSTACK": {
+    "description": "Configures alternate signal handler stack for the calling thread.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_THREAD_CREATE": {
+    "description": "Spawns a new kernel-scheduled POSIX thread sharing process address space.",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_THREAD_EXIT": {
+    "description": "Terminates calling thread and stores join return value.",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_THREAD_JOIN": {
+    "description": "Blocks until target thread tid exits and retrieves its return value.",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_THREAD_SELF": {
+    "description": "返します： kernel thread ID (TID) of calling thread.",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_THREAD_SYNC": {
+    "description": "実行します： kernel-backed synchronization primitive (mutex, condvar, semaphore, rwlock, barrier).",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_INPUT_POLL_KEY_EXT": {
+    "description": "Polls extended multi-byte/UTF keyboard event record.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_INPUT_GET_KEY_STATE": {
+    "description": "照会します： real-time pressed state of keycode.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_INPUT_GET_MODIFIERS": {
+    "description": "返します： unified modifier bitmask (Shift, Ctrl, Alt, Super, Locks).",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_SHORTCUT_REGISTER": {
+    "description": "登録します： a global or app-scoped custom hotkey combination.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_SHORTCUT_UNREGISTER": {
+    "description": "登録解除します： a previously registered shortcut ID.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_SHORTCUT_POLL": {
+    "description": "Polls triggered custom shortcut events for caller PID.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_INPUT_DEV_REGISTER": {
+    "description": "登録します： a custom input device (touchpad, gamepad, tablet) in input hub.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_INPUT_DEV_UNREGISTER": {
+    "description": "登録解除します： an input device by ID.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_INPUT_DEV_EMIT": {
+    "description": "Injects a hardware/virtual input event from a driver into OS event queue.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_INPUT_DEV_LIST": {
+    "description": "Enumerates registered input devices and capabilities.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_INPUT_DEV_POLL_EVENT": {
+    "description": "Polls queued events for all or filtered input device ID.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_INPUT_DEV_GET_STATE": {
+    "description": "読み取ります： current axis/button value for a registered input device.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_MOUSE_INJECT": {
+    "description": "Injects synthetic or HID mouse delta/absolute pointer coordinates.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_INPUT_SET_HOTKEY_MODE": {
+    "description": "Configures per-process hotkey interception policy (default vs pass-through).",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_INPUT_GET_HOTKEY_MODE": {
+    "description": "返します： active hotkey interception mode flags for current process.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_PS2_HOOK_REGISTER": {
+    "description": "登録します： low-level PS/2 channel byte observer hook for external drivers.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_PS2_HOOK_UNREGISTER": {
+    "description": "Removes a PS/2 byte hook by handle.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_PS2_HOOK_POLL": {
+    "description": "Drains captured PS/2 controller bytes from hook queue.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_PS2_TRANSACT": {
+    "description": "実行します： atomic PS/2 AUX/keyboard controller command transaction.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_IRQ_SUBSCRIBE": {
+    "description": "Subscribes a process/driver to poll notification on hardware IRQ line.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_IRQ_UNSUBSCRIBE": {
+    "description": "Unsubscribes from a hardware IRQ subscription handle.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_IRQ_POLL": {
+    "description": "Polls hardware IRQ firing count and last timestamp.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_IRQ_GET_COUNT": {
+    "description": "返します： total interrupt count observed on IRQ line.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_IRQ_REGISTER_CB": {
+    "description": "登録します： a callback IRQ handler with kernel IRQ dispatcher.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_IRQ_UNREGISTER_CB": {
+    "description": "登録解除します： a callback IRQ handler.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_HW_MAP_MMIO": {
+    "description": "マッピングします： physical PCI/MMIO device registers into caller virtual space.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_HW_UNMAP_MMIO": {
+    "description": "アンマップします： previously mapped device MMIO aperture.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_HW_ALLOC_DMA": {
+    "description": "確保します： physically contiguous aligned DMA buffer and returns physical address.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_HW_FREE_DMA": {
+    "description": "解放します： a DMA buffer allocated via ipo_hw_alloc_dma.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_HW_VIRT_TO_PHYS": {
+    "description": "Translates virtual buffer address to physical RAM address for DMA descriptors.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_PCI_GET_COUNT": {
+    "description": "返します： total number of discovered PCI devices.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_PCI_GET_DEVICE": {
+    "description": "読み取ります： PCI device coordinates, IDs, IRQ, and dynamic BAR list by index.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_PCI_CONFIG_READ": {
+    "description": "読み取ります： 8/16/32-bit PCI configuration space register.",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_PCI_CONFIG_WRITE": {
+    "description": "書き込みます： 8/16/32-bit PCI configuration space register.",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_PCI_ENABLE_BUS_MASTER": {
+    "description": "Enables PCI Command Bus Master & Memory/I/O decode bits for DMA.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_DEV_GET_COUNT": {
+    "description": "返します： total nodes registered in unified Device Registry.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_DEV_GET_INFO": {
+    "description": "Retrieves metadata, resources, and driver binding for device index.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_DEV_REGISTER": {
+    "description": "登録します： a new device node from external driver.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_DEV_UNREGISTER": {
+    "description": "登録解除します： a user-owned device node by ID.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_WM_SET_CURSOR_VISIBLE": {
+    "description": "Shows or hides WM software mouse cursor when win is focused.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_WM_GET_CURSOR_VISIBLE": {
+    "description": "照会します： cursor visibility flag for window win.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_WM_GET_SCREEN_BOUNDS": {
+    "description": "返します： active Window Manager physical desktop dimensions in pixels.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_WM_SET_CURSOR_SCALE": {
+    "description": "Sets global WM pixel cursor width and height (arbitrary pixel scale).",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_WM_GET_CURSOR_SCALE": {
+    "description": "読み取ります： current global WM cursor dimensions in pixels.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_KMOD_LOAD": {
+    "description": "ロードします： bare-metal .kmd kernel module from IPO_FS path into Ring 0.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_KMOD_UNLOAD": {
+    "description": "Runs module cleanup() and unloads loaded .kmd by name.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_KMOD_COUNT": {
+    "description": "返します： number of currently loaded kernel modules.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_KMOD_LOAD_MEM": {
+    "description": "ロードします： bare-metal .kmd module directly from memory buffer into kernel.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_EXT_REGISTER": {
+    "description": "登録します： a hot-swappable kernel/userland extension service.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_EXT_UNREGISTER": {
+    "description": "登録解除します： an extension service by ID.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_EXT_CALL": {
+    "description": "Invokes operation op on registered extension by name.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_EXT_LIST": {
+    "description": "一覧取得します： active registered extensions.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_CHAN_LIST": {
+    "description": "一覧取得します： universal raw data channels (e.g. 'eth0') and TX/RX stats.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_CHAN_TX": {
+    "description": "Transmits raw frame directly over registered channel chan_id.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_CHAN_RX": {
+    "description": "Polls next matching EtherType frame from channel subscription.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_CHAN_SUB": {
+    "description": "Subscribes to frames matching ethertype on channel chan_id.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_CHAN_UNSUB": {
+    "description": "Unsubscribes from universal data channel subscription.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_EXT_UPDATE": {
+    "description": "Hot-swaps ops/version of an active registered extension.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_SMP_GET_COUNT": {
+    "description": "返します： total ACPI MADT CPU count and optional online core count.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_SMP_GET_INFO": {
+    "description": "読み取ります： per-CPU SMP metrics (LAPIC ID, ticks, tasks executed/queued).",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_SMP_SUBMIT": {
+    "description": "Dispatches parallel work item to target CPU or SMP_CPU_ANY via LAPIC IPI.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_SMP_WAIT": {
+    "description": "Waits for SMP worker task completion and collects result.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_SMP_CURRENT": {
+    "description": "返します： logical CPU ID (and optional LAPIC ID) running caller.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_DYNMOD_AUTH": {
+    "description": "Authorizes caller PID for runtime kernel symbol/patch introspection.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_DYNMOD_RESOLVE": {
+    "description": "Resolves live kernel symbol address from ksyms table.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_DYNMOD_READ": {
+    "description": "読み取ります： kernel memory range under dynmod authorization.",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_DYNMOD_WRITE_VAR": {
+    "description": "Modifies authorized kernel variable with rollback patch tracking.",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_DYNMOD_HOOK_FUNC": {
+    "description": "Installs live trampoline hook onto a kernel function.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_DYNMOD_HOOK_SYSCALL": {
+    "description": "Hooks active syscall dispatcher entry dynamically.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_DYNMOD_RESTORE": {
+    "description": "Reverts a dynamic kernel patch or trampoline hook by ID.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_DYNMOD_LIST": {
+    "description": "一覧取得します： active dynamic kernel hooks and patches.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_DYNMOD_COMPUTE_DEMO": {
+    "description": "Invokes live-patchable reference computation function for dynmod testing.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_AUDIO_API_VERSION": {
+    "description": "返します： IPO Audio v2 ABI version.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_AUDIO_GET_DEV_COUNT": {
+    "description": "返します： count of active hardware/virtual audio devices.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_AUDIO_GET_DEV_INFO": {
+    "description": "照会します： audio backend capabilities (HDA, AC97, SB16, VirtIO-Sound).",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_AUDIO_OPEN": {
+    "description": "開きます： a PCM/float audio playback or capture stream handle.",
+    "return": "成功時は非負ハンドル、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_AUDIO_CLOSE": {
+    "description": "閉じます： open audio handle and releases hardware buffers.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_AUDIO_WRITE": {
+    "description": "書き込みます： PCM samples into audio handle playback ring.",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_AUDIO_READ": {
+    "description": "Captures PCM samples from input audio handle.",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_AUDIO_HANDLE_PAUSE": {
+    "description": "Pauses or resumes playback on audio handle.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_AUDIO_HANDLE_SET_VOL": {
+    "description": "Sets per-handle linear gain volume (0.0..1.0+).",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_AUDIO_HANDLE_CLOCK": {
+    "description": "照会します： sample-accurate A/V sync playback clock for handle.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_AUDIO_STREAM_CLOCK": {
+    "description": "照会します： monotonic frame clock on legacy audio_stream_t.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_AUDIO_SET_MASTER_VOL": {
+    "description": "Sets left/right master mixer hardware volume.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_AUDIO_GET_MASTER_VOL": {
+    "description": "読み取ります： left/right master mixer volume.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GFX_API_VERSION": {
+    "description": "返します： IPO GFX RGBA64F/HDR pipeline API version.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GFX_GET_CAPS": {
+    "description": "照会します： display hardware capabilities, LFB geometry, and HDR formats.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GFX_ENUM_MODES": {
+    "description": "Enumerates supported display resolutions and pixel formats.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GFX_SET_MODE": {
+    "description": "Switches physical linear framebuffer video mode (arbitrary resolution).",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GFX_GET_MODE": {
+    "description": "返します： active display mode dimensions, pitch, and color encoding.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GFX_SELECT_FORMAT": {
+    "description": "Negotiates optimal render and hardware pixel formats.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GFX_PRESENT_WINDOW": {
+    "description": "Blits/tone-maps RGBA64F/32-bit surface directly into a WM window.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GFX_PRESENT_SCREEN": {
+    "description": "Presents a full-screen surface with dithering/format conversion.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GFX_GET_STATS": {
+    "description": "Retrieves frame presentation counts and conversion stats.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GFX_GET_PALETTE32": {
+    "description": "Synchronizes 256-entry XRGB8888 palette with kernel compositor.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GFX_BGA_OP": {
+    "description": "照会します： Bochs/QEMU BGA display adapter state and LFB base.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GPU_GET_INFO": {
+    "description": "照会します： VirtIO-GPU / VirGL 3D backend capabilities and limits.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GPU_SET_MODE": {
+    "description": "Toggles between hardware VirGL 3D and software 3D fallback.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GPU_CTX_CREATE": {
+    "description": "作成します： hardware 3D VirGL rendering context.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GPU_CTX_DESTROY": {
+    "description": "破棄します： a VirGL rendering context owned by caller.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GPU_RES_CREATE": {
+    "description": "Creates GPU vertex/index/uniform buffer, 2D texture, or render target.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GPU_RES_UPLOAD": {
+    "description": "Uploads buffer/texture pixel data into GPU resource memory.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GPU_RES_DESTROY": {
+    "description": "破棄します： GPU resource object and frees backing allocation.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_GPU_SUBMIT_BATCH": {
+    "description": "Submits hardware 3D command batch (draw, blit, clear, present) to VirGL.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_THREAD_DETACH": {
+    "description": "Detaches thread so resources reclaim automatically upon exit.",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_THREAD_SET_TLS": {
+    "description": "Sets Thread-Local Storage base pointer (FS/GS or TCB register).",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_THREAD_GET_TLS": {
+    "description": "返します： Thread-Local Storage base pointer for calling thread.",
+    "return": "転送バイト/項目数 (>= 0) または負のエラーコード"
+  },
+  "IPO_SYSCALL_CLOCK_GETTIME": {
+    "description": "読み取ります： realtime or monotonic nanosecond-resolution kernel clock.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_NANOSLEEP": {
+    "description": "Suspends calling thread for specified seconds + nanoseconds.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_FUTEX": {
+    "description": "Performs fast userspace mutex FUTEX_WAIT / FUTEX_WAKE operation.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_MMAP": {
+    "description": "マッピングします： anonymous virtual pages with READ/WRITE/EXEC protections.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_MUNMAP": {
+    "description": "アンマップします： virtual memory range created by ipo_mmap().",
+    "return": "成功時は 0、失敗時は負のエラーコード"
+  },
+  "IPO_SYSCALL_MPROTECT": {
+    "description": "Changes page protection flags (PROT_READ/WRITE/EXEC) on mapped range.",
+    "return": "成功時は 0、失敗時は負のエラーコード"
   },
   "IPO_SYSCALL_EXIT": {
     "description": "呼び出し元プロセスを終了し、メモリを解放してコンテキストを切り替えます。",

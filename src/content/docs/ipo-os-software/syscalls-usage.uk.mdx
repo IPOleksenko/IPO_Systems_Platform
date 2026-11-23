@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
     opt.w = 140;
     opt.h = 60;
     opt.title = "Моє Вікно";
-    opt.draw_cb = draw_my_window;
+    // Event-driven loop via wm_poll_event(&win, &ev) (draw directly onto win->framebuf)
 
     wm_window_t *win = wm_create_window(&opt);
     if (!win) {
